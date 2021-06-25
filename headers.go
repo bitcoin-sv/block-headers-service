@@ -27,12 +27,17 @@ type HeaderArgs struct {
 	Blockhash string `param:"blockhash" db:"blockHash"`
 }
 
+type Height struct{
+	Height int `json:"height"`
+}
+
 // BlockheaderService enforces validation of arguments and business rules.
 type BlockheaderService interface {
 	// Header will return a single header by block hash.
 	Header(ctx context.Context, args HeaderArgs) (*BlockHeader, error)
 	// Create will store a block header in the db.
 	Create(ctx context.Context, req BlockHeader) error
+	Height(ctx context.Context) (*Height, error)
 }
 
 // BlockheaderReader is used to get header information from a data store.

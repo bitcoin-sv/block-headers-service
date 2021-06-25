@@ -35,3 +35,12 @@ func (h *headersService) Create(ctx context.Context, req headers.BlockHeader) er
 	}
 	return nil
 }
+
+// Height will return the current block height stored in the service data store.
+func (h *headersService) Height(ctx context.Context) (*headers.Height,error){
+	height, err := h.hRdr.Height(ctx)
+	if err != nil{
+		return nil, errors.Wrap(err, "failed to get current stored height")
+	}
+	return &headers.Height{Height: height}, nil
+}
