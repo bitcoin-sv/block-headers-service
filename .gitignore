@@ -1,0 +1,16 @@
+debug
+.history
+.idea/*
+.DS_Store
+build/
+dist/
+data/blockheaders.db
+data/blockheaders.db-journal
+cover.go
+cover.out
+
+wallet.db
+main
+docker-compose.dev.yml
+cover.out
+cover.html

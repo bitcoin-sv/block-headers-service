@@ -1,0 +1,23 @@
+version: '3.7'
+
+services:
+  paymail:
+    image: local.service
+    build:
+      context: .
+    env_file:
+      - environments/compose.env
+    ports:
+      - "9020:9020"
+    # healthcheck:
+    #   test: ["CMD-SHELL", "grpc_health_probe --addr=localhost:9020"]
+    #   interval: 30s
+    #   timeout: 5s
+    #   retries: 5
+    restart: unless-stopped
+    networks:
+      - platform-services-network
+
+networks:
+  platform-services-network:
+    external: true
