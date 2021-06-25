@@ -22,7 +22,7 @@ type BlockHeader struct {
 	Nonce             uint32  `json:"nonce" db:"nonce"`
 }
 
-// HeaderArgs are sued to retrieve a single block header
+// HeaderArgs are sued to retrieve a single block header.
 type HeaderArgs struct {
 	Blockhash string `param:"blockhash" db:"blockHash"`
 }
@@ -43,7 +43,7 @@ type BlockheaderReader interface {
 	Height(ctx context.Context) (int, error)
 }
 
-// BlockheaderWriter will add or modify block header data
+// BlockheaderWriter will add or modify block header data.
 type BlockheaderWriter interface {
 	// Create will add a blockheader to the data store.
 	Create(ctx context.Context, req BlockHeader) error

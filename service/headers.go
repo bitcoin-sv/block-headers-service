@@ -13,6 +13,7 @@ type headersService struct {
 	hWrtr headers.BlockheaderWriter
 }
 
+// NewHeadersService will setup and return a new headers service.
 func NewHeadersService(hRdr headers.BlockheaderReader, hWrtr headers.BlockheaderWriter) *headersService {
 	return &headersService{hRdr: hRdr, hWrtr: hWrtr}
 }

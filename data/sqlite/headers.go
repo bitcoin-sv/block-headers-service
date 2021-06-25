@@ -35,6 +35,7 @@ type headersDb struct {
 	db *sqlx.DB
 }
 
+// NewHeadersDb will setup and return a new headers store.
 func NewHeadersDb(db *sqlx.DB) *headersDb {
 	return &headersDb{db: db}
 }

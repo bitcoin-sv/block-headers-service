@@ -1,23 +1,16 @@
 version: '3.7'
 
 services:
-  paymail:
-    image: local.service
+  headers-client:
+    container_name: headers-client
+    image: headers-client.service
     build:
       context: .
-    env_file:
-      - environments/compose.env
     ports:
-      - "9020:9020"
-    # healthcheck:
-    #   test: ["CMD-SHELL", "grpc_health_probe --addr=localhost:9020"]
-    #   interval: 30s
-    #   timeout: 5s
-    #   retries: 5
+      - "8442:8442"
+    environment:
+      - DB_DSN=file:/data/blockheaders.db?cache=shared&_foreign_keys=true;
+      - DB_SCHEMA_PATH=/migrations
     restart: unless-stopped
-    networks:
-      - platform-services-network
-
-networks:
-  platform-services-network:
-    external: true
+    volumes:
+      - ~/data/headers-client:/data

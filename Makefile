@@ -32,6 +32,9 @@ go-doc-linux:
 	@xdg-open http://localhost:6060 && \
 	godoc -http=:6060
 
+build-image:
+	@docker-compose -f docker-compose.yml -f docker-compose.build.yml build
+
 run-compose:
 	@docker-compose up
 

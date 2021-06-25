@@ -1,0 +1,7 @@
+version: "3.7"
+
+services:
+  payd:
+    image: headers-client.service
+    build:
+      context: .
