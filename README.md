@@ -1,43 +1,13 @@
-# Service Example
+# Bitcoin Headers Client
 
-An example of a golang service using Hexagonal Architecture with the core domain being located in the Service folder.
+[![Release](https://img.shields.io/github/release-pre/libsv/bitcoin-hc.svg?logo=github&style=flat&v=1)](https://github.com/libsv/bitcoin-hc/releases)
+[![Build Status](https://img.shields.io/github/workflow/status/libsv/bitcoin-hc/go?logo=github&v=3)](https://github.com/libsv/bitcoin-hc/actions)
+[![Report](https://goreportcard.com/badge/github.com/libsv/bitcoin-hc?style=flat&v=1)](https://goreportcard.com/report/github.com/libsv/bitcoin-hc)
+[![Go](https://img.shields.io/github/go-mod/go-version/libsv/bitcoin-hc?v=1)](https://golang.org/)
+[![Sponsor](https://img.shields.io/badge/sponsor-libsv-181717.svg?logo=github&style=flat&v=3)](https://github.com/sponsors/libsv)
+[![Donate](https://img.shields.io/badge/donate-bitcoin-ff9900.svg?logo=bitcoin&style=flat&v=3)](https://gobitcoinsv.com/#sponsor)
 
-A brief overview follows:
+This is a service used to sync and store blockchain headers which can then be used to validate transactions and merkle proofs forming part of an SPV pipeline.
 
-## Application root
+By default, it uses [WhatsOnChain](www.whatsonchain.com) to sync headers using web sockets and stores the data in a local embedded sqlLite database making it highly portable.
 
-Contains the definitions for our domain models, one shown here being transaction.
-
-Being at the root of the application does two things:
-
-1) a developer can quickly glance and see this service is concerned with transactions
-2) the dependency direction is one way, starting from this top level down to the services, stores and handlers - no circular dependencies
-
-These domain files will contain structs defining the objects as well as the interfaces:
-
-* Service interfaces to define our core domain layer
-* Reader/Writer interfaces for interacting with a data store
-
-## Transports
-
-These are our methods of exposing data, these are our public interface. We could have http endpoints, grpc endpoints or message publishers here.
-
-They should be dumb and have no business logic at all here, they simply parse requests and responses and pass onto the service layer.
-
-## Service
-
-Our core domain knowledge is here, this knows how to validate data, how to publish data to messaging system, what order to call data stores in etc.
-
-They should have no knowledge of the transport layer on top, or the data layer below them.
-
-## Data
-
-Can have one or many data stores here, their only role being to store and retrieve data that has been passed to them by the service layer.
-
-## Example.
-
-There is a top to bottom example in the cmd/http-server binary.
-
-This uses a noop data store and you can follow the requests up and down through the layers, just run
-
-`go run cmd/http-server/main.go`

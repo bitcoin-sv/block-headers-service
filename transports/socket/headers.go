@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/centrifugal/centrifuge-go"
+	"github.com/libsv/headers-client/config"
 
 	"github.com/libsv/headers-client"
 )
@@ -15,12 +16,13 @@ import (
 type headersSocket struct {
 	ws  *centrifuge.Client
 	svc headers.BlockheaderService
+	cfg *config.WocConfig
 }
 
 // NewHeaders will setup a new socket service - used to sync with woc.
 // TODO - should this be a data layer?
-func NewHeaders(ws *centrifuge.Client, svc headers.BlockheaderService) *headersSocket {
-	h := &headersSocket{ws: ws, svc: svc}
+func NewHeaders(ws *centrifuge.Client, cfg *config.WocConfig, svc headers.BlockheaderService) *headersSocket {
+	h := &headersSocket{ws: ws, svc: svc, cfg: cfg}
 	ws.OnMessage(h)
 	ws.OnError(h)
 	ws.OnConnect(h)
@@ -30,8 +32,6 @@ func NewHeaders(ws *centrifuge.Client, svc headers.BlockheaderService) *headersS
 	ws.OnError(h)
 
 	ws.OnServerPublish(h)
-	ws.OnServerSubscribe(h)
-	ws.OnServerUnsubscribe(h)
 	ws.OnServerJoin(h)
 	ws.OnServerLeave(h)
 
@@ -50,16 +50,25 @@ func (h *headersSocket) OnMessage(_ *centrifuge.Client, e centrifuge.MessageEven
 	log.Printf("Message from server: %s", string(e.Data))
 }
 
-func (h *headersSocket) OnDisconnect(_ *centrifuge.Client, e centrifuge.DisconnectEvent) {
+func (h *headersSocket) OnDisconnect(c *centrifuge.Client, e centrifuge.DisconnectEvent) {
+	e.Reconnect = false
 	log.Printf("Disconnected from chat: %s", e.Reason)
-}
+	height, _ := h.svc.Height(context.Background())
+	c.Close()
+	c = centrifuge.New(fmt.Sprintf("%s%d", h.cfg.URL, height), centrifuge.DefaultConfig())
+	c.Connect()
+	c.OnMessage(h)
+	c.OnError(h)
+	c.OnConnect(h)
+	c.OnConnect(h)
+	c.OnDisconnect(h)
+	c.OnMessage(h)
+	c.OnError(h)
 
-func (h *headersSocket) OnServerSubscribe(_ *centrifuge.Client, e centrifuge.ServerSubscribeEvent) {
-	log.Printf("Subscribe to server-side channel %s: (resubscribe: %t, recovered: %t)", e.Channel, e.Resubscribed, e.Recovered)
-}
-
-func (h *headersSocket) OnServerUnsubscribe(_ *centrifuge.Client, e centrifuge.ServerUnsubscribeEvent) {
-	log.Printf("Unsubscribe from server-side channel %s", e.Channel)
+	c.OnServerPublish(h)
+	c.OnServerJoin(h)
+	c.OnServerLeave(h)
+	log.Println("Reconnected")
 }
 
 func (h *headersSocket) OnServerJoin(_ *centrifuge.Client, e centrifuge.ServerJoinEvent) {

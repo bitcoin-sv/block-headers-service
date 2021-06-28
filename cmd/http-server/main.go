@@ -49,7 +49,7 @@ func main() {
 		log.Fatalf("creating sqlite3 db driver failed %s", err)
 	}
 	m, err := migrate.NewWithDatabaseInstance(
-		 fmt.Sprintf("file://%s", cfg.Db.SchemaPath) , "sqlite3",
+		fmt.Sprintf("file://%s", cfg.Db.SchemaPath), "sqlite3",
 		driver)
 	if err != nil {
 		log.Fatal(err)
@@ -84,8 +84,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println(fmt.Sprintf("%s%d", cfg.Woc.URL, height))
 	c := centrifuge.New(fmt.Sprintf("%s%d", cfg.Woc.URL, height), centrifuge.DefaultConfig())
-	_ = socket.NewHeaders(c, headerService)
+	_ = socket.NewHeaders(c, cfg.Woc, headerService)
 	defer c.Close() // nolint:errcheck // this is why
 	if err := c.Connect(); err != nil {
 		log.Fatal(err)
