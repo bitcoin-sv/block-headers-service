@@ -4,18 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"github.com/rs/zerolog/log"
 	"sync"
 	"time"
-
-	"github.com/centrifugal/centrifuge-go"
+	"github.com/theflyingcodr/centrifuge-go"
 
 	"github.com/libsv/bitcoin-hc/config"
 
 	"github.com/libsv/bitcoin-hc"
 )
 
-type headersPool struct{
+type headersBuffer struct{
 	svc headers.BlockheaderService
 	headers []*headers.BlockHeader
 	rw sync.RWMutex
@@ -24,8 +23,10 @@ type headersPool struct{
 	done chan bool
 }
 
-func NewHeadersPool( svc headers.BlockheaderService, synced chan<- bool) *headersPool{
-	h := &headersPool{
+// NewHeadersBuffer will return a new headersBuffer which is used to cache records before
+// adding to a database at intervals.
+func NewHeadersBuffer( svc headers.BlockheaderService, synced chan<- bool) *headersBuffer{
+	h := &headersBuffer{
 		svc:     svc,
 		headers: make([]*headers.BlockHeader,0),
 		rw:      sync.RWMutex{},
@@ -36,9 +37,9 @@ func NewHeadersPool( svc headers.BlockheaderService, synced chan<- bool) *header
 	return h
 }
 
-func (h *headersPool) Start(){
+func (h *headersBuffer) Start(){
 	t := time.NewTicker(time.Second*30)
-	fmt.Println("starting sync with network...")
+	log.Info().Msg("starting sync with network...")
 	for {
 		select {
 		case <-h.done:
@@ -50,7 +51,7 @@ func (h *headersPool) Start(){
 				height, _ := h.svc.Height(context.Background())
 				if height.Synced{
 					h.syncCompleted = true
-					fmt.Println("sync with network complete, headers all cached, watching for new blocks...")
+					log.Info().Msg("sync with network complete, headers all cached, watching for new blocks...")
 					h.sync<-true
 					h.done<-true
 				}
@@ -62,40 +63,40 @@ func (h *headersPool) Start(){
 			ctx, cancelFn := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancelFn()
 			if err := h.svc.CreateBatch(ctx, h.ReadAll()); err != nil{
-				log.Println("failed to add batch " + err.Error())
+				log.Error().Msg("failed to add batch " + err.Error())
 			}
 			height, _ := h.svc.Height(context.Background())
-			fmt.Println(fmt.Sprintf("syncing headers, now at header %d of %d",
-				height.Height + len(h.headers), height.NetworkNeight))
+			log.Info().Msgf("syncing headers, now at header %d of %d",
+				height.Height + len(h.headers), height.NetworkNeight)
 		}
 	}
 }
 
-func (h *headersPool) Stop(){
+func (h *headersBuffer) Stop(){
 	h.done <- true
 	// clear buffer
 	ctx, cancelFn := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancelFn()
-	log.Println(fmt.Sprintf("adding %d records", len(h.headers)))
+	log.Info().Msgf("adding %d records", len(h.headers))
 	if err := h.svc.CreateBatch(ctx, h.ReadAll()); err != nil{
-		log.Println("failed to add batch " + err.Error())
+		log.Error().Msg("failed to add batch " + err.Error())
 	}
 }
 
-func (h *headersPool) Add(req *headers.BlockHeader){
+func (h *headersBuffer) Add(req *headers.BlockHeader){
 	h.rw.Lock()
 	defer h.rw.Unlock()
 	if !h.syncCompleted {
 		h.headers = append(h.headers, req)
 		return
 	}
-	fmt.Println(fmt.Sprintf("new header received at height %d with hash %s", req.Height, req.Hash))
+	log.Info().Msgf("new header received at height %d with hash %s", req.Height, req.Hash)
 	if err := h.svc.Create(context.Background(), *req);err != nil{
-		fmt.Println(err)
+		log.Err(err)
 	}
 }
 
-func (h *headersPool) ReadAll() []*headers.BlockHeader{
+func (h *headersBuffer) ReadAll() []*headers.BlockHeader{
 	h.rw.Lock()
 	defer h.rw.Unlock()
 	bh := make([]*headers.BlockHeader,0, len(h.headers))
@@ -111,8 +112,7 @@ type headersSocket struct {
 	ws  *centrifuge.Client
 	svc headers.BlockheaderService
 	cfg *config.WocConfig
-	buffer *headersPool
-	inSync chan bool
+	buffer *headersBuffer
 	synced bool
 }
 
@@ -124,15 +124,15 @@ func NewHeaders(ws *centrifuge.Client, cfg *config.WocConfig, svc headers.Blockh
 		ws: ws,
 		svc: svc,
 		cfg: cfg,
-		buffer: NewHeadersPool(svc,syncChan),
+		buffer: NewHeadersBuffer(svc,syncChan),
 	}
 	h.setup()
 	go func() {
 		for {
 			select {
 			case <-syncChan:
-				h.ws.URL = "wss://socket.whatsonchain.com/blockheaders"
-				h.ws.Connect()
+				h.ws.SetURL("wss://socket.whatsonchain.com/blockheaders")
+				_ = h.ws.Connect()
 				h.synced = true
 				return
 			}
@@ -151,40 +151,42 @@ func (h *headersSocket) setup(){
 }
 
 func (h *headersSocket) OnConnect(_ *centrifuge.Client, e centrifuge.ConnectEvent) {
-	log.Printf("Connected to WoC with ID %s", e.ClientID)
+	log.Debug().Msgf("Connected to WoC with ID %s", e.ClientID)
 }
 
 func (h *headersSocket) OnError(_ *centrifuge.Client, e centrifuge.ErrorEvent) {
-	// log.Printf("Socket Error: %s", e.Message)
+	log.Debug().Msgf("Socket Error: %s", e.Message)
 }
 
 
 func (h *headersSocket) OnDisconnect(c *centrifuge.Client, e centrifuge.DisconnectEvent) {
+	log.Debug().Msgf("Disconnected from server Error: %s... reconnecting", e.Reason)
 	height, err := h.svc.Height(context.Background())
 	if err != nil{
 		h.OnDisconnect(c, e)
 		return
 	}
+	log.Debug().Msg("reconnected")
 	if h.synced{
-		c.URL = "wss://socket.whatsonchain.com/blockheaders"
+		c.SetURL("wss://socket.whatsonchain.com/blockheaders")
 		return
 	}
-	c.URL = fmt.Sprintf("%s%d", h.cfg.URL, height.Height)
+	c.SetURL(fmt.Sprintf("%s%d", h.cfg.URL, height.Height))
 }
 
 func (h *headersSocket) OnServerJoin(_ *centrifuge.Client, e centrifuge.ServerJoinEvent) {
-	log.Printf("Server-side join to channel %s: %s (%s)", e.Channel, e.User, e.Client)
+	log.Debug().Msgf("Server-side join to channel %s: %s (%s)", e.Channel, e.User, e.Client)
 }
 
 func (h *headersSocket) OnServerLeave(_ *centrifuge.Client, e centrifuge.ServerLeaveEvent) {
-	log.Printf("Server-side leave from channel %s: %s (%s)", e.Channel, e.User, e.Client)
+	log.Debug().Msgf("Server-side leave from channel %s: %s (%s)", e.Channel, e.User, e.Client)
 }
 
 func (h *headersSocket) OnServerPublish(c *centrifuge.Client, e centrifuge.ServerPublishEvent) {
 	go func() {
 		var resp *headers.BlockHeader
 		if err := json.Unmarshal(e.Data, &resp); err != nil {
-			log.Println(err.Error())
+			log.Err(err)
 		}
 		h.buffer.Add(resp)
 	}()

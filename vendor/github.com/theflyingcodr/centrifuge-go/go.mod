@@ -1,4 +1,4 @@
-module github.com/centrifugal/centrifuge-go
+module github.com/theflyingcodr/centrifuge-go
 
 go 1.13
 

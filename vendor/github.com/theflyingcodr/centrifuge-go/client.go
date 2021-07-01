@@ -42,7 +42,7 @@ type Client struct {
 	futureID            uint64
 	msgID               uint32
 	mu                  sync.RWMutex
-	URL                 string
+	url                 string
 	encoding            protocol.Type
 	config              Config
 	token               string
@@ -92,7 +92,7 @@ func New(u string, config Config) *Client {
 	}
 
 	c := &Client{
-		URL:               u,
+		url:               u,
 		config:            config,
 		status:            DISCONNECTED,
 		encoding:          encoding,
@@ -130,6 +130,13 @@ func (c *Client) SetToken(token string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.token = token
+}
+
+// SetURL allows to set URL to allow dynamic urls to be assigned to after a disconnect for example.
+func (c *Client) SetURL(url string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.url = url
 }
 
 // SetConnectData allows to set data to send in connect command.
@@ -733,7 +740,7 @@ func (c *Client) connectFromScratch(isReconnect bool, reconnectWaitCB func()) er
 		Header:            c.config.Header,
 	}
 
-	t, err := newWebsocketTransport(c.URL, c.encoding, wsConfig)
+	t, err := newWebsocketTransport(c.url, c.encoding, wsConfig)
 	if err != nil {
 		go c.handleDisconnect(&disconnect{Reason: "connect error", Reconnect: true})
 		reconnectWaitCB()

@@ -1,7 +1,7 @@
 v0.7.1
 ======
 
-* Fix atomic align on 32-bit [#49](https://github.com/centrifugal/centrifuge-go/pull/49)
+* Fix atomic align on 32-bit [#49](https://github.com/theflyingcodr/centrifuge-go/pull/49)
 
 v0.7.0
 ======
@@ -13,7 +13,7 @@ v0.7.0
 
 ```
 $ gorelease -base v0.6.5 -version v0.7.0
-github.com/centrifugal/centrifuge-go
+github.com/theflyingcodr/centrifuge-go
 ------------------------------------
 Incompatible changes:
 - (*Client).SetName: removed
@@ -33,7 +33,7 @@ v0.7.0 is a valid semantic version for this release.
 v0.6.5
 ======
 
-* One more fix for memory align on 32bit arch, see [#46](https://github.com/centrifugal/centrifuge-go/pull/46)
+* One more fix for memory align on 32bit arch, see [#46](https://github.com/theflyingcodr/centrifuge-go/pull/46)
 
 v0.6.4
 ======
@@ -43,12 +43,12 @@ v0.6.4
 v0.6.3
 ======
 
-* Fix memory align on 32bit arch, see [#40](https://github.com/centrifugal/centrifuge-go/pull/40)
+* Fix memory align on 32bit arch, see [#40](https://github.com/theflyingcodr/centrifuge-go/pull/40)
 
 v0.6.2
 ======
 
-* fix deadlock on a private channel resubscribe - see [#38](https://github.com/centrifugal/centrifuge-go/pull/38)
+* fix deadlock on a private channel resubscribe - see [#38](https://github.com/theflyingcodr/centrifuge-go/pull/38)
 
 v0.6.1
 ======
@@ -69,4 +69,4 @@ v0.6.0
 v0.5.2
 ======
 
-* `NamedRPC` method added - [#35](https://github.com/centrifugal/centrifuge-go/pull/35), thanks [@L11R](https://github.com/L11R)
+* `NamedRPC` method added - [#35](https://github.com/theflyingcodr/centrifuge-go/pull/35), thanks [@L11R](https://github.com/L11R)

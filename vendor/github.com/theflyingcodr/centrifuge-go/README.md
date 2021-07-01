@@ -1,4 +1,4 @@
-[![GoDoc](https://pkg.go.dev/badge/centrifugal/centrifuge-go)](https://pkg.go.dev/github.com/centrifugal/centrifuge-go)
+[![GoDoc](https://pkg.go.dev/badge/centrifugal/centrifuge-go)](https://pkg.go.dev/github.com/theflyingcodr/centrifuge-go)
 
 Websocket client for [Centrifuge](https://github.com/centrifugal/centrifuge) library and [Centrifugo](https://github.com/centrifugal/centrifugo) server.
 

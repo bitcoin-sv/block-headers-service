@@ -8,7 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/centrifugal/centrifuge-go"
+	"github.com/rs/zerolog"
+	"github.com/theflyingcodr/centrifuge-go"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/database/sqlite3"
@@ -42,6 +43,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to setup database: %s", err)
 	}
+	lvl, err := zerolog.ParseLevel(cfg.Logging.Level)
+	if err != nil{
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	} else{
+		zerolog.SetGlobalLevel(lvl)
+	}
+
 	// nolint:errcheck // dont care about error.
 	defer db.Close()
 	log.Println("db connection setup")

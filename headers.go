@@ -27,6 +27,8 @@ type HeaderArgs struct {
 	Blockhash string `param:"blockhash" db:"blockHash"`
 }
 
+// Height contains the current cached height as well as current blockchain height and
+// a check for us being in sync or not.
 type Height struct{
 	Height int `json:"height"`
 	NetworkNeight int `json:"networkHeight"`
@@ -50,6 +52,7 @@ type BlockheaderReader interface {
 	HeightReader
 }
 
+// HeightReader defines a contract for reading height data.
 type HeightReader interface {
 	// Height will return the current block height cached.
 	Height(ctx context.Context) (int, error)

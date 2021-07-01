@@ -13,6 +13,7 @@ type whatsonchain struct{
 	cli *http.Client
 }
 
+// NewWhatsOnChain will setup and return a whats on chain data client.
 func NewWhatsOnChain(cli *http.Client	) *whatsonchain{
 	return &whatsonchain{cli: cli}
 }
