@@ -45,6 +45,7 @@ func (h *headersPool) Start(){
 			t.Stop()
 			return
 		case <-t.C:
+
 			if !h.syncCompleted {
 				height, _ := h.svc.Height(context.Background())
 				if height.Synced{
@@ -57,11 +58,15 @@ func (h *headersPool) Start(){
 			if len(h.headers) == 0{
 				continue
 			}
+
 			ctx, cancelFn := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancelFn()
 			if err := h.svc.CreateBatch(ctx, h.ReadAll()); err != nil{
 				log.Println("failed to add batch " + err.Error())
 			}
+			height, _ := h.svc.Height(context.Background())
+			fmt.Println(fmt.Sprintf("syncing headers, now at header %d of %d",
+				height.Height + len(h.headers), height.NetworkNeight))
 		}
 	}
 }
@@ -150,7 +155,7 @@ func (h *headersSocket) OnConnect(_ *centrifuge.Client, e centrifuge.ConnectEven
 }
 
 func (h *headersSocket) OnError(_ *centrifuge.Client, e centrifuge.ErrorEvent) {
-	log.Printf("Socket Error: %s", e.Message)
+	// log.Printf("Socket Error: %s", e.Message)
 }
 
 
