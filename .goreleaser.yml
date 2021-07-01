@@ -45,6 +45,8 @@ dockers:
     image_templates:
       - "libsv/bitcoin-hc:latest"
       - "libsv/bitcoin-hc:{{ .Tag }}"
+    extra_files:
+      - data/sqlite/migrations/
 release:
   name_template: "Release v{{.Version}}"
 snapshot:
