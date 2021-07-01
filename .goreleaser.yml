@@ -31,6 +31,8 @@ checksum:
   name_template: checksums.txt
 dockers:
   -
+  binaries:
+    - http-server
     build_flag_templates:
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
