@@ -20,15 +20,17 @@ type headersPool struct{
 	headers []*headers.BlockHeader
 	rw sync.RWMutex
 	syncCompleted bool
+	sync chan<- bool
 	done chan bool
 }
 
-func NewHeadersPool( svc headers.BlockheaderService) *headersPool{
+func NewHeadersPool( svc headers.BlockheaderService, synced chan<- bool) *headersPool{
 	h := &headersPool{
 		svc:     svc,
 		headers: make([]*headers.BlockHeader,0),
 		rw:      sync.RWMutex{},
 		done:    make(chan bool),
+		sync: synced,
 	}
 	go h.Start()
 	return h
@@ -48,6 +50,7 @@ func (h *headersPool) Start(){
 				if height.Synced{
 					h.syncCompleted = true
 					fmt.Println("sync with network complete, headers all cached, watching for new blocks...")
+					h.sync<-true
 					h.done<-true
 				}
 			}
@@ -81,6 +84,7 @@ func (h *headersPool) Add(req *headers.BlockHeader){
 		h.headers = append(h.headers, req)
 		return
 	}
+	fmt.Println(fmt.Sprintf("new header received at height %d with hash %s", req.Height, req.Hash))
 	if err := h.svc.Create(context.Background(), *req);err != nil{
 		fmt.Println(err)
 	}
@@ -103,13 +107,32 @@ type headersSocket struct {
 	svc headers.BlockheaderService
 	cfg *config.WocConfig
 	buffer *headersPool
+	inSync chan bool
+	synced bool
 }
 
 // NewHeaders will setup a new socket service - used to sync with woc.
 // TODO - should this be a data layer?
 func NewHeaders(ws *centrifuge.Client, cfg *config.WocConfig, svc headers.BlockheaderService) *headersSocket {
-	h := &headersSocket{ws: ws, svc: svc, cfg: cfg,buffer: NewHeadersPool(svc)}
+	syncChan := make(chan bool)
+	h := &headersSocket{
+		ws: ws,
+		svc: svc,
+		cfg: cfg,
+		buffer: NewHeadersPool(svc,syncChan),
+	}
 	h.setup()
+	go func() {
+		for {
+			select {
+			case <-syncChan:
+				h.ws.URL = "wss://socket.whatsonchain.com/blockheaders"
+				h.ws.Connect()
+				h.synced = true
+				return
+			}
+		}
+	}()
 	return h
 }
 
@@ -134,8 +157,11 @@ func (h *headersSocket) OnError(_ *centrifuge.Client, e centrifuge.ErrorEvent) {
 func (h *headersSocket) OnDisconnect(c *centrifuge.Client, e centrifuge.DisconnectEvent) {
 	height, err := h.svc.Height(context.Background())
 	if err != nil{
-		fmt.Println(err)
 		h.OnDisconnect(c, e)
+		return
+	}
+	if h.synced{
+		c.URL = "wss://socket.whatsonchain.com/blockheaders"
 		return
 	}
 	c.URL = fmt.Sprintf("%s%d", h.cfg.URL, height.Height)
