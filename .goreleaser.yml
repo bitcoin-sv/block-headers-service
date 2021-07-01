@@ -1,19 +1,19 @@
-# This is an example .goreleaser.yml file with some sane defaults.
-# Make sure to check the documentation at http://goreleaser.com
 before:
   hooks:
     # You may remove this if you don't use go modules.
   #- go mod download
-builds:
-  -
-    id: http-server
-    main: ./cmd/http-server
-    env:
-      - CGO_ENABLED=1
-    goos:
-      - linux
-      - windows
-      - darwin
+build:
+  skip: false
+  env:
+    - CGO_ENABLED=0
+  goarch:
+    - amd64
+    - arm
+    - arm64
+  goos:
+    - linux
+    - windows
+    - darwin
 archives:
   - replacements:
       darwin: Darwin
@@ -21,6 +21,18 @@ archives:
       windows: Windows
       386: i386
       amd64: x86_64
+dockers:
+  -
+    image_templates:
+        - libsv/bitcoin-hc:latest
+        - libsv/bitcoin-hc:{{ .Tag }}
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--platform=linux/arm64"
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -31,3 +43,5 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+release:
+  name_template: "Release v{{.Version}}"
