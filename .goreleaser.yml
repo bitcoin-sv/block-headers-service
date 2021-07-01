@@ -9,6 +9,7 @@ archives:
 before:
   hooks: ~
 build:
+  binary: http-server
   env:
     - CGO_ENABLED=0
   goarch:
