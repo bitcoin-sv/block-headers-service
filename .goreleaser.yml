@@ -44,7 +44,6 @@ dockers:
     image_templates:
       - "libsv/bitcoin-hc:latest"
       - "libsv/bitcoin-hc:{{ .Tag }}"
-project: http-server
 release:
   name_template: "Release v{{.Version}}"
 snapshot:
