@@ -1,11 +1,15 @@
-project_name: http-server
+---
+archives:
+  -
+    replacements:
+      386: i386
+      amd64: x86_64
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
 before:
-  hooks:
-    # You may remove this if you don't use go modules.
-  #- go mod download
+  hooks: ~
 build:
-  main: ./cmd/http-server
-  skip: false
   env:
     - CGO_ENABLED=0
   goarch:
@@ -16,21 +20,19 @@ build:
     - linux
     - windows
     - darwin
-archives:
-  - replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: i386
-      amd64: x86_64
+  main: ./cmd/http-server
+  skip: false
+changelog:
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+  sort: asc
+checksum:
+  name_template: checksums.txt
 dockers:
   -
-    binaries:
-      http-server
-    image_templates:
-      - libsv/bitcoin-hc:latest
-      - libsv/bitcoin-hc:{{ .Tag }}
-    dockerfile: Dockerfile.releaser
+    binaries: http-server
     build_flag_templates:
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -38,15 +40,12 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--platform=linux/amd64"
-checksum:
-  name_template: 'checksums.txt'
-snapshot:
-  name_template: "{{ .Tag }}-next"
-changelog:
-  sort: asc
-  filters:
-    exclude:
-      - '^docs:'
-      - '^test:'
+    dockerfile: Dockerfile.releaser
+    image_templates:
+      - "libsv/bitcoin-hc:latest"
+      - "libsv/bitcoin-hc:{{ .Tag }}"
+project: http-server
 release:
   name_template: "Release v{{.Version}}"
+snapshot:
+  name_template: "{{ .Tag }}-next"
