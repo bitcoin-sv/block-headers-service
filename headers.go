@@ -29,6 +29,8 @@ type HeaderArgs struct {
 
 type Height struct{
 	Height int `json:"height"`
+	NetworkNeight int `json:"networkHeight"`
+	Synced bool `json:"synced"`
 }
 
 // BlockheaderService enforces validation of arguments and business rules.
@@ -37,6 +39,7 @@ type BlockheaderService interface {
 	Header(ctx context.Context, args HeaderArgs) (*BlockHeader, error)
 	// Create will store a block header in the db.
 	Create(ctx context.Context, req BlockHeader) error
+	CreateBatch(ctx context.Context, req []*BlockHeader) error
 	Height(ctx context.Context) (*Height, error)
 }
 
@@ -44,6 +47,10 @@ type BlockheaderService interface {
 type BlockheaderReader interface {
 	// Header will return a single header by block hash.
 	Header(ctx context.Context, args HeaderArgs) (*BlockHeader, error)
+	HeightReader
+}
+
+type HeightReader interface {
 	// Height will return the current block height cached.
 	Height(ctx context.Context) (int, error)
 }
@@ -52,4 +59,6 @@ type BlockheaderReader interface {
 type BlockheaderWriter interface {
 	// Create will add a blockheader to the data store.
 	Create(ctx context.Context, req BlockHeader) error
+	// CreateBatch will add a batch of records to the data store.
+	CreateBatch(ctx context.Context, req []*BlockHeader) error
 }

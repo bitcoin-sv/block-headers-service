@@ -42,7 +42,7 @@ type Client struct {
 	futureID            uint64
 	msgID               uint32
 	mu                  sync.RWMutex
-	url                 string
+	URL                 string
 	encoding            protocol.Type
 	config              Config
 	token               string
@@ -92,7 +92,7 @@ func New(u string, config Config) *Client {
 	}
 
 	c := &Client{
-		url:               u,
+		URL:               u,
 		config:            config,
 		status:            DISCONNECTED,
 		encoding:          encoding,
@@ -733,7 +733,7 @@ func (c *Client) connectFromScratch(isReconnect bool, reconnectWaitCB func()) er
 		Header:            c.config.Header,
 	}
 
-	t, err := newWebsocketTransport(c.url, c.encoding, wsConfig)
+	t, err := newWebsocketTransport(c.URL, c.encoding, wsConfig)
 	if err != nil {
 		go c.handleDisconnect(&disconnect{Reason: "connect error", Reconnect: true})
 		reconnectWaitCB()

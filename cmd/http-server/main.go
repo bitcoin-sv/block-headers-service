@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
+	"time"
 
 	"github.com/centrifugal/centrifuge-go"
 	"github.com/golang-migrate/migrate/v4"
@@ -16,12 +18,13 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/mattn/go-sqlite3"
 
-	"github.com/libsv/headers-client/config"
-	"github.com/libsv/headers-client/data/sqlite"
-	"github.com/libsv/headers-client/service"
-	httpTransport "github.com/libsv/headers-client/transports/http"
-	httpMiddleware "github.com/libsv/headers-client/transports/http/middleware"
-	"github.com/libsv/headers-client/transports/socket"
+	"github.com/libsv/bitcoin-hc/config"
+	hcHttp "github.com/libsv/bitcoin-hc/data/http"
+	"github.com/libsv/bitcoin-hc/data/sqlite"
+	"github.com/libsv/bitcoin-hc/service"
+	httpTransport "github.com/libsv/bitcoin-hc/transports/http"
+	httpMiddleware "github.com/libsv/bitcoin-hc/transports/http/middleware"
+	"github.com/libsv/bitcoin-hc/transports/socket"
 )
 
 const appname = "go-headers"
@@ -77,20 +80,24 @@ func main() {
 	e.HTTPErrorHandler = httpMiddleware.ErrorHandler
 
 	headerStore := sqlite.NewHeadersDb(db)
-	headerService := service.NewHeadersService(headerStore, headerStore)
+	headerService := service.NewHeadersService(headerStore, headerStore, hcHttp.NewWhatsOnChain(&http.Client{
+		Timeout: time.Second*30,
+	}))
 	httpTransport.NewHeader(headerService).Routes(g)
 	// TODO - we'll need to read our header height from the and then set it.
 	height, err := headerStore.Height(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(fmt.Sprintf("%s%d", cfg.Woc.URL, height))
-	c := centrifuge.New(fmt.Sprintf("%s%d", cfg.Woc.URL, height), centrifuge.DefaultConfig())
-	_ = socket.NewHeaders(c, cfg.Woc, headerService)
+	configWs := centrifuge.DefaultConfig()
+	c := centrifuge.New(fmt.Sprintf("%s%d", cfg.Woc.URL, height), configWs)
 	defer c.Close() // nolint:errcheck // this is why
 	if err := c.Connect(); err != nil {
 		log.Fatal(err)
 	}
+	headerSocket := socket.NewHeaders(c, cfg.Woc, headerService)
+	defer headerSocket.Close()
 
 	e.Logger.Fatal(e.Start(cfg.Server.Port))
+
 }

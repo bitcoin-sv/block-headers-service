@@ -9,7 +9,7 @@ services:
     ports:
       - "8442:8442"
     environment:
-      - DB_DSN=file:/data/blockheaders.db?cache=shared&_foreign_keys=true;
+      - DB_DSN=file:/data/blockheaders.db?_foreign_keys=true&pooled=true;
       - DB_SCHEMA_PATH=/migrations
     restart: unless-stopped
     volumes:

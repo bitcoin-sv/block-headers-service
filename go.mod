@@ -1,4 +1,4 @@
-module github.com/libsv/headers-client
+module github.com/libsv/bitcoin-hc
 
 go 1.15
 

@@ -6,11 +6,11 @@ build/
 dist/
 data/blockheaders.db
 data/blockheaders.db-journal
-cover.go
-cover.out
 
-wallet.db
+
+*.db*
 main
 docker-compose.dev.yml
+cover.go
 cover.out
 cover.html

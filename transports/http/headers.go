@@ -6,7 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 
-	"github.com/libsv/headers-client"
+	"github.com/libsv/bitcoin-hc"
 )
 
 type header struct {

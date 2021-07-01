@@ -56,7 +56,7 @@ func (c *Config) WithLog() *Config {
 // WithDb sets up and returns database configuration.
 func (c *Config) WithDb() *Config {
 	viper.SetDefault(EnvDb, "sqlite")
-	viper.SetDefault(EnvDbDsn, "file:data/blockheaders.db?cache=shared&_foreign_keys=true;")
+	viper.SetDefault(EnvDbDsn, "file:data/blockheaders.db?_foreign_keys=true&pooling=true;")
 	viper.SetDefault(EnvDbSchema,"data/sqlite/migrations")
 	c.Db = &Db{
 		Type: viper.GetString(EnvDb),

@@ -9,7 +9,7 @@ import (
 
 	lathos "github.com/theflyingcodr/lathos/errs"
 
-	"github.com/libsv/headers-client"
+	"github.com/libsv/bitcoin-hc"
 )
 
 const (
@@ -51,6 +51,30 @@ func (h *headersDb) Create(ctx context.Context, req headers.BlockHeader) error {
 	if _, err := tx.NamedExecContext(ctx, sqlInsertBlockHeader, req); err != nil {
 		return errors.Wrap(err, "failed to insert header")
 	}
+	return errors.Wrap(tx.Commit(), "failed to commit tx")
+}
+
+// CreateBatch will add a batch of records to the data store.
+func (h *headersDb) CreateBatch(ctx context.Context, req []*headers.BlockHeader) error{
+	tx, err := h.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+	for i := 0; i < len(req); i+=1000{
+		if i+1000 > len(req){
+			if _, err = tx.NamedExecContext(ctx, sqlInsertBlockHeader, req[i:]);err != nil{
+				return errors.Wrap(err, "failed to bulk insert headers")
+			}
+			break
+		}
+		if _, err = tx.NamedExecContext(ctx, sqlInsertBlockHeader, req[i:i+100]);err != nil{
+			return errors.Wrap(err, "failed to bulk insert headers")
+		}
+	}
+
 	return errors.Wrap(tx.Commit(), "failed to commit tx")
 }
 

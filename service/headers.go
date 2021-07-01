@@ -5,17 +5,18 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/libsv/headers-client"
+	"github.com/libsv/bitcoin-hc"
 )
 
 type headersService struct {
 	hRdr  headers.BlockheaderReader
 	hWrtr headers.BlockheaderWriter
+	networkHeight headers.HeightReader
 }
 
 // NewHeadersService will setup and return a new headers service.
-func NewHeadersService(hRdr headers.BlockheaderReader, hWrtr headers.BlockheaderWriter) *headersService {
-	return &headersService{hRdr: hRdr, hWrtr: hWrtr}
+func NewHeadersService(hRdr headers.BlockheaderReader, hWrtr headers.BlockheaderWriter,networkHeight headers.HeightReader) *headersService {
+	return &headersService{hRdr: hRdr, hWrtr: hWrtr,networkHeight:networkHeight}
 }
 
 // Header will return a single header by block hash.
@@ -36,11 +37,20 @@ func (h *headersService) Create(ctx context.Context, req headers.BlockHeader) er
 	return nil
 }
 
+// CreateBatch will batch insert headers.
+func (h *headersService) CreateBatch(ctx context.Context, req []*headers.BlockHeader) error{
+	return errors.Wrap(h.hWrtr.CreateBatch(ctx, req), "failed to insert blockheaders")
+}
+
 // Height will return the current block height stored in the service data store.
 func (h *headersService) Height(ctx context.Context) (*headers.Height,error){
 	height, err := h.hRdr.Height(ctx)
 	if err != nil{
 		return nil, errors.Wrap(err, "failed to get current stored height")
 	}
-	return &headers.Height{Height: height}, nil
+	networkHeight, err := h.networkHeight.Height(ctx)
+	if err != nil{
+		return nil, errors.Wrap(err, "failed to get current network height")
+	}
+	return &headers.Height{Height: height,NetworkNeight: networkHeight, Synced: height == networkHeight}, nil
 }
