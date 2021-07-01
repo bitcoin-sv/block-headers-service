@@ -33,17 +33,17 @@ dockers:
   -
   binaries:
     - http-server
-    build_flag_templates:
-      - "--pull"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--platform=linux/amd64"
-    dockerfile: Dockerfile.releaser
-    image_templates:
-      - "libsv/bitcoin-hc:latest"
-      - "libsv/bitcoin-hc:{{ .Tag }}"
+  build_flag_templates:
+    - "--pull"
+    - "--label=org.opencontainers.image.created={{.Date}}"
+    - "--label=org.opencontainers.image.title={{.ProjectName}}"
+    - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+    - "--label=org.opencontainers.image.version={{.Version}}"
+    - "--platform=linux/amd64"
+  dockerfile: Dockerfile.releaser
+  image_templates:
+    - "libsv/bitcoin-hc:latest"
+    - "libsv/bitcoin-hc:{{ .Tag }}"
 release:
   name_template: "Release v{{.Version}}"
 snapshot:
