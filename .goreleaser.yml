@@ -3,6 +3,7 @@ before:
     # You may remove this if you don't use go modules.
   #- go mod download
 build:
+  main: ./cmd/http-server
   skip: false
   env:
     - CGO_ENABLED=0
