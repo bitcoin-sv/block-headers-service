@@ -27,6 +27,7 @@ dockers:
     image_templates:
         - libsv/bitcoin-hc:latest
         - libsv/bitcoin-hc:{{ .Tag }}
+    dockerfile: Dockerfile
     build_flag_templates:
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
