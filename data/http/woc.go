@@ -27,7 +27,7 @@ func (w *whatsonchain) Height(ctx context.Context) (int, error){
 	if err != nil{
 		return 0, errors.Wrap(err, "failed to send request when sending Header request to woc")
 	}
-	defer resp.Body.Close() // nolint
+	defer resp.Body.Close() // nolint:errcheck // don't care
 	if resp.StatusCode != http.StatusOK{
 		body, _ := ioutil.ReadAll(resp.Body)
 		return 0, errors.Wrapf(err,"unexpected error received from whatsonchain \n statuscode: %d \n body:%s", resp.StatusCode, body )

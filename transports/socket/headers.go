@@ -100,9 +100,7 @@ func (h *headersBuffer) ReadAll() []*headers.BlockHeader{
 	h.rw.Lock()
 	defer h.rw.Unlock()
 	bh := make([]*headers.BlockHeader,0, len(h.headers))
-	for _, hdr := range h.headers{
-		bh = append(bh, hdr)
-	}
+	bh = append(bh, h.headers...)
 	h.headers =  make([]*headers.BlockHeader,0)
 	return bh
 }
@@ -128,14 +126,11 @@ func NewHeaders(ws *centrifuge.Client, cfg *config.WocConfig, svc headers.Blockh
 	}
 	h.setup()
 	go func() {
-		for {
-			select {
-			case <-syncChan:
-				h.ws.SetURL("wss://socket.whatsonchain.com/blockheaders")
-				_ = h.ws.Connect()
-				h.synced = true
-				return
-			}
+		for range syncChan{
+			h.ws.SetURL("wss://socket.whatsonchain.com/blockheaders")
+			_ = h.ws.Connect()
+			h.synced = true
+			return
 		}
 	}()
 	return h
