@@ -1,3 +1,4 @@
+project_name: http-server
 before:
   hooks:
     # You may remove this if you don't use go modules.
@@ -24,10 +25,12 @@ archives:
       amd64: x86_64
 dockers:
   -
+    binaries:
+      http-server
     image_templates:
-        - libsv/bitcoin-hc:latest
-        - libsv/bitcoin-hc:{{ .Tag }}
-    dockerfile: Dockerfile
+      - libsv/bitcoin-hc:latest
+      - libsv/bitcoin-hc:{{ .Tag }}
+    dockerfile: Dockerfile.releaser
     build_flag_templates:
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
