@@ -28,13 +28,14 @@ dockers:
         - libsv/bitcoin-hc:latest
         - libsv/bitcoin-hc:{{ .Tag }}
     dockerfile: Dockerfile
+    use_buildx: true
     build_flag_templates:
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--platform=linux/arm64"
+      - "--platform=linux/amd64"
 checksum:
   name_template: 'checksums.txt'
 snapshot:
