@@ -11,7 +11,7 @@ before:
 build:
   binary: http-server
   env:
-    - CGO_ENABLED=0
+    - CGO_ENABLED=1
   goarch:
     - amd64
     - arm

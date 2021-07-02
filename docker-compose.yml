@@ -3,9 +3,7 @@ version: '3.7'
 services:
   headers-client:
     container_name: headers-client
-    image: headers-client.service
-    build:
-      context: .
+    image: libsv/bitcoin-hc:latest
     ports:
       - "8442:8442"
     environment:
