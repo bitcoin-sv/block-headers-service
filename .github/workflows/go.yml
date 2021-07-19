@@ -58,6 +58,11 @@ jobs:
       -
         uses: actions/checkout@v2
       -
+        name: OSXCross for CGO Support
+        run: |
+          mkdir ../../osxcross
+          git clone https://github.com/plentico/osxcross-target.git ../../osxcross/target
+      -
         name: release
         uses: goreleaser/goreleaser-action@v2
         if: startsWith(github.ref, 'refs/tags/')

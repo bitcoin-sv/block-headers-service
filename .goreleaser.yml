@@ -14,12 +14,8 @@ build:
     - CGO_ENABLED=1
   goarch:
     - amd64
-    - arm
-    - arm64
   goos:
     - linux
-    - windows
-    - darwin
   main: ./cmd/http-server
   skip: false
 changelog:
@@ -32,7 +28,7 @@ checksum:
   name_template: checksums.txt
 dockers:
   -
-    binaries:
+    ids:
       - http-server
     build_flag_templates:
       - "--pull"
