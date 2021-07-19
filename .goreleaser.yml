@@ -1,3 +1,4 @@
+project_name: headers-client
 archives:
   -
     replacements:
@@ -9,7 +10,6 @@ archives:
 before:
   hooks: ~
 build:
-  binary: http-server
   env:
     - CGO_ENABLED=1
   goarch:
@@ -29,7 +29,7 @@ checksum:
 dockers:
   -
     ids:
-      - http-server
+      - headers-client
     build_flag_templates:
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"

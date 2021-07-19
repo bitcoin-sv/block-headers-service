@@ -14,7 +14,7 @@ RUN adduser \
 
 FROM bitnami/minideb:buster
 
-ADD http-server /bin
+ADD headers-client /bin
 ADD data/sqlite/migrations/ /migrations
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/group /etc/group
@@ -23,4 +23,4 @@ USER appuser:appuser
 
 EXPOSE 8442
 
-CMD ["http-server"]
+CMD ["headers-client"]
