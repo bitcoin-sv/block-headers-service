@@ -36,9 +36,9 @@ Returns the current cached block height as well as the current live network bloc
 
 ```json
 {
-    height: 567873,
-    networkHeight: 696617,
-    synced: false
+  "height": 696617,
+  "networkHeight": 696617,
+  "synced": true
 }
 ```
 
@@ -48,19 +48,19 @@ Returns block information when provided with a blockhash.
 
 ```json
 {
-    hash: "0000000007e95100bbaf9c467b1416c91ee6c8942d78db630d8d7c4c49eaa717",
-    versionHex: "00000001",
-    merkleroot: "d93d2317ab0a1714e785ca22fe6f906fbafa3242bba251d8bc3a4a057475bec4",
-    bits: "1d00ffff",
-    chainwork: "0000000000000000000000000000000000000000000000000000100110011001",
-    previousblockhash: "0000000066ca066a388fea7b34b7ff1e0e6f87f97be2a1eb82ed574182664fd4",
-    nextblockhash: "00000000860819695ff009f818bbceefa24da888aad021e8a2701c614fa5686c",
-    confirmations: 689958,
-    height: 4096,
-    mediantime: 1234507372,
-    difficulty: 1,
-    version: 1,
-    time: 1234509841,
-    nonce: 3594350374
+  "hash": "0000000007e95100bbaf9c467b1416c91ee6c8942d78db630d8d7c4c49eaa717",
+  "versionHex": "00000001",
+  "merkleroot": "d93d2317ab0a1714e785ca22fe6f906fbafa3242bba251d8bc3a4a057475bec4",
+  "bits": "1d00ffff",
+  "chainwork": "0000000000000000000000000000000000000000000000000000100110011001",
+  "previousblockhash": "0000000066ca066a388fea7b34b7ff1e0e6f87f97be2a1eb82ed574182664fd4",
+  "nextblockhash": "00000000860819695ff009f818bbceefa24da888aad021e8a2701c614fa5686c",
+  "confirmations": 689958,
+  "height": 4096,
+  "mediantime": 1234507372,
+  "difficulty": 1,
+  "version": 1,
+  "time": 1234509841,
+  "nonce": 3594350374
 }
 ```
