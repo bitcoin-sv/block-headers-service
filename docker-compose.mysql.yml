@@ -1,0 +1,35 @@
+version: '3.7'
+
+services:
+  headers-client:
+    environment:
+      - DB_DSN=root:dev@tcp(hc_mysql:3306)/spvheaders
+      - DB_SCHEMA_PATH=/migrations
+      - DB_TYPE=mysql
+    depends_on:
+      hc_mysql:
+        condition: service_started
+
+  hc_mysql:
+    container_name: hc_mysql
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      interval: 10s
+      retries: 20
+      test: "echo 'SELECT count(*) FROM spvheaders.blockheaders' | mysql --silent -u root --password=dev"
+    environment:
+      MYSQL_DATABASE: spvheaders
+      MYSQL_ROOT_PASSWORD: dev
+    cap_add:
+      - SYS_NICE
+    networks:
+      - headers-client-network
+    ports:
+      - "3306:3306"
+
+volumes:
+  mysql-data:

@@ -7,7 +7,7 @@ import (
 // BlockHeader defines a single block header, used in SPV validations.
 type BlockHeader struct {
 	Hash              string  `json:"hash" db:"hash"`
-	Versionhex        string  `json:"versionHex" db:"versionHex"`
+	Versionhex        string  `json:"versionHex" db:"versionhex"`
 	Merkleroot        string  `json:"merkleroot" db:"merkleroot"`
 	Bits              string  `json:"bits" db:"bits"`
 	Chainwork         string  `json:"chainwork" db:"chainwork"`
@@ -29,10 +29,10 @@ type HeaderArgs struct {
 
 // Height contains the current cached height as well as current blockchain height and
 // a check for us being in sync or not.
-type Height struct{
-	Height int `json:"height"`
-	NetworkNeight int `json:"networkHeight"`
-	Synced bool `json:"synced"`
+type Height struct {
+	Height        int  `json:"height"`
+	NetworkNeight int  `json:"networkHeight"`
+	Synced        bool `json:"synced"`
 }
 
 // BlockheaderService enforces validation of arguments and business rules.

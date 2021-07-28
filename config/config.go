@@ -2,7 +2,10 @@ package config
 
 import (
 	"fmt"
+	"regexp"
 	"time"
+
+	validator "github.com/theflyingcodr/govalidator"
 )
 
 // Environment variable constants.
@@ -19,6 +22,7 @@ const (
 	EnvDb          = "db.type"
 	EnvDbSchema    = "db.schema.path"
 	EnvDbDsn       = "db.dsn"
+	EnvDbMigrate   = "db.migrate"
 	EnvWocURL      = "woc.url"
 
 	LogDebug = "debug"
@@ -34,6 +38,16 @@ type Config struct {
 	Deployment *Deployment
 	Db         *Db
 	Woc        *WocConfig
+}
+
+// Validate will check config values are valid and return a list of failures
+// if any have been found.
+func (c *Config) Validate() error {
+	vl := validator.New()
+	if c.Db != nil {
+		vl = vl.Validate("db.type", validator.MatchString(string(c.Db.Type), reDbType))
+	}
+	return vl.Err()
 }
 
 // Deployment contains information relating to the current
@@ -69,11 +83,22 @@ type Server struct {
 	Hostname string
 }
 
+var reDbType = regexp.MustCompile(`sqlite|mysql|postgres`)
+
+type DbType string
+
+const (
+	DBSqlite   DbType = "sqlite"
+	DBMySql    DbType = "mysql"
+	DBPostgres DbType = "postgres"
+)
+
 // Db contains database information.
 type Db struct {
-	Type       string
+	Type       DbType
 	SchemaPath string
 	Dsn        string
+	MigrateDb  bool
 }
 
 // WocConfig contains params for connecting to whatsOnChain.

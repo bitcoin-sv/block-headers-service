@@ -12,3 +12,9 @@ services:
     restart: unless-stopped
     volumes:
       - ~/data/headers-client:/data
+    networks:
+      - headers-client-network
+
+networks:
+  headers-client-network:
+    name: headers-client-network

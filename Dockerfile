@@ -1,4 +1,4 @@
-FROM golang:1.16.1-buster as builder
+FROM golang:1.16.6-buster as builder
 
 WORKDIR /app
 COPY . .
@@ -23,7 +23,7 @@ COPY --from=builder /app/http-server /bin/
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/group /etc/group
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-COPY --from=builder /app/data/sqlite/migrations/ /migrations
+COPY --from=builder /app/data/sql/migrations/ /migrations
 USER appuser:appuser
 
 EXPOSE 8442

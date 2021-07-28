@@ -2,26 +2,23 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
 
-	"github.com/rs/zerolog"
-	"github.com/theflyingcodr/centrifuge-go"
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/rs/zerolog"
+	"github.com/theflyingcodr/centrifuge-go"
 
 	"github.com/libsv/bitcoin-hc/config"
+	"github.com/libsv/bitcoin-hc/config/databases"
 	hcHttp "github.com/libsv/bitcoin-hc/data/http"
-	"github.com/libsv/bitcoin-hc/data/sqlite"
+	"github.com/libsv/bitcoin-hc/data/sql"
 	"github.com/libsv/bitcoin-hc/service"
 	httpTransport "github.com/libsv/bitcoin-hc/transports/http"
 	httpMiddleware "github.com/libsv/bitcoin-hc/transports/http/middleware"
@@ -38,41 +35,24 @@ func main() {
 		WithDeployment(appname).
 		WithLog().
 		WithWoc()
-	log.Println("setting up db connection")
-	db, err := sqlx.Open("sqlite3", cfg.Db.Dsn)
-	if err != nil {
-		log.Fatalf("failed to setup database: %s", err)
+	if err := cfg.Validate(); err != nil {
+		log.Fatalf("%s", err)
 	}
 	lvl, err := zerolog.ParseLevel(cfg.Logging.Level)
-	if err != nil{
+	if err != nil {
+		log.Println(err)
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	} else{
+	} else {
 		zerolog.SetGlobalLevel(lvl)
 	}
 
-	// nolint:errcheck // dont care about error.
-	defer db.Close()
-	log.Println("db connection setup")
-
-	log.Println("migrating database")
-	driver, err := sqlite3.WithInstance(db.DB, &sqlite3.Config{})
-	if err != nil {
-		log.Fatalf("creating sqlite3 db driver failed %s", err)
-	}
-	m, err := migrate.NewWithDatabaseInstance(
-		fmt.Sprintf("file://%s", cfg.Db.SchemaPath), "sqlite3",
-		driver)
+	log.Printf("setting up %s db connection \n", cfg.Db.Type)
+	db, err := databases.NewDbSetup().SetupDb(cfg.Db)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	if err := m.Up(); err != nil {
-		if !errors.Is(err, migrate.ErrNoChange) {
-			log.Fatal(err)
-		}
-
-	}
-	log.Println("migrating database completed")
+	defer db.Close()
+	log.Println("db connection setup")
 
 	e := echo.New()
 	e.HideBanner = true
@@ -87,9 +67,9 @@ func main() {
 	}))
 	e.HTTPErrorHandler = httpMiddleware.ErrorHandler
 
-	headerStore := sqlite.NewHeadersDb(db)
+	headerStore := sql.NewHeadersDb(db, cfg.Db.Type)
 	headerService := service.NewHeadersService(headerStore, headerStore, hcHttp.NewWhatsOnChain(&http.Client{
-		Timeout: time.Second*30,
+		Timeout: time.Second * 30,
 	}))
 	httpTransport.NewHeader(headerService).Routes(g)
 	// TODO - we'll need to read our header height from the and then set it.

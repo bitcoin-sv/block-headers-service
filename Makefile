@@ -33,7 +33,7 @@ go-doc-linux:
 	godoc -http=:6060
 
 build-image:
-	@docker-compose -f docker-compose.yml -f docker-compose.build.yml build
+	@docker-compose -f docker-compose.build.yml build --no-cache
 
 run-compose:
 	@docker-compose up
@@ -46,6 +46,18 @@ fresh-compose:
 
 stop-compose:
 	@docker-compose down
+
+run-compose-mysql:
+	@docker-compose -f docker-compose.yml -f docker-compose.mysql.yml up
+
+compose-local-mysql:
+	@docker-compose -f docker-compose.yml -f docker-compose.local.yml -f docker-compose.mysql.yml up
+
+compose-local-postgres:
+	@docker-compose -f docker-compose.yml -f docker-compose.local.yml -f docker-compose.postgres.yml up
+
+run-compose-postgres:
+	@docker-compose -f docker-compose.yml -f docker-compose.postgres.yml up
 
 vendor-deps:
 	@go mod tidy && go mod vendor

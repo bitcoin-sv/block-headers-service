@@ -1,0 +1,5 @@
+version: '3.7'
+
+services:
+  headers-client:
+    image: headers-client.service
