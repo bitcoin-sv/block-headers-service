@@ -7,6 +7,8 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	"github.com/jmoiron/sqlx"
+
+	// used to import the sqlite drivers.
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
 

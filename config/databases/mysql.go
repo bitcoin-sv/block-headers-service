@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"log"
 
+	// used to import the mysql drivers.
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/mysql"
-	_ "github.com/golang-migrate/migrate/v4/database/mysql"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 

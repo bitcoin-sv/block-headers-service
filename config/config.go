@@ -85,8 +85,10 @@ type Server struct {
 
 var reDbType = regexp.MustCompile(`sqlite|mysql|postgres`)
 
+// DbType is used to restrict the dbs we can support.
 type DbType string
 
+// Supported database types.
 const (
 	DBSqlite   DbType = "sqlite"
 	DBMySql    DbType = "mysql"
