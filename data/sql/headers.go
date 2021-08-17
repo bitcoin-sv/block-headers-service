@@ -34,7 +34,7 @@ const (
 	WHERE hash = ?
 	`
 
-	sqlHeighestBlock = `
+	sqlHighestBlock = `
 	SELECT COALESCE(max(height),0) as height
 	FROM blockheaders
 	`
@@ -118,7 +118,7 @@ func (h *headersDb) Header(ctx context.Context, args headers.HeaderArgs) (*heade
 // Height will return the current highest block height we have stored in the db.
 func (h *headersDb) Height(ctx context.Context) (int, error) {
 	var height int
-	if err := h.db.GetContext(ctx, &height, sqlHeighestBlock); err != nil {
+	if err := h.db.GetContext(ctx, &height, sqlHighestBlock); err != nil {
 		return 0, errors.Wrapf(err, "failed to get current block height from cache")
 	}
 	return height, nil

@@ -2,6 +2,10 @@ package headers
 
 import (
 	"context"
+
+	"github.com/libsv/go-bc"
+	"github.com/pkg/errors"
+	validator "github.com/theflyingcodr/govalidator"
 )
 
 // BlockHeader defines a single block header, used in SPV validations.
@@ -13,13 +17,13 @@ type BlockHeader struct {
 	Chainwork         string  `json:"chainwork" db:"chainwork"`
 	Previousblockhash string  `json:"previousblockhash" db:"previousblockhash"`
 	Nextblockhash     string  `json:"nextblockhash" db:"nextblockhash"`
-	Confirmations     int     `json:"confirmations" db:"confirmations"`
-	Height            int     `json:"height" db:"height"`
-	Mediantime        int     `json:"mediantime" db:"mediantime"`
+	Confirmations     uint64  `json:"confirmations" db:"confirmations"`
+	Height            uint64  `json:"height" db:"height"`
+	Mediantime        uint64  `json:"mediantime" db:"mediantime"`
 	Difficulty        float64 `json:"difficulty" db:"difficulty"`
-	Version           uint32  `json:"version" db:"version"`
-	Time              uint32  `json:"time" db:"time"`
-	Nonce             uint32  `json:"nonce" db:"nonce"`
+	Version           uint64  `json:"version" db:"version"`
+	Time              uint64  `json:"time" db:"time"`
+	Nonce             uint64  `json:"nonce" db:"nonce"`
 }
 
 // HeaderArgs are sued to retrieve a single block header.
@@ -27,11 +31,21 @@ type HeaderArgs struct {
 	Blockhash string `param:"blockhash" db:"blockHash"`
 }
 
+// Validate will ensure HeaderArgs is valid.
+func (h *HeaderArgs) Validate() error {
+	return validator.New().Validate("blockhash", func() error {
+		if _, err := bc.EncodeBlockHeaderStr(h.Blockhash); err != nil {
+			return errors.Wrap(err, "block hash is invalid")
+		}
+		return nil
+	}).Err()
+}
+
 // Height contains the current cached height as well as current blockchain height and
 // a check for us being in sync or not.
 type Height struct {
 	Height        int  `json:"height"`
-	NetworkNeight int  `json:"networkHeight"`
+	NetworkHeight int  `json:"networkHeight"`
 	Synced        bool `json:"synced"`
 }
 

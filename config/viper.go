@@ -16,8 +16,8 @@ func NewViperConfig(appname string) *Config {
 
 // WithServer will setup the web server configuration if required.
 func (c *Config) WithServer() *Config {
-	viper.SetDefault(EnvServerPort, ":8442")
-	viper.SetDefault(EnvServerHost, "localhost:8442")
+	viper.SetDefault(EnvServerPort, ":8443")
+	viper.SetDefault(EnvServerHost, "localhost:8443")
 	c.Server = &Server{
 		Port:     viper.GetString(EnvServerPort),
 		Hostname: viper.GetString(EnvServerHost),
@@ -73,6 +73,27 @@ func (c *Config) WithWoc() *Config {
 	viper.SetDefault(EnvWocURL, "wss://socket.whatsonchain.com/blockheaders/history?from=")
 	c.Woc = &WocConfig{
 		URL: viper.GetString(EnvWocURL),
+	}
+	return c
+}
+
+// WithBitcoinNode sets up and returns bitcoin node configuration.
+func (c *Config) WithBitcoinNode() *Config {
+	c.Node = &BitcoinNode{
+		Host:     viper.GetString(EnvNodeHost),
+		Port:     viper.GetInt(EnvNodePort),
+		Username: viper.GetString(EnvNodeUser),
+		Password: viper.GetString(EnvNodePassword),
+		UseSSL:   viper.GetBool(EnvNodeSSL),
+	}
+	return c
+}
+
+// WithHeaderClient sets up the header client with the type of
+// syncing we wish to do.
+func (c *Config) WithHeaderClient() *Config {
+	c.Client = &HeaderClient{
+		SyncType: viper.GetString(EnvHeaderType),
 	}
 	return c
 }

@@ -72,7 +72,7 @@ func (h *headersBuffer) Start() {
 			}
 			height, _ := h.svc.Height(context.Background())
 			log.Info().Msgf("syncing headers, now at header %d of %d",
-				height.Height+len(h.headers), height.NetworkNeight)
+				height.Height+len(h.headers), height.NetworkHeight)
 		}
 	}
 }

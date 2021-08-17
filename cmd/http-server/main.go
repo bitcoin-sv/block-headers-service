@@ -17,24 +17,31 @@ import (
 
 	"github.com/libsv/bitcoin-hc/config"
 	"github.com/libsv/bitcoin-hc/config/databases"
+	"github.com/libsv/bitcoin-hc/config/zmq"
 	hcHttp "github.com/libsv/bitcoin-hc/data/http"
+	"github.com/libsv/bitcoin-hc/data/node"
 	"github.com/libsv/bitcoin-hc/data/sql"
 	"github.com/libsv/bitcoin-hc/service"
 	httpTransport "github.com/libsv/bitcoin-hc/transports/http"
 	httpMiddleware "github.com/libsv/bitcoin-hc/transports/http/middleware"
 	"github.com/libsv/bitcoin-hc/transports/socket"
+	zmqTransport "github.com/libsv/bitcoin-hc/transports/zmq"
 )
 
 const appname = "go-headers"
 
 func main() {
 	log.Printf("starting %s\n", appname)
+	config.SetDefaults()
 	cfg := config.NewViperConfig(appname).
 		WithServer().
 		WithDb().
 		WithDeployment(appname).
 		WithLog().
-		WithWoc()
+		WithBitcoinNode().
+		WithWoc().
+		WithHeaderClient()
+
 	if err := cfg.Validate(); err != nil {
 		log.Fatalf("%s", err)
 	}
@@ -74,20 +81,38 @@ func main() {
 		Timeout: time.Second * 30,
 	}))
 	httpTransport.NewHeader(headerService).Routes(g)
-	// TODO - we'll need to read our header height from the and then set it.
 	height, err := headerStore.Height(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
-	configWs := centrifuge.DefaultConfig()
-	c := centrifuge.New(fmt.Sprintf("%s%d", cfg.Woc.URL, height), configWs)
-	defer c.Close() // nolint:errcheck // this is why
-	if err := c.Connect(); err != nil {
-		log.Fatal(err)
+	switch cfg.Client.SyncType {
+	case config.SyncWoc:
+		configWs := centrifuge.DefaultConfig()
+		c := centrifuge.New(fmt.Sprintf("%s%d", cfg.Woc.URL, height), configWs)
+		defer c.Close() // nolint:errcheck // this is why
+		if err := c.Connect(); err != nil {
+			log.Fatal(err)
+		}
+		headerSocket := socket.NewHeaders(c, cfg.Woc, headerService)
+		defer headerSocket.Close()
+	case config.SyncNode:
+		zmqSub, nodeClient := zmq.Setup(cfg.Node)
+		t := zmqTransport.NewHeadersHandler(headerService)
+		t.Register(zmqSub)
+		go t.Header()
+		defer t.Close(zmqSub)
+		syncSvc := service.NewSyncService(node.NewBlock(nodeClient), headerStore, headerStore)
+		go func() {
+			fmt.Println("Starting sync of historic headers from node")
+			for err := syncSvc.Sync(context.Background()); err != nil; {
+				log.Println(err)
+				time.Sleep(time.Second * 5)
+			}
+			fmt.Println("Sync completed")
+		}()
+	default:
+		log.Fatalf("unknown sync type received %s", cfg.Client.SyncType)
 	}
-	headerSocket := socket.NewHeaders(c, cfg.Woc, headerService)
-	defer headerSocket.Close()
-
+	// run echo and wait for cancellation
 	e.Logger.Fatal(e.Start(cfg.Server.Port))
-
 }
