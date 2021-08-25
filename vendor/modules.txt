@@ -39,7 +39,7 @@ github.com/golang-migrate/migrate/v4/internal/url
 github.com/golang-migrate/migrate/v4/source
 github.com/golang-migrate/migrate/v4/source/file
 github.com/golang-migrate/migrate/v4/source/httpfs
-# github.com/google/uuid v1.2.0
+# github.com/google/uuid v1.3.0
 github.com/google/uuid
 # github.com/gorilla/websocket v1.4.2
 github.com/gorilla/websocket
@@ -134,7 +134,7 @@ github.com/theflyingcodr/centrifuge-go
 # github.com/theflyingcodr/govalidator v0.0.2
 ## explicit
 github.com/theflyingcodr/govalidator
-# github.com/theflyingcodr/lathos v0.0.1
+# github.com/theflyingcodr/lathos v0.0.3
 ## explicit
 github.com/theflyingcodr/lathos
 github.com/theflyingcodr/lathos/errs

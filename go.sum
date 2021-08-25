@@ -222,8 +222,8 @@ github.com/google/pprof v0.0.0-20210226084205-cbba55b83ad5/go.mod h1:kpwsk12EmLe
 github.com/google/renameio v0.1.0/go.mod h1:KWCgfxg9yswjAJkECMjeO8J8rahYeXnNhOm40UhjYkI=
 github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/google/uuid v1.2.0 h1:qJYtXnJRWmpe7m/3XlyhrsLrEURqHRM2kxzoxXqyUDs=
-github.com/google/uuid v1.2.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
+github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/googleapis/gax-go/v2 v2.0.4/go.mod h1:0Wqv26UfaUD9n4G6kQubkQ+KchISgw+vpHVxEJEs9eg=
 github.com/googleapis/gax-go/v2 v2.0.5/go.mod h1:DWXyrwAJ9X0FpwwEdw+IPEYBICEFu5mhpdKc/us6bOk=
 github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 h1:EGx4pi6eqNxGaHF6qqu48+N2wcFQ5qg5FXgOdqsJ5d8=
@@ -451,8 +451,8 @@ github.com/theflyingcodr/centrifuge-go v0.7.4 h1:9zVJ4rGUavQ1NqSTFc1ngWH89+q+eZ1
 github.com/theflyingcodr/centrifuge-go v0.7.4/go.mod h1:/tR3u9xxXBkBa821dBFaqRizg/LLvo48nC0le877OKo=
 github.com/theflyingcodr/govalidator v0.0.2 h1:ahGtcJIwDVN9VdWRMbNPbiKnlikX4gC2PWkz/MkJFCs=
 github.com/theflyingcodr/govalidator v0.0.2/go.mod h1:E6v0mkRcAVMTa7pC8VkUOtoE8WQ9zQ4/fOwrvtwhOM0=
-github.com/theflyingcodr/lathos v0.0.1 h1:njT8mIxE9TyGnlprBXw9IVMHf42QGH3bc6J2GDhTdWk=
-github.com/theflyingcodr/lathos v0.0.1/go.mod h1:F1eTwqX1gWC85yNJO0KR5OITkTTjhKMH6P2ozCAgRNc=
+github.com/theflyingcodr/lathos v0.0.3 h1:V9h3pgU4QivqImj1+erc3w8H7Es+R9Z5vBfWwCx//mk=
+github.com/theflyingcodr/lathos v0.0.3/go.mod h1:68tGFEbAqAzydWDb1KEJZPQY57l3hH32GXO11Hf1zGQ=
 github.com/tidwall/pretty v0.0.0-20180105212114-65a9db5fad51/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=

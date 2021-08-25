@@ -179,9 +179,9 @@ func NewErrNotAvailable(code, detail string) ErrNotAvailable {
 	}
 }
 
-// NotAvailable implements the NotAvailable interface used
+// Unavailable implements the Unavailable interface used
 // in error checking.
-func (e ErrNotAvailable) NotAvailable() bool {
+func (e ErrNotAvailable) Unavailable() bool {
 	return true
 }
 
@@ -204,8 +204,8 @@ func NewErrUnprocessable(code, detail string) ErrUnprocessable {
 	}
 }
 
-// Unprocessable implements the Unprocessable interface
+// CannotProcess implements the Unprocessable interface
 // and is used in error checking code.
-func (e ErrUnprocessable) Unprocessable() bool {
+func (e ErrUnprocessable) CannotProcess() bool {
 	return true
 }

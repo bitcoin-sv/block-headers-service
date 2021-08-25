@@ -17,5 +17,5 @@ require (
 	github.com/spf13/viper v1.8.1
 	github.com/theflyingcodr/centrifuge-go v0.7.4
 	github.com/theflyingcodr/govalidator v0.0.2
-	github.com/theflyingcodr/lathos v0.0.1
+	github.com/theflyingcodr/lathos v0.0.3
 )

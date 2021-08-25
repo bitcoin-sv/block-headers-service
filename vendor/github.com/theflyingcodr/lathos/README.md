@@ -1,10 +1,10 @@
-# lathos [![example workflow](https://github.com/theflyingcodr/lathos/actions/workflows/go.yml/badge.svg)](https://github.com/theflyingcodr/lathos/actions/workflows/go.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/theflyingcodr/lathos)](https://goreportcard.com/report/github.com/theflyingcodr/lathos) ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/theflyingcodr/lathos?style=flat-square)
+# lathos [![Go Reference](https://pkg.go.dev/badge/github.com/theflyingcodr/lathos.svg)](https://pkg.go.dev/github.com/theflyingcodr/lathos) [![example workflow](https://github.com/theflyingcodr/lathos/actions/workflows/go.yml/badge.svg)](https://github.com/theflyingcodr/lathos/actions/workflows/go.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/theflyingcodr/lathos)](https://goreportcard.com/report/github.com/theflyingcodr/lathos) ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/theflyingcodr/lathos?style=flat-square)
 
 Greek for error, lathos is an errors package for go.
 
 It utilises checking errors for behaviour, not type or substring. This helps to make error checking elegant and removes dependency on your code from concrete error types.
 
-This library was heavily influenced by a [blog from Dave Cheney](https://dave.cheney.net/2016/04/27/dont-just-check-errors-handle-them-gracefully) and is my take on the paradigms discussed there.
+This library was heavily influenced by a [blog from Dave Cheney (Don’t just check errors, handle them gracefully)](https://tpow.app/2a736d9f) and is my take on the paradigms discussed there.
 
 ## Examples
 
@@ -65,4 +65,14 @@ Occasionally you will expect a particular error such as a Duplicate. At this poi
 If you then create a global error handler, you can check the errors in one place, convert to a response of your choosing and return. Or you may log them.
 
 There are some examples in the [examples](examples) folder.
+
+## Compatibility
+
+As this uses features introduced in Go1.13 relating to errors and error checks it will only work in projects using Go 1.13 and above.
+
+It can still be used with the excellent [pkg/errors](https://tpow.app/f8efe08c) package as from version 0.9.0 they added support for the Go1.13 error types.
+
+## Contributions
+
+If you have any suggestions or improvements feel free to add an Issue or create a PR and I'll be very grateful!
 
