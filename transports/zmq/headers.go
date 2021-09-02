@@ -2,6 +2,7 @@ package zmq
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -26,7 +27,7 @@ func NewHeadersHandler(svc headers.BlockheaderService) *headersHandler {
 
 // Register will setup zmq with a handler
 func (h *headersHandler) Register(z *bitcoin.ZMQ) {
-	if err := z.Subscribe("rawblock", h.bc); err != nil {
+	if err := z.Subscribe("hashblock", h.bc); err != nil {
 		log.Fatalln(err)
 	}
 }
@@ -35,10 +36,11 @@ func (h *headersHandler) Header() error {
 	for {
 		select {
 		case rawHdr := <-h.bc:
-			func() {
+			go func() {
 				ctx, cancelFn := context.WithTimeout(context.Background(), time.Second*5)
 				defer cancelFn()
-				hdr, err := h.svc.Header(ctx, headers.HeaderArgs{Blockhash: rawHdr[1][:160]})
+				fmt.Println(fmt.Sprintf("%+V", rawHdr))
+				hdr, err := h.svc.Header(ctx, headers.HeaderArgs{Blockhash: rawHdr[1]})
 				if err != nil {
 					log.Println(err)
 					return

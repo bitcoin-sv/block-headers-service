@@ -3,8 +3,6 @@ package headers
 import (
 	"context"
 
-	"github.com/libsv/go-bc"
-	"github.com/pkg/errors"
 	validator "github.com/theflyingcodr/govalidator"
 )
 
@@ -33,12 +31,7 @@ type HeaderArgs struct {
 
 // Validate will ensure HeaderArgs is valid.
 func (h *HeaderArgs) Validate() error {
-	return validator.New().Validate("blockhash", func() error {
-		if _, err := bc.EncodeBlockHeaderStr(h.Blockhash); err != nil {
-			return errors.Wrap(err, "block hash is invalid")
-		}
-		return nil
-	}).Err()
+	return validator.New().Validate("blockhash", validator.StrLengthExact(h.Blockhash, 64)).Err()
 }
 
 // Height contains the current cached height as well as current blockchain height and

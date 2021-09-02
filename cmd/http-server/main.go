@@ -18,6 +18,7 @@ import (
 	"github.com/libsv/bitcoin-hc/config"
 	"github.com/libsv/bitcoin-hc/config/databases"
 	"github.com/libsv/bitcoin-hc/config/zmq"
+	"github.com/libsv/bitcoin-hc/data"
 	hcHttp "github.com/libsv/bitcoin-hc/data/http"
 	"github.com/libsv/bitcoin-hc/data/node"
 	"github.com/libsv/bitcoin-hc/data/sql"
@@ -80,7 +81,7 @@ func main() {
 	headerService := service.NewHeadersService(headerStore, headerStore, hcHttp.NewWhatsOnChain(&http.Client{
 		Timeout: time.Second * 30,
 	}))
-	httpTransport.NewHeader(headerService).Routes(g)
+
 	height, err := headerStore.Height(context.Background())
 	if err != nil {
 		log.Fatal(err)
@@ -97,15 +98,17 @@ func main() {
 		defer headerSocket.Close()
 	case config.SyncNode:
 		zmqSub, nodeClient := zmq.Setup(cfg.Node)
+		nodeStore := node.NewBlock(nodeClient)
+		syncSvc := service.NewSyncService(nodeStore, headerStore, headerStore)
+		headerService = service.NewHeadersService(data.NewNodeHeaderFacade(nodeStore, headerStore), headerStore, nodeStore)
 		t := zmqTransport.NewHeadersHandler(headerService)
 		t.Register(zmqSub)
 		go t.Header()
 		defer t.Close(zmqSub)
-		syncSvc := service.NewSyncService(node.NewBlock(nodeClient), headerStore, headerStore)
 		go func() {
 			fmt.Println("Starting sync of historic headers from node")
 			for err := syncSvc.Sync(context.Background()); err != nil; {
-				log.Println(err)
+				log.Println("Sync error:" + err.Error())
 				time.Sleep(time.Second * 5)
 			}
 			fmt.Println("Sync completed")
@@ -113,6 +116,7 @@ func main() {
 	default:
 		log.Fatalf("unknown sync type received %s", cfg.Client.SyncType)
 	}
+	httpTransport.NewHeader(headerService).Routes(g)
 	// run echo and wait for cancellation
 	e.Logger.Fatal(e.Start(cfg.Server.Port))
 }

@@ -20,10 +20,10 @@ func NewBlock(node *bitcoin.Bitcoind) *block {
 }
 
 // BlockInfo will return extended info for a given block hash.
-func (b *block) BlockInfo(ctx context.Context, args headers.BlockArgs) (*headers.BlockHeader, error) {
-	bh, err := b.node.GetBlockHeader(args.BlockHash)
+func (b *block) Header(ctx context.Context, args headers.HeaderArgs) (*headers.BlockHeader, error) {
+	bh, err := b.node.GetBlockHeader(args.Blockhash)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to find block with hash %s", args.BlockHash)
+		return nil, errors.Wrapf(err, "failed to find block with hash %s", args.Blockhash)
 	}
 	// TODO - handle not found error properly
 	return &headers.BlockHeader{
@@ -50,7 +50,7 @@ func (b *block) BestBlock(ctx context.Context) (*headers.BlockHeader, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get best block hash")
 	}
-	return b.BlockInfo(ctx, headers.BlockArgs{BlockHash: hash})
+	return b.Header(ctx, headers.HeaderArgs{Blockhash: hash})
 }
 
 // BlockByHeight will return a block on the longest chain by index (height).
@@ -59,9 +59,23 @@ func (b *block) BlockByHeight(ctx context.Context, height uint64) (*headers.Bloc
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get best block hash")
 	}
-	block, err := b.BlockInfo(ctx, headers.BlockArgs{BlockHash: hash})
+
+	block, err := b.Header(ctx, headers.HeaderArgs{Blockhash: hash})
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	return block, nil
+}
+
+// Height will return the current height of the longest (best) chain.
+func (b *block) Height(ctx context.Context) (int, error) {
+	hash, err := b.node.GetBestBlockHash()
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get best block hash")
+	}
+	hdr, err := b.Header(ctx, headers.HeaderArgs{Blockhash: hash})
+	if err != nil {
+		return 0, err
+	}
+	return int(hdr.Height), nil
 }
