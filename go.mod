@@ -9,7 +9,6 @@ require (
 	github.com/labstack/echo/v4 v4.3.0
 	github.com/labstack/gommon v0.3.0
 	github.com/lib/pq v1.8.0
-	github.com/libsv/go-bc v0.1.1
 	github.com/mattn/go-sqlite3 v1.14.6
 	github.com/ordishs/go-bitcoin v1.0.41
 	github.com/pkg/errors v0.9.1
@@ -17,5 +16,5 @@ require (
 	github.com/spf13/viper v1.8.1
 	github.com/theflyingcodr/centrifuge-go v0.7.4
 	github.com/theflyingcodr/govalidator v0.0.2
-	github.com/theflyingcodr/lathos v0.0.1
+	github.com/theflyingcodr/lathos v0.0.5
 )

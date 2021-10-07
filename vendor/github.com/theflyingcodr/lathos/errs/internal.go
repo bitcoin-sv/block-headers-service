@@ -50,3 +50,8 @@ func (e ErrInternal) Stack() string {
 func (e ErrInternal) Metadata() map[string]string {
 	return e.metadata
 }
+
+// Error implements the error interface.
+func (e ErrInternal) Error() string {
+	return e.message
+}
