@@ -33,10 +33,18 @@ func IsClientError(err error) bool {
 // error logging system to be rectified.
 // In terms of a web server, this would be a 5XX error.
 type InternalError interface {
+	// ID is a unique id for this particular message to help identification
 	ID() string
+	// Code is an optional error code, all erorrs of the same reason could have
+	// a code assigned for machine handling of errors.
+	Code() string
+
+	// Message is the human readable reason for the error.
 	Message() string
+	// Stack is the full stack trace of the error, you may want to redact this in production environments.
 	Stack() string
-	Metadata() map[string]string
+	// Metadata can be used to provide structured fields to an error message.
+	Metadata() map[string]interface{}
 }
 
 // IsInternalError will return true if this is an InternalError.
