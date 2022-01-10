@@ -118,3 +118,34 @@ func (e ErrValidation) Error() string {
 func (e ErrValidation) BadRequest() bool {
 	return true
 }
+
+// NewSingleError is a simple way of creating a one off error
+// rather than calling a validate function.
+//   test, err := thing()
+//   if err != nil{
+//	    // this error is froma. bad request, convert to a validation error
+//	    return validator.NewSingleError("myField", []string{"this went wrong"})
+//   }
+// This will then be classed as a validation error and handled how you desire.
+func NewSingleError(fieldName string, msg []string) error {
+	return ErrValidation{
+		fieldName: msg,
+	}.Err()
+}
+
+// NewFromError is a simple way of creating a one off error
+// rather than calling a validate function.
+//   test, err := thing()
+//   if err != nil{
+//	    // this error is froma. bad request, convert to a validation error
+//	    return validator.NewFromError("myField", err)
+//   }
+// This will then be classed as a validation error and handled how you desire.
+func NewFromError(fieldName string, err error) error {
+	if err == nil {
+		return nil
+	}
+	return ErrValidation{
+		fieldName: []string{err.Error()},
+	}.Err()
+}
