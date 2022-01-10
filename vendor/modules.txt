@@ -1,10 +1,5 @@
 # bitbucket.org/simon_ordish/cryptolib v1.0.44
 bitbucket.org/simon_ordish/cryptolib
-# github.com/bitcoinsv/bsvd v0.0.0-20190609155523-4c29707f7173
-github.com/bitcoinsv/bsvd/bsvec
-github.com/bitcoinsv/bsvd/chaincfg/chainhash
-# github.com/bitcoinsv/bsvutil v0.0.0-20181216182056-1d77cf353ea9
-github.com/bitcoinsv/bsvutil/base58
 # github.com/btcsuite/btcd v0.21.0-beta
 github.com/btcsuite/btcd/btcec
 # github.com/btcsuite/btcutil v1.0.2
@@ -74,19 +69,11 @@ github.com/labstack/gommon/bytes
 github.com/labstack/gommon/color
 github.com/labstack/gommon/log
 github.com/labstack/gommon/random
-# github.com/lib/pq v1.8.0
+# github.com/lib/pq v1.10.4
 ## explicit
 github.com/lib/pq
 github.com/lib/pq/oid
 github.com/lib/pq/scram
-# github.com/libsv/go-bc v0.1.1
-## explicit
-github.com/libsv/go-bc
-# github.com/libsv/go-bt v0.0.11
-github.com/libsv/go-bt
-github.com/libsv/go-bt/bscript
-github.com/libsv/go-bt/crypto
-github.com/libsv/go-bt/sighash
 # github.com/magiconair/properties v1.8.5
 github.com/magiconair/properties
 # github.com/mattn/go-colorable v0.1.8
