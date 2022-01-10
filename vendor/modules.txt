@@ -1,10 +1,5 @@
 # bitbucket.org/simon_ordish/cryptolib v1.0.44
 bitbucket.org/simon_ordish/cryptolib
-# github.com/bitcoinsv/bsvd v0.0.0-20190609155523-4c29707f7173
-github.com/bitcoinsv/bsvd/bsvec
-github.com/bitcoinsv/bsvd/chaincfg/chainhash
-# github.com/bitcoinsv/bsvutil v0.0.0-20181216182056-1d77cf353ea9
-github.com/bitcoinsv/bsvutil/base58
 # github.com/btcsuite/btcd v0.21.0-beta
 github.com/btcsuite/btcd/btcec
 # github.com/btcsuite/btcutil v1.0.2
@@ -68,7 +63,7 @@ github.com/jpillora/backoff
 ## explicit
 github.com/labstack/echo/v4
 github.com/labstack/echo/v4/middleware
-# github.com/labstack/gommon v0.3.0
+# github.com/labstack/gommon v0.3.1
 ## explicit
 github.com/labstack/gommon/bytes
 github.com/labstack/gommon/color
@@ -79,19 +74,11 @@ github.com/labstack/gommon/random
 github.com/lib/pq
 github.com/lib/pq/oid
 github.com/lib/pq/scram
-# github.com/libsv/go-bc v0.1.1
-## explicit
-github.com/libsv/go-bc
-# github.com/libsv/go-bt v0.0.11
-github.com/libsv/go-bt
-github.com/libsv/go-bt/bscript
-github.com/libsv/go-bt/crypto
-github.com/libsv/go-bt/sighash
 # github.com/magiconair/properties v1.8.5
 github.com/magiconair/properties
-# github.com/mattn/go-colorable v0.1.8
+# github.com/mattn/go-colorable v0.1.11
 github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.12
+# github.com/mattn/go-isatty v0.0.14
 github.com/mattn/go-isatty
 # github.com/mattn/go-sqlite3 v1.14.6
 ## explicit
@@ -155,7 +142,7 @@ golang.org/x/net/idna
 # golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 golang.org/x/sync/errgroup
 golang.org/x/sync/singleflight
-# golang.org/x/sys v0.0.0-20210510120138-977fb7262007
+# golang.org/x/sys v0.0.0-20211103235746-7861aae1554b
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.6
