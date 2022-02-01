@@ -90,6 +90,7 @@ type (
 		HidePort         bool
 		HTTPErrorHandler HTTPErrorHandler
 		Binder           Binder
+		JSONSerializer   JSONSerializer
 		Validator        Validator
 		Renderer         Renderer
 		Logger           Logger
@@ -123,6 +124,12 @@ type (
 	// Validator is the interface that wraps the Validate function.
 	Validator interface {
 		Validate(i interface{}) error
+	}
+
+	// JSONSerializer is the interface that encodes and decodes JSON to and from interfaces.
+	JSONSerializer interface {
+		Serialize(c Context, i interface{}, indent string) error
+		Deserialize(c Context, i interface{}) error
 	}
 
 	// Renderer is the interface that wraps the Render function.
@@ -207,6 +214,7 @@ const (
 	HeaderXHTTPMethodOverride = "X-HTTP-Method-Override"
 	HeaderXRealIP             = "X-Real-IP"
 	HeaderXRequestID          = "X-Request-ID"
+	HeaderXCorrelationID      = "X-Correlation-ID"
 	HeaderXRequestedWith      = "X-Requested-With"
 	HeaderServer              = "Server"
 	HeaderOrigin              = "Origin"
@@ -234,7 +242,7 @@ const (
 
 const (
 	// Version of Echo
-	Version = "4.3.0"
+	Version = "4.6.3"
 	website = "https://echo.labstack.com"
 	// http://patorjk.com/software/taag/#p=display&f=Small%20Slant&t=Echo
 	banner = `
@@ -315,6 +323,7 @@ func New() (e *Echo) {
 	e.TLSServer.Handler = e
 	e.HTTPErrorHandler = e.DefaultHTTPErrorHandler
 	e.Binder = &DefaultBinder{}
+	e.JSONSerializer = &DefaultJSONSerializer{}
 	e.Logger.SetLevel(log.ERROR)
 	e.StdLogger = stdLog.New(e.Logger.Output(), e.Logger.Prefix()+": ", 0)
 	e.pool.New = func() interface{} {
@@ -349,7 +358,17 @@ func (e *Echo) Routers() map[string]*Router {
 
 // DefaultHTTPErrorHandler is the default HTTP error handler. It sends a JSON response
 // with status code.
+//
+// NOTE: In case errors happens in middleware call-chain that is returning from handler (which did not return an error).
+// When handler has already sent response (ala c.JSON()) and there is error in middleware that is returning from
+// handler. Then the error that global error handler received will be ignored because we have already "commited" the
+// response and status code header has been sent to the client.
 func (e *Echo) DefaultHTTPErrorHandler(err error, c Context) {
+
+	if c.Response().Committed {
+		return
+	}
+
 	he, ok := err.(*HTTPError)
 	if ok {
 		if he.Internal != nil {
@@ -376,15 +395,13 @@ func (e *Echo) DefaultHTTPErrorHandler(err error, c Context) {
 	}
 
 	// Send response
-	if !c.Response().Committed {
-		if c.Request().Method == http.MethodHead { // Issue #608
-			err = c.NoContent(he.Code)
-		} else {
-			err = c.JSON(code, message)
-		}
-		if err != nil {
-			e.Logger.Error(err)
-		}
+	if c.Request().Method == http.MethodHead { // Issue #608
+		err = c.NoContent(he.Code)
+	} else {
+		err = c.JSON(code, message)
+	}
+	if err != nil {
+		e.Logger.Error(err)
 	}
 }
 

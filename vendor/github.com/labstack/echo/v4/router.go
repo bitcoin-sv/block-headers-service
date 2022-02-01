@@ -98,6 +98,12 @@ func (r *Router) Add(method, path string, h HandlerFunc) {
 
 	for i, lcpIndex := 0, len(path); i < lcpIndex; i++ {
 		if path[i] == ':' {
+			if i > 0 && path[i-1] == '\\' {
+				path = path[:i-1] + path[i:]
+				i--
+				lcpIndex--
+				continue
+			}
 			j := i + 1
 
 			r.insert(method, path[:i], nil, staticKind, "", nil)
