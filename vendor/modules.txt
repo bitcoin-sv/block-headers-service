@@ -1,10 +1,5 @@
 # bitbucket.org/simon_ordish/cryptolib v1.0.44
 bitbucket.org/simon_ordish/cryptolib
-# github.com/bitcoinsv/bsvd v0.0.0-20190609155523-4c29707f7173
-github.com/bitcoinsv/bsvd/bsvec
-github.com/bitcoinsv/bsvd/chaincfg/chainhash
-# github.com/bitcoinsv/bsvutil v0.0.0-20181216182056-1d77cf353ea9
-github.com/bitcoinsv/bsvutil/base58
 # github.com/btcsuite/btcd v0.21.0-beta
 github.com/btcsuite/btcd/btcec
 # github.com/btcsuite/btcutil v1.0.2
@@ -28,18 +23,19 @@ github.com/go-zeromq/zmq4/transport
 github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
-# github.com/golang-migrate/migrate/v4 v4.14.1
+# github.com/golang-migrate/migrate/v4 v4.15.1
 ## explicit
 github.com/golang-migrate/migrate/v4
 github.com/golang-migrate/migrate/v4/database
+github.com/golang-migrate/migrate/v4/database/multistmt
 github.com/golang-migrate/migrate/v4/database/mysql
 github.com/golang-migrate/migrate/v4/database/postgres
 github.com/golang-migrate/migrate/v4/database/sqlite3
 github.com/golang-migrate/migrate/v4/internal/url
 github.com/golang-migrate/migrate/v4/source
 github.com/golang-migrate/migrate/v4/source/file
-github.com/golang-migrate/migrate/v4/source/httpfs
-# github.com/google/uuid v1.2.0
+github.com/golang-migrate/migrate/v4/source/iofs
+# github.com/google/uuid v1.3.0
 github.com/google/uuid
 # github.com/gorilla/websocket v1.4.2
 github.com/gorilla/websocket
@@ -74,19 +70,11 @@ github.com/labstack/gommon/bytes
 github.com/labstack/gommon/color
 github.com/labstack/gommon/log
 github.com/labstack/gommon/random
-# github.com/lib/pq v1.8.0
+# github.com/lib/pq v1.10.0
 ## explicit
 github.com/lib/pq
 github.com/lib/pq/oid
 github.com/lib/pq/scram
-# github.com/libsv/go-bc v0.1.1
-## explicit
-github.com/libsv/go-bc
-# github.com/libsv/go-bt v0.0.11
-github.com/libsv/go-bt
-github.com/libsv/go-bt/bscript
-github.com/libsv/go-bt/crypto
-github.com/libsv/go-bt/sighash
 # github.com/magiconair/properties v1.8.5
 github.com/magiconair/properties
 # github.com/mattn/go-colorable v0.1.8
@@ -142,11 +130,13 @@ github.com/theflyingcodr/lathos/errs
 github.com/valyala/bytebufferpool
 # github.com/valyala/fasttemplate v1.2.1
 github.com/valyala/fasttemplate
-# golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
+# go.uber.org/atomic v1.7.0
+go.uber.org/atomic
+# golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 golang.org/x/crypto/acme
 golang.org/x/crypto/acme/autocert
 golang.org/x/crypto/ripemd160
-# golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
+# golang.org/x/net v0.0.0-20211013171255-e13a2654a71e
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
 golang.org/x/net/http2/h2c
@@ -155,10 +145,10 @@ golang.org/x/net/idna
 # golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 golang.org/x/sync/errgroup
 golang.org/x/sync/singleflight
-# golang.org/x/sys v0.0.0-20210510120138-977fb7262007
+# golang.org/x/sys v0.0.0-20211013075003-97ac67df715c
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
-# golang.org/x/text v0.3.6
+# golang.org/x/text v0.3.7
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
