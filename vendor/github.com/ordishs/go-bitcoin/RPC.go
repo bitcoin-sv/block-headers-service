@@ -5,9 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
+	"bitbucket.org/simon_ordish/cryptolib"
 	cache "github.com/patrickmn/go-cache"
 	"golang.org/x/sync/singleflight"
 )
@@ -37,7 +42,16 @@ func New(host string, port int, user, passwd string, useSSL bool) (*Bitcoind, er
 }
 
 func (b *Bitcoind) call(method string, params []interface{}) (rpcResponse, error) {
-	key := fmt.Sprintf("%s|%v", method, params)
+	keyfunc := func(method string, params []interface{}) string {
+		return fmt.Sprintf("%s|%v", method, params)
+	}
+
+	return b.callWithKeyFunc(method, params, keyfunc)
+}
+
+func (b *Bitcoind) callWithKeyFunc(method string, params []interface{}, keyfunc func(string, []interface{}) string) (rpcResponse, error) {
+	key := keyfunc(method, params)
+
 	// Check cache
 	value, found := b.Storage.Get(key)
 	if found {
@@ -47,7 +61,6 @@ func (b *Bitcoind) call(method string, params []interface{}) (rpcResponse, error
 
 	// Combine memoized function with a cache store
 	value, err, _ := b.group.Do(key, func() (interface{}, error) {
-		// fmt.Printf("EXECED: ")
 		data, innerErr := b.client.call(method, params)
 
 		if innerErr == nil {
@@ -57,6 +70,10 @@ func (b *Bitcoind) call(method string, params []interface{}) (rpcResponse, error
 		return data, innerErr
 	})
 	return value.(rpcResponse), err
+}
+
+func (b *Bitcoind) read(method string, params []interface{}) (io.ReadCloser, error) {
+	return b.client.read(method, params)
 }
 
 // GetConnectionCount returns the number of connections to other nodes.
@@ -181,6 +198,29 @@ func (b *Bitcoind) GetPeerInfo() (info PeerInfo, err error) {
 	return
 }
 
+// GetChainTips return information about all known tips in the block tree, including the main chain as well as orphaned branches.
+// Possible values for status:
+// 1.  "invalid"               This branch contains at least one invalid block
+// 2.  "headers-only"          Not all blocks for this branch are available, but the headers are valid
+// 3.  "valid-headers"         All blocks are available for this branch, but they were never fully validated
+// 4.  "valid-fork"            This branch is not part of the active chain, but is fully validated
+// 5.  "active"                This is the tip of the active main chain, which is certainly valid
+func (b *Bitcoind) GetChainTips() (tips ChainTips, err error) {
+	r, err := b.call("getchaintips", nil)
+	if err != nil {
+		return
+	}
+
+	if r.Err != nil {
+		rr := r.Err.(map[string]interface{})
+		err = fmt.Errorf("ERROR %s: %s", rr["code"], rr["message"])
+		return
+	}
+
+	err = json.Unmarshal(r.Result, &tips)
+	return
+}
+
 // GetMempoolInfo comment
 func (b *Bitcoind) GetMempoolInfo() (info MempoolInfo, err error) {
 	r, err := b.call("getmempoolinfo", nil)
@@ -213,6 +253,55 @@ func (b *Bitcoind) GetRawMempool(details bool) (raw []byte, err error) {
 	}
 
 	//err = json.Unmarshal(r.Result, &raw)
+	raw, err = json.Marshal(r.Result)
+	return
+}
+
+// GetRawNonFinalMempool returns all transaction ids in the non-final memory pool as a json array of string transaction ids.
+func (b *Bitcoind) GetRawNonFinalMempool() ([]string, error) {
+	r, err := b.call("getrawnonfinalmempool", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var ids []string
+	_ = json.Unmarshal(r.Result, &ids)
+
+	return ids, nil
+}
+
+// GetMempoolAncestors if txid is in the mempool, returns all in-mempool ancestors..
+func (b *Bitcoind) GetMempoolAncestors(txid string, details bool) (raw []byte, err error) {
+	p := []interface{}{txid}
+	r, err := b.call("getmempoolancestors", p)
+	if err != nil {
+		return
+	}
+
+	if r.Err != nil {
+		rr := r.Err.(map[string]interface{})
+		err = fmt.Errorf("ERROR %s: %s", rr["code"], rr["message"])
+		return
+	}
+
+	raw, err = json.Marshal(r.Result)
+	return
+}
+
+// GetMempoolDescendants if txid is in the mempool, returns all in-mempool descendants..
+func (b *Bitcoind) GetMempoolDescendants(txid string, details bool) (raw []byte, err error) {
+	p := []interface{}{txid}
+	r, err := b.call("getmempooldescendants", p)
+	if err != nil {
+		return
+	}
+
+	if r.Err != nil {
+		rr := r.Err.(map[string]interface{})
+		err = fmt.Errorf("ERROR %s: %s", rr["code"], rr["message"])
+		return
+	}
+
 	raw, err = json.Marshal(r.Result)
 	return
 }
@@ -291,9 +380,18 @@ func (b *Bitcoind) GetBlockHash(blockHeight int) (blockHash string, err error) {
 	return
 }
 
-// SendRawTransaction comment
+func keyFuncSendRawTransaction(method string, params []interface{}) string {
+	var b strings.Builder
+
+	b.WriteString(method)
+	b.WriteRune('-')
+	b.WriteString(params[0].(string))
+
+	return b.String()
+}
+
 func (b *Bitcoind) SendRawTransaction(hex string) (txid string, err error) {
-	r, err := b.call("sendrawtransaction", []interface{}{hex, true})
+	r, err := b.callWithKeyFunc("sendrawtransaction", []interface{}{hex}, keyFuncSendRawTransaction)
 	if err != nil {
 		return "", err
 	}
@@ -305,9 +403,32 @@ func (b *Bitcoind) SendRawTransaction(hex string) (txid string, err error) {
 	return
 }
 
-// SendRawTransactionWithoutFeeCheck comment
 func (b *Bitcoind) SendRawTransactionWithoutFeeCheck(hex string) (txid string, err error) {
-	r, err := b.call("sendrawtransaction", []interface{}{hex, false, true})
+
+	// Doing this function is 4 times faster than the normal fmt.Sprintf("%s|%v", method, params).  As we know that
+	// we will always pass (string, bool, bool) as the params, we can avoid the cost of reflection.
+	keyFunc := func(method string, params []interface{}) string {
+		var s strings.Builder
+
+		s.WriteString(method)
+		s.WriteRune('-')
+		s.WriteString(params[0].(string))
+		s.WriteRune('|')
+		if params[1].(bool) {
+			s.WriteString("T")
+		} else {
+			s.WriteString("F")
+		}
+		if params[2].(bool) {
+			s.WriteRune('T')
+		} else {
+			s.WriteRune('F')
+		}
+
+		return s.String()
+	}
+
+	r, err := b.callWithKeyFunc("sendrawtransaction", []interface{}{hex, false, true}, keyFunc)
 	if err != nil {
 		return "", err
 	}
@@ -317,6 +438,65 @@ func (b *Bitcoind) SendRawTransactionWithoutFeeCheck(hex string) (txid string, e
 	}
 
 	return
+}
+
+func (b *Bitcoind) SendRawTransactionWithoutFeeCheckOrScriptCheck(raw string) (string, error) {
+
+	type transaction struct {
+		Hex                      string                 `json:"hex"`
+		AllowHighFees            bool                   `json:"allowhighfees"`
+		DontCheckFee             bool                   `json:"dontcheckfee"`
+		ListUnconfirmedAncestors bool                   `json:"listunconfirmedancestors"`
+		Config                   map[string]interface{} `json:"config,omitempty"`
+	}
+
+	transactions := []*transaction{{
+		Hex:                      raw,
+		AllowHighFees:            false,
+		DontCheckFee:             true,
+		ListUnconfirmedAncestors: false,
+		Config:                   map[string]interface{}{"maxscriptsizepolicy": 50_000_000},
+	}}
+
+	r, err := b.call("sendrawtransactions", []interface{}{transactions})
+	if err != nil {
+		return "", err
+	}
+
+	type txResponse struct {
+		TxID         string `json:"txid"`
+		RejectReason string `json:"reject_reason"`
+	}
+
+	type result struct {
+		Known       []*txResponse `json:"known"`
+		Evicted     []*txResponse `json:"evicted"`
+		Invalid     []*txResponse `json:"invalid"`
+		Unconfirmed []*txResponse `json:"unconfirmed"`
+	}
+
+	var res result
+
+	if err := json.Unmarshal(r.Result, &res); err != nil {
+		return "", err
+	}
+
+	if len(res.Known) > 0 {
+		return res.Known[0].TxID, nil
+	} else if len(res.Unconfirmed) > 0 {
+		return res.Unconfirmed[0].TxID, nil
+	} else if len(res.Evicted) > 0 {
+		return "", errors.New("Transaction evicted due to insufficient fees")
+	} else if len(res.Invalid) > 0 {
+		return "", fmt.Errorf("Transaction invalid: %s", res.Invalid[0].RejectReason)
+	} else {
+		// It seems that if the transaction is not listed in any of the above arrays, it is successful.  Compute the txid
+
+		b, _ := hex.DecodeString(raw)
+		hash := cryptolib.ReverseBytes(cryptolib.Sha256d(b))
+		return hex.EncodeToString(hash), nil
+	}
+
 }
 
 // SignRawTransaction comment
@@ -373,6 +553,32 @@ func (b *Bitcoind) GetRawBlock(blockHash string) ([]byte, error) {
 	}
 
 	return res, nil
+}
+
+// GetRawBlockReader returns a reader of the block with the given hash.
+func (b *Bitcoind) GetRawBlockReader(blockHash string) (io.ReadCloser, error) {
+	return b.read("getblock", []interface{}{blockHash, 0})
+}
+
+func (b *Bitcoind) GetRawBlockRest(blockHash string) (io.ReadCloser, error) {
+	resp, err := http.Get(fmt.Sprintf("%s/rest/block/%s.bin", b.client.serverAddr, blockHash))
+	if err != nil {
+		return nil, fmt.Errorf("Could not GET block: %v", err)
+	}
+
+	if resp.StatusCode != 200 {
+		defer resp.Body.Close()
+
+		data, err := ioutil.ReadAll(resp.Body)
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to read response body: %w", err)
+		}
+
+		return nil, fmt.Errorf("ERROR: code %d: %s", resp.StatusCode, data)
+	}
+
+	return resp.Body, nil
 }
 
 // GetBlockOverview returns basic information about the block with the given hash.
@@ -451,6 +657,21 @@ func (b *Bitcoind) GetBlockHeaderAndCoinbase(blockHash string) (blockHeaderAndCo
 	return
 }
 
+func keyFuncForGetRawTransaction(method string, params []interface{}) string {
+	var b strings.Builder
+	b.WriteString(method)
+	b.WriteRune('-')
+	b.WriteString(params[0].(string))
+	b.WriteRune('|')
+	if params[1].(int) == 0 {
+		b.WriteRune('0')
+	} else {
+		b.WriteRune('1')
+	}
+
+	return b.String()
+}
+
 // GetRawTransaction returns raw transaction representation for given transaction id.
 func (b *Bitcoind) GetRawTransaction(txID string) (rawTx *RawTransaction, err error) {
 	if txID == "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b" {
@@ -487,7 +708,7 @@ func (b *Bitcoind) GetRawTransaction(txID string) (rawTx *RawTransaction, err er
 		}, nil
 	}
 
-	r, err := b.call("getrawtransaction", []interface{}{txID, 1})
+	r, err := b.callWithKeyFunc("getrawtransaction", []interface{}{txID, 1}, keyFuncForGetRawTransaction)
 	if err != nil {
 		return
 	}
@@ -503,13 +724,34 @@ func (b *Bitcoind) GetRawTransactionHex(txID string) (rawTx *string, err error) 
 		return &genesisHex, nil
 	}
 
-	r, err := b.call("getrawtransaction", []interface{}{txID, 0})
+	r, err := b.callWithKeyFunc("getrawtransaction", []interface{}{txID, 0}, keyFuncForGetRawTransaction)
 	if err != nil {
 		return
 	}
 
 	err = json.Unmarshal(r.Result, &rawTx)
 	return
+}
+
+func (b *Bitcoind) GetRawTransactionRest(txid string) (io.ReadCloser, error) {
+	resp, err := http.Get(fmt.Sprintf("%s/rest/tx/%s.bin", b.client.serverAddr, txid))
+	if err != nil {
+		return nil, fmt.Errorf("Could not GET tx: %v", err)
+	}
+
+	if resp.StatusCode != 200 {
+		defer resp.Body.Close()
+
+		data, err := ioutil.ReadAll(resp.Body)
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to read response body: %w", err)
+		}
+
+		return nil, fmt.Errorf("ERROR: code %d: %s", resp.StatusCode, data)
+	}
+
+	return resp.Body, nil
 }
 
 // GetBlockTemplate comment
@@ -601,14 +843,28 @@ func (b *Bitcoind) DecodeRawTransaction(txHex string) (string, error) {
 	return string(r.Result), nil
 }
 
-// GetTxOut comment
-func (b *Bitcoind) GetTxOut(txHex string, vout int, includeMempool bool) (string, error) {
-	r, err := b.call("gettxout", []interface{}{txHex, vout, includeMempool})
-	if err != nil {
-		return "", err
+func keyFuncForGetTxOut(method string, params []interface{}) string {
+	var b strings.Builder
+	b.Grow(85) // "gettxout" = 9, "-" = 1, {txid} = 64, "|" = 1, int = 8 bytes "|" = 1, "T" = 1
+
+	if params[2].(bool) {
+		fmt.Fprintf(&b, "%s-%s|%d|T", method, params[0].(string), params[1].(int))
+	} else {
+		fmt.Fprintf(&b, "%s-%s|%d|F", method, params[0].(string), params[1].(int))
 	}
 
-	return string(r.Result), nil
+	return b.String()
+}
+
+func (b *Bitcoind) GetTxOut(txHex string, vout int, includeMempool bool) (res *TXOut, err error) {
+	r, err := b.callWithKeyFunc("gettxout", []interface{}{txHex, vout, includeMempool}, keyFuncForGetTxOut)
+	if err != nil {
+		return
+	}
+
+	_ = json.Unmarshal(r.Result, &res)
+
+	return
 }
 
 // ListUnspent comment
@@ -621,7 +877,7 @@ func (b *Bitcoind) ListUnspent(addresses []string) (res []*UnspentTransaction, e
 		return
 	}
 
-	json.Unmarshal(r.Result, &res)
+	_ = json.Unmarshal(r.Result, &res)
 
 	for _, utxo := range res {
 		if utxo.Amount > 0 && utxo.Satoshis == 0 {
@@ -640,7 +896,7 @@ func (b *Bitcoind) SendToAddress(address string, amount float64) (string, error)
 	}
 
 	var txid string
-	json.Unmarshal(r.Result, &txid)
+	_ = json.Unmarshal(r.Result, &txid)
 
 	return txid, nil
 }
@@ -653,7 +909,7 @@ func (b *Bitcoind) Generate(amount float64) ([]string, error) {
 	}
 
 	var hashes []string
-	json.Unmarshal(r.Result, &hashes)
+	_ = json.Unmarshal(r.Result, &hashes)
 
 	return hashes, nil
 }
@@ -666,7 +922,7 @@ func (b *Bitcoind) GenerateToAddress(amount float64, address string) ([]string, 
 	}
 
 	var hashes []string
-	json.Unmarshal(r.Result, &hashes)
+	_ = json.Unmarshal(r.Result, &hashes)
 
 	return hashes, nil
 }
