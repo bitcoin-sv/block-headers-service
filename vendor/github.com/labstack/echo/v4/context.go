@@ -2,7 +2,6 @@ package echo
 
 import (
 	"bytes"
-	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -10,8 +9,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 )
@@ -212,6 +209,13 @@ type (
 )
 
 const (
+	// ContextKeyHeaderAllow is set by Router for getting value for `Allow` header in later stages of handler call chain.
+	// Allow header is mandatory for status 405 (method not found) and useful for OPTIONS method requests.
+	// It is added to context only when Router does not find matching method handler for request.
+	ContextKeyHeaderAllow = "echo_header_allow"
+)
+
+const (
 	defaultMemory = 32 << 20 // 32 MB
 	indexPage     = "index.html"
 	defaultIndent = "  "
@@ -276,9 +280,9 @@ func (c *context) RealIP() string {
 	}
 	// Fall back to legacy behavior
 	if ip := c.request.Header.Get(HeaderXForwardedFor); ip != "" {
-		i := strings.IndexAny(ip, ", ")
+		i := strings.IndexAny(ip, ",")
 		if i > 0 {
-			return ip[:i]
+			return strings.TrimSpace(ip[:i])
 		}
 		return ip
 	}
@@ -457,17 +461,16 @@ func (c *context) String(code int, s string) (err error) {
 }
 
 func (c *context) jsonPBlob(code int, callback string, i interface{}) (err error) {
-	enc := json.NewEncoder(c.response)
-	_, pretty := c.QueryParams()["pretty"]
-	if c.echo.Debug || pretty {
-		enc.SetIndent("", "  ")
+	indent := ""
+	if _, pretty := c.QueryParams()["pretty"]; c.echo.Debug || pretty {
+		indent = defaultIndent
 	}
 	c.writeContentType(MIMEApplicationJavaScriptCharsetUTF8)
 	c.response.WriteHeader(code)
 	if _, err = c.response.Write([]byte(callback + "(")); err != nil {
 		return
 	}
-	if err = enc.Encode(i); err != nil {
+	if err = c.echo.JSONSerializer.Serialize(c, i, indent); err != nil {
 		return
 	}
 	if _, err = c.response.Write([]byte(");")); err != nil {
@@ -477,13 +480,9 @@ func (c *context) jsonPBlob(code int, callback string, i interface{}) (err error
 }
 
 func (c *context) json(code int, i interface{}, indent string) error {
-	enc := json.NewEncoder(c.response)
-	if indent != "" {
-		enc.SetIndent("", indent)
-	}
 	c.writeContentType(MIMEApplicationJSONCharsetUTF8)
 	c.response.Status = code
-	return enc.Encode(i)
+	return c.echo.JSONSerializer.Serialize(c, i, indent)
 }
 
 func (c *context) JSON(code int, i interface{}) (err error) {
@@ -565,29 +564,6 @@ func (c *context) Stream(code int, contentType string, r io.Reader) (err error) 
 	c.writeContentType(contentType)
 	c.response.WriteHeader(code)
 	_, err = io.Copy(c.response, r)
-	return
-}
-
-func (c *context) File(file string) (err error) {
-	f, err := os.Open(file)
-	if err != nil {
-		return NotFoundHandler(c)
-	}
-	defer f.Close()
-
-	fi, _ := f.Stat()
-	if fi.IsDir() {
-		file = filepath.Join(file, indexPage)
-		f, err = os.Open(file)
-		if err != nil {
-			return NotFoundHandler(c)
-		}
-		defer f.Close()
-		if fi, err = f.Stat(); err != nil {
-			return
-		}
-	}
-	http.ServeContent(c.Response(), c.Request(), fi.Name(), fi.ModTime(), f)
 	return
 }
 
