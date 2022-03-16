@@ -47,9 +47,6 @@ import (
 	stdLog "log"
 	"net"
 	"net/http"
-	"net/url"
-	"os"
-	"path/filepath"
 	"reflect"
 	"runtime"
 	"sync"
@@ -66,6 +63,7 @@ import (
 type (
 	// Echo is the top-level framework instance.
 	Echo struct {
+		filesystem
 		common
 		// startupMutex is mutex to lock Echo instance access during server configuration and startup. Useful for to get
 		// listener address info (on which interface/port was listener binded) without having data races.
@@ -77,7 +75,6 @@ type (
 		maxParam         *int
 		router           *Router
 		routers          map[string]*Router
-		notFoundHandler  HandlerFunc
 		pool             sync.Pool
 		Server           *http.Server
 		TLSServer        *http.Server
@@ -90,6 +87,7 @@ type (
 		HidePort         bool
 		HTTPErrorHandler HTTPErrorHandler
 		Binder           Binder
+		JSONSerializer   JSONSerializer
 		Validator        Validator
 		Renderer         Renderer
 		Logger           Logger
@@ -112,10 +110,10 @@ type (
 	}
 
 	// MiddlewareFunc defines a function to process middleware.
-	MiddlewareFunc func(HandlerFunc) HandlerFunc
+	MiddlewareFunc func(next HandlerFunc) HandlerFunc
 
 	// HandlerFunc defines a function to serve HTTP requests.
-	HandlerFunc func(Context) error
+	HandlerFunc func(c Context) error
 
 	// HTTPErrorHandler is a centralized HTTP error handler.
 	HTTPErrorHandler func(error, Context)
@@ -123,6 +121,12 @@ type (
 	// Validator is the interface that wraps the Validate function.
 	Validator interface {
 		Validate(i interface{}) error
+	}
+
+	// JSONSerializer is the interface that encodes and decodes JSON to and from interfaces.
+	JSONSerializer interface {
+		Serialize(c Context, i interface{}, indent string) error
+		Deserialize(c Context, i interface{}) error
 	}
 
 	// Renderer is the interface that wraps the Render function.
@@ -183,8 +187,12 @@ const (
 
 // Headers
 const (
-	HeaderAccept              = "Accept"
-	HeaderAcceptEncoding      = "Accept-Encoding"
+	HeaderAccept         = "Accept"
+	HeaderAcceptEncoding = "Accept-Encoding"
+	// HeaderAllow is the name of the "Allow" header field used to list the set of methods
+	// advertised as supported by the target resource. Returning an Allow header is mandatory
+	// for status 405 (method not found) and useful for the OPTIONS method in responses.
+	// See RFC 7231: https://datatracker.ietf.org/doc/html/rfc7231#section-7.4.1
 	HeaderAllow               = "Allow"
 	HeaderAuthorization       = "Authorization"
 	HeaderContentDisposition  = "Content-Disposition"
@@ -196,6 +204,7 @@ const (
 	HeaderIfModifiedSince     = "If-Modified-Since"
 	HeaderLastModified        = "Last-Modified"
 	HeaderLocation            = "Location"
+	HeaderRetryAfter          = "Retry-After"
 	HeaderUpgrade             = "Upgrade"
 	HeaderVary                = "Vary"
 	HeaderWWWAuthenticate     = "WWW-Authenticate"
@@ -205,11 +214,14 @@ const (
 	HeaderXForwardedSsl       = "X-Forwarded-Ssl"
 	HeaderXUrlScheme          = "X-Url-Scheme"
 	HeaderXHTTPMethodOverride = "X-HTTP-Method-Override"
-	HeaderXRealIP             = "X-Real-IP"
-	HeaderXRequestID          = "X-Request-ID"
+	HeaderXRealIP             = "X-Real-Ip"
+	HeaderXRequestID          = "X-Request-Id"
+	HeaderXCorrelationID      = "X-Correlation-Id"
 	HeaderXRequestedWith      = "X-Requested-With"
 	HeaderServer              = "Server"
 	HeaderOrigin              = "Origin"
+	HeaderCacheControl        = "Cache-Control"
+	HeaderConnection          = "Connection"
 
 	// Access control
 	HeaderAccessControlRequestMethod    = "Access-Control-Request-Method"
@@ -234,7 +246,7 @@ const (
 
 const (
 	// Version of Echo
-	Version = "4.3.0"
+	Version = "4.7.2"
 	website = "https://echo.labstack.com"
 	// http://patorjk.com/software/taag/#p=display&f=Small%20Slant&t=Echo
 	banner = `
@@ -294,6 +306,12 @@ var (
 	}
 
 	MethodNotAllowedHandler = func(c Context) error {
+		// See RFC 7231 section 7.4.1: An origin server MUST generate an Allow field in a 405 (Method Not Allowed)
+		// response and MAY do so in any other response. For disabled resources an empty Allow header may be returned
+		routerAllowMethods, ok := c.Get(ContextKeyHeaderAllow).(string)
+		if ok && routerAllowMethods != "" {
+			c.Response().Header().Set(HeaderAllow, routerAllowMethods)
+		}
 		return ErrMethodNotAllowed
 	}
 )
@@ -301,8 +319,9 @@ var (
 // New creates an instance of Echo.
 func New() (e *Echo) {
 	e = &Echo{
-		Server:    new(http.Server),
-		TLSServer: new(http.Server),
+		filesystem: createFilesystem(),
+		Server:     new(http.Server),
+		TLSServer:  new(http.Server),
 		AutoTLSManager: autocert.Manager{
 			Prompt: autocert.AcceptTOS,
 		},
@@ -315,6 +334,7 @@ func New() (e *Echo) {
 	e.TLSServer.Handler = e
 	e.HTTPErrorHandler = e.DefaultHTTPErrorHandler
 	e.Binder = &DefaultBinder{}
+	e.JSONSerializer = &DefaultJSONSerializer{}
 	e.Logger.SetLevel(log.ERROR)
 	e.StdLogger = stdLog.New(e.Logger.Output(), e.Logger.Prefix()+": ", 0)
 	e.pool.New = func() interface{} {
@@ -349,7 +369,17 @@ func (e *Echo) Routers() map[string]*Router {
 
 // DefaultHTTPErrorHandler is the default HTTP error handler. It sends a JSON response
 // with status code.
+//
+// NOTE: In case errors happens in middleware call-chain that is returning from handler (which did not return an error).
+// When handler has already sent response (ala c.JSON()) and there is error in middleware that is returning from
+// handler. Then the error that global error handler received will be ignored because we have already "commited" the
+// response and status code header has been sent to the client.
 func (e *Echo) DefaultHTTPErrorHandler(err error, c Context) {
+
+	if c.Response().Committed {
+		return
+	}
+
 	he, ok := err.(*HTTPError)
 	if ok {
 		if he.Internal != nil {
@@ -376,15 +406,13 @@ func (e *Echo) DefaultHTTPErrorHandler(err error, c Context) {
 	}
 
 	// Send response
-	if !c.Response().Committed {
-		if c.Request().Method == http.MethodHead { // Issue #608
-			err = c.NoContent(he.Code)
-		} else {
-			err = c.JSON(code, message)
-		}
-		if err != nil {
-			e.Logger.Error(err)
-		}
+	if c.Request().Method == http.MethodHead { // Issue #608
+		err = c.NoContent(he.Code)
+	} else {
+		err = c.JSON(code, message)
+	}
+	if err != nil {
+		e.Logger.Error(err)
 	}
 }
 
@@ -470,50 +498,6 @@ func (e *Echo) Match(methods []string, path string, handler HandlerFunc, middlew
 		routes[i] = e.Add(m, path, handler, middleware...)
 	}
 	return routes
-}
-
-// Static registers a new route with path prefix to serve static files from the
-// provided root directory.
-func (e *Echo) Static(prefix, root string) *Route {
-	if root == "" {
-		root = "." // For security we want to restrict to CWD.
-	}
-	return e.static(prefix, root, e.GET)
-}
-
-func (common) static(prefix, root string, get func(string, HandlerFunc, ...MiddlewareFunc) *Route) *Route {
-	h := func(c Context) error {
-		p, err := url.PathUnescape(c.Param("*"))
-		if err != nil {
-			return err
-		}
-
-		name := filepath.Join(root, filepath.Clean("/"+p)) // "/"+ for security
-		fi, err := os.Stat(name)
-		if err != nil {
-			// The access path does not exist
-			return NotFoundHandler(c)
-		}
-
-		// If the request is for a directory and does not end with "/"
-		p = c.Request().URL.Path // path must not be empty.
-		if fi.IsDir() && p[len(p)-1] != '/' {
-			// Redirect to ends with "/"
-			return c.Redirect(http.StatusMovedPermanently, p+"/")
-		}
-		return c.File(name)
-	}
-	// Handle added routes based on trailing slash:
-	// 	/prefix  => exact route "/prefix" + any route "/prefix/*"
-	// 	/prefix/ => only any route "/prefix/*"
-	if prefix != "" {
-		if prefix[len(prefix)-1] == '/' {
-			// Only add any route for intentional trailing slash
-			return get(prefix+"*", h)
-		}
-		get(prefix, h)
-	}
-	return get(prefix+"/*", h)
 }
 
 func (common) file(path, file string, get func(string, HandlerFunc, ...MiddlewareFunc) *Route,
@@ -626,7 +610,7 @@ func (e *Echo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Acquire context
 	c := e.pool.Get().(*context)
 	c.Reset(r, w)
-	h := NotFoundHandler
+	var h func(Context) error
 
 	if e.premiddleware == nil {
 		e.findRouter(r.Host).Find(r.Method, GetPath(r), c)
@@ -748,7 +732,7 @@ func (e *Echo) StartServer(s *http.Server) (err error) {
 	return s.Serve(e.Listener)
 }
 
-func (e *Echo) configureServer(s *http.Server) (err error) {
+func (e *Echo) configureServer(s *http.Server) error {
 	// Setup
 	e.colorer.SetOutput(e.Logger.Output())
 	s.ErrorLog = e.StdLogger
@@ -763,10 +747,11 @@ func (e *Echo) configureServer(s *http.Server) (err error) {
 
 	if s.TLSConfig == nil {
 		if e.Listener == nil {
-			e.Listener, err = newListener(s.Addr, e.ListenerNetwork)
+			l, err := newListener(s.Addr, e.ListenerNetwork)
 			if err != nil {
 				return err
 			}
+			e.Listener = l
 		}
 		if !e.HidePort {
 			e.colorer.Printf("⇨ http server started on %s\n", e.colorer.Green(e.Listener.Addr()))
@@ -807,7 +792,7 @@ func (e *Echo) TLSListenerAddr() net.Addr {
 }
 
 // StartH2CServer starts a custom http/2 server with h2c (HTTP/2 Cleartext).
-func (e *Echo) StartH2CServer(address string, h2s *http2.Server) (err error) {
+func (e *Echo) StartH2CServer(address string, h2s *http2.Server) error {
 	e.startupMutex.Lock()
 	// Setup
 	s := e.Server
@@ -824,11 +809,12 @@ func (e *Echo) StartH2CServer(address string, h2s *http2.Server) (err error) {
 	}
 
 	if e.Listener == nil {
-		e.Listener, err = newListener(s.Addr, e.ListenerNetwork)
+		l, err := newListener(s.Addr, e.ListenerNetwork)
 		if err != nil {
 			e.startupMutex.Unlock()
 			return err
 		}
+		e.Listener = l
 	}
 	if !e.HidePort {
 		e.colorer.Printf("⇨ http server started on %s\n", e.colorer.Green(e.Listener.Addr()))
