@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcutil/base58"
+	"github.com/bitcoinsv/bsvd/bsvec"
+	"github.com/bitcoinsv/bsvutil/base58"
 )
 
 func base58Encode(input []byte) string {
@@ -24,10 +24,10 @@ func checksum(input []byte) (cksum [4]byte) {
 	return
 }
 
-// AddressFromPublicKey takes a btcec public key and returns a P2PKH address string.
+// AddressFromPublicKey takes a bsvec public key and returns a P2PKH address string.
 // If mainnet parameter is true it will return a mainnet address (starting with a 1).
 // Otherwise (mainnet is false) it will return a testnet address (starting with an m or n).
-func AddressFromPublicKey(pubKey *btcec.PublicKey, mainnet bool) string {
+func AddressFromPublicKey(pubKey *bsvec.PublicKey, mainnet bool) string {
 	hash := Hash160(pubKey.SerializeCompressed())
 
 	// regtest := 111
@@ -66,7 +66,7 @@ func PublicKeyHashFromPublicKeyStr(pubKeyStr string) (string, error) {
 		return "", err
 	}
 
-	pubKey, err := btcec.ParsePubKey(pubKeyBytes, btcec.S256())
+	pubKey, err := bsvec.ParsePubKey(pubKeyBytes, bsvec.S256())
 	if err != nil {
 		return "", err
 	}
@@ -74,9 +74,9 @@ func PublicKeyHashFromPublicKeyStr(pubKeyStr string) (string, error) {
 	return PublicKeyHashFromPublicKey(pubKey), nil
 }
 
-// PublicKeyHashFromPublicKey hashes a btcec public key (in compressed format starting with 03 or 02)
+// PublicKeyHashFromPublicKey hashes a bsvec public key (in compressed format starting with 03 or 02)
 // and returns the hash encoded as a string of hex values.
-func PublicKeyHashFromPublicKey(pubKey *btcec.PublicKey) string {
+func PublicKeyHashFromPublicKey(pubKey *bsvec.PublicKey) string {
 	hash := Hash160(pubKey.SerializeCompressed())
 
 	return hex.EncodeToString(hash)
