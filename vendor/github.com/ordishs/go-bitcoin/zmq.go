@@ -2,9 +2,11 @@ package bitcoin
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 
@@ -41,7 +43,7 @@ func newZMQ(host string, port int, rawRequired bool, optionValue string) *ZMQ {
 	zmq := &ZMQ{
 		address:       fmt.Sprintf("tcp://%s:%d", host, port),
 		subscriptions: make(map[string][]chan []string),
-		topics:        []string{"hashblock", "hashtx", "discardedfrommempool", "removedfrommempoolblock"},
+		topics:        []string{"hashblock", "hashtx", "discardedfrommempool", "removedfrommempoolblock", "invalidtx"},
 	}
 
 	if rawRequired {
@@ -99,8 +101,16 @@ func newZMQ(host string, port int, rawRequired bool, optionValue string) *ZMQ {
 					// log.Printf("%s: %s", string(msg.Frames[0]), hex.EncodeToString(msg.Frames[1]))
 					zmq.mu.RLock()
 					subscribers := zmq.subscriptions[string(msg.Frames[0])]
+
+					sequence := "N/A"
+
+					if len(msg.Frames) > 2 && len(msg.Frames[2]) == 4 {
+						s := binary.LittleEndian.Uint32(msg.Frames[2])
+						sequence = strconv.FormatInt(int64(s), 10)
+					}
+
 					for _, subscriber := range subscribers {
-						subscriber <- []string{string(msg.Frames[0]), hex.EncodeToString(msg.Frames[1])}
+						subscriber <- []string{string(msg.Frames[0]), hex.EncodeToString(msg.Frames[1]), sequence}
 					}
 					zmq.mu.RUnlock()
 				}
