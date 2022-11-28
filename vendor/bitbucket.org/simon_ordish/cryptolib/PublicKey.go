@@ -11,8 +11,8 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcutil/base58"
+	"github.com/bitcoinsv/bsvd/bsvec"
+	"github.com/bitcoinsv/bsvutil/base58"
 	"golang.org/x/crypto/ripemd160"
 )
 
@@ -52,7 +52,7 @@ type PublicKey struct {
 	XPubKey              string `json:"xpubkey"`    // 'xpub661My
 }
 
-var curve = btcec.S256()
+var curve = bsvec.S256()
 
 // NewPrivateKey comment TODO: public key or private key?
 func NewPrivateKey(xprv string) (*PublicKey, error) {
