@@ -44,6 +44,16 @@ type GetInfo struct {
 	MaxStackMemoryUsageConsensus uint64  `json:"maxstackmemoryusageconsensus"`
 }
 
+type Tip struct {
+	Height    uint64 `json:"height"`
+	Hash      string `json:"hash"`
+	BranchLen uint32 `json:"branchlen"`
+	Status    string `json:"status"`
+}
+
+// ChainTips comment
+type ChainTips []Tip
+
 // Network comment
 type Network struct {
 	Name                       string `json:"name"`
@@ -62,22 +72,26 @@ type LocalAddress struct {
 
 // NetworkInfo comment
 type NetworkInfo struct {
-	Version           int            `json:"version"`
-	SubVersion        string         `json:"subversion"`
-	ProtocolVersion   int            `json:"protocolversion"`
-	LocalServices     string         `json:"localservices"`
-	LocalRelay        bool           `json:"localrelay"`
-	TimeOffset        int            `json:"timeoffset"`
-	TXPropagationFreq int            `json:"txnpropagationfreq"`
-	TXPropagationLen  int            `json:"txnpropagationqlen"`
-	NetworkActive     bool           `json:"networkactive"`
-	Connections       int            `json:"connections"`
-	AddressCount      int            `json:"addresscount"`
-	Networks          []Network      `json:"networks"`
-	RelayFee          float64        `json:"relayfee"`
-	ExcessUTXOCharge  float64        `json:"excessutxocharge"`
-	LocalAddresses    []LocalAddress `json:"localaddresses"`
-	Warnings          string         `json:"warnings"`
+	Version                         int            `json:"version"`
+	SubVersion                      string         `json:"subversion"`
+	ProtocolVersion                 int            `json:"protocolversion"`
+	LocalServices                   string         `json:"localservices"`
+	LocalRelay                      bool           `json:"localrelay"`
+	TimeOffset                      int            `json:"timeoffset"`
+	TXPropagationFreq               int            `json:"txnpropagationfreq"`
+	TXPropagationLen                int            `json:"txnpropagationqlen"`
+	NetworkActive                   bool           `json:"networkactive"`
+	Connections                     int            `json:"connections"`
+	AddressCount                    int            `json:"addresscount"`
+	Networks                        []Network      `json:"networks"`
+	RelayFee                        float64        `json:"relayfee"`
+	MinConsolidationFactor          int            `json:"minconsolidationfactor"`
+	MinConsolidationInputMaturity   int            `json:"minconsolidationinputmaturity"`
+	MaxConsolidationInputScriptSize int            `json:"maxconsolidationinputscriptsize"`
+	AcceptNonStdConsolidationInput  bool           `json:"acceptnonstdconsolidationinput"`
+	ExcessUTXOCharge                float64        `json:"excessutxocharge"`
+	LocalAddresses                  []LocalAddress `json:"localaddresses"`
+	Warnings                        string         `json:"warnings"`
 }
 
 // NetTotals comment
@@ -173,6 +187,15 @@ type MempoolInfo struct {
 	Usage          int     `json:"usage"`
 	MaxMemPool     int     `json:"maxmempool"`
 	MemPoolMinFree float64 `json:"mempoolminfee"`
+}
+
+type MempoolEntry struct {
+	Size        int      `json:"size"`
+	Fee         float64  `json:"fee"`
+	ModifiedFee float64  `json:"modifiedfee"`
+	Time        int      `json:"time"`
+	Height      int      `json:"height"`
+	Depends     []string `json:"depends"`
 }
 
 // ChainTXStats struct
@@ -338,7 +361,8 @@ type BlockHeader struct {
 	Chainwork         string  `json:"chainwork"`
 	PreviousBlockHash string  `json:"previousblockhash"`
 	NextBlockHash     string  `json:"nextblockhash"`
-	TXCount           uint32  `json:"num_tx"`
+	NTx               uint64  `json:"nTx"`
+	TxCount           uint64  `json:"num_tx"`
 }
 
 // BlockHeaderAndCoinbase comment
@@ -360,6 +384,34 @@ type BlockHeaderAndCoinbase struct {
 	Tx                []RawTransaction `json:"tx"`
 }
 
+type BlockStats struct {
+	AvgFee        float64 `json:"avgfee"`
+	AvgFeeRate    float64 `json:"avgfeerate"`
+	AvgTxSize     int     `json:"avgtxsize"`
+	BlockHash     string  `json:"blockhash"`
+	Height        int     `json:"height"`
+	Ins           int     `json:"ins"`
+	MaxFee        float64 `json:"maxfee"`
+	MaxFeeRate    float64 `json:"maxfeerate"`
+	MaxTxSize     int     `json:"maxtxsize"`
+	MedianFee     float64 `json:"medianfee"`
+	MedianFeeRate float64 `json:"medianfeerate"`
+	MedianTime    int     `json:"mediantime"`
+	MedianTxSize  int     `json:"mediantxsize"`
+	MinFee        float64 `json:"minfee"`
+	MinFeeRate    float64 `json:"minfeerate"`
+	MinTxSize     int     `json:"mintxsize"`
+	Outs          int     `json:"outs"`
+	Subsidy       float64 `json:"subsidy"`
+	Time          int     `json:"time"`
+	TotalOut      float64 `json:"total_out"`
+	TotalSize     int     `json:"total_size"`
+	TotalFee      float64 `json:"totalfee"`
+	Txs           int     `json:"txs"`
+	UtxoIncrease  int     `json:"utxo_increase"`
+	UtxoSizeInc   int     `json:"utxo_size_inc"`
+}
+
 // BlockPage to store links
 type BlockPage struct {
 	URI  []string `json:"uri"`
@@ -377,19 +429,19 @@ type BlockTxid struct {
 
 // RawTransaction comment
 type RawTransaction struct {
-	Hex           string `json:"hex"`
-	TxID          string `json:"txid"`
-	Hash          string `json:"hash"`
-	Version       int32  `json:"version"`
-	Size          uint32 `json:"size"`
-	LockTime      uint32 `json:"locktime"`
-	Vin           []Vin  `json:"vin"`
-	Vout          []Vout `json:"vout"`
-	BlockHash     string `json:"blockhash,omitempty"`
-	Confirmations uint32 `json:"confirmations,omitempty"`
-	Time          int64  `json:"time,omitempty"`
-	Blocktime     int64  `json:"blocktime,omitempty"`
-	BlockHeight   uint64 `json:"blockheight,omitempty"`
+	Hex           string  `json:"hex,omitempty"`
+	TxID          string  `json:"txid"`
+	Hash          string  `json:"hash"`
+	Version       int32   `json:"version"`
+	Size          uint32  `json:"size"`
+	LockTime      uint32  `json:"locktime"`
+	Vin           []*Vin  `json:"vin"`
+	Vout          []*Vout `json:"vout"`
+	BlockHash     string  `json:"blockhash,omitempty"`
+	Confirmations uint32  `json:"confirmations,omitempty"`
+	Time          int64   `json:"time,omitempty"`
+	Blocktime     int64   `json:"blocktime,omitempty"`
+	BlockHeight   uint64  `json:"blockheight,omitempty"`
 }
 
 // Vout represent an OUT value
@@ -416,6 +468,12 @@ type OpReturn struct {
 	Parts  []string `json:"parts"`
 }
 
+// Tag
+type Tag struct {
+	Type   string `json:"type"`
+	Action string `json:"action"`
+}
+
 // ScriptPubKey Comment
 type ScriptPubKey struct {
 	ASM         string    `json:"asm"`
@@ -423,11 +481,12 @@ type ScriptPubKey struct {
 	ReqSigs     int64     `json:"reqSigs,omitempty"`
 	Type        string    `json:"type"`
 	Addresses   []string  `json:"addresses,omitempty"`
-	OpReturn    *OpReturn `json:"opReturn"`
+	OpReturn    *OpReturn `json:"opReturn,omitempty"`
+	Tag         *Tag      `json:"tag,omitempty"`
 	IsTruncated bool      `json:"isTruncated"`
 }
 
-// A ScriptSig represents a scriptsyg
+// A ScriptSig represents a scriptsig
 type ScriptSig struct {
 	ASM string `json:"asm"`
 	Hex string `json:"hex"`
@@ -442,6 +501,14 @@ type UnspentTransaction struct {
 	Amount        float64 `json:"amount"`
 	Satoshis      uint64  `json:"satoshis"`
 	Confirmations uint32  `json:"confirmations"`
+}
+
+type TXOut struct {
+	BestBlock     string       `json:"bestblock"`
+	Confirmations int          `json:"confirmations"`
+	Value         float64      `json:"value"`
+	ScriptPubKey  ScriptPubKey `json:"scriptPubKey"`
+	Coinbase      bool         `json:"coinbase"`
 }
 
 // SignRawTransactionResponse struct
