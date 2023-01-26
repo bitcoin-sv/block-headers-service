@@ -33,10 +33,18 @@ func IsClientError(err error) bool {
 // error logging system to be rectified.
 // In terms of a web server, this would be a 5XX error.
 type InternalError interface {
+	// ID is a unique id for this particular message to help identification
 	ID() string
+	// Code is an optional error code, all erorrs of the same reason could have
+	// a code assigned for machine handling of errors.
+	Code() string
+
+	// Message is the human readable reason for the error.
 	Message() string
+	// Stack is the full stack trace of the error, you may want to redact this in production environments.
 	Stack() string
-	Metadata() map[string]string
+	// Metadata can be used to provide structured fields to an error message.
+	Metadata() map[string]interface{}
 }
 
 // IsInternalError will return true if this is an InternalError.
@@ -123,5 +131,17 @@ type Unavailable interface {
 // IsUnavailable will check that an error is an Unavailable type.
 func IsUnavailable(err error) bool {
 	var t Unavailable
+	return errors.As(err, &t)
+}
+
+// Retryable when implemented will indicate that the error is retryable
+// at which point you can try to re-submit as there is a chance it could succeed.
+type Retryable interface {
+	Retryable() bool
+}
+
+// IsRetryable will check that an error is a Retryable type.
+func IsRetryable(err error) bool {
+	var t Retryable
 	return errors.As(err, &t)
 }

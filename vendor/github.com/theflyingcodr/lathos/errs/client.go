@@ -1,6 +1,8 @@
 package errs
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 )
 
@@ -78,6 +80,15 @@ func NewErrNotFound(code, detail string) ErrNotFound {
 	}
 }
 
+// NewErrNotFoundf will create and return a new NotFound error.
+// You can supply a code which can be set in your application to identify
+// a particular error in code such as E404.
+// Detail can be supplied to give more context to the error, ie
+// "resource 123 does not exist".
+func NewErrNotFoundf(code, detail string, a ...interface{}) ErrNotFound {
+	return NewErrNotFound(code, fmt.Sprintf(detail, a...))
+}
+
 // NotFound implements the NotFound interface
 // and is used in error type checks.
 func (e ErrNotFound) NotFound() bool {
@@ -101,6 +112,15 @@ func NewErrDuplicate(code, detail string) ErrDuplicate {
 	return ErrDuplicate{
 		ErrClient: c,
 	}
+}
+
+// NewErrDuplicatef will create and return a new Duplicate error.
+// You can supply a code which can be set in your application to identify
+// a particular error in code such as D001.
+// Detail can be supplied to give more context to the error, ie
+// "resource 123 already exists".
+func NewErrDuplicatef(code, detail string, a ...interface{}) ErrDuplicate {
+	return NewErrDuplicate(code, fmt.Sprintf(detail, a...))
 }
 
 // Duplicate implements the Duplicate interface and
@@ -129,6 +149,16 @@ func NewErrNotAuthenticated(code, detail string) ErrNotAuthenticated {
 	}
 }
 
+// NewErrNotAuthenticatedf will create and return a new NotAuthenticated error.
+// You can supply a code which can be set in your application to identify
+// a particular error in code such as F001 which can be handled by clients
+// to show a custom message.
+// Detail can be supplied to give more context to the error, ie
+// "user not authenticated".
+func NewErrNotAuthenticatedf(code, detail string, a ...interface{}) ErrNotAuthenticated {
+	return NewErrNotAuthenticated(code, fmt.Sprintf(detail, a...))
+}
+
 // NotAuthenticated implements the NotAuthenticated interface
 // and is used in error type checks.
 func (e ErrNotAuthenticated) NotAuthenticated() bool {
@@ -152,6 +182,15 @@ func NewErrNotAuthorised(code, detail string) ErrNotAuthorised {
 	return ErrNotAuthorised{
 		ErrClient: c,
 	}
+}
+
+// NewErrNotAuthorisedf will create and return a new NotAuthorised error.
+// You can supply a code which can be set in your application to identify
+// a particular error in code such as F001.
+// Detail can be supplied to give more context to the error, ie
+// "user 123 cannot access resource".
+func NewErrNotAuthorisedf(code, detail string, a ...interface{}) ErrNotAuthorised {
+	return NewErrNotAuthorised(code, fmt.Sprintf(detail, a...))
 }
 
 // NotAuthorised implements the NotAuthorised interface
@@ -179,9 +218,18 @@ func NewErrNotAvailable(code, detail string) ErrNotAvailable {
 	}
 }
 
-// NotAvailable implements the NotAvailable interface used
+// NewErrNotAvailablef will create and return a new NotAvailable error.
+// You can supply a code which can be set in your application to identify
+// a particular error in code such as U001.
+// Detail can be supplied to give more context to the error, ie
+// "the service is not currently available".
+func NewErrNotAvailablef(code, detail string, a ...interface{}) ErrNotAvailable {
+	return NewErrNotAvailable(code, fmt.Sprintf(detail, a...))
+}
+
+// Unavailable implements the Unavailable interface used
 // in error checking.
-func (e ErrNotAvailable) NotAvailable() bool {
+func (e ErrNotAvailable) Unavailable() bool {
 	return true
 }
 
@@ -204,8 +252,11 @@ func NewErrUnprocessable(code, detail string) ErrUnprocessable {
 	}
 }
 
-// Unprocessable implements the Unprocessable interface
-// and is used in error checking code.
-func (e ErrUnprocessable) Unprocessable() bool {
-	return true
+// NewErrUnprocessablef will create and return a new Unprocessable error.
+// You can supply a code which can be set in your application to identify
+// a particular error in code such as U001.
+// Detail can be supplied to give more context to the error, ie
+// "cannot process this request".
+func NewErrUnprocessablef(code, detail string, a ...interface{}) ErrUnprocessable {
+	return NewErrUnprocessable(code, fmt.Sprintf(detail, a...))
 }
