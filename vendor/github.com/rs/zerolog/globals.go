@@ -19,6 +19,10 @@ const (
 	// TimeFormatUnixMicro defines a time format that makes time fields to be
 	// serialized as Unix timestamp integers in microseconds.
 	TimeFormatUnixMicro = "UNIXMICRO"
+
+	// TimeFormatUnixNano defines a time format that makes time fields to be
+	// serialized as Unix timestamp integers in nanoseconds.
+	TimeFormatUnixNano = "UNIXNANO"
 )
 
 var (
@@ -61,7 +65,7 @@ var (
 	CallerSkipFrameCount = 2
 
 	// CallerMarshalFunc allows customization of global caller marshaling
-	CallerMarshalFunc = func(file string, line int) string {
+	CallerMarshalFunc = func(pc uintptr, file string, line int) string {
 		return file + ":" + strconv.Itoa(line)
 	}
 
@@ -81,7 +85,7 @@ var (
 	InterfaceMarshalFunc = json.Marshal
 
 	// TimeFieldFormat defines the time format of the Time field type. If set to
-	// TimeFormatUnix, TimeFormatUnixMs or TimeFormatUnixMicro, the time is formatted as an UNIX
+	// TimeFormatUnix, TimeFormatUnixMs, TimeFormatUnixMicro or TimeFormatUnixNano, the time is formatted as a UNIX
 	// timestamp as integer.
 	TimeFieldFormat = time.RFC3339
 
@@ -100,6 +104,10 @@ var (
 	// output. If not set, an error is printed on the stderr. This handler must
 	// be thread safe and non-blocking.
 	ErrorHandler func(err error)
+
+	// DefaultContextLogger is returned from Ctx() if there is no logger associated
+	// with the context.
+	DefaultContextLogger *Logger
 )
 
 var (
