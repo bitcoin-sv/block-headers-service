@@ -2,7 +2,6 @@ package echo
 
 import (
 	"encoding"
-	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -66,13 +65,13 @@ func (b *DefaultBinder) BindBody(c Context, i interface{}) (err error) {
 	ctype := req.Header.Get(HeaderContentType)
 	switch {
 	case strings.HasPrefix(ctype, MIMEApplicationJSON):
-		if err = json.NewDecoder(req.Body).Decode(i); err != nil {
-			if ute, ok := err.(*json.UnmarshalTypeError); ok {
-				return NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Unmarshal type error: expected=%v, got=%v, field=%v, offset=%v", ute.Type, ute.Value, ute.Field, ute.Offset)).SetInternal(err)
-			} else if se, ok := err.(*json.SyntaxError); ok {
-				return NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Syntax error: offset=%v, error=%v", se.Offset, se.Error())).SetInternal(err)
+		if err = c.Echo().JSONSerializer.Deserialize(c, i); err != nil {
+			switch err.(type) {
+			case *HTTPError:
+				return err
+			default:
+				return NewHTTPError(http.StatusBadRequest, err.Error()).SetInternal(err)
 			}
-			return NewHTTPError(http.StatusBadRequest, err.Error()).SetInternal(err)
 		}
 	case strings.HasPrefix(ctype, MIMEApplicationXML), strings.HasPrefix(ctype, MIMETextXML):
 		if err = xml.NewDecoder(req.Body).Decode(i); err != nil {
@@ -97,6 +96,14 @@ func (b *DefaultBinder) BindBody(c Context, i interface{}) (err error) {
 	return nil
 }
 
+// BindHeaders binds HTTP headers to a bindable object
+func (b *DefaultBinder) BindHeaders(c Context, i interface{}) error {
+	if err := b.bindData(i, c.Request().Header, "header"); err != nil {
+		return NewHTTPError(http.StatusBadRequest, err.Error()).SetInternal(err)
+	}
+	return nil
+}
+
 // Bind implements the `Binder#Bind` function.
 // Binding is done in following order: 1) path params; 2) query params; 3) request body. Each step COULD override previous
 // step binded values. For single source binding use their own methods BindBody, BindQueryParams, BindPathParams.
@@ -104,11 +111,11 @@ func (b *DefaultBinder) Bind(i interface{}, c Context) (err error) {
 	if err := b.BindPathParams(c, i); err != nil {
 		return err
 	}
-	// Issue #1670 - Query params are binded only for GET/DELETE and NOT for usual request with body (POST/PUT/PATCH)
-	// Reasoning here is that parameters in query and bind destination struct could have UNEXPECTED matches and results due that.
-	// i.e. is `&id=1&lang=en` from URL same as `{"id":100,"lang":"de"}` request body and which one should have priority when binding.
-	// This HTTP method check restores pre v4.1.11 behavior and avoids different problems when query is mixed with body
-	if c.Request().Method == http.MethodGet || c.Request().Method == http.MethodDelete {
+	// Only bind query parameters for GET/DELETE/HEAD to avoid unexpected behavior with destination struct binding from body.
+	// For example a request URL `&id=1&lang=en` with body `{"id":100,"lang":"de"}` would lead to precedence issues.
+	// The HTTP method check restores pre-v4.1.11 behavior to avoid these problems (see issue #1670)
+  method := c.Request().Method
+	if method == http.MethodGet || method == http.MethodDelete || method == http.MethodHead {
 		if err = b.BindQueryParams(c, i); err != nil {
 			return err
 		}
@@ -134,7 +141,7 @@ func (b *DefaultBinder) bindData(destination interface{}, data map[string][]stri
 
 	// !struct
 	if typ.Kind() != reflect.Struct {
-		if tag == "param" || tag == "query" {
+		if tag == "param" || tag == "query" || tag == "header" {
 			// incompatible type, data is probably to be found in the body
 			return nil
 		}
