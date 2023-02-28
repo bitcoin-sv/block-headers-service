@@ -9,9 +9,8 @@ require (
 	github.com/labstack/echo/v4 v4.3.0
 	github.com/labstack/gommon v0.3.0
 	github.com/lib/pq v1.8.0
-	github.com/libsv/go-bc v0.1.1
 	github.com/mattn/go-sqlite3 v1.14.6
-	github.com/ordishs/go-bitcoin v1.0.41
+	github.com/ordishs/go-bitcoin v1.0.79
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.23.0
 	github.com/spf13/viper v1.8.1
