@@ -7,7 +7,7 @@ package wire
 import (
 	"io"
 
-	"github.com/gignative-solutions/ba-p2p-headers/internal/chaincfg/chainhash"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 )
 
 // MaxGetCFiltersReqRange the maximum number of filters that may be requested in

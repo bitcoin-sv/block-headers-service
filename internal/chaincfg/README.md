@@ -24,8 +24,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/gignative-solutions/ba-p2p-headers/p2putil"
-	"github.com/gignative-solutions/ba-p2p-headers/chaincfg"
+	"github.com/libsv/bitcoin-hc/p2putil"
+	"github.com/libsv/bitcoin-hc/chaincfg"
 )
 
 var testnet = flag.Bool("testnet", false, "operate on the testnet Bitcoin network")

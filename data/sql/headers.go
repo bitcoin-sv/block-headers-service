@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/gignative-solutions/ba-p2p-headers/configs"
-	"github.com/gignative-solutions/ba-p2p-headers/domains"
-	"github.com/gignative-solutions/ba-p2p-headers/vconfig"
 	"github.com/jmoiron/sqlx"
+	"github.com/libsv/bitcoin-hc/configs"
+	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/libsv/bitcoin-hc/vconfig"
 	"github.com/pkg/errors"
 )
 

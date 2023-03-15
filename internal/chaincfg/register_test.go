@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	. "github.com/gignative-solutions/ba-p2p-headers/internal/chaincfg"
+	. "github.com/libsv/bitcoin-hc/internal/chaincfg"
 )
 
 // Define some of the required parameters for a user-registered

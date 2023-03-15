@@ -20,12 +20,12 @@ import (
 	"time"
 
 	"github.com/btcsuite/go-socks/socks"
-	"github.com/gignative-solutions/ba-p2p-headers/internal/chaincfg"
-	"github.com/gignative-solutions/ba-p2p-headers/internal/chaincfg/chainhash"
-	"github.com/gignative-solutions/ba-p2p-headers/transports/p2p/connmgr"
-	"github.com/gignative-solutions/ba-p2p-headers/transports/p2p/p2plog"
-	"github.com/gignative-solutions/ba-p2p-headers/transports/p2p/p2putil"
-	"github.com/gignative-solutions/ba-p2p-headers/version"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
+	"github.com/libsv/bitcoin-hc/transports/p2p/connmgr"
+	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
+	"github.com/libsv/bitcoin-hc/transports/p2p/p2putil"
+	"github.com/libsv/bitcoin-hc/version"
 
 	flags "github.com/jessevdk/go-flags"
 )
@@ -124,10 +124,10 @@ type config struct {
 	oniondial                 func(string, string, time.Duration) (net.Conn, error)
 	dial                      func(string, string, time.Duration) (net.Conn, error)
 	AddCheckpointsSlice       []chaincfg.Checkpoint
-	Checkpoints				  []chaincfg.Checkpoint
+	Checkpoints               []chaincfg.Checkpoint
 	Logger                    p2plog.Logger
 	BlocksForForkConfirmation int
-	TimeSource				  MedianTimeSource			  
+	TimeSource                MedianTimeSource
 }
 
 var (

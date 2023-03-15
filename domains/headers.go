@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gignative-solutions/ba-p2p-headers/internal/chaincfg"
-	"github.com/gignative-solutions/ba-p2p-headers/internal/chaincfg/chainhash"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 )
 
 var log2FloorMasks = []uint32{0xffff0000, 0xff00, 0xf0, 0xc, 0x2}

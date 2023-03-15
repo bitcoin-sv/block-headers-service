@@ -5,9 +5,9 @@
 package configs
 
 import (
-	"github.com/gignative-solutions/ba-p2p-headers/internal/chaincfg"
-	"github.com/gignative-solutions/ba-p2p-headers/internal/chaincfg/chainhash"
-	"github.com/gignative-solutions/ba-p2p-headers/internal/wire"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
+	"github.com/libsv/bitcoin-hc/internal/wire"
 )
 
 // ActiveNetParams is a pointer to the parameters specific to the

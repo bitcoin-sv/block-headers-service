@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/gignative-solutions/ba-p2p-headers/internal/chaincfg/chainhash"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 )
 
 // TestMerkleBlock tests the MsgMerkleBlock API.

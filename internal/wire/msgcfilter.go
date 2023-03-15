@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/gignative-solutions/ba-p2p-headers/internal/chaincfg/chainhash"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 )
 
 // FilterType is used to represent a filter type.

@@ -7,9 +7,9 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 
-	"github.com/gignative-solutions/ba-p2p-headers/vconfig"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
+	"github.com/libsv/bitcoin-hc/vconfig"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
 )

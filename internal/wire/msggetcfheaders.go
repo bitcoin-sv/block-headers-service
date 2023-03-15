@@ -7,7 +7,7 @@ package wire
 import (
 	"io"
 
-	"github.com/gignative-solutions/ba-p2p-headers/internal/chaincfg/chainhash"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 )
 
 // MsgGetCFHeaders is a message similar to MsgGetHeaders, but for committed

@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/gignative-solutions/ba-p2p-headers/internal/chaincfg/chainhash"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 )
 
 // defaultTransactionAlloc is the default size used for the backing array

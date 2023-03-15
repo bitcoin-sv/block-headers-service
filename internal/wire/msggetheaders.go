@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/gignative-solutions/ba-p2p-headers/internal/chaincfg/chainhash"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 )
 
 // MsgGetHeaders implements the Message interface and represents a bitcoin

@@ -3,8 +3,8 @@ package databases
 import (
 	"fmt"
 
-	"github.com/gignative-solutions/ba-p2p-headers/vconfig"
 	"github.com/jmoiron/sqlx"
+	"github.com/libsv/bitcoin-hc/vconfig"
 )
 
 type dbSetupFunc func(c *vconfig.Db) (*sqlx.DB, error)

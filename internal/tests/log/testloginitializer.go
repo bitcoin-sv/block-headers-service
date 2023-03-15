@@ -3,7 +3,7 @@ package testlog
 import (
 	"os"
 
-	"github.com/gignative-solutions/ba-p2p-headers/transports/p2p/p2plog"
+	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
 )
 
 type logWriter struct{}
