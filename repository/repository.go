@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"github.com/gignative-solutions/ba-p2p-headers/data/sql"
-	"github.com/gignative-solutions/ba-p2p-headers/domains"
+	"github.com/libsv/bitcoin-hc/data/sql"
+	"github.com/libsv/bitcoin-hc/domains"
 )
 
 type Headers interface {

@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 
-	"github.com/gignative-solutions/ba-p2p-headers/data/sql"
-	"github.com/gignative-solutions/ba-p2p-headers/domains"
+	"github.com/libsv/bitcoin-hc/data/sql"
+	"github.com/libsv/bitcoin-hc/domains"
 )
 
 type HeaderRepository struct {

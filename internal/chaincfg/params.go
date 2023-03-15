@@ -10,8 +10,8 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/gignative-solutions/ba-p2p-headers/internal/chaincfg/chainhash"
-	"github.com/gignative-solutions/ba-p2p-headers/internal/wire"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
+	"github.com/libsv/bitcoin-hc/internal/wire"
 )
 
 // These variables are the chain proof-of-work limit parameters for each default
