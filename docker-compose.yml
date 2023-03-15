@@ -1,20 +1,15 @@
-version: '3.7'
+version: '3.8'
 
 services:
-  headers-client:
-    container_name: headers-client
-    image: libsv/bitcoin-hc:latest
+  app:
+    container_name: p2p-headers
+    build: ./
     ports:
-      - "8442:8442"
+      - "8080:8080"
+      - "8333:8333"
     environment:
-      - DB_DSN=file:/data/blockheaders.db?_foreign_keys=true&pooled=true;
+      - DB_DSN=file:/data/blockheaders.db?_foreign_keys=true&pooled=true
       - DB_SCHEMA_PATH=/migrations
     restart: unless-stopped
     volumes:
-      - ~/data/headers-client:/data
-    networks:
-      - regtest-stack
-
-networks:
-  regtest-stack:
-    name: regtest-stack
+      - ~/data/p2p-headers:/data

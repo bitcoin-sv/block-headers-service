@@ -1,0 +1,217 @@
+definitions:
+  headers.BlockHeader:
+    properties:
+      creationTimestamp:
+        type: string
+      difficultyTarget:
+        type: integer
+      hash:
+        type: string
+      merkleRoot:
+        type: string
+      nonce:
+        type: integer
+      prevBlockHash:
+        type: string
+      transactionCount:
+        type: integer
+      version:
+        type: integer
+      work:
+        type: integer
+    type: object
+  headers.BlockHeaderState:
+    properties:
+      chainWork:
+        type: integer
+      confirmations:
+        type: integer
+      header:
+        $ref: '#/definitions/headers.BlockHeader'
+      height:
+        type: integer
+      state:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /chain/header/{hash}:
+    get:
+      consumes:
+      - '*/*'
+      parameters:
+      - description: Requested Header Hash
+        in: path
+        name: hash
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/headers.BlockHeader'
+      summary: Gets header by hash
+      tags:
+      - headers
+  /chain/header/{hash}/{ancestorHash}/ancestors:
+    get:
+      consumes:
+      - '*/*'
+      parameters:
+      - description: Requested Header Hash
+        in: path
+        name: hash
+        required: true
+        type: string
+      - description: Ancestor Header Hash
+        in: path
+        name: ancestorHash
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/headers.BlockHeader'
+            type: array
+      summary: Gets header ancestors
+      tags:
+      - headers
+  /chain/header/byHeight:
+    get:
+      consumes:
+      - '*/*'
+      parameters:
+      - description: Height to start from
+        in: query
+        name: height
+        required: true
+        type: integer
+      - description: Headers count (optional)
+        in: query
+        name: count
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/headers.BlockHeader'
+            type: array
+      summary: Gets header by height
+      tags:
+      - headers
+  /chain/header/commonAncestor:
+    post:
+      consumes:
+      - '*/*'
+      parameters:
+      - description: JSON
+        in: body
+        name: ancesstors
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/headers.BlockHeader'
+      summary: Gets common ancestors
+      tags:
+      - headers
+  /chain/header/state/{hash}:
+    get:
+      consumes:
+      - '*/*'
+      parameters:
+      - description: Requested Header Hash
+        in: path
+        name: hash
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/headers.BlockHeaderState'
+      summary: Gets header state
+      tags:
+      - headers
+  /chain/tips:
+    get:
+      consumes:
+      - '*/*'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/headers.BlockHeaderState'
+            type: array
+      summary: Gets all tips
+      tags:
+      - tip
+  /chain/tips/prune/{hash}:
+    get:
+      consumes:
+      - '*/*'
+      parameters:
+      - description: Requested Header Hash
+        in: path
+        name: hash
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Prune tip
+      tags:
+      - tip
+  /network/peers:
+    get:
+      consumes:
+      - '*/*'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Gets all peers
+      tags:
+      - network
+  /network/peers/count:
+    get:
+      consumes:
+      - '*/*'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+      summary: Gets peers count
+      tags:
+      - network
+swagger: "2.0"

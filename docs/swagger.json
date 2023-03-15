@@ -1,0 +1,338 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/chain/header/byHeight": {
+            "get": {
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "headers"
+                ],
+                "summary": "Gets header by height",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Height to start from",
+                        "name": "height",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Headers count (optional)",
+                        "name": "count",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/headers.BlockHeader"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/chain/header/commonAncestor": {
+            "post": {
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "headers"
+                ],
+                "summary": "Gets common ancestors",
+                "parameters": [
+                    {
+                        "description": "JSON",
+                        "name": "ancesstors",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/headers.BlockHeader"
+                        }
+                    }
+                }
+            }
+        },
+        "/chain/header/state/{hash}": {
+            "get": {
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "headers"
+                ],
+                "summary": "Gets header state",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Requested Header Hash",
+                        "name": "hash",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/headers.BlockHeaderState"
+                        }
+                    }
+                }
+            }
+        },
+        "/chain/header/{hash}": {
+            "get": {
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "headers"
+                ],
+                "summary": "Gets header by hash",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Requested Header Hash",
+                        "name": "hash",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/headers.BlockHeader"
+                        }
+                    }
+                }
+            }
+        },
+        "/chain/header/{hash}/{ancestorHash}/ancestors": {
+            "get": {
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "headers"
+                ],
+                "summary": "Gets header ancestors",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Requested Header Hash",
+                        "name": "hash",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Ancestor Header Hash",
+                        "name": "ancestorHash",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/headers.BlockHeader"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/chain/tips": {
+            "get": {
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tip"
+                ],
+                "summary": "Gets all tips",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/headers.BlockHeaderState"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/chain/tips/prune/{hash}": {
+            "get": {
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tip"
+                ],
+                "summary": "Prune tip",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Requested Header Hash",
+                        "name": "hash",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/network/peers": {
+            "get": {
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "network"
+                ],
+                "summary": "Gets all peers",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/network/peers/count": {
+            "get": {
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "network"
+                ],
+                "summary": "Gets peers count",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "headers.BlockHeader": {
+            "type": "object",
+            "properties": {
+                "creationTimestamp": {
+                    "type": "string"
+                },
+                "difficultyTarget": {
+                    "type": "integer"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "merkleRoot": {
+                    "type": "string"
+                },
+                "nonce": {
+                    "type": "integer"
+                },
+                "prevBlockHash": {
+                    "type": "string"
+                },
+                "transactionCount": {
+                    "type": "integer"
+                },
+                "version": {
+                    "type": "integer"
+                },
+                "work": {
+                    "type": "integer"
+                }
+            }
+        },
+        "headers.BlockHeaderState": {
+            "type": "object",
+            "properties": {
+                "chainWork": {
+                    "type": "integer"
+                },
+                "confirmations": {
+                    "type": "integer"
+                },
+                "header": {
+                    "$ref": "#/definitions/headers.BlockHeader"
+                },
+                "height": {
+                    "type": "integer"
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
