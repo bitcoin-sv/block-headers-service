@@ -170,6 +170,18 @@ func findHeader(hash string, headers []domains.BlockHeader) *domains.BlockHeader
 	return nil
 }
 
+func (r *HeaderTestRepository) GetAncestorOnHeight(hash string, height int32) (*domains.BlockHeader, error) {
+	return nil, nil
+}
+
+func (r *HeaderTestRepository) GetAllTips() ([]*domains.BlockHeader, error) {
+	return nil, nil
+}
+
+func (r *HeaderTestRepository) GetChainBetweenTwoHashes(low string, high string) ([]*domains.BlockHeader, error) {
+	return nil, nil
+}
+
 // NewHeadersTestRepository constructor for HeaderTestRepository.
 func NewHeadersTestRepository(db []domains.BlockHeader) *HeaderTestRepository {
 	return &HeaderTestRepository{

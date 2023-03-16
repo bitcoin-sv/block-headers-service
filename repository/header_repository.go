@@ -40,15 +40,6 @@ func (r *HeaderRepository) GetHeaderByHeight(height int32) (*domains.BlockHeader
 	return nil, err
 }
 
-// GetBlockByHash returns header from db by given arguments.
-func (r *HeaderRepository) GetBlockByHash(args domains.HeaderArgs) (*domains.BlockHeader, error) {
-	bh, err := r.db.Header(context.Background(), args)
-	if err == nil {
-		return bh.ToBlockHeader(), nil
-	}
-	return nil, err
-}
-
 // GetHeaderByHeightRange returns headers from db in specified height range.
 func (r *HeaderRepository) GetHeaderByHeightRange(from int, to int) ([]*domains.BlockHeader, error) {
 	dbHeaders, err := r.db.GetHeaderByHeightRange(from, to)
@@ -127,4 +118,28 @@ func (r *HeaderRepository) GetTip() (*domains.BlockHeader, error) {
 	}
 	header := tip.ToBlockHeader()
 	return header, err
+}
+
+func (r *HeaderRepository) GetAncestorOnHeight(hash string, height int32) (*domains.BlockHeader, error) {
+	bh, err := r.db.GetAncestorOnHeight(hash, height)
+	if err == nil {
+		return bh.ToBlockHeader(), nil
+	}
+	return nil, err
+}
+
+func (r *HeaderRepository) GetAllTips() ([]*domains.BlockHeader, error) {
+	tips, err := r.db.GetAllTips()
+	if err == nil {
+		return domains.ConvertToBlockHeader(tips), nil
+	}
+	return nil, err
+}
+
+func (r *HeaderRepository) GetChainBetweenTwoHashes(low string, high string) ([]*domains.BlockHeader, error) {
+	dbHeaders, err := r.db.GetChainBetweenTwoHashes(low, high)
+	if err == nil {
+		return domains.ConvertToBlockHeader(dbHeaders), nil
+	}
+	return nil, err
 }
