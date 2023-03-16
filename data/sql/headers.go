@@ -102,6 +102,7 @@ const (
 	`
 )
 
+// HeadersDb represents a database connection and map of related sql queries.
 type HeadersDb struct {
 	dbType vconfig.DbType
 	db     *sqlx.DB
@@ -121,6 +122,7 @@ func NewHeadersDb(db *sqlx.DB, dbType vconfig.DbType) *HeadersDb {
 	}
 }
 
+// Create method will add new record into db.
 func (h *HeadersDb) Create(ctx context.Context, req domains.DbBlockHeader) error {
 	tx, err := h.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -180,6 +182,7 @@ func (h *HeadersDb) Height(ctx context.Context) (int, error) {
 	return height, nil
 }
 
+// Count will return the current number of headers in db.
 func (h *HeadersDb) Count(ctx context.Context) (int, error) {
 	var count int
 	if err := h.db.GetContext(ctx, &count, sqlHeadersCount); err != nil {
@@ -189,6 +192,7 @@ func (h *HeadersDb) Count(ctx context.Context) (int, error) {
 	return count, nil
 }
 
+// GetHeaderByHash will return header from db with given hash.
 func (h *HeadersDb) GetHeaderByHash(ctx context.Context, hash string) (*domains.DbBlockHeader, error) {
 	var bh domains.DbBlockHeader
 	if err := h.db.GetContext(ctx, &bh, h.db.Rebind(sqlHeader), hash); err != nil {
@@ -200,45 +204,50 @@ func (h *HeadersDb) GetHeaderByHash(ctx context.Context, hash string) (*domains.
 	return &bh, nil
 }
 
+// GetHeaderByHeight will return header from db with given height.
 func (h *HeadersDb) GetHeaderByHeight(ctx context.Context, height int32) (*domains.DbBlockHeader, error) {
 	var bh domains.DbBlockHeader
 	if err := h.db.GetContext(ctx, &bh, h.db.Rebind(sqlHeaderByHeight), height); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("could not find height")
 		}
-		return nil, errors.Wrapf(err, "failed to get blockhash using height %s", height)
+		return nil, errors.Wrapf(err, "failed to get blockhash using height %d", height)
 	}
 	return &bh, nil
 }
 
+// GetHeaderByHeightRange will return headers from db for given height range (including sended height).
 func (h *HeadersDb) GetHeaderByHeightRange(from int, to int) ([]*domains.DbBlockHeader, error) {
 	var bh []*domains.DbBlockHeader
 	if err := h.db.Select(&bh, h.db.Rebind(sqlHeaderByHeightRange), from, to); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("could not find headers in given range")
 		}
-		return nil, errors.Wrapf(err, "failed to get headers using given range from: %s to: %s", from, to)
+		return nil, errors.Wrapf(err, "failed to get headers using given range from: %d to: %d", from, to)
 	}
 	return bh, nil
 }
 
+// GetCurrentTip will return highest header from db.
 func (h *HeadersDb) GetCurrentTip(ctx context.Context) (*domains.DbBlockHeader, error) {
 	var bh domains.DbBlockHeader
 	if err := h.db.GetContext(ctx, &bh, h.db.Rebind(sqlGetTip)); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("no records in db")
 		}
-		return nil, errors.Wrapf(err, "failed to get tip block %s")
+		return nil, errors.Wrapf(err, "failed to get tip block")
 	}
 
 	return &bh, nil
 }
 
+// GenesisExists check if genesis header is present in db.
 func (h *HeadersDb) GenesisExists(ctx context.Context) bool {
 	err := h.db.QueryRow(sqlVerifyIfGenesisPresent)
 	return err == nil
 }
 
+// CalculateConfirmations will calculate number of confirmations for header with given hash.
 func (h *HeadersDb) CalculateConfirmations(ctx context.Context, hash string) (int, error) {
 	var amount int
 	if err := h.db.Select(&amount, h.db.Rebind(sqlCalculateConfirmations), hash); err != nil {
@@ -250,6 +259,7 @@ func (h *HeadersDb) CalculateConfirmations(ctx context.Context, hash string) (in
 	return amount, nil
 }
 
+// GetPreviousHeader will return previous header for this with given hash.
 func (h *HeadersDb) GetPreviousHeader(ctx context.Context, hash string) (*domains.DbBlockHeader, error) {
 	var bh domains.DbBlockHeader
 	if err := h.db.GetContext(ctx, &bh, h.db.Rebind(sqlSelectPreviousBlock), hash); err != nil {
@@ -261,6 +271,7 @@ func (h *HeadersDb) GetPreviousHeader(ctx context.Context, hash string) (*domain
 	return &bh, nil
 }
 
+// GetTip will return highest header from db.
 func (h *HeadersDb) GetTip(ctx context.Context) (*domains.DbBlockHeader, error) {
 	var tip []domains.DbBlockHeader
 	if err := h.db.Select(&tip, sqlSelectTip); err != nil {
