@@ -665,7 +665,7 @@ func (sm *SyncManager) sendGetHeadersWithPassedParams(chainHash []*chainhash.Has
 func (sm *SyncManager) handleInvMsg(imsg *invMsg) {
 	sm.log.Infof("[Headers] handleInvMsg, peer.ID: %d", imsg.peer.ID())
 
-	lastHeader, _ := sm.Services.Headers.BackElement()
+	lastHeader := sm.Services.Headers.GetTip()
 	sm.log.Infof("[Manager] handleInvMsg lastHeaderNode.height : %d", lastHeader.Height)
 
 	peer := imsg.peer
@@ -698,14 +698,14 @@ func (sm *SyncManager) handleInvMsg(imsg *invMsg) {
 	// If our chain is current and a peer announces a block we already
 	// know of, then update their current block height.
 	if lastBlock != -1 && sm.current() {
-		blkHeight, err := sm.Services.Headers.BlockHeightByHash(&invVects[lastBlock].Hash)
+		blkHeight, err := sm.Services.Headers.GetHeightByHash(&invVects[lastBlock].Hash)
 		if err == nil {
 			peer.UpdateLastBlockHeight(blkHeight)
 		}
 	}
 
 	if lastBlock != -1 {
-		lastHeader, _ := sm.Services.Headers.BackElement()
+		lastHeader := sm.Services.Headers.GetTip()
 		sm.log.Infof("[Manager] handleInvMsg  lastConfirmedHeaderNode.hash  : %s", lastHeader.Hash)
 		sm.log.Infof("[Manager] handleInvMsg lastConfirmedHeaderNode.height : %d", lastHeader.Height)
 		sm.log.Infof("[Manager] handleInvMsg &invVects[lastBlock].Hash  : %v", &invVects[lastBlock].Hash)

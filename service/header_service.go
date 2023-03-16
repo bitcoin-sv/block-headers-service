@@ -3,7 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
-	"sort"
+	"math"
 	"time"
 
 	"github.com/libsv/bitcoin-hc/configs"
@@ -49,11 +49,6 @@ func (hs *HeaderService) BackElement() (domains.BlockHeader, error) {
 	return *header, err
 }
 
-// LatestHeaderLocator returns BlockLocator for current chain.
-func (hs *HeaderService) LatestHeaderLocator() domains.BlockLocator {
-	return hs.blockLocator()
-}
-
 // IsCurrent checks if the headers are synchronized and up to date.
 func (hs *HeaderService) IsCurrent() bool {
 	// Not current if the latest main (best) chain height is before the
@@ -75,17 +70,6 @@ func (hs *HeaderService) IsCurrent() bool {
 	// otherwise.
 	minus24Hours := configs.Cfg.TimeSource.AdjustedTime().Add(-24 * time.Hour).Unix()
 	return tip.Timestamp.Unix() >= minus24Hours
-}
-
-// BlockHeightByHash returns height of the header with given hash.
-func (hs *HeaderService) BlockHeightByHash(hash *chainhash.Hash) (int32, error) {
-	bh, err := hs.repo.Headers.GetBlockByHash(domains.HeaderArgs{Blockhash: hash.String()})
-	if err != nil {
-		str := fmt.Sprintf("block %s is not in the main chain", hash)
-		return 0, errors.New(str)
-	}
-
-	return bh.Height, nil
 }
 
 // GetTip returns header which is the tip of the chain.
@@ -136,15 +120,24 @@ func (hs *HeaderService) GetHeaderAncestorsByHash(hash string, ancestorHash stri
 
 	// Check possible errors
 	if err != nil && err2 != nil {
-		return nil, errors.New("error during etting headers with given hashes")
+		return nil, errors.New("error during getting headers with given hashes")
 	} else if ancestorHeader.Height > reqHeader.Height {
 		return nil, errors.New("ancestor header height can not be higher than requested header heght")
 	} else if ancestorHeader.Height == reqHeader.Height {
 		return make([]*domains.BlockHeader, 0), nil
 	}
 
+	a, err := hs.repo.Headers.GetAncestorOnHeight(reqHeader.Hash.String(), ancestorHeader.Height)
+        if err != nil {
+            return nil, errors.New("the headers provided are not part of the same chain")
+        }
+
+	if a.Hash != ancestorHeader.Hash {
+		return nil, errors.New("the headers provided are not part of the same chain")
+	}
+
 	// Get headers from db
-	headers, err := hs.repo.Headers.GetHeaderByHeightRange(int(ancestorHeader.Height), int(reqHeader.Height))
+	headers, err := hs.repo.Headers.GetChainBetweenTwoHashes(ancestorHash, hash)
 
 	if err == nil {
 		return headers, nil
@@ -154,27 +147,49 @@ func (hs *HeaderService) GetHeaderAncestorsByHash(hash string, ancestorHash stri
 
 // GetCommonAncestors returns first ancestor for given slice of hashes.
 func (hs *HeaderService) GetCommonAncestors(hashes []string) (*domains.BlockHeader, error) {
-	headers := make([]*domains.BlockHeader, 0)
+	var headers []*domains.BlockHeader
+    height := int32(math.MaxInt32)
 
-	for _, hash := range hashes {
-		header, err := hs.repo.Headers.GetHeaderByHash(hash)
-		if err != nil {
-			return nil, err
-		}
+    for _, hash := range hashes {
+        header, err := hs.repo.Headers.GetHeaderByHash(hash)
+        if err != nil {
+            return nil, err
+        }
 
-		headers = append(headers, header)
-	}
+        headers = append(headers, header)
+        if header.Height < height {
+            height = header.Height
+        }
+    }
 
-	// sort slice to get the lowest height
-	sort.SliceStable(headers, func(i, j int) bool {
-		return headers[i].Height < headers[j].Height
-	})
+    if height < 1 {
+        return nil, nil
+    }
+    height--
 
-	header, err := hs.repo.Headers.GetHeaderByHeight(headers[0].Height - 1)
-	if err == nil {
-		return header, nil
-	}
-	return nil, err
+    for i, h := range headers {
+        a, err := hs.repo.Headers.GetAncestorOnHeight(h.Hash.String(), height)
+        if err != nil {
+            return nil, err
+        }
+        headers[i] = a
+    }
+
+    for height >= 0 {
+        if areAllElementsEqual(headers) {
+            return headers[0], nil
+        }
+        for i := range headers {
+            h, err := hs.repo.Headers.GetPreviousHeader(headers[i].Hash.String())
+            if err != nil {
+                return nil, err
+            }
+            headers[i] = h
+        } 
+        height--
+    }
+
+    return nil, nil
 }
 
 // GetHeadersState returns state of the header with given hash.
@@ -195,7 +210,8 @@ func (hs *HeaderService) GetHeadersState(hash string) (*domains.BlockHeaderState
 	return &state, nil
 }
 
-func (hs *HeaderService) blockLocator() domains.BlockLocator {
+// LatestHeaderLocator returns BlockLocator for current chain.
+func (hs *HeaderService) LatestHeaderLocator() domains.BlockLocator {
 	tip := hs.GetTip()
 	if tip == nil {
 		return nil
@@ -247,6 +263,16 @@ func (hs *HeaderService) blockLocator() domains.BlockLocator {
 	return locator
 }
 
+// GetHeightByHash calculates height by hash
+func (hs *HeaderService) GetHeightByHash(hash *chainhash.Hash) (int32, error) {
+	bh, err := hs.repo.Headers.GetHeaderByHash(hash.String())
+	if err != nil {
+		str := fmt.Sprintf("block %s is not in the main chain", hash)
+		return 0, errors.New(str)
+	}
+
+	return bh.Height, nil
+}
 
 // LocateHeaders fetches headers for a number of blocks after the most recent known block
 // in the best chain, based on the provided block locator and stop hash, and defaults to the
@@ -285,7 +311,7 @@ func (hs *HeaderService) locateHeaders(locator domains.BlockLocator, hashStop *c
 func (hs *HeaderService) locateInventory(locator domains.BlockLocator, hashStop *chainhash.Hash, maxEntries uint32) (*domains.BlockHeader, uint32) {
 	// There are no block locators so a specific block is being requested
 	// as identified by the stop hash.
-	stopNode := hs.LookupNode(hashStop)
+	stopNode, _ := hs.GetHeaderByHash(hashStop.String())
 	if len(locator) == 0 {
 		if stopNode == nil {
 			// No blocks with the stop hash were found so there is
@@ -300,7 +326,7 @@ func (hs *HeaderService) locateInventory(locator domains.BlockLocator, hashStop 
 	// back to the genesis block.
 	startNode, _ := hs.repo.Headers.GetHeaderByHeight(0)
 	for _, hash := range locator {
-		node := hs.LookupNode(hash)
+		node, _ := hs.GetHeaderByHash(hash.String())
 		if node != nil && hs.Contains(node) {
 			startNode = node
 			break
@@ -330,23 +356,8 @@ func (hs *HeaderService) locateInventory(locator domains.BlockLocator, hashStop 
 	return startNode, total
 }
 
-// LookupNode return header by given Hash.
-func (hs *HeaderService) LookupNode(hash *chainhash.Hash) *domains.BlockHeader {
-	node, err := hs.repo.Headers.GetBlockByHash(domains.HeaderArgs{Blockhash: hash.String()})
-	if err != nil {
-		return nil
-	}
-
-	return node
-}
-
 // Contains checks if given header is stored in db.
 func (hs *HeaderService) Contains(node *domains.BlockHeader) bool {
-	contains := hs.contains(node)
-	return contains
-}
-
-func (hs *HeaderService) contains(node *domains.BlockHeader) bool {
 	return hs.nodeByHeight(node.Height) == node
 }
 
@@ -375,7 +386,7 @@ func (hs *HeaderService) HeadersCount() int {
 
 // Next returns next header for the given one.
 func (hs *HeaderService) Next(node *domains.BlockHeader) *domains.BlockHeader {
-	if node == nil || !hs.contains(node) {
+	if node == nil || !hs.Contains(node) {
 		return nil
 	}
 
@@ -414,4 +425,21 @@ func (hs *HeaderService) CalculateConfirmations(originHeader *domains.BlockHeade
 	}
 
 	return conf
+}
+
+func (s *HeaderService) GetTips() ([]*domains.BlockHeader, error) {
+	return s.repo.Headers.GetAllTips()
+}
+
+func (s *HeaderService) GetPruneTip() (string, error) {
+	return "", nil
+}
+
+func areAllElementsEqual(slice []*domains.BlockHeader) bool {
+    for _, val := range slice {
+        if val.Hash != slice[0].Hash{
+            return false
+        }
+    }
+    return true
 }

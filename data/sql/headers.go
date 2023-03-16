@@ -120,6 +120,46 @@ const (
 	WHERE height = (SELECT max(height)
 					FROM headers)
 	`
+
+	sqlSelectAncestorOnHeight = `
+    WITH RECURSIVE ancestors(hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, isorphan, isconfirmed, cumulatedWork, level) AS (
+        SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, isorphan, isconfirmed, cumulatedWork, 0 level
+        FROM headers
+        WHERE hash = ?
+        UNION ALL
+        SELECT h.hash, h.height, h.version, h.merkleroot, h.nonce, h.bits, h.chainwork, h.previousblock, h.timestamp, h.isorphan, h.isconfirmed, h.cumulatedWork, a.level + 1 level
+        FROM headers h JOIN ancestors a
+          ON h.hash = a.previousblock AND h.height >= ?
+      )
+    SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, isorphan, isconfirmed, cumulatedWork
+    FROM ancestors
+    WHERE height = ?
+    `
+
+	sqlSelectTips = `
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, isorphan, isconfirmed, cumulatedWork
+	FROM headers
+	WHERE hash NOT IN (SELECT previousblock
+					   FROM headers)
+				   `
+
+	sqlChainBetweenTwoHashes = `
+	WITH RECURSIVE ancestors(hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, isorphan, isconfirmed, cumulatedWork, level) AS (
+		SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, isorphan, isconfirmed, cumulatedWork, 0 level
+		FROM headers
+		WHERE hash = ?
+		UNION ALL
+		SELECT h.hash, h.height, h.version, h.merkleroot, h.nonce, h.bits, h.chainwork, h.previousblock, h.timestamp, h.isorphan, h.isconfirmed, h.cumulatedWork, a.level + 1 level
+		FROM headers h JOIN ancestors a
+			ON h.hash = a.previousblock AND h.hash != ?
+		)
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, isorphan, isconfirmed, cumulatedWork
+	FROM ancestors
+	UNION ALL
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, isorphan, isconfirmed, cumulatedWork
+	FROM headers
+	WHERE hash = ?
+	`
 )
 
 // HeadersDb represents a database connection and map of related sql queries.
@@ -330,4 +370,37 @@ func (h *HeadersDb) GetTip(ctx context.Context) (*domains.DbBlockHeader, error) 
 		return nil, errors.Wrap(err, "failed to get tip")
 	}
 	return &tip[0], nil
+}
+
+func (h *HeadersDb) GetAncestorOnHeight(hash string, height int32) (*domains.DbBlockHeader, error) {
+    var bh []*domains.DbBlockHeader
+    if err := h.db.Select(&bh, h.db.Rebind(sqlSelectAncestorOnHeight), hash, int(height), int(height)); err != nil {
+        if errors.Is(err, sql.ErrNoRows) {
+            return nil, errors.New("could not find ancestors for a providen hash")
+        }
+        return nil, errors.Wrapf(err, "failed to get ancestors using given hash: %s ", hash)
+    }
+    if bh == nil {
+        return nil, errors.New("could not find ancestors for a providen hash")
+    }
+    return bh[0], nil
+}
+
+func (h *HeadersDb) GetAllTips() ([]*domains.DbBlockHeader, error) {
+	var bh []*domains.DbBlockHeader
+	if err := h.db.Select(&bh, sqlSelectTips); err != nil {
+		return nil, errors.Wrapf(err, "failed to get tips")
+	}
+	return bh, nil
+}
+
+func (h *HeadersDb) GetChainBetweenTwoHashes(low string, high string) ([]*domains.DbBlockHeader, error) {
+	var bh []*domains.DbBlockHeader
+	if err := h.db.Select(&bh, h.db.Rebind(sqlChainBetweenTwoHashes), high, low, low); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("could not find headers in given range")
+		}
+		return nil, errors.Wrapf(err, "failed to get headers using given range from: %s to: %s", low, high)
+	}
+	return bh, nil
 }

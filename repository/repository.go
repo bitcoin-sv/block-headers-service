@@ -11,7 +11,6 @@ type Headers interface {
 	AddHeaderToDatabase(header domains.BlockHeader) error
 	UpdateState([]chainhash.Hash, domains.HeaderState) error
 	GetHeaderByHeight(height int32) (*domains.BlockHeader, error)
-	GetBlockByHash(args domains.HeaderArgs) (*domains.BlockHeader, error)
 	GetHeaderByHeightRange(from int, to int) ([]*domains.BlockHeader, error)
 	GetLongestChainHeadersFromHeight(height int32) ([]*domains.BlockHeader, error)
 	GetStaleChainHeadersBackFrom(hash string) ([]*domains.BlockHeader, error)
@@ -21,7 +20,10 @@ type Headers interface {
 	GenesisExists() bool
 	GetPreviousHeader(hash string) (*domains.BlockHeader, error)
 	GetTip() (*domains.BlockHeader, error)
+	GetAllTips() ([]*domains.BlockHeader, error)
 	GetConfirmationsCountForBlock(hash string) (int, error)
+	GetAncestorOnHeight(hash string, height int32) (*domains.BlockHeader, error)
+	GetChainBetweenTwoHashes(low string, high string) ([]*domains.BlockHeader, error)
 }
 
 // Repositories represents all repositories in app and provide access to them.

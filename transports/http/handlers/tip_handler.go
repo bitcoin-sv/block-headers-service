@@ -15,7 +15,7 @@ import (
 //  @Success 200 {object} []headers.BlockHeaderState
 //  @Router /chain/tips [get]
 func (h *Handler) getTips(c *gin.Context) {
-	tips, err := h.services.Tip.GetTips()
+	tips, err := h.services.Headers.GetTips()
 
 	if err == nil {
 		c.JSON(http.StatusOK, tips)
@@ -35,7 +35,7 @@ func (h *Handler) getTips(c *gin.Context) {
 func (h *Handler) pruneTip(c *gin.Context) {
 	param := c.Param("hash")
 	fmt.Println(param)
-	tip, err := h.services.Tip.PruneTip()
+	tip, err := h.services.Headers.GetPruneTip()
 
 	if err == nil {
 		c.JSON(http.StatusOK, tip)

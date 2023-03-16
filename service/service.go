@@ -20,10 +20,9 @@ type Network interface {
 type Headers interface {
 	AddHeader(h domains.BlockHeader, blocksToConfirmFork int) error
 	FindPreviousHeader(headerHash string) *domains.BlockHeader
-	BackElement() (domains.BlockHeader, error)
 	LatestHeaderLocator() domains.BlockLocator
 	IsCurrent() bool
-	BlockHeightByHash(hash *chainhash.Hash) (int32, error)
+	GetHeightByHash(hash *chainhash.Hash) (int32, error)
 	LocateHeaders(locator domains.BlockLocator, hashStop *chainhash.Hash) []wire.BlockHeader
 	GetTip() *domains.BlockHeader
 	GetTipHeight() int32
@@ -34,6 +33,8 @@ type Headers interface {
 	GetHeaderAncestorsByHash(hash string, ancestorHash string) ([]*domains.BlockHeader, error)
 	GetCommonAncestors(hashes []string) (*domains.BlockHeader, error)
 	GetHeadersState(hash string) (*domains.BlockHeaderState, error)
+	GetTips() ([]*domains.BlockHeader, error)
+	GetPruneTip() (string, error)
 }
 
 // Chains is an interface which represents methods exposed by Chains Service.
@@ -41,18 +42,10 @@ type Chains interface {
 	Add(domains.BlockHeaderSource) (*domains.BlockHeader, error)
 }
 
-// Tip is an interface which represents methods required for Tip service.
-type Tip interface {
-	GetTips() ([]domains.BlockHeaderState, error)
-	PruneTip() (string, error)
-	GetAllTips() []domains.BlockHeader
-}
-
 // Services represents all services in app and provide access to them.
 type Services struct {
 	Network Network
 	Headers Headers
-	Tip     Tip
 	Chains  Chains
 }
 
@@ -68,7 +61,6 @@ func NewServices(d Dept) *Services {
 	return &Services{
 		Network: NewNetworkService(d.Peers),
 		Headers: NewHeaderService(d.Repositories),
-		Tip:     NewTipService(d.Repositories),
 		Chains: NewChainsService(ChainServiceDependencies{
 			Repositories: d.Repositories,
 			Params:       d.Params,
