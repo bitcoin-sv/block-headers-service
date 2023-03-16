@@ -19,18 +19,12 @@ type Headers interface {
 	GetConfirmationsCountForBlock(hash string) (int, error)
 }
 
-type Tips interface {
-	GetConfirmedTip() (*domains.BlockHeader, error)
-}
-
 type Repositories struct {
 	Headers Headers
-	Tips    Tips
 }
 
 func NewRepositories(db *sql.HeadersDb) *Repositories {
 	return &Repositories{
-		Tips:    NewTipRepository(db),
 		Headers: NewHeadersRepository(db),
 	}
 }

@@ -48,12 +48,6 @@ const (
 	FROM headers;
 	`
 
-	sqlGetTip = `
-	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, isorphan, isconfirmed, cumulatedWork
-	FROM headers 
-	ORDER BY height DESC LIMIT 1;
-	`
-
 	sqlVerifyIfGenesisPresent = `
 	SELECT hash 
 	FROM headers 
@@ -226,19 +220,6 @@ func (h *HeadersDb) GetHeaderByHeightRange(from int, to int) ([]*domains.DbBlock
 		return nil, errors.Wrapf(err, "failed to get headers using given range from: %d to: %d", from, to)
 	}
 	return bh, nil
-}
-
-// GetCurrentTip will return highest header from db.
-func (h *HeadersDb) GetCurrentTip(ctx context.Context) (*domains.DbBlockHeader, error) {
-	var bh domains.DbBlockHeader
-	if err := h.db.GetContext(ctx, &bh, h.db.Rebind(sqlGetTip)); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("no records in db")
-		}
-		return nil, errors.Wrapf(err, "failed to get tip block")
-	}
-
-	return &bh, nil
 }
 
 // GenesisExists check if genesis header is present in db.
