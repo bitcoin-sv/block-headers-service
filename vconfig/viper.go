@@ -6,12 +6,14 @@ import (
 	"github.com/spf13/viper"
 )
 
+// NewViperConfig creates and returns new viper config.
 func NewViperConfig(appname string) *Config {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	return &Config{}
 }
 
+// WithDb edits and returns database-based viper configuration.
 func (c *Config) WithDb() *Config {
 	viper.SetDefault(EnvDb, "sqlite")
 	viper.SetDefault(EnvResetDbOnStartup, false)

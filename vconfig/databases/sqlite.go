@@ -7,9 +7,12 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 
+
+	// use blank import to use file source driver with the migrate package.
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
 	"github.com/libsv/bitcoin-hc/vconfig"
+	// use blank import to register sqlite driver.
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
 )

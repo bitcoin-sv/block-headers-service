@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// semanticAlphabet
+// semanticAlphabet.
 const semanticAlphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-"
 
 // These constants define the application version and follow the semantic
