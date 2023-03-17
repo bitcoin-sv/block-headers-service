@@ -13,20 +13,24 @@ import (
 	"github.com/libsv/bitcoin-hc/repository"
 )
 
+// HeaderService represents Header service and provide access to repositories.
 type HeaderService struct {
 	repo *repository.Repositories
 }
 
+// NewHeaderService creates and returns HeaderService instance.
 func NewHeaderService(repo *repository.Repositories) *HeaderService {
 	return &HeaderService{
 		repo: repo,
 	}
 }
 
+// AddHeader used to pass BlockHeader to repository which will add it to db.
 func (hs *HeaderService) AddHeader(h domains.BlockHeader, blocksToConfirmFork int) error {
 	return hs.repo.Headers.AddHeaderToDatabase(h)
 }
 
+// FindPreviousHeader returns previous header for the header with given hash.
 func (hs *HeaderService) FindPreviousHeader(headerHash string) *domains.BlockHeader {
 	h, err := hs.repo.Headers.GetPreviousHeader(headerHash)
 	if err != nil {
@@ -36,6 +40,7 @@ func (hs *HeaderService) FindPreviousHeader(headerHash string) *domains.BlockHea
 	return h
 }
 
+// BackElement returns last element from db (tip).
 func (hs *HeaderService) BackElement() (domains.BlockHeader, error) {
 	header, err := hs.repo.Headers.GetTip()
 	if header == nil {
@@ -44,10 +49,12 @@ func (hs *HeaderService) BackElement() (domains.BlockHeader, error) {
 	return *header, err
 }
 
+// LatestHeaderLocator returns BlockLocator for current chain.
 func (hs *HeaderService) LatestHeaderLocator() domains.BlockLocator {
 	return hs.blockLocator()
 }
 
+// IsCurrent checks if the headers are synchronised and up to date.
 func (hs *HeaderService) IsCurrent() bool {
 	// Not current if the latest main (best) chain height is before the
 	// latest known good checkpoint (when checkpoints are enabled).
@@ -70,6 +77,7 @@ func (hs *HeaderService) IsCurrent() bool {
 	return tip.Timestamp.Unix() >= minus24Hours
 }
 
+// BlockHeightByHash returns height of the header with given hash.
 func (hs *HeaderService) BlockHeightByHash(hash *chainhash.Hash) (int32, error) {
 	bh, err := hs.repo.Headers.GetBlockByHash(domains.HeaderArgs{Blockhash: hash.String()})
 	if err != nil {
@@ -80,6 +88,7 @@ func (hs *HeaderService) BlockHeightByHash(hash *chainhash.Hash) (int32, error) 
 	return bh.Height, nil
 }
 
+// GetTip returns header which is the tip of the chain.
 func (hs *HeaderService) GetTip() *domains.BlockHeader {
 	tip, err := hs.repo.Headers.GetTip()
 	if err != nil {
@@ -88,6 +97,7 @@ func (hs *HeaderService) GetTip() *domains.BlockHeader {
 	return tip
 }
 
+// GetTipHeight returns height of the tip.
 func (hs *HeaderService) GetTipHeight() int32 {
 	tip := hs.GetTip()
 	if tip != nil {
@@ -96,6 +106,7 @@ func (hs *HeaderService) GetTipHeight() int32 {
 	return 0
 }
 
+// GetHeaderByHash returns header with given hash.
 func (hs *HeaderService) GetHeaderByHash(hash string) (*domains.BlockHeader, error) {
 	header, err := hs.repo.Headers.GetHeaderByHash(hash)
 
@@ -106,6 +117,7 @@ func (hs *HeaderService) GetHeaderByHash(hash string) (*domains.BlockHeader, err
 	return header, nil
 }
 
+// GetHeadersByHeight returns the specified number of headers starting from given height.
 func (hs *HeaderService) GetHeadersByHeight(height int, count int) ([]*domains.BlockHeader, error) {
 	headers_range := height + count - 1
 	headers, err := hs.repo.Headers.GetHeaderByHeightRange(height, headers_range)
@@ -116,6 +128,7 @@ func (hs *HeaderService) GetHeadersByHeight(height int, count int) ([]*domains.B
 	return nil, err
 }
 
+// GetHeaderAncestorsByHash returns first ancestor for two headers specified by hash.
 func (hs *HeaderService) GetHeaderAncestorsByHash(hash string, ancestorHash string) ([]*domains.BlockHeader, error) {
 	// Get headers by hash
 	reqHeader, err := hs.repo.Headers.GetHeaderByHash(hash)
@@ -139,8 +152,9 @@ func (hs *HeaderService) GetHeaderAncestorsByHash(hash string, ancestorHash stri
 	return nil, nil
 }
 
+// GetCommonAncestors returns first ancestor for given slice of hashes.
 func (hs *HeaderService) GetCommonAncestors(hashes []string) (*domains.BlockHeader, error) {
-	var headers []*domains.BlockHeader
+	headers := make([]*domains.BlockHeader, 0)
 
 	for _, hash := range hashes {
 		header, err := hs.repo.Headers.GetHeaderByHash(hash)
@@ -163,6 +177,7 @@ func (hs *HeaderService) GetCommonAncestors(hashes []string) (*domains.BlockHead
 	return nil, err
 }
 
+// GetHeadersState returns state of the header with given hash.
 func (hs *HeaderService) GetHeadersState(hash string) (*domains.BlockHeaderState, error) {
 	header, err := hs.repo.Headers.GetHeaderByHash(hash)
 
@@ -241,7 +256,7 @@ func (hs *HeaderService) locateHeaders(locator domains.BlockLocator, hashStop *c
 	// Find the node after the first known block in the locator and the
 	// total number of nodes after it needed while respecting the stop hash
 	// and max entries.
-	node, total := hs.locateInventory(locator, hashStop, maxHeaders, true)
+	node, total := hs.locateInventory(locator, hashStop, maxHeaders)
 	if total == 0 {
 		return nil
 	}
@@ -263,7 +278,7 @@ func (hs *HeaderService) locateHeaders(locator domains.BlockLocator, hashStop *c
 	return headers
 }
 
-func (hs *HeaderService) locateInventory(locator domains.BlockLocator, hashStop *chainhash.Hash, maxEntries uint32, headersOnly bool) (*domains.BlockHeader, uint32) {
+func (hs *HeaderService) locateInventory(locator domains.BlockLocator, hashStop *chainhash.Hash, maxEntries uint32) (*domains.BlockHeader, uint32) {
 	// There are no block locators so a specific block is being requested
 	// as identified by the stop hash.
 	stopNode := hs.LookupNode(hashStop)
@@ -311,6 +326,7 @@ func (hs *HeaderService) locateInventory(locator domains.BlockLocator, hashStop 
 	return startNode, total
 }
 
+// LookupNode return header by given Hash.
 func (hs *HeaderService) LookupNode(hash *chainhash.Hash) *domains.BlockHeader {
 	node, err := hs.repo.Headers.GetBlockByHash(domains.HeaderArgs{Blockhash: hash.String()})
 	if err != nil {
@@ -320,6 +336,7 @@ func (hs *HeaderService) LookupNode(hash *chainhash.Hash) *domains.BlockHeader {
 	return node
 }
 
+// Contains checks if given header is stored in db.
 func (hs *HeaderService) Contains(node *domains.BlockHeader) bool {
 	contains := hs.contains(node)
 	return contains
@@ -342,6 +359,7 @@ func (hs *HeaderService) nodeByHeight(height int32) *domains.BlockHeader {
 	return header
 }
 
+// HeadersCount return current number of stored headers.
 func (hs *HeaderService) HeadersCount() int {
 	count, err := hs.repo.Headers.GetHeadersCount()
 	if err != nil {
@@ -351,6 +369,7 @@ func (hs *HeaderService) HeadersCount() int {
 	return count
 }
 
+// Next returns next header for the given one.
 func (hs *HeaderService) Next(node *domains.BlockHeader) *domains.BlockHeader {
 	if node == nil || !hs.contains(node) {
 		return nil
@@ -359,6 +378,7 @@ func (hs *HeaderService) Next(node *domains.BlockHeader) *domains.BlockHeader {
 	return hs.nodeByHeight(node.Height + 1)
 }
 
+// CountHeaders return current number of stored headers.
 func (hs *HeaderService) CountHeaders() int {
 	count, err := hs.repo.Headers.GetHeadersCount()
 
@@ -368,6 +388,7 @@ func (hs *HeaderService) CountHeaders() int {
 	return count
 }
 
+// InsertGenesisHeaderInDatabase adds a genesis header (height=0) to db.
 func (hs *HeaderService) InsertGenesisHeaderInDatabase() error {
 	genesisBlock := domains.CreateGenesisHeaderBlock()
 	if hs.repo.Headers.GenesisExists() {
@@ -379,6 +400,7 @@ func (hs *HeaderService) InsertGenesisHeaderInDatabase() error {
 	return err
 }
 
+// CalculateConfirmations returns number of confirmations for given header.
 func (hs *HeaderService) CalculateConfirmations(originHeader *domains.BlockHeader) int {
 	conf, err := hs.repo.Headers.
 		GetConfirmationsCountForBlock(originHeader.Hash.String())

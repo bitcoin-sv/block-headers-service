@@ -8,11 +8,14 @@ import (
 	peerpkg "github.com/libsv/bitcoin-hc/transports/p2p/peer"
 )
 
+// Network is a interface which represents methods required for Network service.
 type Network interface {
 	GetPeers() []peerpkg.PeerState
 	GetPeersCount() int
 }
 
+
+// Headers is a interface which represents methods required for Headers service.
 type Headers interface {
 	AddHeader(h domains.BlockHeader, blocksToConfirmFork int) error
 	FindPreviousHeader(headerHash string) *domains.BlockHeader
@@ -32,23 +35,27 @@ type Headers interface {
 	GetHeadersState(hash string) (*domains.BlockHeaderState, error)
 }
 
+// Tip is a interface which represents methods required for Tip service.
 type Tip interface {
 	GetTips() ([]domains.BlockHeaderState, error)
 	PruneTip() (string, error)
 	GetAllTips() []domains.BlockHeader
 }
 
+// Services represents all services in app and provide access to them.
 type Services struct {
 	Network Network
 	Headers Headers
 	Tip     Tip
 }
 
+// Dept is a struct used to create Services. 
 type Dept struct {
 	Peers        map[*peerpkg.Peer]*peerpkg.PeerSyncState
 	Repositories *repository.Repositories
 }
 
+// NewServices creates and returns Services instance.
 func NewServices(d Dept) *Services {
 	return &Services{
 		Network: NewNetworkService(d.Peers),
