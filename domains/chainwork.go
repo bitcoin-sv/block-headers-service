@@ -2,16 +2,7 @@ package domains
 
 import "math/big"
 
-var (
-	// bigOne is 1 represented as a big.Int.  It is defined here to avoid
-	// the overhead of creating it multiple times.
-	bigOne = big.NewInt(1)
-
-	// oneLsh256 is 1 shifted left 256 bits.  It is defined here to avoid
-	// the overhead of creating it multiple times.
-	oneLsh256 = new(big.Int).Lsh(bigOne, 256)
-)
-
+// CalcWork calculate chainwork for header based on given bits.
 func CalcWork(bits uint32) *big.Int {
 	// Return a work value of zero if the passed difficulty bits represent
 	// a negative number. Note this should not happen in practice with valid
@@ -21,7 +12,9 @@ func CalcWork(bits uint32) *big.Int {
 		return big.NewInt(0)
 	}
 	// (1 << 256) / (difficultyNum + 1)
-	denominator := new(big.Int).Add(difficultyNum, bigOne)
+	denominator := new(big.Int).Add(difficultyNum, big.NewInt(1))
+	// oneLsh256 is 1 shifted left 256 bits.
+	var oneLsh256 = new(big.Int).Lsh(big.NewInt(1), 256)
 	return new(big.Int).Div(oneLsh256, denominator)
 }
 
