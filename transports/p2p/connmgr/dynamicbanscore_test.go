@@ -50,7 +50,7 @@ func TestDynamicBanScoreLifetime(t *testing.T) {
 }
 
 // TestDynamicBanScore tests exported functions of DynamicBanScore. Exponential
-// decay or other time based behavior is tested by other functions.
+// decay or other time based behaviour is tested by other functions.
 func TestDynamicBanScoreReset(t *testing.T) {
 	var bs DynamicBanScore
 	if bs.Int() != 0 {

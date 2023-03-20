@@ -166,7 +166,7 @@ type SyncManager struct {
 // It returns nil when there is not one either because the height is already
 // later than the final checkpoint or some other reason such as disabled
 // checkpoints.
-// TODO: set next headers checkpoint
+// TODO: set next headers checkpoint.
 func (sm *SyncManager) findNextHeaderCheckpoint(height int32) *chaincfg.Checkpoint {
 	checkpoints := configs.Cfg.Checkpoints
 
@@ -290,7 +290,10 @@ func (sm *SyncManager) startSync() {
 
 			// TODO: request for next headers batch
 			sm.log.Info("[Headers] startSync - Request for next headers batch")
-			bestPeer.PushGetHeadersMsg(locator, sm.nextCheckpoint.Hash)
+			err := bestPeer.PushGetHeadersMsg(locator, sm.nextCheckpoint.Hash)
+			if err != nil {
+				sm.log.Info(err)
+			}
 			sm.headersFirstMode = true
 			sm.log.Infof("Downloading headers for blocks %d to "+
 				// "%d from peer %s", best.Height+1,
@@ -299,7 +302,10 @@ func (sm *SyncManager) startSync() {
 		} else {
 			// TODO: initial request for headers
 			sm.log.Info("[Headers] Initial request")
-			bestPeer.PushGetBlocksMsg(locator, &zeroHash)
+			err := bestPeer.PushGetBlocksMsg(locator, &zeroHash)
+			if err != nil {
+				sm.log.Info(err)
+			}
 		}
 
 		bestPeer.SetSyncPeer(true)
@@ -364,7 +370,7 @@ func (sm *SyncManager) handleNewPeerMsg(peer *peerpkg.Peer) {
 
 	sm.log.Infof("New valid peer %s (%s)", peer, peer.UserAgent())
 
-	// Initialize the peer state
+	// Initialise the peer state
 	isSyncCandidate := sm.isSyncCandidate(peer)
 
 	sm.peerStates[peer] = &peerpkg.PeerSyncState{
@@ -410,15 +416,15 @@ func (sm *SyncManager) handleCheckSyncPeer() {
 		return
 	}
 
-	state, exists := sm.peerStates[sm.syncPeer]
+	_, exists := sm.peerStates[sm.syncPeer]
 	if !exists {
 		return
 	}
 
-	sm.updateSyncPeer(state)
+	sm.updateSyncPeer()
 }
 
-// topBlock returns the best chains top block height
+// topBlock returns the best chains top block height.
 func (sm *SyncManager) topBlock() int32 {
 
 	if sm.syncPeer.LastBlock() > sm.syncPeer.StartingHeight() {
@@ -433,7 +439,7 @@ func (sm *SyncManager) topBlock() int32 {
 // the current sync peer, attempts to select a new best peer to sync from.  It
 // is invoked from the syncHandler goroutine.
 func (sm *SyncManager) handleDonePeerMsg(peer *peerpkg.Peer) {
-	state, exists := sm.peerStates[peer]
+	_, exists := sm.peerStates[peer]
 	if !exists {
 		sm.log.Warnf("Received done peer message for unknown peer %s", peer)
 		return
@@ -446,12 +452,12 @@ func (sm *SyncManager) handleDonePeerMsg(peer *peerpkg.Peer) {
 
 	// Fetch a new sync peer if this is the sync peer.
 	if peer == sm.syncPeer {
-		sm.updateSyncPeer(state)
+		sm.updateSyncPeer()
 	}
 }
 
 // updateSyncPeer picks a new peer to sync from.
-func (sm *SyncManager) updateSyncPeer(state *peerpkg.PeerSyncState) {
+func (sm *SyncManager) updateSyncPeer() {
 	sm.log.Infof("Updating sync peer, last block: %v, violations: %v", sm.syncPeerState.lastBlockTime, sm.syncPeerState.violations)
 
 	// Disconnect from the misbehaving peer.
@@ -473,7 +479,7 @@ func (sm *SyncManager) updateSyncPeer(state *peerpkg.PeerSyncState) {
 }
 
 // current returns true if we believe we are synced with our peers, false if we
-// still have blocks to check
+// still have blocks to check.
 func (sm *SyncManager) current() bool {
 	if !sm.Services.Headers.IsCurrent() {
 		return false
@@ -628,7 +634,10 @@ func (sm *SyncManager) insertIncomingHeaders(h domains.BlockHeader, prevNode dom
 	h.IsOrphan = prevNode.IsOrphan
 
 	h.CumulateWork(prevNode.CumulatedWork)
-	sm.Services.Headers.AddHeader(h, sm.blocksToConfirmFork)
+	err := sm.Services.Headers.AddHeader(h, sm.blocksToConfirmFork)
+	if err != nil {
+		sm.log.Info(err)
+	}
 
 	if sm.startHeader == nil {
 		sm.startHeader = &h
@@ -637,7 +646,7 @@ func (sm *SyncManager) insertIncomingHeaders(h domains.BlockHeader, prevNode dom
 	return h
 }
 
-// TODO: Consider removing this method after finishing devleopment
+// TODO: Consider removing this method after finishing devleopment.
 func (sm *SyncManager) logSyncState(i int, h domains.BlockHeader, prevNode domains.BlockHeader) {
 	length := sm.Services.Headers.CountHeaders()
 	if math.Mod(float64(length), 1000) == 0 || length > 760000 {
@@ -876,17 +885,16 @@ func (sm *SyncManager) Start() {
 
 // Stop gracefully shuts down the sync manager by stopping all asynchronous
 // handlers and waiting for them to finish.
-func (sm *SyncManager) Stop() error {
+func (sm *SyncManager) Stop() {
 	if atomic.AddInt32(&sm.shutdown, 1) != 1 {
 		sm.log.Warnf("Sync manager is already in the process of " +
 			"shutting down")
-		return nil
 	}
 
 	sm.log.Infof("Sync manager shutting down")
 	close(sm.quit)
 	sm.wg.Wait()
-	return nil
+	sm.log.Infof("Sync manager stopped")
 }
 
 // IsCurrent returns whether or not the sync manager believes it is synced with
@@ -914,7 +922,7 @@ func New(config *Config, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState) (*SyncM
 	}
 
 	if !config.DisableCheckpoints {
-		// Initialize the next checkpoint based on the current height.
+		// Initialise the next checkpoint based on the current height.
 		height := config.Services.Headers.GetTipHeight()
 		sm.nextCheckpoint = sm.findNextHeaderCheckpoint(height)
 		if sm.nextCheckpoint != nil {

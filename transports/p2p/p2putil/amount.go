@@ -27,8 +27,8 @@ const (
 	AmountSatoshi  AmountUnit = -8
 )
 
-// String returns the unit as a string.  For recognized units, the SI
-// prefix is used, or "Satoshi" for the base unit.  For all unrecognized
+// String returns the unit as a string.  For recognised units, the SI
+// prefix is used, or "Satoshi" for the base unit.  For all unrecognised
 // units, "1eN BSV" is returned, where N is the AmountUnit.
 func (u AmountUnit) String() string {
 	switch u {

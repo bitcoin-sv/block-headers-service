@@ -8,7 +8,6 @@ import (
 	"errors"
 	"net"
 
-	// "reflect"
 	"testing"
 
 	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
@@ -27,10 +26,7 @@ type naTest struct {
 // method.
 var naTests = make([]naTest, 0)
 
-// Put some IP in here for convenience. Points to google.
-var someIP = "173.194.115.66"
-
-// addNaTests
+// addNaTests.
 func addNaTests() {
 	// IPv4
 	// Localhost
@@ -106,10 +102,7 @@ func TestStartStop(t *testing.T) {
 	log := testlog.InitializeMockLogger()
 	n := addrmgr.New(lookupFunc, log)
 	n.Start()
-	err := n.Stop()
-	if err != nil {
-		t.Fatalf("Address Manager failed to stop: %v", err)
-	}
+	n.Stop()
 }
 
 func TestAddLocalAddress(t *testing.T) {

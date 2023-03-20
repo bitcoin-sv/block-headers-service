@@ -7,14 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// getHeaderByHash godoc
-// @Summary Gets header by hash
-// @Tags headers
-// @Accept */*
-// @Success 200 {object} headers.BlockHeader
-// @Produce json
-// @Router /chain/header/{hash} [get]
-// @Param hash path string true "Requested Header Hash"
+// getHeaderByHash godoc.
+//  @Summary Gets header by hash
+//  @Tags headers
+//  @Accept */*
+//  @Success 200 {object} headers.BlockHeader
+//  @Produce json
+//  @Router /chain/header/{hash} [get]
+//  @Param hash path string true "Requested Header Hash"
 func (h *Handler) getHeaderByHash(c *gin.Context) {
 	hash := c.Param("hash")
 	header, err := h.services.Headers.GetHeaderByHash(hash)
@@ -26,15 +26,15 @@ func (h *Handler) getHeaderByHash(c *gin.Context) {
 	}
 }
 
-// getHeaderByHeight godoc
-// @Summary Gets header by height
-// @Tags headers
-// @Accept */*
-// @Produce json
-// @Success 200 {object} []headers.BlockHeader
-// @Router /chain/header/byHeight [get]
-// @Param height query int true "Height to start from"
-// @Param count query int false "Headers count (optional)"
+// getHeaderByHeight godoc.
+//  @Summary Gets header by height
+//  @Tags headers
+//  @Accept */*
+//  @Produce json
+//  @Success 200 {object} []headers.BlockHeader
+//  @Router /chain/header/byHeight [get]
+//  @Param height query int true "Height to start from"
+//  @Param count query int false "Headers count (optional)"
 func (h *Handler) getHeaderByHeight(c *gin.Context) {
 	height, _ := c.GetQuery("height")
 	count, _ := c.GetQuery("count")
@@ -56,15 +56,15 @@ func (h *Handler) getHeaderByHeight(c *gin.Context) {
 	}
 }
 
-// getHeaderAncestorsByHash godoc
-// @Summary Gets header ancestors
-// @Tags headers
-// @Accept */*
-// @Produce json
-// @Success 200 {object} []headers.BlockHeader
-// @Router /chain/header/{hash}/{ancestorHash}/ancestors [get]
-// @Param hash path string true "Requested Header Hash"
-// @Param ancestorHash path string true "Ancestor Header Hash"
+// getHeaderAncestorsByHash godoc.
+//  @Summary Gets header ancestors
+//  @Tags headers
+//  @Accept */*
+//  @Produce json
+//  @Success 200 {object} []headers.BlockHeader
+//  @Router /chain/header/{hash}/{ancestorHash}/ancestors [get]
+//  @Param hash path string true "Requested Header Hash"
+//  @Param ancestorHash path string true "Ancestor Header Hash"
 func (h *Handler) getHeaderAncestorsByHash(c *gin.Context) {
 	hash := c.Param("hash")
 	ancestorHash := c.Param("ancestorHash")
@@ -77,14 +77,14 @@ func (h *Handler) getHeaderAncestorsByHash(c *gin.Context) {
 	}
 }
 
-// getCommonAncestors godoc
-// @Summary Gets common ancestors
-// @Tags headers
-// @Accept */*
-// @Produce json
-// @Success 200 {object} headers.BlockHeader
-// @Router /chain/header/commonAncestor [post]
-// @Param ancesstors body []string true "JSON"
+// getCommonAncestors godoc.
+//  @Summary Gets common ancestors
+//  @Tags headers
+//  @Accept */*
+//  @Produce json
+//  @Success 200 {object} headers.BlockHeader
+//  @Router /chain/header/commonAncestor [post]
+//  @Param ancesstors body []string true "JSON"
 func (h *Handler) getCommonAncestors(c *gin.Context) {
 	var body []string
 	if err := c.BindJSON(&body); err != nil {
@@ -100,14 +100,14 @@ func (h *Handler) getCommonAncestors(c *gin.Context) {
 	}
 }
 
-// getHeadersState godoc
-// @Summary Gets header state
-// @Tags headers
-// @Accept */*
-// @Produce json
-// @Success 200 {object} headers.BlockHeaderState
-// @Router /chain/header/state/{hash} [get]
-// @Param hash path string true "Requested Header Hash"
+// getHeadersState godoc.
+//  @Summary Gets header state
+//  @Tags headers
+//  @Accept */*
+//  @Produce json
+//  @Success 200 {object} headers.BlockHeaderState
+//  @Router /chain/header/state/{hash} [get]
+//  @Param hash path string true "Requested Header Hash"
 func (h *Handler) getHeadersState(c *gin.Context) {
 	hash := c.Param("hash")
 	state, err := h.services.Headers.GetHeadersState(hash)

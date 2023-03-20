@@ -83,6 +83,7 @@ var (
 	sentNonces = newMruNonceMap(50)
 )
 
+// PeerSyncState represents state of peer and if it is a sync candidate.
 type PeerSyncState struct {
 	SyncCandidate bool
 }
@@ -335,7 +336,7 @@ func newNetAddress(addr net.Addr, services wire.ServiceFlag) (*wire.NetAddress, 
 
 // outMsg is used to house a message to be sent along with a channel to signal
 // when the message has been sent (or won't be sent due to things such as
-// shutdown)
+// shutdown).
 type outMsg struct {
 	msg      wire.Message
 	doneChan chan<- struct{}
@@ -490,6 +491,7 @@ type Peer struct {
 	quit          chan struct{}
 }
 
+// PeerState represents basic info about peer address.
 type PeerState struct {
 	Ip   string `json:"ip"`
 	Port int    `json:"port"`
@@ -703,6 +705,7 @@ func (p *Peer) WantsHeaders() bool {
 	return sendHeadersPreferred
 }
 
+// ToPeerState return PeerState of the peer on which this method was called.
 func (p *Peer) ToPeerState() PeerState {
 	return PeerState{
 		Ip:   p.NA().IP.String(),
@@ -713,7 +716,7 @@ func (p *Peer) ToPeerState() PeerState {
 // PushAddrMsg sends an addr message to the connected peer using the provided
 // addresses.  This function is useful over manually sending the message via
 // QueueMessage since it automatically limits the addresses to the maximum
-// number allowed by the message and randomizes the chosen addresses when there
+// number allowed by the message and randomises the chosen addresses when there
 // are too many.  It returns the addresses that were actually sent and no
 // message will be sent if there are no entries in the provided addresses slice.
 //
@@ -730,7 +733,7 @@ func (p *Peer) PushAddrMsg(addresses []*wire.NetAddress) ([]*wire.NetAddress, er
 	msg.AddrList = make([]*wire.NetAddress, addressCount)
 	copy(msg.AddrList, addresses)
 
-	// Randomize the addresses sent if there are more than the maximum allowed.
+	// Randomise the addresses sent if there are more than the maximum allowed.
 	if addressCount > wire.MaxAddrPerMsg {
 		// Shuffle the address list.
 		for i := 0; i < wire.MaxAddrPerMsg; i++ {
@@ -990,6 +993,7 @@ func (p *Peer) isAllowedReadError(err error) bool {
 	}
 
 	// Don't allow the error if it's not specifically a malformed message error.
+
 	if _, ok := err.(*wire.MessageError); !ok {
 		return false
 	}
@@ -1523,7 +1527,10 @@ out:
 			// queue.
 			if iv.Type == wire.InvTypeBlock {
 				invMsg := wire.NewMsgInvSizeHint(1)
-				invMsg.AddInvVect(iv)
+				err := invMsg.AddInvVect(iv)
+				if err != nil {
+					p.cfg.Log.Info(err)
+				}
 				waiting = queuePacket(outMsg{msg: invMsg},
 					pendingMsgs, waiting)
 				continue
@@ -1541,7 +1548,10 @@ out:
 			}
 
 			invMsg := wire.NewMsgInvSizeHint(1)
-			invMsg.AddInvVect(iv)
+			err := invMsg.AddInvVect(iv)
+			if err != nil {
+				p.cfg.Log.Info(err)
+			}
 			waiting = queuePacket(outMsg{msg: invMsg}, pendingMsgs, waiting)
 
 		case <-trickleTicker.C:
@@ -1565,7 +1575,10 @@ out:
 					continue
 				}
 
-				invMsg.AddInvVect(iv)
+				err := invMsg.AddInvVect(iv)
+				if err != nil {
+					p.cfg.Log.Info(err)
+				}
 				if len(invMsg.InvList) >= maxInvTrickleSize {
 					waiting = queuePacket(
 						outMsg{msg: invMsg},
@@ -1635,7 +1648,7 @@ func (p *Peer) shouldLogWriteError(err error) bool {
 }
 
 // outHandler handles all outgoing messages for the peer.  It must be run as a
-// goroutine.  It uses a buffered channel to serialize output messages while
+// goroutine.  It uses a buffered channel to serialise output messages while
 // allowing the sender to continue running asynchronously.
 func (p *Peer) outHandler() {
 out:
@@ -1799,7 +1812,10 @@ func (p *Peer) Disconnect() {
 
 	p.cfg.Log.Tracef("Disconnecting %s", p)
 	if atomic.LoadInt32(&p.connected) != 0 {
-		p.conn.Close()
+		err := p.conn.Close()
+		if err != nil {
+			p.cfg.Log.Info(err)
+		}
 	}
 	close(p.quit)
 }
@@ -1938,8 +1954,11 @@ func (p *Peer) localVersionMsg() (*wire.MsgVersion, error) {
 
 	// Version message.
 	msg := wire.NewMsgVersion(ourNA, theirNA, nonce, blockNum)
-	msg.AddUserAgent(p.cfg.UserAgentName, p.cfg.UserAgentVersion,
+	err := msg.AddUserAgent(p.cfg.UserAgentName, p.cfg.UserAgentVersion,
 		p.cfg.UserAgentComments...)
+	if err != nil {
+		p.cfg.Log.Info(err)
+	}
 
 	// Advertise local services.
 	msg.Services = p.cfg.Services

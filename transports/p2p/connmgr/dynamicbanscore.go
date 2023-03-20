@@ -49,7 +49,7 @@ func decayFactor(t int64) float64 {
 }
 
 // DynamicBanScore provides dynamic ban scores consisting of a persistent and a
-// decaying component. The persistent score could be utilized to create simple
+// decaying component. The persistent score could be utilised to create simple
 // additive banning policies similar to those found in other bitcoin node
 // implementations.
 //

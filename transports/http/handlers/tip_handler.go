@@ -7,13 +7,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetTips godoc
-// @Summary Gets all tips
-// @Tags tip
-// @Accept */*
-// @Produce json
-// @Success 200 {object} []headers.BlockHeaderState
-// @Router /chain/tips [get]
+// GetTips godoc.
+//  @Summary Gets all tips
+//  @Tags tip
+//  @Accept */*
+//  @Produce json
+//  @Success 200 {object} []headers.BlockHeaderState
+//  @Router /chain/tips [get]
 func (h *Handler) getTips(c *gin.Context) {
 	tips, err := h.services.Tip.GetTips()
 
@@ -24,14 +24,14 @@ func (h *Handler) getTips(c *gin.Context) {
 	}
 }
 
-// PruneTip godoc
-// @Summary Prune tip
-// @Tags tip
-// @Accept */*
-// @Produce json
-// @Success 200 {object} string
-// @Router /chain/tips/prune/{hash} [get]
-// @Param hash path string true "Requested Header Hash"
+// PruneTip godoc.
+//  @Summary Prune tip
+//  @Tags tip
+//  @Accept */*
+//  @Produce json
+//  @Success 200 {object} string
+//  @Router /chain/tips/prune/{hash} [get]
+//  @Param hash path string true "Requested Header Hash"
 func (h *Handler) pruneTip(c *gin.Context) {
 	param := c.Param("hash")
 	fmt.Println(param)

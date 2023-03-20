@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-package p2plog defines an interface and default implementation for subsystem
+Package p2plog defines an interface and default implementation for subsystem
 logging.
 
 Log level verbosity may be modified at runtime for each individual subsystem
@@ -14,10 +14,10 @@ Backends can write to any io.Writer, including multi-writers created by
 io.MultiWriter.  Multi-writers allow log output to be written to many writers,
 including standard output and log files.
 
-Optional logging behavior can be specified by using the LOGFLAGS environment
+Optional logging behaviour can be specified by using the LOGFLAGS environment
 variable and overridden per-Backend by using the WithFlags call option. Multiple
 LOGFLAGS options can be specified, separated by commas.  The following options
-are recognized:
+are recognised:
 
 	longfile: Include the full filepath and line number in all log messages
 

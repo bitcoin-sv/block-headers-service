@@ -43,9 +43,9 @@ var (
 type ConnState uint8
 
 // ConnState can be either pending, established, disconnected or failed.  When
-// a new connection is requested, it is attempted and categorized as
+// a new connection is requested, it is attempted and categorised as
 // established or failed depending on the connection result.  An established
-// connection which was disconnected is categorized as disconnected.
+// connection which was disconnected is categorised as disconnected.
 const (
 	ConnPending ConnState = iota
 	ConnFailing
@@ -257,7 +257,10 @@ out:
 
 				if _, ok := pending[connReq.id]; !ok {
 					if msg.conn != nil {
-						msg.conn.Close()
+						err := msg.conn.Close()
+						if err != nil {
+							cm.cfg.Log.Info(err)
+						}
 					}
 					cm.cfg.Log.Debugf("Ignoring connection for "+
 						"canceled connreq=%v", connReq)
@@ -305,7 +308,10 @@ out:
 				delete(conns, msg.id)
 
 				if connReq.conn != nil {
-					connReq.conn.Close()
+					err := connReq.conn.Close()
+					if err != nil {
+						cm.cfg.Log.Info(err)
+					}
 				}
 
 				if cm.cfg.OnDisconnection != nil {

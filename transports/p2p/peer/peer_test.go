@@ -20,7 +20,7 @@ import (
 	"github.com/libsv/bitcoin-hc/transports/p2p/peer"
 )
 
-// fixedExcessiveBlockSize should not be the default -we want to ensure it will work in all cases
+// fixedExcessiveBlockSize should not be the default -we want to ensure it will work in all cases.
 const fixedExcessiveBlockSize uint32 = 42111000
 
 func init() {
@@ -76,7 +76,7 @@ func (c conn) SetDeadline(t time.Time) error      { return nil }
 func (c conn) SetReadDeadline(t time.Time) error  { return nil }
 func (c conn) SetWriteDeadline(t time.Time) error { return nil }
 
-// addr mocks a network address
+// addr mocks a network address.
 type addr struct {
 	net, address string
 }
@@ -118,7 +118,7 @@ type peerStats struct {
 	wantBytesReceived   uint64
 }
 
-// testPeer tests the given peer's flags and stats
+// testPeer tests the given peer's flags and stats.
 func testPeer(t *testing.T, p *peer.Peer, s peerStats) {
 	if p.UserAgent() != s.wantUserAgent {
 		t.Errorf("testPeer: wrong UserAgent - got %v, want %v", p.UserAgent(), s.wantUserAgent)

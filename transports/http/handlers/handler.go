@@ -8,20 +8,24 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// Handler represents handler which creates all routes for http server
+// and provide access to repositories.
 type Handler struct {
 	services *p2pservice.Services
 }
 
+// NewHandler creates and returns Handler instance.
 func NewHandler(services *p2pservice.Services) *Handler {
 	return &Handler{services: services}
 }
 
-// @title P2P Headers API
-// @version 1.0
-// @description P2P headers API
-// @host localhost:8080
-// @BasePath /
-// @schemes http
+// Init is used to create router and init all routes for http server.
+//  @title P2P Headers API
+//  @version 1.0
+//  @description P2P headers API
+//  @host localhost:8080
+//  @BasePath /
+//  @schemes http.
 func (h *Handler) Init() *gin.Engine {
 	router := gin.Default()
 	docs.SwaggerInfo.BasePath = "/api/v1"

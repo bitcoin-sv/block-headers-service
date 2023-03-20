@@ -43,16 +43,14 @@ const (
 	// retries when connecting to persistent peers.  It is adjusted by the
 	// number of retries such that there is a retry backoff.
 	connectionRetryInterval = time.Second * 5
-)
 
-var (
 	// userAgentName is the user agent name and is used to help identify
 	// ourselves to other bitcoin peers.
 	userAgentName = "/bsv"
 
 	// userAgentVersion is the user agent version and is used to help
 	// identify ourselves to other bitcoin peers.
-	// userAgentVersion = fmt.Sprintf("%d.%d.%d", version.AppMajor, version.AppMinor, version.AppPatch)
+	// userAgentVersion = fmt.Sprintf("%d.%d.%d", version.AppMajor, version.AppMinor, version.AppPatch).
 	userAgentVersion = "1.0.11"
 )
 
@@ -81,7 +79,7 @@ func (oa *onionAddr) Network() string {
 // Ensure onionAddr implements the net.Addr interface.
 var _ net.Addr = (*onionAddr)(nil)
 
-// simpleAddr implements the net.Addr interface with two struct fields
+// simpleAddr implements the net.Addr interface with two struct fields.
 type simpleAddr struct {
 	net, addr string
 }
@@ -120,7 +118,7 @@ type relayMsg struct {
 // updatePeerHeightsMsg is a message sent from the blockmanager to the server
 // after a new block has been accepted. The purpose of the message is to update
 // the heights of peers that were known to announce the block before we
-// connected it to the main chain or recognized it as an orphan. With these
+// connected it to the main chain or recognised it as an orphan. With these
 // updates, peer heights will be kept up to date, allowing for fresh data when
 // selecting sync peer candidacy.
 type updatePeerHeightsMsg struct {
@@ -200,7 +198,6 @@ type server struct {
 	nat                  NAT
 	timeSource           configs.MedianTimeSource
 	wireServices         wire.ServiceFlag
-	services             *service.Services
 }
 
 // serverPeer extends the peer to maintain state shared by the server and
@@ -292,7 +289,7 @@ func (sp *serverPeer) OnVersion(_ *peer.Peer, msg *wire.MsgVersion) *wire.MsgRej
 	configs.Log.Infof("[Server] msg.ProtocolVersion: %d", msg.ProtocolVersion)
 	// Update the address manager with the advertised services for outbound
 	// connections in case they have changed.  This is not done for inbound
-	// connections to help prevent malicious behavior and is skipped when
+	// connections to help prevent malicious behaviour and is skipped when
 	// running on the simulation test network since it is only intended to
 	// connect to specified peers and actively avoids advertising and
 	// connecting to discovered peers.
@@ -409,7 +406,7 @@ func (sp *serverPeer) OnGetHeaders(_ *peer.Peer, msg *wire.MsgGetHeaders) {
 	// provided locator are known.  This does mean the client will start
 	// over with the genesis block if unknown block locators are provided.
 	//
-	// This mirrors the behavior in the reference implementation.
+	// This mirrors the behaviour in the reference implementation.
 	headers := sp.server.syncManager.Services.Headers.LocateHeaders(msg.BlockLocatorHashes, &msg.HashStop)
 
 	// Send found headers to the requesting peer.
@@ -927,7 +924,7 @@ func newPeerConfig(sp *serverPeer) *peer.Config {
 }
 
 // inboundPeerConnected is invoked by the connection manager when a new inbound
-// connection is established.  It initializes a new inbound server peer
+// connection is established.  It initialises a new inbound server peer
 // instance, associates it with the connection, and starts a goroutine to wait
 // for disconnection.
 func (s *server) inboundPeerConnected(conn net.Conn) {
@@ -940,7 +937,7 @@ func (s *server) inboundPeerConnected(conn net.Conn) {
 }
 
 // outboundPeerConnected is invoked by the connection manager when a new
-// outbound connection is established.  It initializes a new outbound server
+// outbound connection is established.  It initialises a new outbound server
 // peer instance, associates it with the relevant state such as the connection
 // request instance and the connection itself, and finally notifies the address
 // manager of the attempt.
@@ -1136,7 +1133,7 @@ func (s *server) NetTotals() (uint64, uint64) {
 }
 
 // UpdatePeerHeights updates the heights of all peers who have have announced
-// the latest connected main chain block, or a recognized orphan. These height
+// the latest connected main chain block, or a recognised orphan. These height
 // updates allow us to dynamically refresh peer heights, ensuring sync peer
 // selection has access to the latest block heights for each peer.
 func (s *server) UpdatePeerHeights(latestBlkHash *chainhash.Hash, latestHeight int32, updateSource *peer.Peer) {
@@ -1169,18 +1166,16 @@ func (s *server) Start() {
 
 // Stop gracefully shuts down the server by stopping and disconnecting all
 // peers and the main listener.
-func (s *server) Stop() error {
+func (s *server) Stop() {
 	// Make sure this only happens once.
 	if atomic.AddInt32(&s.shutdown, 1) != 1 {
 		configs.Log.Infof("Server is already in the process of shutting down")
-		return nil
 	}
 
 	configs.Log.Warnf("P2P Server shutting down")
 
 	// Signal the remaining goroutines to quit.
 	close(s.quit)
-	return nil
 }
 
 func (s *server) StopServer() {
@@ -1244,7 +1239,7 @@ func parseListeners(addrs []string) ([]net.Addr, error) {
 	for _, addr := range addrs {
 		host, _, err := net.SplitHostPort(addr)
 		if err != nil {
-			// Shouldn't happen due to already being normalized.
+			// Shouldn't happen due to already being normalised.
 			return nil, err
 		}
 
@@ -1336,7 +1331,7 @@ out:
 // newServer returns a new bsvd server configured to listen on addr for the
 // bitcoin network type specified by chainParams.  Use start to begin accepting
 // connections from peers.
-func newServer(listenAddrs []string, chainParams *chaincfg.Params, interrupt <-chan struct{},
+func newServer(listenAddrs []string, chainParams *chaincfg.Params,
 	services *service.Services, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState) (*server, error) {
 	wireServices := defaultServices
 	if configs.Cfg.NoCFilters {
@@ -1491,7 +1486,7 @@ func newServer(listenAddrs []string, chainParams *chaincfg.Params, interrupt <-c
 	return &s, nil
 }
 
-// initListeners initializes the configured net listeners and adds any bound
+// initListeners initialises the configured net listeners and adds any bound
 // addresses to the address manager. Returns the listeners and a NAT interface,
 // which is non-nil if UPnP is in use.
 func initListeners(amgr *addrmgr.AddrManager, listenAddrs []string, services wire.ServiceFlag) ([]net.Listener, NAT, error) {
@@ -1671,7 +1666,10 @@ func addLocalAddress(addrMgr *addrmgr.AddrManager, addr string, services wire.Se
 			}
 
 			netAddr := wire.NewNetAddressIPPort(ifaceIP, uint16(port), services)
-			addrMgr.AddLocalAddress(netAddr, addrmgr.BoundPrio)
+			err = addrMgr.AddLocalAddress(netAddr, addrmgr.BoundPrio)
+			if err != nil {
+				configs.Log.Info(err)
+			}
 		}
 	} else {
 		netAddr, err := addrMgr.HostToNetAddress(host, uint16(port), services)
@@ -1679,7 +1677,10 @@ func addLocalAddress(addrMgr *addrmgr.AddrManager, addr string, services wire.Se
 			return err
 		}
 
-		addrMgr.AddLocalAddress(netAddr, addrmgr.BoundPrio)
+		err = addrMgr.AddLocalAddress(netAddr, addrmgr.BoundPrio)
+		if err != nil {
+			configs.Log.Info(err)
+		}
 	}
 
 	return nil
@@ -1708,7 +1709,7 @@ func dynamicTickDuration(remaining time.Duration) time.Duration {
 }
 
 // RunServer starts the server and also contain all deferred functions
-// beacuse they are not called in main method when os.Exit() is called.
+// because they are not called in main method when os.Exit() is called.
 // The optional serverChan parameter is mainly used by the service code to be
 // notified with the server once it is setup so it can gracefully stop it when
 // requested from the service control manager.
@@ -1720,7 +1721,7 @@ func RunServer(serverChan chan<- *server, services *service.Services, peers map[
 	defer configs.Log.Info("Shutdown complete")
 
 	// Create server and start it.
-	server, err := createAndStartServer(interrupt, serverChan, services, peers)
+	server, err := createAndStartServer(serverChan, services, peers)
 	if server == nil {
 		return err
 	}
@@ -1737,10 +1738,9 @@ func RunServer(serverChan chan<- *server, services *service.Services, peers map[
 	return nil
 }
 
-// Create and start server, return error if server was not created correctly
-func createAndStartServer(interrupt <-chan struct{}, serverChan chan<- *server, services *service.Services, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState) (*server, error) {
-	server, err := newServer(configs.Cfg.Listeners, configs.ActiveNetParams.Params,
-		interrupt, services, peers)
+// Create and start server, return error if server was not created correctly.
+func createAndStartServer(serverChan chan<- *server, services *service.Services, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState) (*server, error) {
+	server, err := newServer(configs.Cfg.Listeners, configs.ActiveNetParams.Params, services, peers)
 	if err != nil {
 		configs.Log.Errorf("Unable to start server on %v: %v",
 			configs.Cfg.Listeners, err)
@@ -1753,9 +1753,9 @@ func createAndStartServer(interrupt <-chan struct{}, serverChan chan<- *server, 
 	return server, nil
 }
 
+// NewServer creates and return p2p server.
 func NewServer(services *service.Services, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState) (*server, error) {
-	server, err := newServer(configs.Cfg.Listeners, configs.ActiveNetParams.Params,
-		nil, services, peers)
+	server, err := newServer(configs.Cfg.Listeners, configs.ActiveNetParams.Params, services, peers)
 	if err != nil {
 		configs.Log.Errorf("Unable to start server on %v: %v",
 			configs.Cfg.Listeners, err)

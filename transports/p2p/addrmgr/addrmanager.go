@@ -45,7 +45,6 @@ type AddrManager struct {
 	nNew           int
 	lamtx          sync.Mutex
 	localAddresses map[string]*localAddress
-	log            p2plog.Logger
 }
 
 type localAddress struct {
@@ -58,7 +57,7 @@ type localAddress struct {
 type AddressPriority int
 
 const (
-	// InterfacePrio signifies the address is on a local interface
+	// InterfacePrio signifies the address is on a local interface.
 	InterfacePrio AddressPriority = iota
 
 	// BoundPrio signifies the address has been explicitly bounded to.
@@ -337,17 +336,17 @@ func (a *AddrManager) Start() {
 }
 
 // Stop gracefully shuts down the address manager by stopping the main handler.
-func (a *AddrManager) Stop() error {
+func (a *AddrManager) Stop() {
 	if atomic.AddInt32(&a.shutdown, 1) != 1 {
 		log.Warnf("Address manager is already in the process of " +
 			"shutting down")
-		return nil
 	}
 
 	log.Infof("Address manager shutting down")
 	close(a.quit)
 	a.wg.Wait()
-	return nil
+
+	log.Infof("Address manager stopped")
 }
 
 // AddAddresses adds new addresses to the address manager.  It enforces a max
@@ -417,7 +416,10 @@ func (a *AddrManager) reset() {
 	a.addrIndex = make(map[string]*KnownAddress)
 
 	// fill key with bytes from a good random source.
-	io.ReadFull(crand.Reader, a.key[:])
+	_, err := io.ReadFull(crand.Reader, a.key[:])
+	if err != nil {
+		fmt.Println(err)
+	}
 	for i := range a.addrNew {
 		a.addrNew[i] = make(map[string]*KnownAddress)
 	}

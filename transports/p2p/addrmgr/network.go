@@ -21,7 +21,7 @@ var (
 	}
 
 	// rfc2544Net specifies the the IPv4 block as defined by RFC2544
-	// (198.18.0.0/15)
+	// (198.18.0.0/15).
 	rfc2544Net = ipNet("198.18.0.0", 15, 32)
 
 	// rfc3849Net specifies the IPv6 documentation address block as defined
@@ -40,7 +40,7 @@ var (
 	// by RFC4193 (FC00::/7).
 	rfc4193Net = ipNet("FC00::", 7, 128)
 
-	// rfc4380Net specifies the IPv6 teredo tunneling over UDP address block
+	// rfc4380Net specifies the IPv6 teredo tunnelling over UDP address block
 	// as defined by RFC4380 (2001::/32).
 	rfc4380Net = ipNet("2001::", 32, 128)
 
@@ -53,7 +53,7 @@ var (
 	rfc4862Net = ipNet("FE80::", 64, 128)
 
 	// rfc5737Net specifies the IPv4 documentation address blocks as defined
-	// by RFC5737 (192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24)
+	// by RFC5737 (192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24).
 	rfc5737Net = []net.IPNet{
 		ipNet("192.0.2.0", 24, 32),
 		ipNet("198.51.100.0", 24, 32),
@@ -68,7 +68,7 @@ var (
 	// defined by RFC6145 (::FFFF:0:0:0/96).
 	rfc6145Net = ipNet("::FFFF:0:0:0", 96, 128)
 
-	// rfc6598Net specifies the IPv4 block as defined by RFC6598 (100.64.0.0/10)
+	// rfc6598Net specifies the IPv4 block as defined by RFC6598 (100.64.0.0/10).
 	rfc6598Net = ipNet("100.64.0.0", 10, 32)
 
 	// onionCatNet defines the IPv6 address block used to support Tor.
@@ -81,7 +81,7 @@ var (
 	// RFC4193 unique local IPv6 range.
 	//
 	// In summary the format is:
-	// { magic 6 bytes, 10 bytes base32 decode of key hash }
+	// { magic 6 bytes, 10 bytes base32 decode of key hash }.
 	onionCatNet = ipNet("fd87:d87e:eb43::", 48, 128)
 
 	// zero4Net defines the IPv4 address block for address staring with 0
@@ -130,7 +130,7 @@ func IsRFC1918(na *wire.NetAddress) bool {
 }
 
 // IsRFC2544 returns whether or not the passed address is part of the IPv4
-// address space as defined by RFC2544 (198.18.0.0/15)
+// address space as defined by RFC2544 (198.18.0.0/15).
 func IsRFC2544(na *wire.NetAddress) bool {
 	return rfc2544Net.Contains(na.IP)
 }
@@ -160,7 +160,7 @@ func IsRFC4193(na *wire.NetAddress) bool {
 }
 
 // IsRFC4380 returns whether or not the passed address is part of the IPv6
-// teredo tunneling over UDP range as defined by RFC4380 (2001::/32).
+// teredo tunnelling over UDP range as defined by RFC4380 (2001::/32).
 func IsRFC4380(na *wire.NetAddress) bool {
 	return rfc4380Net.Contains(na.IP)
 }
@@ -179,7 +179,7 @@ func IsRFC4862(na *wire.NetAddress) bool {
 
 // IsRFC5737 returns whether or not the passed address is part of the IPv4
 // documentation address space as defined by RFC5737 (192.0.2.0/24,
-// 198.51.100.0/24, 203.0.113.0/24)
+// 198.51.100.0/24, 203.0.113.0/24).
 func IsRFC5737(na *wire.NetAddress) bool {
 	for _, rfc := range rfc5737Net {
 		if rfc.Contains(na.IP) {
@@ -203,7 +203,7 @@ func IsRFC6145(na *wire.NetAddress) bool {
 }
 
 // IsRFC6598 returns whether or not the passed address is part of the IPv4
-// shared address space specified by RFC6598 (100.64.0.0/10)
+// shared address space specified by RFC6598 (100.64.0.0/10).
 func IsRFC6598(na *wire.NetAddress) bool {
 	return rfc6598Net.Contains(na.IP)
 }

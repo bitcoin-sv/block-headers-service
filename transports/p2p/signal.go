@@ -58,16 +58,3 @@ func interruptListener() <-chan struct{} {
 
 	return c
 }
-
-// interruptRequested returns true when the channel returned by
-// interruptListener was closed.  This simplifies early shutdown slightly since
-// the caller can just use an if statement instead of a select.
-func interruptRequested(interrupted <-chan struct{}) bool {
-	select {
-	case <-interrupted:
-		return true
-	default:
-	}
-
-	return false
-}

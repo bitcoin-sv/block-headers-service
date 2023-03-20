@@ -490,7 +490,7 @@ func TestCancelIgnoreDelayedConnection(t *testing.T) {
 	retryTimeout := 10 * time.Millisecond
 
 	// Setup a dialer that will continue to return an error until the
-	// connect chan is signaled, the dial attempt immediately after will
+	// connect chan is signalled, the dial attempt immediately after will
 	// succeed in returning a connection.
 	connect := make(chan struct{})
 	failingDialer := func(addr net.Addr) (net.Conn, error) {

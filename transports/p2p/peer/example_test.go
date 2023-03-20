@@ -48,7 +48,7 @@ func mockRemotePeer() error {
 	return nil
 }
 
-// This example demonstrates the basic process for initializing and creating an
+// This example demonstrates the basic process for initialising and creating an
 // outbound peer.  Peers negotiate by exchanging version and verack messages.
 // For demonstration, a simple handler for version message is attached to the
 // peer.
