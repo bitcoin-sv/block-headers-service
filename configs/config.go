@@ -30,6 +30,7 @@ import (
 	flags "github.com/jessevdk/go-flags"
 )
 
+// Default config for p2p app.
 const (
 	defaultConfigFilename          = "p2p.conf"
 	defaultLogLevel                = "info"
@@ -54,13 +55,14 @@ var (
 
 var (
 	// backendLog is the logging backend used to create all subsystem loggers.
-	// The backend must not be used before the log rotator has been initialized,
+	// The backend must not be used before the log rotator has been initialised,
 	// or data races and/or nil pointer dereferences will occur.
 	backendLog = p2plog.NewBackend(logWriter{})
 
 	logger = backendLog.Logger("HEADERS")
 )
 
+// Log instance of logger used in project.
 var Log p2plog.Logger
 
 // runServiceCommand is only set to a real function on Windows.  It is used
@@ -79,7 +81,11 @@ func maxUint32(a, b uint32) uint32 {
 type logWriter struct{}
 
 func (logWriter) Write(p []byte) (n int, err error) {
-	os.Stdout.Write(p)
+	_, err = os.Stdout.Write(p)
+
+	if err != nil {
+		return len(p), err
+	}
 	return len(p), nil
 }
 
@@ -107,7 +113,7 @@ type config struct {
 	OnionProxyUser            string        `long:"onionuser" description:"Username for onion proxy server"`
 	OnionProxyPass            string        `long:"onionpass" default-mask:"-" description:"Password for onion proxy server"`
 	NoOnion                   bool          `long:"noonion" description:"Disable connecting to tor hidden services"`
-	TorIsolation              bool          `long:"torisolation" description:"Enable Tor stream isolation by randomizing user credentials for each connection."`
+	TorIsolation              bool          `long:"torisolation" description:"Enable Tor stream isolation by randomising user credentials for each connection."`
 	TestNet3                  bool          `long:"testnet" description:"Use the test network"`
 	RegressionTest            bool          `long:"regtest" description:"Use the regression test network"`
 	SimNet                    bool          `long:"simnet" description:"Use the simulation test network"`
@@ -130,6 +136,7 @@ type config struct {
 	TimeSource                MedianTimeSource
 }
 
+// Cfg instance of config used during defining config for app.
 var (
 	Cfg *config
 )
@@ -179,7 +186,7 @@ func normalizeAddress(addr, defaultPort string) string {
 }
 
 // normalizeAddresses returns a new slice with all the passed peer addresses
-// normalized with the given default port, and all duplicates removed.
+// normalised with the given default port, and all duplicates removed.
 func normalizeAddresses(addrs []string, defaultPort string) []string {
 	for i, addr := range addrs {
 		addrs[i] = normalizeAddress(addr, defaultPort)
@@ -245,7 +252,7 @@ func newConfigParser(cfg *config, so *serviceOptions, options flags.Options) *fl
 	return parser
 }
 
-// loadConfig initializes and parses the config using a config file and command
+// LoadConfig initialises and parses the config using a config file and command
 // line options.
 //
 // The configuration proceeds as follows:
@@ -259,7 +266,7 @@ func newConfigParser(cfg *config, so *serviceOptions, options flags.Options) *fl
 // command line options.  Command line options always take precedence.
 func LoadConfig() error {
 	// Default config.
-	Log := useLogger(logger)
+	Log = useLogger(logger)
 	cfg := config{
 		ConfigFile:                defaultConfigFile,
 		DebugLevel:                defaultLogLevel,
@@ -436,7 +443,7 @@ func LoadConfig() error {
 	// Excessive blocksize cannot be set less than the default but it can be higher.
 	cfg.ExcessiveBlockSize = maxUint32(cfg.ExcessiveBlockSize, defaultExcessiveBlockSize)
 
-	// Prepend ExcessiveBlockSize signaling to the UserAgentComments
+	// Prepend ExcessiveBlockSize signalling to the UserAgentComments
 	cfg.UserAgentComments = append([]string{fmt.Sprintf("EB%.1f", float64(cfg.ExcessiveBlockSize)/1000000)}, cfg.UserAgentComments...)
 
 	// Look for illegal characters in the user agent comments.
@@ -614,7 +621,7 @@ func LoadConfig() error {
 	return nil
 }
 
-// createDefaultConfig copies the sample-bsvd.conf content to the given destination path
+// createDefaultConfig copies the sample-bsvd.conf content to the given destination path.
 func createDefaultConfigFile(destinationPath string) error {
 	// Create the destination directory if it does not exists
 	err := os.MkdirAll(filepath.Dir(destinationPath), 0700)
@@ -635,12 +642,12 @@ func createDefaultConfigFile(destinationPath string) error {
 	}
 	defer dest.Close()
 
-	// We copy every line from the sample config file to the destination,
+	// We copy every line from the sample config file to the destination.
 	reader := bufio.NewReader(src)
-	for err != io.EOF {
+	for errors.Is(err, io.EOF) {
 		var line string
 		line, err = reader.ReadString('\n')
-		if err != nil && err != io.EOF {
+		if err != nil && errors.Is(err, io.EOF) {
 			return err
 		}
 
@@ -654,7 +661,7 @@ func createDefaultConfigFile(destinationPath string) error {
 
 // BsvdDial connects to the address on the named network using the appropriate
 // dial function depending on the address and configuration options.  For
-// example, .onion addresses will be dialed using the onion specific proxy if
+// example, .onion addresses will be dialled using the onion specific proxy if
 // one was specified, but will otherwise use the normal dial function (which
 // could itself use a proxy or not).
 func BsvdDial(addr net.Addr) (net.Conn, error) {

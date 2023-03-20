@@ -21,9 +21,7 @@ const (
 	// local clock that is used to determine that it is likley wrong and
 	// hence to show a warning.
 	similarTimeSecs = 5 * 60 // 5 minutes
-)
 
-var (
 	// maxMedianTimeEntries is the maximum number of entries allowed in the
 	// median time data.  This is a variable as opposed to a constant so the
 	// test code can modify it.
@@ -71,7 +69,7 @@ func (s int64Sorter) Less(i, j int) bool {
 }
 
 // medianTime provides an implementation of the MedianTimeSource interface.
-// It is limited to maxMedianTimeEntries includes the same buggy behavior as
+// It is limited to maxMedianTimeEntries includes the same buggy behaviour as
 // the time offset mechanism in Bitcoin Core.  This is necessary because it is
 // used in the consensus code.
 type medianTime struct {
@@ -138,7 +136,7 @@ func (m *medianTime) AddTimeSample(sourceID string, timeVal time.Time) {
 		numOffsets)
 
 	// NOTE: The following code intentionally has a bug to mirror the
-	// buggy behavior in Bitcoin Core since the median time is used in the
+	// buggy behaviour in Bitcoin Core since the median time is used in the
 	// consensus rules.
 	//
 	// In particular, the offset is only updated when the number of entries
