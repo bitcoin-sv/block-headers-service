@@ -116,7 +116,7 @@ func (msg *MsgMerkleBlock) BsvEncode(w io.Writer, pver uint32, enc MessageEncodi
 		return messageError("MsgMerkleBlock.Bsvdecode", str)
 	}
 
-	err := writeBlockHeader(w, &msg.Header)
+	err := WriteBlockHeader(w, &msg.Header)
 	if err != nil {
 		return err
 	}

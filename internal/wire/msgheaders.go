@@ -97,7 +97,7 @@ func (msg *MsgHeaders) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) 
 	}
 
 	for _, bh := range msg.Headers {
-		err := writeBlockHeader(w, bh)
+		err := WriteBlockHeader(w, bh)
 		if err != nil {
 			return err
 		}

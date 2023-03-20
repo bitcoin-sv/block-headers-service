@@ -374,7 +374,7 @@ func BenchmarkReadBlockHeader(b *testing.B) {
 func BenchmarkWriteBlockHeader(b *testing.B) {
 	header := blockOne.Header
 	for i := 0; i < b.N; i++ {
-		writeBlockHeader(ioutil.Discard, &header)
+		WriteBlockHeader(ioutil.Discard, &header)
 	}
 }
 

@@ -9,6 +9,15 @@ import (
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 )
 
+type HeaderState string
+
+const (
+	Orphan       HeaderState = "ORPHAN"
+	Stale        HeaderState = "STALE"
+	LongestChain HeaderState = "LONGEST_CHAIN"
+	Rejected     HeaderState = "REJECTED"
+)
+
 // BlockHeader defines a single block header, used in SPV validations.
 type BlockHeader struct {
 	Height           int32          `json:"-"`
@@ -18,10 +27,9 @@ type BlockHeader struct {
 	Timestamp        time.Time      `json:"creationTimestamp"`
 	Bits             uint32         `json:"-"`
 	Nonce            uint32         `json:"nonce"`
+	State            HeaderState    `json:"-"`
 	Chainwork        uint64         `json:"-"`
 	CumulatedWork    *big.Int       `json:"work"`
-	IsOrphan         bool           `json:"-"`
-	IsConfirmed      bool           `json:"-"`
 	PreviousBlock    chainhash.Hash `json:"prevBlockHash"`
 	DifficultyTarget uint32         `json:"difficultyTarget"`
 }
@@ -58,6 +66,40 @@ type BlockHeaderState struct {
 	Confirmations int         `json:"confirmations"`
 }
 
+type BlockHash chainhash.Hash
+
+func (h *BlockHash) String() string {
+	return h.ChainHash().String()
+}
+
+func (h *BlockHash) ChainHash() chainhash.Hash {
+	return chainhash.Hash(*h)
+}
+
+func NewRejectedBlockHeader(hash BlockHash) *BlockHeader {
+	return &BlockHeader{
+		Hash:  chainhash.Hash(hash),
+		State: Rejected,
+	}
+}
+
+func NewOrphanPreviousBlockHeader() *BlockHeader {
+	return &BlockHeader{
+		Height:        0,
+		State:         Orphan,
+		Bits:          0,
+		CumulatedWork: big.NewInt(0),
+	}
+}
+
+func (bh *BlockHeader) IsOrphan() bool {
+	return bh.State == Orphan
+}
+
+func (bh *BlockHeader) IsLongestChain() bool {
+	return bh.State == LongestChain
+}
+
 // ConvertToBlockHeader converts one or whole slice of DbBlockHeaders to BlockHeaders
 // used after getting records from db.
 func ConvertToBlockHeader(dbBlockHeaders []*DbBlockHeader) []*BlockHeader {
@@ -74,77 +116,73 @@ func ConvertToBlockHeader(dbBlockHeaders []*DbBlockHeader) []*BlockHeader {
 }
 
 // ToBlockHeader converts work from string to big.Int and return BlockHeader.
-func (dbBlockHeader *DbBlockHeader) ToBlockHeader() *BlockHeader {
-	if dbBlockHeader.CumulatedWork == "" {
-		dbBlockHeader.CumulatedWork = "0"
+func (dbh *DbBlockHeader) ToBlockHeader() *BlockHeader {
+	if dbh.CumulatedWork == "" {
+		dbh.CumulatedWork = "0"
 	}
-	cumulatedWork, ok := new(big.Int).SetString(dbBlockHeader.CumulatedWork, 10)
+	cumulatedWork, ok := new(big.Int).SetString(dbh.CumulatedWork, 10)
 	if !ok {
 		cumulatedWork = big.NewInt(0)
 	}
 
-	chainWork, err := strconv.ParseUint(dbBlockHeader.Chainwork, 10, 64)
+	chainWork, err := strconv.ParseUint(dbh.Chainwork, 10, 64)
 	if err != nil {
 		chainWork = 0
 	}
 
-	hash, _ := chainhash.NewHashFromStr(dbBlockHeader.Hash)
-	merkleTree, _ := chainhash.NewHashFromStr(dbBlockHeader.MerkleRoot)
-	prevBlock, _ := chainhash.NewHashFromStr(dbBlockHeader.PreviousBlock)
+	hash, _ := chainhash.NewHashFromStr(dbh.Hash)
+	merkleTree, _ := chainhash.NewHashFromStr(dbh.MerkleRoot)
+	prevBlock, _ := chainhash.NewHashFromStr(dbh.PreviousBlock)
+
+	var state HeaderState
+	if dbh.IsOrphan {
+		state = Orphan
+	} else {
+		state = LongestChain
+	}
 
 	return &BlockHeader{
-		Height:           dbBlockHeader.Height,
+		Height:           dbh.Height,
 		Hash:             *hash,
-		Version:          dbBlockHeader.Version,
+		Version:          dbh.Version,
 		MerkleRoot:       *merkleTree,
-		Timestamp:        dbBlockHeader.Timestamp,
-		Bits:             dbBlockHeader.Bits,
-		Nonce:            dbBlockHeader.Nonce,
+		Timestamp:        dbh.Timestamp,
+		Bits:             dbh.Bits,
+		Nonce:            dbh.Nonce,
 		Chainwork:        chainWork,
 		CumulatedWork:    cumulatedWork,
-		IsOrphan:         dbBlockHeader.IsOrphan,
-		IsConfirmed:      dbBlockHeader.IsConfirmed,
+		State:            state,
 		PreviousBlock:    *prevBlock,
-		DifficultyTarget: dbBlockHeader.DifficultyTarget,
+		DifficultyTarget: dbh.DifficultyTarget,
 	}
 }
 
 // ToDbBlockHeader converts BlockHeader to DbBlockHeader
 // used mainly to prepare record befor saving in db.
-func (blockHeader BlockHeader) ToDbBlockHeader() DbBlockHeader {
+func (bh BlockHeader) ToDbBlockHeader() DbBlockHeader {
 	return DbBlockHeader{
-		Height:           blockHeader.Height,
-		Hash:             blockHeader.Hash.String(),
-		Version:          blockHeader.Version,
-		MerkleRoot:       blockHeader.MerkleRoot.String(),
-		Timestamp:        blockHeader.Timestamp,
-		Bits:             blockHeader.Bits,
-		Nonce:            blockHeader.Nonce,
-		Chainwork:        strconv.FormatUint(blockHeader.Chainwork, 10),
-		CumulatedWork:    blockHeader.CumulatedWork.String(),
-		IsOrphan:         blockHeader.IsOrphan,
-		IsConfirmed:      blockHeader.IsConfirmed,
-		PreviousBlock:    blockHeader.PreviousBlock.String(),
-		DifficultyTarget: blockHeader.DifficultyTarget,
+		Height:           bh.Height,
+		Hash:             bh.Hash.String(),
+		Version:          bh.Version,
+		MerkleRoot:       bh.MerkleRoot.String(),
+		Timestamp:        bh.Timestamp,
+		Bits:             bh.Bits,
+		Nonce:            bh.Nonce,
+		Chainwork:        strconv.FormatUint(bh.Chainwork, 10),
+		CumulatedWork:    bh.CumulatedWork.String(),
+		IsOrphan:         bh.IsOrphan(),
+		PreviousBlock:    bh.PreviousBlock.String(),
+		DifficultyTarget: bh.DifficultyTarget,
 	}
-}
-
-// CumulateWork sums up cumulatedWork from previous header with chainwork from new header.
-func (blockHeader *BlockHeader) CumulateWork(prevWork *big.Int) {
-	work := prevWork
-	if work == nil {
-		work = big.NewInt(0)
-	}
-	blockHeader.CumulatedWork = work.Add(new(big.Int).SetUint64(blockHeader.Chainwork), work)
 }
 
 // WrapWithHeaderState wraps BlockHeader with additional information creating BlockHeaderState.
-func (blockHeader *BlockHeader) WrapWithHeaderState() BlockHeaderState {
+func (bh *BlockHeader) WrapWithHeaderState() BlockHeaderState {
 	model := BlockHeaderState{
-		Header:    *blockHeader,
+		Header:    *bh,
 		State:     "LONGEST_CHAIN",
-		Height:    blockHeader.Height,
-		ChainWork: blockHeader.Chainwork,
+		Height:    bh.Height,
+		ChainWork: bh.Chainwork,
 	}
 
 	return model
@@ -162,14 +200,15 @@ func CreateGenesisHeaderBlock() BlockHeader {
 		Timestamp:     time.Unix(0x495fab29, 0),   // 2009-01-03 18:15:05 +0000 UTC
 		Bits:          0x1d00ffff,
 		Nonce:         0x7c2bac1d,
+		State:         LongestChain,
 		CumulatedWork: big.NewInt(0),
 	}
 
 	return genesisBlock
 }
 
-// FastLog2Floor calculates the floor of the base-2 logarithm of an input 32-bit 
-// unsigned integer using a bitwise algorithm that masks off decreasingly lower-order bits 
+// FastLog2Floor calculates the floor of the base-2 logarithm of an input 32-bit
+// unsigned integer using a bitwise algorithm that masks off decreasingly lower-order bits
 //of the integer until it reaches the highest order bit, and returns the resulting integer value.
 func FastLog2Floor(n uint32) uint8 {
 	var log2FloorMasks = []uint32{0xffff0000, 0xff00, 0xf0, 0xc, 0x2}

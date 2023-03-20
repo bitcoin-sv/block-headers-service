@@ -172,7 +172,6 @@ func (sm *SyncManager) findNextHeaderCheckpoint(height int32) *chaincfg.Checkpoi
 	checkpoints := configs.Cfg.Checkpoints
 
 	sm.log.Infof("[Headers] findNextHeaderCheckpoint count: %d, height: %d", len(checkpoints), height)
-	sm.log.Infof("[Headers] findNextHeaderCheckpoint count: %d, height: %d", len(checkpoints), height)
 
 	if len(checkpoints) == 0 {
 		return nil
@@ -541,45 +540,38 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 	receivedCheckpoint := false
 	var finalHash *chainhash.Hash
 	for i, blockHeader := range msg.Headers {
-		blockHash := blockHeader.BlockHash()
-		finalHash = &blockHash
+		h, addErr := sm.Services.Chains.Add(service.BlockHeaderSource(*blockHeader))
 
-		if sm.ignoreBlockHash(&blockHash) {
-			sm.log.Warnf("Message rejected - containing forbidden header")
-
+		if service.BlockRejected.Is(addErr) {
 			sm.peerNotifier.BanPeer(peer)
-
 			peer.Disconnect()
 			return
 		}
 
-		// Ensure there is a previous header to compare against.
-		prevHeaderBlock, _ := sm.Services.Headers.GetHeaderByHash(blockHeader.PrevBlock.String())
-		prevNode := domains.BlockHeader{Height: 0, IsOrphan: true}
-		if prevHeaderBlock == nil {
-			sm.log.Warnf("Header list does not contain a previous element as expected")
-		} else {
-			prevNode = *prevHeaderBlock
+		if service.BlockSaveFail.Is(addErr) {
+			sm.log.Errorf("Couldn't save header %v in database, because of %+v", h, addErr)
 		}
 
-		// Ensure the header properly connects to the previous one and
-		// add it to the list of headers.
-		h := domains.BlockHeader{Hash: blockHash}
-		sm.logSyncState(i, h, prevNode)
-
-		h = sm.insertIncomingHeaders(h, prevNode, blockHeader, blockHash)
+		sm.logSyncState(i, *h)
 
 		// Verify the header at the next checkpoint height matches.
 		var err error
-		receivedCheckpoint, err = verifyCheckpointHeight(sm, h, receivedCheckpoint, peer)
+		receivedCheckpoint, err = verifyCheckpointHeight(sm, *h, receivedCheckpoint, peer)
 		if err != nil {
 			sm.log.Warnf(err.Error())
 			return
 		}
+
+		if h.IsLongestChain() {
+			finalHash = &h.Hash
+		}
+		if sm.startHeader == nil {
+			sm.startHeader = h
+		}
 	}
 
 	// When this header is a checkpoint, switch to fetching the blocks for
-	// all of the headers since the last checkpoint.
+	// all the headers since the last checkpoint.
 	if receivedCheckpoint {
 		// Since the first entry of the list is always the final block
 		// that is already in the database and is only used to ensure
@@ -630,33 +622,8 @@ func (sm *SyncManager) requestForNextHeaderBatch(prevHash *chainhash.Hash, peer 
 	}
 }
 
-func (sm *SyncManager) insertIncomingHeaders(h domains.BlockHeader, prevNode domains.BlockHeader, blockHeader *wire.BlockHeader, blockHash chainhash.Hash) domains.BlockHeader {
-	h.Height = prevNode.Height + 1
-	h.MerkleRoot = blockHeader.MerkleRoot
-	h.Version = blockHeader.Version
-	h.PreviousBlock = blockHeader.PrevBlock
-	h.Timestamp = blockHeader.Timestamp
-	h.Bits = blockHeader.Bits
-	h.Nonce = blockHeader.Nonce
-	h.Chainwork = uint64(domains.CalcWork(blockHeader.Bits).Int64())
-	h.Hash = blockHash
-	h.IsOrphan = prevNode.IsOrphan
-
-	h.CumulateWork(prevNode.CumulatedWork)
-	err := sm.Services.Headers.AddHeader(h, sm.blocksToConfirmFork)
-	if err != nil {
-		sm.log.Info(err)
-	}
-
-	if sm.startHeader == nil {
-		sm.startHeader = &h
-	}
-
-	return h
-}
-
 // TODO: Consider removing this method after finishing devleopment.
-func (sm *SyncManager) logSyncState(i int, h domains.BlockHeader, prevNode domains.BlockHeader) {
+func (sm *SyncManager) logSyncState(i int, h domains.BlockHeader) {
 	length := sm.Services.Headers.CountHeaders()
 	if math.Mod(float64(length), 1000) == 0 || length > 760000 {
 		sm.log.Infof("[Manager][%d] sm.headerList.Len()    : %#v", i, length)
@@ -665,8 +632,8 @@ func (sm *SyncManager) logSyncState(i int, h domains.BlockHeader, prevNode domai
 		sm.log.Infof("[Manager][%d] -------------------", i)
 		sm.log.Infof("[Manager][%d] sm.headerList.Len()    : %#v", i, length)
 		sm.log.Infof("[Manager][%d] node.hash              : %#v", i, h.Hash)
-		sm.log.Infof("[Manager][%d] prevNode.hash          : %#v", i, prevNode.Hash)
-		sm.log.Infof("[Manager][%d] prevNode.height        : %#v", i, prevNode.Height)
+		sm.log.Infof("[Manager][%d] node.height            : %#v", i, h.Height)
+		sm.log.Infof("[Manager][%d] prevNode.hash          : %#v", i, h.PreviousBlock)
 	}
 }
 
