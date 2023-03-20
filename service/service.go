@@ -1,11 +1,14 @@
 package service
 
 import (
+	"github.com/libsv/bitcoin-hc/configs"
 	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/wire"
 	"github.com/libsv/bitcoin-hc/repository"
 	peerpkg "github.com/libsv/bitcoin-hc/transports/p2p/peer"
+	"time"
 )
 
 // Network is a interface which represents methods required for Network service.
@@ -35,6 +38,12 @@ type Headers interface {
 	GetHeadersState(hash string) (*domains.BlockHeaderState, error)
 }
 
+
+// Headers is a interface which represents methods exposed by Chains Service.
+type Chains interface {
+	Add(BlockHeaderSource) (*domains.BlockHeader, error)
+}
+
 // Tip is a interface which represents methods required for Tip service.
 type Tip interface {
 	GetTips() ([]domains.BlockHeaderState, error)
@@ -47,12 +56,14 @@ type Services struct {
 	Network Network
 	Headers Headers
 	Tip     Tip
+	Chains  Chains
 }
 
-// Dept is a struct used to create Services. 
+// Dept is a struct used to create Services.
 type Dept struct {
 	Peers        map[*peerpkg.Peer]*peerpkg.PeerSyncState
 	Repositories *repository.Repositories
+	Params       *chaincfg.Params
 }
 
 // NewServices creates and returns Services instance.
@@ -61,6 +72,32 @@ func NewServices(d Dept) *Services {
 		Network: NewNetworkService(d.Peers),
 		Headers: NewHeaderService(d.Repositories),
 		Tip:     NewTipService(d.Repositories),
+		Chains: NewChainsService(ChainServiceDependencies{
+			Repositories: d.Repositories,
+			Params:       d.Params,
+			Logger:       configs.Log,
+			BlockHasher:  DefaultBlockHasher(),
+		}),
 	}
+}
 
+// BlockHeaderSource defines source of information about a block header used by system
+type BlockHeaderSource struct {
+	// Version of the block. This is not the same as the protocol version.
+	Version int32
+
+	// Hash of the previous block header in the block chain.
+	PrevBlock chainhash.Hash
+
+	// Merkle tree reference to hash of all transactions for the block.
+	MerkleRoot chainhash.Hash
+
+	// Time the block was created.
+	Timestamp time.Time
+
+	// Difficulty target for the block.
+	Bits uint32
+
+	// Nonce used to generate the block.
+	Nonce uint32
 }
