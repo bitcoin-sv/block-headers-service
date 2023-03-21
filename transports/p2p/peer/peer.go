@@ -11,7 +11,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math/rand"
+	"math/big"
+	"crypto/rand"
 	"net"
 	"strconv"
 	"sync"
@@ -737,8 +738,12 @@ func (p *Peer) PushAddrMsg(addresses []*wire.NetAddress) ([]*wire.NetAddress, er
 	if addressCount > wire.MaxAddrPerMsg {
 		// Shuffle the address list.
 		for i := 0; i < wire.MaxAddrPerMsg; i++ {
-			j := i + rand.Intn(addressCount-i)
-			msg.AddrList[i], msg.AddrList[j] = msg.AddrList[j], msg.AddrList[i]
+			randInt, err := rand.Int(rand.Reader, big.NewInt(int64(addressCount-i)))
+
+			if err == nil {
+				j := i + int(randInt.Int64())
+				msg.AddrList[i], msg.AddrList[j] = msg.AddrList[j], msg.AddrList[i]
+			}
 		}
 
 		// Truncate it to the maximum size.
@@ -1931,7 +1936,12 @@ func (p *Peer) localVersionMsg() (*wire.MsgVersion, error) {
 	// Generate a unique nonce for this peer so self connections can be
 	// detected.  This is accomplished by adding it to a size-limited map of
 	// recently seen nonces.
-	nonce := uint64(rand.Int63())
+	// nonce := uint64(rand.Int63())
+	n, err := rand.Int(rand.Reader, big.NewInt(9223372036854775807))
+	if err != nil {
+		panic(err)
+	}
+	nonce := n.Uint64()
 	sentNonces.Add(nonce)
 
 	// Create a wire.NetAddress to use as "addrme" in the
@@ -1954,7 +1964,7 @@ func (p *Peer) localVersionMsg() (*wire.MsgVersion, error) {
 
 	// Version message.
 	msg := wire.NewMsgVersion(ourNA, theirNA, nonce, blockNum)
-	err := msg.AddUserAgent(p.cfg.UserAgentName, p.cfg.UserAgentVersion,
+	err = msg.AddUserAgent(p.cfg.UserAgentName, p.cfg.UserAgentVersion,
 		p.cfg.UserAgentComments...)
 	if err != nil {
 		p.cfg.Log.Info(err)
@@ -2159,8 +2169,4 @@ func NewOutboundPeer(cfg *Config, addr string) (*Peer, error) {
 	}
 
 	return p, nil
-}
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
 }

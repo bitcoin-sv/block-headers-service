@@ -7,7 +7,8 @@ package p2psync
 import (
 	"fmt"
 	"math"
-	"math/rand"
+	"math/big"
+	"crypto/rand"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -250,9 +251,17 @@ func (sm *SyncManager) startSync() {
 	// if that is not available then use a random peer at the same
 	// height and hope they find blocks.
 	if len(bestPeers) > 0 {
-		bestPeer = bestPeers[rand.Intn(len(bestPeers))]
+		randInt, err := rand.Int(rand.Reader, big.NewInt(int64(len(bestPeers))))
+
+		if err == nil {
+			bestPeer = bestPeers[int(randInt.Int64())]
+		}
 	} else if len(okPeers) > 0 {
-		bestPeer = okPeers[rand.Intn(len(okPeers))]
+		randInt, err := rand.Int(rand.Reader, big.NewInt(int64(len(okPeers))))
+
+		if err == nil {
+			bestPeer = bestPeers[int(randInt.Int64())]
+		}
 	}
 
 	// Start syncing from the best peer if one was selected.
