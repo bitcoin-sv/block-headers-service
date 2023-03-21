@@ -198,11 +198,11 @@ type TxIn struct {
 	Sequence         uint32
 }
 
-// SerializeSize returns the number of bytes it would take to serialize the
+// SerializeSize returns the number of bytes it would take to serialise the
 // the transaction input.
 func (t *TxIn) SerializeSize() int {
 	// Outpoint Hash 32 bytes + Outpoint Index 4 bytes + Sequence 4 bytes +
-	// serialized varint size for the length of SignatureScript +
+	// serialised varint size for the length of SignatureScript +
 	// SignatureScript bytes.
 	return 40 + VarIntSerializeSize(uint64(len(t.SignatureScript))) +
 		len(t.SignatureScript)
@@ -225,10 +225,10 @@ type TxOut struct {
 	PkScript []byte
 }
 
-// SerializeSize returns the number of bytes it would take to serialize the
+// SerializeSize returns the number of bytes it would take to serialise the
 // the transaction output.
 func (t *TxOut) SerializeSize() int {
-	// Value 8 bytes + serialized varint size for the length of PkScript +
+	// Value 8 bytes + serialised varint size for the length of PkScript +
 	// PkScript bytes.
 	return 8 + VarIntSerializeSize(uint64(len(t.PkScript))) + len(t.PkScript)
 }
@@ -280,7 +280,7 @@ func (msg *MsgTx) TxHash() chainhash.Hash {
 	}
 }
 
-// NewTxHash Version10 new tx hash
+// NewTxHash Version10 new tx hash.
 func (msg *MsgTx) NewTxHash() chainhash.Hash {
 	hash, _ := newTxHash(msg)
 	return hash
@@ -583,7 +583,7 @@ func (msg *MsgTx) Deserialize(r io.Reader) error {
 
 // BsvEncode encodes the receiver to w using the bitcoin protocol encoding.
 // This is part of the Message interface implementation.
-// See Serialize for encoding transactions to be stored to disk, such as in a
+// See Serialise for encoding transactions to be stored to disk, such as in a
 // database, as opposed to encoding transactions for the wire.
 func (msg *MsgTx) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) error {
 	err := binarySerializer.PutUint32(w, littleEndian, uint32(msg.Version))
@@ -620,7 +620,7 @@ func (msg *MsgTx) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) error
 	return binarySerializer.PutUint32(w, littleEndian, msg.LockTime)
 }
 
-// Serialize encodes the transaction to w using a format that suitable for
+// Serialise encodes the transaction to w using a format that suitable for
 // long-term storage such as a database while respecting the Version field in
 // the transaction.  This function differs from BsvEncode in that BsvEncode
 // encodes the transaction to the bitcoin wire protocol in order to be sent
@@ -630,17 +630,17 @@ func (msg *MsgTx) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) error
 // encoded transaction is the same in both instances, but there is a distinct
 // difference and separating the two allows the API to be flexible enough to
 // deal with changes.
-func (msg *MsgTx) Serialize(w io.Writer) error {
+func (msg *MsgTx) Serialise(w io.Writer) error {
 	// At the current time, there is no difference between the wire encoding
 	// at protocol version 0 and the stable long-term storage format.  As
 	// a result, make use of BsvEncode.
 	return msg.BsvEncode(w, 0, BaseEncoding)
 }
 
-// baseSize returns the serialized size of the transaction without accounting
+// baseSize returns the serialised size of the transaction without accounting
 // for any witness data.
 func (msg *MsgTx) baseSize() int {
-	// Version 4 bytes + LockTime 4 bytes + Serialized varint size for the
+	// Version 4 bytes + LockTime 4 bytes + Serialised varint size for the
 	// number of transaction inputs and outputs.
 	n := 8 + VarIntSerializeSize(uint64(len(msg.TxIn))) +
 		VarIntSerializeSize(uint64(len(msg.TxOut)))
@@ -656,7 +656,7 @@ func (msg *MsgTx) baseSize() int {
 	return n
 }
 
-// SerializeSize returns the number of bytes it would take to serialize the
+// SerializeSize returns the number of bytes it would take to serialise the
 // the transaction.
 func (msg *MsgTx) SerializeSize() int {
 	return msg.baseSize()
@@ -675,7 +675,7 @@ func (msg *MsgTx) MaxPayloadLength(pver uint32) uint32 {
 }
 
 // PkScriptLocs returns a slice containing the start of each public key script
-// within the raw serialized transaction.  The caller can easily obtain the
+// within the raw serialised transaction.  The caller can easily obtain the
 // length of each script by using len on the script available via the
 // appropriate transaction output entry.
 func (msg *MsgTx) PkScriptLocs() []int {
@@ -684,11 +684,11 @@ func (msg *MsgTx) PkScriptLocs() []int {
 		return nil
 	}
 
-	// The starting offset in the serialized transaction of the first
+	// The starting offset in the serialised transaction of the first
 	// transaction output is:
 	//
-	// Version 4 bytes + serialized varint size for the number of
-	// transaction inputs and outputs + serialized size of each transaction
+	// Version 4 bytes + serialised varint size for the number of
+	// transaction inputs and outputs + serialised size of each transaction
 	// input.
 	n := 4 + VarIntSerializeSize(uint64(len(msg.TxIn))) +
 		VarIntSerializeSize(uint64(numTxOut))
@@ -702,7 +702,7 @@ func (msg *MsgTx) PkScriptLocs() []int {
 	for i, txOut := range msg.TxOut {
 		// The offset of the script in the transaction output is:
 		//
-		// Value 8 bytes + serialized varint size for the length of
+		// Value 8 bytes + serialised varint size for the length of
 		// PkScript.
 		n += 8 + VarIntSerializeSize(uint64(len(txOut.PkScript)))
 		pkScriptLocs[i] = n

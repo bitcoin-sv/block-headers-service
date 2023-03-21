@@ -11,14 +11,14 @@ import (
 
 // MsgProtoconf implements the Message interface and represents a bitcoin
 // protoconf message.  It is sent after verack message directly to inform
-// max receive payload length
+// max receive payload length.
 type MsgProtoconf struct {
 	NumberOfFields       uint64 // numberOfFields is set to 1, increment if new properties are added
 	MaxRecvPayloadLength uint32
 }
 
 // MaxProtoconfPayload is the maximum number of bytes a protoconf can be.
-// NumberOfFields 8 bytes + MaxRecvPayloadLength 4 bytes
+// NumberOfFields 8 bytes + MaxRecvPayloadLength 4 bytes.
 const MaxProtoconfPayload = 1048576
 
 // Bsvdecode decodes r using the bitcoin protocol encoding into the receiver.

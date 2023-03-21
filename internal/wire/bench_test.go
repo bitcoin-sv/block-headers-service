@@ -333,7 +333,7 @@ func BenchmarkDeserializeTxLarge(b *testing.B) {
 	}
 }
 
-// BenchmarkSerializeTx performs a benchmark on how long it takes to serialize
+// BenchmarkSerializeTx performs a benchmark on how long it takes to serialise
 // a transaction.
 func BenchmarkSerializeTx(b *testing.B) {
 	tx := blockOne.Transactions[0]
@@ -370,7 +370,7 @@ func BenchmarkReadBlockHeader(b *testing.B) {
 }
 
 // BenchmarkWriteBlockHeader performs a benchmark on how long it takes to
-// serialize a block header.
+// serialise a block header.
 func BenchmarkWriteBlockHeader(b *testing.B) {
 	header := blockOne.Header
 	for i := 0; i < b.N; i++ {
@@ -392,7 +392,7 @@ func BenchmarkDecodeGetHeaders(b *testing.B) {
 		m.AddBlockLocatorHash(hash)
 	}
 
-	// Serialize it so the bytes are available to test the decode below.
+	// Serialise it so the bytes are available to test the decode below.
 	var bb bytes.Buffer
 	if err := m.BsvEncode(&bb, pver, LatestEncoding); err != nil {
 		b.Fatalf("MsgGetHeaders.BsvEncode: unexpected error: %v", err)
@@ -422,7 +422,7 @@ func BenchmarkDecodeHeaders(b *testing.B) {
 		m.AddBlockHeader(NewBlockHeader(1, hash, hash, 0, uint32(i)))
 	}
 
-	// Serialize it so the bytes are available to test the decode below.
+	// Serialise it so the bytes are available to test the decode below.
 	var bb bytes.Buffer
 	if err := m.BsvEncode(&bb, pver, LatestEncoding); err != nil {
 		b.Fatalf("MsgHeaders.BsvEncode: unexpected error: %v", err)
@@ -452,7 +452,7 @@ func BenchmarkDecodeGetBlocks(b *testing.B) {
 		m.AddBlockLocatorHash(hash)
 	}
 
-	// Serialize it so the bytes are available to test the decode below.
+	// Serialise it so the bytes are available to test the decode below.
 	var bb bytes.Buffer
 	if err := m.BsvEncode(&bb, pver, LatestEncoding); err != nil {
 		b.Fatalf("MsgGetBlocks.BsvEncode: unexpected error: %v", err)
@@ -479,7 +479,7 @@ func BenchmarkDecodeAddr(b *testing.B) {
 		ma.AddAddress(NewNetAddressIPPort(ip, port, SFNodeNetwork))
 	}
 
-	// Serialize it so the bytes are available to test the decode below.
+	// Serialise it so the bytes are available to test the decode below.
 	var bb bytes.Buffer
 	if err := ma.BsvEncode(&bb, pver, LatestEncoding); err != nil {
 		b.Fatalf("MsgAddr.BsvEncode: unexpected error: %v", err)
@@ -509,7 +509,7 @@ func BenchmarkDecodeInv(b *testing.B) {
 		m.AddInvVect(NewInvVect(InvTypeBlock, hash))
 	}
 
-	// Serialize it so the bytes are available to test the decode below.
+	// Serialise it so the bytes are available to test the decode below.
 	var bb bytes.Buffer
 	if err := m.BsvEncode(&bb, pver, LatestEncoding); err != nil {
 		b.Fatalf("MsgInv.BsvEncode: unexpected error: %v", err)
@@ -539,7 +539,7 @@ func BenchmarkDecodeNotFound(b *testing.B) {
 		m.AddInvVect(NewInvVect(InvTypeBlock, hash))
 	}
 
-	// Serialize it so the bytes are available to test the decode below.
+	// Serialise it so the bytes are available to test the decode below.
 	var bb bytes.Buffer
 	if err := m.BsvEncode(&bb, pver, LatestEncoding); err != nil {
 		b.Fatalf("MsgNotFound.BsvEncode: unexpected error: %v", err)
@@ -577,7 +577,7 @@ func BenchmarkDecodeMerkleBlock(b *testing.B) {
 		}
 	}
 
-	// Serialize it so the bytes are available to test the decode below.
+	// Serialise it so the bytes are available to test the decode below.
 	var bb bytes.Buffer
 	if err := m.BsvEncode(&bb, pver, LatestEncoding); err != nil {
 		b.Fatalf("MsgMerkleBlock.BsvEncode: unexpected error: %v", err)
@@ -606,7 +606,7 @@ func BenchmarkTxHash(b *testing.B) {
 func BenchmarkDoubleHashB(b *testing.B) {
 	var buf bytes.Buffer
 	if err := genesisCoinbaseTx.Serialize(&buf); err != nil {
-		b.Errorf("Serialize: unexpected error: %v", err)
+		b.Errorf("Serialise: unexpected error: %v", err)
 		return
 	}
 	txBytes := buf.Bytes()
@@ -622,7 +622,7 @@ func BenchmarkDoubleHashB(b *testing.B) {
 func BenchmarkDoubleHashH(b *testing.B) {
 	var buf bytes.Buffer
 	if err := genesisCoinbaseTx.Serialize(&buf); err != nil {
-		b.Errorf("Serialize: unexpected error: %v", err)
+		b.Errorf("Serialise: unexpected error: %v", err)
 		return
 	}
 	txBytes := buf.Bytes()

@@ -23,7 +23,7 @@ const MessageHeaderSize = 24
 const CommandSize = 12
 
 // ebs is the excessive block size, used to determine reasonable maximum message sizes.
-// 32MB is the current default value
+// 32MB is the current default value.
 var ebs uint32 = 3200000000
 
 // SetLimits adjusts various message limits based on max block size configuration.
@@ -264,7 +264,7 @@ func WriteMessage(w io.Writer, msg Message, pver uint32, bsvnet BitcoinNet) erro
 // WriteMessageWithEncodingN writes a bitcoin Message to w including the
 // necessary header information and returns the number of bytes written.
 // This function is the same as WriteMessageN except it also allows the caller
-// to specify the message encoding format to be used when serializing wire
+// to specify the message encoding format to be used when serialising wire
 // messages.
 func WriteMessageWithEncodingN(w io.Writer, msg Message, pver uint32,
 	bsvnet BitcoinNet, encoding MessageEncoding) (int, error) {

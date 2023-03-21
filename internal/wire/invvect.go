@@ -70,7 +70,7 @@ func readInvVect(r io.Reader, pver uint32, iv *InvVect) error {
 	return readElements(r, &iv.Type, &iv.Hash)
 }
 
-// writeInvVect serializes an InvVect to w depending on the protocol version.
+// writeInvVect serialises an InvVect to w depending on the protocol version.
 func writeInvVect(w io.Writer, pver uint32, iv *InvVect) error {
 	return writeElements(w, iv.Type, &iv.Hash)
 }

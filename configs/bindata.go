@@ -184,7 +184,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"sample-bsvd.conf": {sampleBsvdConf, map[string]*bintree{}},
 }}
 
-// RestoreAsset restores an asset under the given directory
+// RestoreAsset restores an asset under the given directory.
 func RestoreAsset(dir, name string) error {
 	data, err := Asset(name)
 	if err != nil {
@@ -209,7 +209,7 @@ func RestoreAsset(dir, name string) error {
 	return nil
 }
 
-// RestoreAssets restores an asset under the given directory recursively
+// RestoreAssets restores an asset under the given directory recursively.
 func RestoreAssets(dir, name string) error {
 	children, err := AssetDir(name)
 	// File

@@ -562,7 +562,7 @@ func sanitizeString(str string, maxLength uint) string {
 	return str
 }
 
-// MessageSummary returns a human-readable string which summarizes a message.
+// MessageSummary returns a human-readable string which summarises a message.
 // Not all messages have or need a summary.  This is used for debug logging.
 func MessageSummary(msg wire.Message) string {
 	switch msg := msg.(type) {

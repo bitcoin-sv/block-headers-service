@@ -162,7 +162,7 @@ func (msg *MsgBlock) DeserializeTxLoc(r *bytes.Buffer) ([]TxLoc, error) {
 
 // BsvEncode encodes the receiver to w using the bitcoin protocol encoding.
 // This is part of the Message interface implementation.
-// See Serialize for encoding blocks to be stored to disk, such as in a
+// See Serialise for encoding blocks to be stored to disk, such as in a
 // database, as opposed to encoding blocks for the wire.
 func (msg *MsgBlock) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) error {
 	err := writeBlockHeader(w, pver, &msg.Header)
@@ -185,7 +185,7 @@ func (msg *MsgBlock) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) er
 	return nil
 }
 
-// Serialize encodes the block to w using a format that suitable for long-term
+// Serialise encodes the block to w using a format that suitable for long-term
 // storage such as a database while respecting the Version field in the block.
 // This function differs from BsvEncode in that BsvEncode encodes the block to
 // the bitcoin wire protocol in order to be sent across the network.  The wire
@@ -194,17 +194,17 @@ func (msg *MsgBlock) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) er
 // time this comment was written, the encoded block is the same in both
 // instances, but there is a distinct difference and separating the two allows
 // the API to be flexible enough to deal with changes.
-func (msg *MsgBlock) Serialize(w io.Writer) error {
+func (msg *MsgBlock) Serialise(w io.Writer) error {
 	// At the current time, there is no difference between the wire encoding
 	// at protocol version 0 and the stable long-term storage format.  As
 	// a result, make use of BsvEncode.
 	return msg.BsvEncode(w, 0, BaseEncoding)
 }
 
-// SerializeSize returns the number of bytes it would take to serialize the
+// SerializeSize returns the number of bytes it would take to serialise the
 // block, factoring in any witness data within transaction.
 func (msg *MsgBlock) SerializeSize() int {
-	// Block header bytes + Serialized varint size for the number of
+	// Block header bytes + Serialised varint size for the number of
 	// transactions.
 	n := blockHeaderLen + VarIntSerializeSize(uint64(len(msg.Transactions)))
 

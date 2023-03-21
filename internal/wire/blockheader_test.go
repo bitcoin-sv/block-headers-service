@@ -186,7 +186,7 @@ func TestBlockHeaderWire(t *testing.T) {
 	}
 }
 
-// TestBlockHeaderSerialize tests BlockHeader serialize and deserialize.
+// TestBlockHeaderSerialize tests BlockHeader serialise and deserialize.
 func TestBlockHeaderSerialize(t *testing.T) {
 	nonce := uint32(123123) // 0x1e0f3
 
@@ -220,7 +220,7 @@ func TestBlockHeaderSerialize(t *testing.T) {
 	tests := []struct {
 		in  *BlockHeader // Data to encode
 		out *BlockHeader // Expected decoded data
-		buf []byte       // Serialized data
+		buf []byte       // Serialised data
 	}{
 		{
 			baseBlockHdr,
@@ -231,15 +231,15 @@ func TestBlockHeaderSerialize(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		// Serialize the block header.
+		// Serialise the block header.
 		var buf bytes.Buffer
 		err := test.in.Serialize(&buf)
 		if err != nil {
-			t.Errorf("Serialize #%d error %v", i, err)
+			t.Errorf("Serialise #%d error %v", i, err)
 			continue
 		}
 		if !bytes.Equal(buf.Bytes(), test.buf) {
-			t.Errorf("Serialize #%d\n got: %s want: %s", i,
+			t.Errorf("Serialise #%d\n got: %s want: %s", i,
 				spew.Sdump(buf.Bytes()), spew.Sdump(test.buf))
 			continue
 		}

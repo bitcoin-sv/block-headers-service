@@ -404,7 +404,7 @@ var merkleBlockOne = MsgMerkleBlock{
 	Flags: []byte{0x80},
 }
 
-// merkleBlockOneBytes is the serialized bytes for a merkle block created from
+// merkleBlockOneBytes is the serialised bytes for a merkle block created from
 // block one of the block chain where the first transaction matches.
 var merkleBlockOneBytes = []byte{
 	0x01, 0x00, 0x00, 0x00, // Version 1
