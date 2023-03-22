@@ -12,7 +12,7 @@ jobs:
   golangci:
     strategy:
       matrix:
-       go-version: [1.16.x]
+       go-version: [1.19.x]
        os: [ubuntu-latest]
     name: lint
     runs-on: ${{ matrix.os }}
@@ -26,7 +26,7 @@ jobs:
   build:
     strategy:
       matrix:
-        go-version: [ 1.16.x ]
+        go-version: [ 1.19.x ]
         os: [ ubuntu-latest ]
     runs-on:  ${{ matrix.os }}
     steps:
@@ -37,8 +37,12 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
 
+      - name: Clean test cache
+        run: go clean -testcache
+
       - name: Tests
-        run: make run-unit-tests
+        run: go test -v ./... -race
+
       - name: Build
         run: go build -v ./...
   release:
