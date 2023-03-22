@@ -540,7 +540,7 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 	receivedCheckpoint := false
 	var finalHash *chainhash.Hash
 	for i, blockHeader := range msg.Headers {
-		h, addErr := sm.Services.Chains.Add(service.BlockHeaderSource(*blockHeader))
+		h, addErr := sm.Services.Chains.Add(domains.BlockHeaderSource(*blockHeader))
 
 		if service.BlockRejected.Is(addErr) {
 			sm.peerNotifier.BanPeer(peer)
@@ -548,8 +548,19 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 			return
 		}
 
-		if service.BlockSaveFail.Is(addErr) {
+		if service.HeaderSaveFail.Is(addErr) {
 			sm.log.Errorf("Couldn't save header %v in database, because of %+v", h, addErr)
+			continue
+		}
+
+		if service.HeaderCreationFail.Is(addErr) {
+			sm.log.Errorf("Couldn't create header from %v because of error %+v", blockHeader, addErr)
+			continue
+		}
+
+		if service.ChainUpdateFail.Is(addErr) {
+			sm.log.Errorf("When adding header %v couldn't update chains state because of error %+v", blockHeader, addErr)
+			continue
 		}
 
 		sm.logSyncState(i, *h)

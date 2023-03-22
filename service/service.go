@@ -8,7 +8,6 @@ import (
 	"github.com/libsv/bitcoin-hc/internal/wire"
 	"github.com/libsv/bitcoin-hc/repository"
 	peerpkg "github.com/libsv/bitcoin-hc/transports/p2p/peer"
-	"time"
 )
 
 // Network is a interface which represents methods required for Network service.
@@ -41,7 +40,7 @@ type Headers interface {
 
 // Headers is a interface which represents methods exposed by Chains Service.
 type Chains interface {
-	Add(BlockHeaderSource) (*domains.BlockHeader, error)
+	Add(domains.BlockHeaderSource) (*domains.BlockHeader, error)
 }
 
 // Tip is a interface which represents methods required for Tip service.
@@ -79,25 +78,4 @@ func NewServices(d Dept) *Services {
 			BlockHasher:  DefaultBlockHasher(),
 		}),
 	}
-}
-
-// BlockHeaderSource defines source of information about a block header used by system
-type BlockHeaderSource struct {
-	// Version of the block. This is not the same as the protocol version.
-	Version int32
-
-	// Hash of the previous block header in the block chain.
-	PrevBlock chainhash.Hash
-
-	// Merkle tree reference to hash of all transactions for the block.
-	MerkleRoot chainhash.Hash
-
-	// Time the block was created.
-	Timestamp time.Time
-
-	// Difficulty target for the block.
-	Bits uint32
-
-	// Nonce used to generate the block.
-	Nonce uint32
 }

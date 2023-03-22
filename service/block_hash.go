@@ -18,7 +18,7 @@ func DefaultBlockHasher() BlockHasher {
 	return maxBlockHeaderPayload
 }
 
-func (max blockHashBufferMax) BlockHash(h *BlockHeaderSource) domains.BlockHash {
+func (max blockHashBufferMax) BlockHash(h *domains.BlockHeaderSource) domains.BlockHash {
 	buf := bytes.NewBuffer(make([]byte, 0, max))
 	bh := wire.BlockHeader(*h)
 	_ = wire.WriteBlockHeader(buf, 0, &bh)
