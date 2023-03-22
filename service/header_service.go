@@ -247,6 +247,10 @@ func (hs *HeaderService) blockLocator() domains.BlockLocator {
 	return locator
 }
 
+
+// LocateHeaders fetches headers for a number of blocks after the most recent known block
+// in the best chain, based on the provided block locator and stop hash, and defaults to the
+// genesis block if the locator is unknown.
 func (hs *HeaderService) LocateHeaders(locator domains.BlockLocator, hashStop *chainhash.Hash) []wire.BlockHeader {
 	headers := hs.locateHeaders(locator, hashStop, wire.MaxBlockHeadersPerMsg)
 	return headers

@@ -43,7 +43,7 @@ func SeedFromDNS(chainParams *chaincfg.Params, reqServices wire.ServiceFlag,
 		}
 
 		go func(host string) {
-			randSource := mrand.New(mrand.NewSource(time.Now().UnixNano()))
+			randSource := mrand.New(mrand.NewSource(time.Now().UnixNano())) //nolint:gosec
 
 			seedpeers, err := lookupFn(host)
 			if err != nil {
@@ -66,7 +66,7 @@ func SeedFromDNS(chainParams *chaincfg.Params, reqServices wire.ServiceFlag,
 					// a time randomly selected between 3
 					// and 7 days ago.
 					time.Now().Add(-1*time.Second*time.Duration(secondsIn3Days+
-						randSource.Int31n(secondsIn4Days))),
+						randSource.Int31n(secondsIn4Days))), //nolint:gosec
 					0, peer, uint16(intPort))
 			}
 

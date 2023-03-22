@@ -63,11 +63,14 @@ func (msg *MsgInv) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) erro
 	msg.InvList = make([]*InvVect, 0, count)
 	for i := uint64(0); i < count; i++ {
 		iv := &invList[i]
-		err := readInvVect(r, pver, iv)
+		err := readInvVect(r, iv)
 		if err != nil {
 			return err
 		}
-		msg.AddInvVect(iv)
+		err = msg.AddInvVect(iv)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
 	return nil
@@ -89,7 +92,7 @@ func (msg *MsgInv) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) erro
 	}
 
 	for _, iv := range msg.InvList {
-		err := writeInvVect(w, pver, iv)
+		err := writeInvVect(w, iv)
 		if err != nil {
 			return err
 		}

@@ -1306,7 +1306,7 @@ out:
 					s.wireServices)
 				err = s.addrManager.AddLocalAddress(na, addrmgr.UpnpPrio)
 				if err != nil {
-					// XXX DeletePortMapping?
+					configs.Log.Warnf("can't add local address: %v", err)
 				}
 				configs.Log.Warnf("Successfully bound via UPnP to %s", addrmgr.NetAddressKey(na))
 				first = false

@@ -57,7 +57,7 @@ func (msg *MsgProtoconf) MaxPayloadLength(pver uint32) uint32 {
 	return MaxProtoconfPayload
 }
 
-// NewMsgFeeFilter returns a new bitcoin feefilter message that conforms to
+// NewMsgProtoconf returns a new bitcoin feefilter message that conforms to
 // the Message interface.  See MsgFeeFilter for details.
 func NewMsgProtoconf(maxRecvPayloadLength uint32) *MsgProtoconf {
 	return &MsgProtoconf{

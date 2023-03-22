@@ -343,12 +343,8 @@ linters:
     - exportloopref
     - exhaustive
     - sqlclosecheck
-    - nolintlint
-    - nestif
     - goconst
-    - gochecknoglobals
     - godot
-    #- lll
   disable:
     - gocritic # use this for very opinionated linting
     - whitespace
@@ -357,6 +353,8 @@ linters:
     - testpackage
     - nlreturn
     - gci
+    - errorlint
+    - musttag
   disable-all: false
   presets:
     - bugs

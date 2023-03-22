@@ -15,11 +15,12 @@ import (
 )
 
 const (
+	// MVCTxVersion1 reperesents message version 1.
 	MVCTxVersion1  = 1
+	// MVCTxVersion2 reperesents message version 2.
 	MVCTxVersion2  = 2
+	// MVCTxVersion10 reperesents message version 10.
 	MVCTxVersion10 = 10
-
-	TxVersion = 1
 
 	// MaxTxInSequenceNum is the maximum sequence number the sequence field
 	// of a transaction input can be.
@@ -273,11 +274,12 @@ func (msg *MsgTx) TxHash() chainhash.Hash {
 	// cause a run-time panic.
 	if msg.Version == MVCTxVersion10 {
 		return msg.NewTxHash()
-	} else {
-		buf := bytes.NewBuffer(make([]byte, 0, msg.SerializeSize()))
-		_ = msg.Serialize(buf)
-		return chainhash.DoubleHashH(buf.Bytes())
 	}
+
+	buf := bytes.NewBuffer(make([]byte, 0, msg.SerializeSize()))
+	_ = msg.Serialise(buf)
+	return chainhash.DoubleHashH(buf.Bytes())
+
 }
 
 // NewTxHash Version10 new tx hash.
@@ -290,7 +292,7 @@ func newTxHash(msg *MsgTx) (chainhash.Hash, error) {
 	if msg.Version != MVCTxVersion10 {
 		return chainhash.Hash{}, errors.New("version error")
 	}
-	buf := bytes.NewBuffer(make([]byte, 0, 0))
+	buf := bytes.NewBuffer(make([]byte, 0))
 	// version
 	err := binarySerializer.PutUint32(buf, littleEndian, uint32(msg.Version))
 	if err != nil {
@@ -314,7 +316,7 @@ func newTxHash(msg *MsgTx) (chainhash.Hash, error) {
 		return chainhash.Hash{}, err
 	}
 	// outpoint and sequence
-	inputBuf := bytes.NewBuffer(make([]byte, 0, 0))
+	inputBuf := bytes.NewBuffer(make([]byte, 0))
 	for _, ti := range msg.TxIn {
 		inputBuf.Write(ti.PreviousOutPoint.Hash[:])
 		err = binarySerializer.PutUint32(inputBuf, littleEndian, ti.PreviousOutPoint.Index)
@@ -328,13 +330,13 @@ func newTxHash(msg *MsgTx) (chainhash.Hash, error) {
 	}
 	buf.Write(chainhash.HashB(inputBuf.Bytes()))
 	// unlocking script
-	inputUnlockingBuf := bytes.NewBuffer(make([]byte, 0, 0))
+	inputUnlockingBuf := bytes.NewBuffer(make([]byte, 0))
 	for _, ti := range msg.TxIn {
 		inputUnlockingBuf.Write(chainhash.HashB(ti.SignatureScript))
 	}
 	buf.Write(chainhash.HashB(inputUnlockingBuf.Bytes()))
 	// outputs
-	outputBuf := bytes.NewBuffer(make([]byte, 0, 0))
+	outputBuf := bytes.NewBuffer(make([]byte, 0))
 	for _, to := range msg.TxOut {
 		err = binarySerializer.PutUint64(outputBuf, littleEndian, uint64(to.Value))
 		if err != nil {
@@ -363,7 +365,10 @@ func (msg *MsgTx) Copy() *MsgTx {
 		// Deep copy the old previous outpoint.
 		oldOutPoint := oldTxIn.PreviousOutPoint
 		newOutPoint := OutPoint{}
-		newOutPoint.Hash.SetBytes(oldOutPoint.Hash[:])
+		err := newOutPoint.Hash.SetBytes(oldOutPoint.Hash[:])
+		if err != nil {
+			fmt.Println(err)
+		}
 		newOutPoint.Index = oldOutPoint.Index
 
 		// Deep copy the old signature script.
@@ -466,7 +471,7 @@ func (msg *MsgTx) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) error
 		// and needs to be returned to the pool on error.
 		ti := &txIns[i]
 		msg.TxIn[i] = ti
-		err = readTxIn(r, pver, msg.Version, ti)
+		err = readTxIn(r, pver, ti)
 		if err != nil {
 			returnScriptBuffers()
 			return err
@@ -498,7 +503,7 @@ func (msg *MsgTx) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) error
 		// and needs to be returned to the pool on error.
 		to := &txOuts[i]
 		msg.TxOut[i] = to
-		err = readTxOut(r, pver, msg.Version, to)
+		err = readTxOut(r, pver, to)
 		if err != nil {
 			returnScriptBuffers()
 			return err
@@ -598,7 +603,7 @@ func (msg *MsgTx) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) error
 	}
 
 	for _, ti := range msg.TxIn {
-		err = writeTxIn(w, pver, msg.Version, ti)
+		err = writeTxIn(w, pver, ti)
 		if err != nil {
 			return err
 		}
@@ -726,7 +731,7 @@ func NewMsgTx(version int32) *MsgTx {
 }
 
 // readOutPoint reads the next sequence of bytes from r as an OutPoint.
-func readOutPoint(r io.Reader, pver uint32, version int32, op *OutPoint) error {
+func readOutPoint(r io.Reader, op *OutPoint) error {
 	_, err := io.ReadFull(r, op.Hash[:])
 	if err != nil {
 		return err
@@ -738,7 +743,7 @@ func readOutPoint(r io.Reader, pver uint32, version int32, op *OutPoint) error {
 
 // writeOutPoint encodes op to the bitcoin protocol encoding for an OutPoint
 // to w.
-func writeOutPoint(w io.Writer, pver uint32, version int32, op *OutPoint) error {
+func writeOutPoint(w io.Writer, op *OutPoint) error {
 	_, err := w.Write(op.Hash[:])
 	if err != nil {
 		return err
@@ -780,8 +785,8 @@ func readScript(r io.Reader, pver uint32, maxAllowed uint32, fieldName string) (
 
 // readTxIn reads the next sequence of bytes from r as a transaction input
 // (TxIn).
-func readTxIn(r io.Reader, pver uint32, version int32, ti *TxIn) error {
-	err := readOutPoint(r, pver, version, &ti.PreviousOutPoint)
+func readTxIn(r io.Reader, pver uint32, ti *TxIn) error {
+	err := readOutPoint(r, &ti.PreviousOutPoint)
 	if err != nil {
 		return err
 	}
@@ -797,8 +802,8 @@ func readTxIn(r io.Reader, pver uint32, version int32, ti *TxIn) error {
 
 // writeTxIn encodes ti to the bitcoin protocol encoding for a transaction
 // input (TxIn) to w.
-func writeTxIn(w io.Writer, pver uint32, version int32, ti *TxIn) error {
-	err := writeOutPoint(w, pver, version, &ti.PreviousOutPoint)
+func writeTxIn(w io.Writer, pver uint32, ti *TxIn) error {
+	err := writeOutPoint(w, &ti.PreviousOutPoint)
 	if err != nil {
 		return err
 	}
@@ -813,7 +818,7 @@ func writeTxIn(w io.Writer, pver uint32, version int32, ti *TxIn) error {
 
 // readTxOut reads the next sequence of bytes from r as a transaction output
 // (TxOut).
-func readTxOut(r io.Reader, pver uint32, version int32, to *TxOut) error {
+func readTxOut(r io.Reader, pver uint32, to *TxOut) error {
 	err := readElement(r, &to.Value)
 	if err != nil {
 		return err

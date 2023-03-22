@@ -9,11 +9,15 @@ import (
 type logWriter struct{}
 
 func (logWriter) Write(p []byte) (n int, err error) {
-	os.Stdout.Write(p)
+	_, err = os.Stdout.Write(p)
+	if err != nil {
+		return len(p), err
+	}
 	return len(p), nil
 }
 
-func InitializeMockLogger() p2plog.Logger {
+// InitialiseMockLogger initialise logger for tests.
+func InitialiseMockLogger() p2plog.Logger {
 	backendLog := p2plog.NewBackend(logWriter{})
 	logger := backendLog.Logger("TEST_LOGGER")
 	return logger

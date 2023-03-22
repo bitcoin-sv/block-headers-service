@@ -188,7 +188,7 @@ func BenchmarkReadOutPoint(b *testing.B) {
 	var op OutPoint
 	for i := 0; i < b.N; i++ {
 		r.Seek(0, 0)
-		readOutPoint(r, 0, 0, &op)
+		readOutPoint(r, &op)
 	}
 }
 
@@ -200,7 +200,7 @@ func BenchmarkWriteOutPoint(b *testing.B) {
 		Index: 0,
 	}
 	for i := 0; i < b.N; i++ {
-		writeOutPoint(ioutil.Discard, 0, 0, op)
+		writeOutPoint(ioutil.Discard, op)
 	}
 }
 
@@ -226,7 +226,7 @@ func BenchmarkReadTxOut(b *testing.B) {
 	var txOut TxOut
 	for i := 0; i < b.N; i++ {
 		r.Seek(0, 0)
-		readTxOut(r, 0, 0, &txOut)
+		readTxOut(r, 0, &txOut)
 		scriptPool.Return(txOut.PkScript)
 	}
 }
@@ -257,7 +257,7 @@ func BenchmarkReadTxIn(b *testing.B) {
 	var txIn TxIn
 	for i := 0; i < b.N; i++ {
 		r.Seek(0, 0)
-		readTxIn(r, 0, 0, &txIn)
+		readTxIn(r, 0, &txIn)
 		scriptPool.Return(txIn.SignatureScript)
 	}
 }
@@ -267,7 +267,7 @@ func BenchmarkReadTxIn(b *testing.B) {
 func BenchmarkWriteTxIn(b *testing.B) {
 	txIn := blockOne.Transactions[0].TxIn[0]
 	for i := 0; i < b.N; i++ {
-		writeTxIn(ioutil.Discard, 0, 0, txIn)
+		writeTxIn(ioutil.Discard, 0, txIn)
 	}
 }
 
@@ -338,7 +338,7 @@ func BenchmarkDeserializeTxLarge(b *testing.B) {
 func BenchmarkSerializeTx(b *testing.B) {
 	tx := blockOne.Transactions[0]
 	for i := 0; i < b.N; i++ {
-		tx.Serialize(ioutil.Discard)
+		tx.Serialise(ioutil.Discard)
 
 	}
 }
@@ -365,7 +365,7 @@ func BenchmarkReadBlockHeader(b *testing.B) {
 	var header BlockHeader
 	for i := 0; i < b.N; i++ {
 		r.Seek(0, 0)
-		readBlockHeader(r, 0, &header)
+		readBlockHeader(r, &header)
 	}
 }
 
@@ -374,7 +374,7 @@ func BenchmarkReadBlockHeader(b *testing.B) {
 func BenchmarkWriteBlockHeader(b *testing.B) {
 	header := blockOne.Header
 	for i := 0; i < b.N; i++ {
-		writeBlockHeader(ioutil.Discard, 0, &header)
+		writeBlockHeader(ioutil.Discard, &header)
 	}
 }
 
@@ -605,7 +605,7 @@ func BenchmarkTxHash(b *testing.B) {
 // double hash returning a byte slice.
 func BenchmarkDoubleHashB(b *testing.B) {
 	var buf bytes.Buffer
-	if err := genesisCoinbaseTx.Serialize(&buf); err != nil {
+	if err := genesisCoinbaseTx.Serialise(&buf); err != nil {
 		b.Errorf("Serialise: unexpected error: %v", err)
 		return
 	}
@@ -621,7 +621,7 @@ func BenchmarkDoubleHashB(b *testing.B) {
 // a double hash returning a chainhash.Hash.
 func BenchmarkDoubleHashH(b *testing.B) {
 	var buf bytes.Buffer
-	if err := genesisCoinbaseTx.Serialize(&buf); err != nil {
+	if err := genesisCoinbaseTx.Serialise(&buf); err != nil {
 		b.Errorf("Serialise: unexpected error: %v", err)
 		return
 	}

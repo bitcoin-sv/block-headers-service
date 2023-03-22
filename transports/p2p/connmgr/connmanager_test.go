@@ -105,7 +105,7 @@ func TestStartStop(t *testing.T) {
 		OnDisconnection: func(c *ConnReq) {
 			disconnected <- c
 		},
-		Log: testlog.InitializeMockLogger(),
+		Log: testlog.InitialiseMockLogger(),
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -149,7 +149,7 @@ func TestConnectMode(t *testing.T) {
 		OnConnection: func(c *ConnReq, conn net.Conn) {
 			connected <- c
 		},
-		Log: testlog.InitializeMockLogger(),
+		Log: testlog.InitialiseMockLogger(),
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -202,7 +202,7 @@ func TestTargetOutbound(t *testing.T) {
 		OnConnection: func(c *ConnReq, conn net.Conn) {
 			connected <- c
 		},
-		Log: testlog.InitializeMockLogger(),
+		Log: testlog.InitialiseMockLogger(),
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -238,7 +238,7 @@ func TestRetryPermanent(t *testing.T) {
 		OnDisconnection: func(c *ConnReq) {
 			disconnected <- c
 		},
-		Log: testlog.InitializeMockLogger(),
+		Log: testlog.InitialiseMockLogger(),
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -331,7 +331,7 @@ func TestMaxRetryDuration(t *testing.T) {
 		OnConnection: func(c *ConnReq, conn net.Conn) {
 			connected <- c
 		},
-		Log: testlog.InitializeMockLogger(),
+		Log: testlog.InitialiseMockLogger(),
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -377,7 +377,7 @@ func TestNetworkFailure(t *testing.T) {
 		OnConnection: func(c *ConnReq, conn net.Conn) {
 			t.Fatalf("network failure: got unexpected connection - %v", c.Addr)
 		},
-		Log: testlog.InitializeMockLogger(),
+		Log: testlog.InitialiseMockLogger(),
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -407,7 +407,7 @@ func TestStopFailed(t *testing.T) {
 	}
 	cmgr, err := New(&Config{
 		Dial: waitDialer,
-		Log:  testlog.InitializeMockLogger(),
+		Log:  testlog.InitialiseMockLogger(),
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -443,7 +443,7 @@ func TestRemovePendingConnection(t *testing.T) {
 	}
 	cmgr, err := New(&Config{
 		Dial: indefiniteDialer,
-		Log:  testlog.InitializeMockLogger(),
+		Log:  testlog.InitialiseMockLogger(),
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -510,7 +510,7 @@ func TestCancelIgnoreDelayedConnection(t *testing.T) {
 		OnConnection: func(c *ConnReq, conn net.Conn) {
 			connected <- c
 		},
-		Log: testlog.InitializeMockLogger(),
+		Log: testlog.InitialiseMockLogger(),
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -637,7 +637,7 @@ func TestListeners(t *testing.T) {
 			receivedConns <- conn
 		},
 		Dial: mockDialer,
-		Log:  testlog.InitializeMockLogger(),
+		Log:  testlog.InitialiseMockLogger(),
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)

@@ -301,7 +301,7 @@ func (b *Backend) print(lvl, tag string, args ...interface{}) {
 	*bytebuf = buf.Bytes()
 
 	b.mu.Lock()
-	b.w.Write(*bytebuf)
+	b.w.Write(*bytebuf) //nolint:all
 	b.mu.Unlock()
 
 	recycleBuffer(bytebuf)
@@ -328,7 +328,10 @@ func (b *Backend) printf(lvl, tag string, format string, args ...interface{}) {
 	*bytebuf = append(buf.Bytes(), '\n')
 
 	b.mu.Lock()
-	b.w.Write(*bytebuf)
+	_, err := b.w.Write(*bytebuf)
+	if err != nil {
+		fmt.Println(err)
+	}
 	b.mu.Unlock()
 
 	recycleBuffer(bytebuf)
@@ -519,9 +522,11 @@ func invSummary(invList []*wire.InvVect) string {
 			return fmt.Sprintf("block %s", iv.Hash)
 		case wire.InvTypeTx:
 			return fmt.Sprintf("tx %s", iv.Hash)
+		case wire.InvTypeFilteredBlock:
+			return fmt.Sprintf("filteredBlocks %s", iv.Hash)
+		default:
+			return fmt.Sprintf("unknown (%d) %s", uint32(iv.Type), iv.Hash)
 		}
-
-		return fmt.Sprintf("unknown (%d) %s", uint32(iv.Type), iv.Hash)
 	}
 
 	// More than one inv item.

@@ -247,7 +247,10 @@ func parseCheckpoints(checkpointStrings []string) ([]chaincfg.Checkpoint, error)
 func newConfigParser(cfg *config, so *serviceOptions, options flags.Options) *flags.Parser {
 	parser := flags.NewParser(cfg, options)
 	if runtime.GOOS == "windows" {
-		parser.AddGroup("Service Options", "Service Options", so)
+		_, err := parser.AddGroup("Service Options", "Service Options", so)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 	return parser
 }
@@ -635,12 +638,11 @@ func createDefaultConfigFile(destinationPath string) error {
 	}
 	src := bytes.NewReader(sampleBytes)
 
-	dest, err := os.OpenFile(destinationPath,
-		os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+	dest, err := os.OpenFile(destinationPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600) //nolint:all
 	if err != nil {
 		return err
 	}
-	defer dest.Close()
+	defer dest.Close() //nolint:all
 
 	// We copy every line from the sample config file to the destination.
 	reader := bufio.NewReader(src)

@@ -401,7 +401,7 @@ func (a *AddrManager) AddressCache() []*wire.NetAddress {
 	// `numAddresses' since we are throwing the rest.
 	for i := 0; i < numAddresses; i++ {
 		// pick a number between current index and the end
-		j := rand.Intn(addrIndexLen-i) + i
+		j := rand.Intn(addrIndexLen-i) + i //nolint:gosec
 		allAddr[i], allAddr[j] = allAddr[j], allAddr[i]
 	}
 
@@ -852,7 +852,7 @@ func New(lookupFunc func(string) ([]net.IP, error), log p2plog.Logger) *AddrMana
 	useLogger(log)
 	am := AddrManager{
 		lookupFunc:     lookupFunc,
-		rand:           rand.New(rand.NewSource(time.Now().UnixNano())),
+		rand:           rand.New(rand.NewSource(time.Now().UnixNano())), //nolint:gosec
 		quit:           make(chan struct{}),
 		localAddresses: make(map[string]*localAddress),
 	}

@@ -216,8 +216,10 @@ func readMessageHeader(r io.Reader) (int, *messageHeader, error) {
 	// Create and populate a messageHeader struct from the raw header bytes.
 	hdr := messageHeader{}
 	var command [CommandSize]byte
-	readElements(hr, &hdr.magic, &command, &hdr.length, &hdr.checksum)
-
+	err = readElements(hr, &hdr.magic, &command, &hdr.length, &hdr.checksum)
+	if err != nil {
+		return n, nil, err
+	}
 	// Strip trailing zeros from command string.
 	hdr.command = string(bytes.TrimRight(command[:], "\x00"))
 
@@ -235,12 +237,18 @@ func discardInput(r io.Reader, n uint32) {
 	if n > 0 {
 		buf := make([]byte, maxSize)
 		for i := uint32(0); i < numReads; i++ {
-			io.ReadFull(r, buf)
+			_, err := io.ReadFull(r, buf)
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
 	}
 	if bytesRemaining > 0 {
 		buf := make([]byte, bytesRemaining)
-		io.ReadFull(r, buf)
+		_, err := io.ReadFull(r, buf)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }
 
@@ -318,7 +326,11 @@ func WriteMessageWithEncodingN(w io.Writer, msg Message, pver uint32,
 	// rather than directly to the writer since writeElements doesn't
 	// return the number of bytes written.
 	hw := bytes.NewBuffer(make([]byte, 0, MessageHeaderSize))
-	writeElements(hw, hdr.magic, command, hdr.length, hdr.checksum)
+	err = writeElements(hw, hdr.magic, command, hdr.length, hdr.checksum)
+
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	// Write header.
 	n, err := w.Write(hw.Bytes())

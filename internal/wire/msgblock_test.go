@@ -278,7 +278,7 @@ func TestBlockSerialize(t *testing.T) {
 	for i, test := range tests {
 		// Serialise the block.
 		var buf bytes.Buffer
-		err := test.in.Serialize(&buf)
+		err := test.in.Serialise(&buf)
 		if err != nil {
 			t.Errorf("Serialise #%d error %v", i, err)
 			continue
@@ -357,7 +357,7 @@ func TestBlockSerializeErrors(t *testing.T) {
 	for i, test := range tests {
 		// Serialise the block.
 		w := newFixedWriter(test.max)
-		err := test.in.Serialize(w)
+		err := test.in.Serialise(w)
 		if err != test.writeErr {
 			t.Errorf("Serialise #%d wrong error got: %v, want: %v",
 				i, err, test.writeErr)

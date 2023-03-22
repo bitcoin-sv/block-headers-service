@@ -168,6 +168,9 @@ func CreateGenesisHeaderBlock() BlockHeader {
 	return genesisBlock
 }
 
+// FastLog2Floor calculates the floor of the base-2 logarithm of an input 32-bit 
+// unsigned integer using a bitwise algorithm that masks off decreasingly lower-order bits 
+//of the integer until it reaches the highest order bit, and returns the resulting integer value.
 func FastLog2Floor(n uint32) uint8 {
 	var log2FloorMasks = []uint32{0xffff0000, 0xff00, 0xf0, 0xc, 0x2}
 	rv := uint8(0)

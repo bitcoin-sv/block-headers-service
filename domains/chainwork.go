@@ -18,6 +18,8 @@ func CalcWork(bits uint32) *big.Int {
 	return new(big.Int).Div(oneLsh256, denominator)
 }
 
+// CompactToBig  takes a compact representation of a 256-bit number used in Bitcoin,
+// converts it to a big.Int, and returns the resulting big.Int value.
 func CompactToBig(compact uint32) *big.Int {
 	// Extract the mantissa, sign bit, and exponent.
 	mantissa := compact & 0x007fffff

@@ -78,7 +78,10 @@ func (msg *MsgAddr) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) err
 		if err != nil {
 			return err
 		}
-		msg.AddAddress(na)
+		err = msg.AddAddress(na)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 	return nil
 }

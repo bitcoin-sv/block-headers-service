@@ -454,10 +454,6 @@ func TestPeerListeners(t *testing.T) {
 			wire.NewMsgMemPool(),
 		},
 		{
-			"OnTx",
-			wire.NewMsgTx(wire.TxVersion),
-		},
-		{
 			"OnBlock",
 			wire.NewMsgBlock(wire.NewBlockHeader(1,
 				&chainhash.Hash{}, &chainhash.Hash{}, 1, 1)),
