@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 
 	"github.com/libsv/bitcoin-hc/data/sql"
 	"github.com/libsv/bitcoin-hc/domains"
@@ -16,6 +17,17 @@ type HeaderRepository struct {
 func (r *HeaderRepository) AddHeaderToDatabase(header domains.BlockHeader) error {
 	dbHeader := header.ToDbBlockHeader()
 	err := r.db.Create(context.Background(), dbHeader)
+	return err
+}
+
+// UpdateState changes state value to provided one for each of headers with provided hash.
+func (r *HeaderRepository) UpdateState(hashes []chainhash.Hash, state domains.HeaderState) error {
+	hs := make([]string, len(hashes))
+	for _, h := range hashes {
+		hs = append(hs, h.String())
+	}
+
+	err := r.db.UpdateState(context.Background(), hs, state.String())
 	return err
 }
 
@@ -40,6 +52,24 @@ func (r *HeaderRepository) GetBlockByHash(args domains.HeaderArgs) (*domains.Blo
 // GetHeaderByHeightRange returns headers from db in specified height range.
 func (r *HeaderRepository) GetHeaderByHeightRange(from int, to int) ([]*domains.BlockHeader, error) {
 	dbHeaders, err := r.db.GetHeaderByHeightRange(from, to)
+	if err == nil {
+		return domains.ConvertToBlockHeader(dbHeaders), nil
+	}
+	return nil, err
+}
+
+// GetLongestChainHeadersFromHeight returns from db the headers from "longest chain" starting from given height.
+func (r *HeaderRepository) GetLongestChainHeadersFromHeight(height int32) ([]*domains.BlockHeader, error) {
+	dbHeaders, err := r.db.GetLongestChainHeadersFromHeight(height)
+	if err == nil {
+		return domains.ConvertToBlockHeader(dbHeaders), nil
+	}
+	return nil, err
+}
+
+// GetStaleChainHeadersBackFrom returns from db all the headers with state STALE, starting from header with hash and preceding that one.
+func (r *HeaderRepository) GetStaleChainHeadersBackFrom(hash string) ([]*domains.BlockHeader, error) {
+	dbHeaders, err := r.db.GetStaleHeadersBackFrom(hash)
 	if err == nil {
 		return domains.ConvertToBlockHeader(dbHeaders), nil
 	}

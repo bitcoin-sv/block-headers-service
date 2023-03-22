@@ -15,27 +15,54 @@ const (
 	insertBH = "insertheader"
 
 	sqliteInsertHeader = `
-	INSERT INTO headers(hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, isorphan, isconfirmed, cumulatedWork)
-	VALUES(:hash, :height, :version, :merkleroot, :nonce, :bits, :chainwork, :previousblock, :timestamp, :isorphan, :isconfirmed, :cumulatedWork)
+	INSERT INTO headers(hash, height, version, merkleroot, nonce, bits, header_state, chainwork, previousblock, timestamp , cumulatedWork)
+	VALUES(:hash, :height, :version, :merkleroot, :nonce, :bits, :header_state, :chainwork, :previousblock, :timestamp, :cumulatedWork)
 	ON CONFLICT DO NOTHING
 	`
 
+	sqlUpdateState = `
+	UPDATE headers
+	SET header_state = ?
+	WHERE hash IN (?)
+	`
+
 	sqlHeader = `
-	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, isorphan, isconfirmed, cumulatedWork
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
 	FROM headers
 	WHERE hash = ?
 	`
 
 	sqlHeaderByHeight = `
-	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, isorphan, isconfirmed, cumulatedWork
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
 	FROM headers
 	WHERE height = ?
 	`
 
 	sqlHeaderByHeightRange = `
-	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, isorphan, isconfirmed, cumulatedWork
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
 	FROM headers
 	WHERE height BETWEEN ? AND ?
+	`
+
+	sqlLongestChainHeadersFromHeight = `
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
+	FROM headers
+	WHERE height >= ? AND header_state = 'LONGEST_CHAIN'
+	`
+
+	sqlStaleHeadersFrom = `
+	WITH RECURSIVE recur(hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork) as (
+		select hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
+		from headers 
+		where hash = ?
+		UNION ALL
+		SELECT h.hash, h.height, h.version, h.merkleroot, h.nonce, h.bits, h.chainwork, h.previousblock, h.timestamp, h.header_state, h.cumulatedWork
+		FROM headers h JOIN recur r
+		  ON h.hash = r.previousblock
+	)
+	select hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
+	from recur
+	where header_state = 'STALE';
 	`
 
 	sqlHighestBlock = `
@@ -46,6 +73,12 @@ const (
 	sqlHeadersCount = `
 	SELECT max(RowId) 
 	FROM headers;
+	`
+
+	sqlGetTip = `
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
+	FROM headers 
+	ORDER BY height DESC LIMIT 1;
 	`
 
 	sqlVerifyIfGenesisPresent = `
@@ -79,8 +112,7 @@ const (
 		   prev.chainwork,
 		   prev.previousblock,
 		   prev.timestamp,
-		   prev.isorphan,
-		   prev.isconfirmed,
+		   prev.header_state,
 		   prev.cumulatedWork
 	FROM headers h,
 		 headers prev
@@ -89,7 +121,7 @@ const (
   	`
 
 	sqlSelectTip = `
-	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, isorphan, isconfirmed, cumulatedWork
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
 	FROM headers
 	WHERE height = (SELECT max(height)
 					FROM headers)
@@ -152,6 +184,23 @@ func (h *HeadersDb) CreateBatch(ctx context.Context, req []*domains.BlockHeader)
 		}
 	}
 
+	return errors.Wrap(tx.Commit(), "failed to commit tx")
+}
+
+// UpdateState will update state of headers of hashes to given state
+func (h *HeadersDb) UpdateState(ctx context.Context, hashes []string, state string) error {
+	tx, err := h.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+
+	query, args, err := sqlx.In(sqlUpdateState, state, hashes)
+	if _, err := tx.ExecContext(ctx, h.db.Rebind(query), args...); err != nil {
+		return errors.Wrapf(err, "failed to update headers state to %s", state)
+	}
 	return errors.Wrap(tx.Commit(), "failed to commit tx")
 }
 
@@ -218,6 +267,28 @@ func (h *HeadersDb) GetHeaderByHeightRange(from int, to int) ([]*domains.DbBlock
 			return nil, errors.New("could not find headers in given range")
 		}
 		return nil, errors.Wrapf(err, "failed to get headers using given range from: %d to: %d", from, to)
+	}
+	return bh, nil
+}
+
+func (h *HeadersDb) GetLongestChainHeadersFromHeight(height int32) ([]*domains.DbBlockHeader, error) {
+	var bh []*domains.DbBlockHeader
+	if err := h.db.Select(&bh, h.db.Rebind(sqlLongestChainHeadersFromHeight), height); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.Errorf("could not find headers in longest chain from height %s", height)
+		}
+		return nil, errors.Wrapf(err, "failed to get headers in longest chain from height %s", height)
+	}
+	return bh, nil
+}
+
+func (h *HeadersDb) GetStaleHeadersBackFrom(hash string) ([]*domains.DbBlockHeader, error) {
+	var bh []*domains.DbBlockHeader
+	if err := h.db.Select(&bh, h.db.Rebind(sqlStaleHeadersFrom), hash); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.Errorf("header with %s hash does not exist", hash)
+		}
+		return nil, errors.Wrapf(err, "failed to get headers in stale chain from hash %s", hash)
 	}
 	return bh, nil
 }

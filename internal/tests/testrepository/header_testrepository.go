@@ -3,6 +3,7 @@ package testrepository
 import (
 	"errors"
 	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 )
 
 type HeaderTestRepository struct {
@@ -11,6 +12,17 @@ type HeaderTestRepository struct {
 
 func (r *HeaderTestRepository) AddHeaderToDatabase(header domains.BlockHeader) error {
 	r.db = append(r.db, header)
+	return nil
+}
+
+func (r *HeaderTestRepository) UpdateState(hs []chainhash.Hash, s domains.HeaderState) error {
+	for _, h := range hs {
+		for i, hdb := range r.db {
+			if h == hdb.Hash {
+				r.db[i].State = s
+			}
+		}
+	}
 	return nil
 }
 
@@ -34,11 +46,51 @@ func (r *HeaderTestRepository) GetBlockByHash(args domains.HeaderArgs) (*domains
 func (r *HeaderTestRepository) GetHeaderByHeightRange(from int, to int) ([]*domains.BlockHeader, error) {
 	filteredHeaders := make([]*domains.BlockHeader, 0)
 
-	for _, header := range r.db {
+	for i, header := range r.db {
 		if header.Height >= int32(from) && header.Height <= int32(to) {
-			filteredHeaders = append(filteredHeaders, &header)
+			filteredHeaders = append(filteredHeaders, &r.db[i])
 		}
 	}
+	return filteredHeaders, nil
+}
+
+func (r *HeaderTestRepository) GetHeaderFromHeightToTip(height int32) ([]*domains.BlockHeader, error) {
+	tip, err := r.GetTip()
+	if err != nil {
+		return nil, err
+	}
+
+	filteredHeaders := make([]*domains.BlockHeader, 0)
+
+	for i, header := range r.db {
+		if header.Height >= height && header.Height <= tip.Height {
+			filteredHeaders = append(filteredHeaders, &r.db[i])
+		}
+	}
+	return filteredHeaders, nil
+}
+
+func (r *HeaderTestRepository) GetLongestChainHeadersFromHeight(height int32) ([]*domains.BlockHeader, error) {
+	filteredHeaders := make([]*domains.BlockHeader, 0)
+
+	for i, header := range r.db {
+		if header.Height >= height && header.State == domains.LongestChain {
+			filteredHeaders = append(filteredHeaders, &r.db[i])
+		}
+	}
+	return filteredHeaders, nil
+}
+
+func (r *HeaderTestRepository) GetStaleChainHeadersBackFrom(hash string) ([]*domains.BlockHeader, error) {
+	filteredHeaders := make([]*domains.BlockHeader, 0)
+
+	header, _ := r.GetHeaderByHash(hash)
+
+	for h := header; h.State == domains.Stale; {
+		filteredHeaders = append(filteredHeaders, h)
+		h, _ = r.GetHeaderByHash(h.PreviousBlock.String())
+	}
+
 	return filteredHeaders, nil
 }
 
@@ -50,7 +102,7 @@ func (r *HeaderTestRepository) GetPreviousHeader(hash string) (*domains.BlockHea
 			return prevHeader, nil
 		}
 	}
-	return nil, errors.New("ould not find header")
+	return nil, errors.New("could not find header")
 }
 
 func (r *HeaderTestRepository) GetCurrentHeight() (int, error) {
@@ -72,7 +124,7 @@ func (r *HeaderTestRepository) GetHeaderByHash(hash string) (*domains.BlockHeade
 	if header != nil {
 		return header, nil
 	}
-	return nil, errors.New("could not find blockhash")
+	return nil, errors.New("could not find hash")
 }
 
 func (r *HeaderTestRepository) GetConfirmationsCountForBlock(hash string) (int, error) {

@@ -18,6 +18,10 @@ const (
 	Rejected     HeaderState = "REJECTED"
 )
 
+func (s *HeaderState) String() string {
+	return string(*s)
+}
+
 // BlockHeader defines a single block header, used in SPV validations.
 type BlockHeader struct {
 	Height           int32          `json:"-"`
@@ -43,10 +47,9 @@ type DbBlockHeader struct {
 	Timestamp        time.Time `db:"timestamp"`
 	Bits             uint32    `db:"bits"`
 	Nonce            uint32    `db:"nonce"`
+	State            string    `db:"header_state"`
 	Chainwork        string    `db:"chainwork"`
 	CumulatedWork    string    `db:"cumulatedWork"`
-	IsOrphan         bool      `db:"isorphan"`
-	IsConfirmed      bool      `db:"isconfirmed"`
 	PreviousBlock    string    `db:"previousblock"`
 	DifficultyTarget uint32    `db:"difficultytarget"`
 }
@@ -66,6 +69,27 @@ type BlockHeaderState struct {
 	Confirmations int         `json:"confirmations"`
 }
 
+// BlockHeaderSource defines source of information about a block header used by system
+type BlockHeaderSource struct {
+	// Version of the block. This is not the same as the protocol version.
+	Version int32
+
+	// Hash of the previous block header in the block chain.
+	PrevBlock chainhash.Hash
+
+	// Merkle tree reference to hash of all transactions for the block.
+	MerkleRoot chainhash.Hash
+
+	// Time the block was created.
+	Timestamp time.Time
+
+	// Difficulty target for the block.
+	Bits uint32
+
+	// Nonce used to generate the block.
+	Nonce uint32
+}
+
 type BlockHash chainhash.Hash
 
 func (h *BlockHash) String() string {
@@ -74,6 +98,32 @@ func (h *BlockHash) String() string {
 
 func (h *BlockHash) ChainHash() chainhash.Hash {
 	return chainhash.Hash(*h)
+}
+
+func CreateHeader(hash *BlockHash, bs *BlockHeaderSource, ph *BlockHeader) BlockHeader {
+	cw := CalculateWork(bs.Bits)
+	ccw := CumulatedChainWorkOf(*ph.CumulatedWork).Add(cw)
+
+	var state HeaderState
+	if ph.IsOrphan() {
+		state = Orphan
+	} else {
+		state = LongestChain
+	}
+
+	return BlockHeader{
+		Height:        ph.Height + 1,
+		Hash:          hash.ChainHash(),
+		Version:       bs.Version,
+		MerkleRoot:    bs.MerkleRoot,
+		Timestamp:     bs.Timestamp,
+		Bits:          bs.Bits,
+		Nonce:         bs.Nonce,
+		State:         state,
+		Chainwork:     cw.Uint64(),
+		CumulatedWork: ccw.BigInt(),
+		PreviousBlock: bs.PrevBlock,
+	}
 }
 
 func NewRejectedBlockHeader(hash BlockHash) *BlockHeader {
@@ -134,13 +184,6 @@ func (dbh *DbBlockHeader) ToBlockHeader() *BlockHeader {
 	merkleTree, _ := chainhash.NewHashFromStr(dbh.MerkleRoot)
 	prevBlock, _ := chainhash.NewHashFromStr(dbh.PreviousBlock)
 
-	var state HeaderState
-	if dbh.IsOrphan {
-		state = Orphan
-	} else {
-		state = LongestChain
-	}
-
 	return &BlockHeader{
 		Height:           dbh.Height,
 		Hash:             *hash,
@@ -151,7 +194,7 @@ func (dbh *DbBlockHeader) ToBlockHeader() *BlockHeader {
 		Nonce:            dbh.Nonce,
 		Chainwork:        chainWork,
 		CumulatedWork:    cumulatedWork,
-		State:            state,
+		State:            HeaderState(dbh.State),
 		PreviousBlock:    *prevBlock,
 		DifficultyTarget: dbh.DifficultyTarget,
 	}
@@ -168,9 +211,9 @@ func (bh BlockHeader) ToDbBlockHeader() DbBlockHeader {
 		Timestamp:        bh.Timestamp,
 		Bits:             bh.Bits,
 		Nonce:            bh.Nonce,
+		State:            bh.State.String(),
 		Chainwork:        strconv.FormatUint(bh.Chainwork, 10),
 		CumulatedWork:    bh.CumulatedWork.String(),
-		IsOrphan:         bh.IsOrphan(),
 		PreviousBlock:    bh.PreviousBlock.String(),
 		DifficultyTarget: bh.DifficultyTarget,
 	}
@@ -180,7 +223,7 @@ func (bh BlockHeader) ToDbBlockHeader() DbBlockHeader {
 func (bh *BlockHeader) WrapWithHeaderState() BlockHeaderState {
 	model := BlockHeaderState{
 		Header:    *bh,
-		State:     "LONGEST_CHAIN",
+		State:     bh.State.String(),
 		Height:    bh.Height,
 		ChainWork: bh.Chainwork,
 	}

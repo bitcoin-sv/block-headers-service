@@ -23,11 +23,9 @@ func TestRejectBlockHeader(t *testing.T) {
 	header, err := cs.Add(h)
 
 	//then
-	if err == nil {
-		t.Error("Expect to receive error BlockRejected")
-	} else {
-		assert.Equal(t, err.Error(), BlockRejected.String())
-	}
+	assert.IsError(t, err, BlockRejected.String())
+
+	assertHeaderExist(t, header)
 
 	assert.Equal(t, header.State, domains.Rejected)
 }
@@ -39,19 +37,13 @@ func TestAddTheHeaderToLongestChain(t *testing.T) {
 
 	cs := createChainsService(serviceSetup{Repositories: &r})
 
-	//when adding header
+	//when
 	header, addErr := cs.Add(h)
 
 	//then
-	if addErr != nil {
-		t.Errorf("Doesn't expect to receive error, but get one %v", addErr)
-	}
-
-	hash := header.Hash
-	_, err := r.Headers.GetHeaderByHash(hash.String())
-	if err != nil {
-		t.Errorf("Could not find header by hash %s because %s", hash, err)
-	}
+	assert.NoError(t, addErr)
+	assertHeaderExist(t, header)
+	assertHeaderInDb(t, r, header)
 
 	if header.State != "LONGEST_CHAIN" {
 		t.Errorf("Header should belong to the longest chain but is %s", header.State)
@@ -73,19 +65,13 @@ func TestAddOrphanHeaderToChain(t *testing.T) {
 
 	cs := createChainsService(serviceSetup{Repositories: &r})
 
-	//when adding header
+	//when
 	header, addErr := cs.Add(h)
 
 	//then
-	if addErr != nil {
-		t.Errorf("Doesn't expect to receive error, but get one %v", addErr)
-	}
-
-	hash := header.Hash
-	_, err := r.Headers.GetHeaderByHash(hash.String())
-	if err != nil {
-		t.Errorf("Could not find header by hash %s because %s", hash, err)
-	}
+	assert.NoError(t, addErr)
+	assertHeaderExist(t, header)
+	assertHeaderInDb(t, r, header)
 
 	if header.State != "ORPHAN" {
 		t.Errorf("Header should belong to the orphan chain but is %s", header.State)
@@ -108,19 +94,13 @@ func TestAddHeaderToOrphanChain(t *testing.T) {
 
 	cs := createChainsService(serviceSetup{Repositories: &r})
 
-	//when adding header
+	//when
 	header, addErr := cs.Add(h)
 
 	//then
-	if addErr != nil {
-		t.Errorf("Doesn't expect to receive error, but get one %v", addErr)
-	}
-
-	hash := header.Hash
-	_, err := r.Headers.GetHeaderByHash(hash.String())
-	if err != nil {
-		t.Errorf("Could not find header by hash %s because %s", hash, err)
-	}
+	assert.NoError(t, addErr)
+	assertHeaderExist(t, header)
+	assertHeaderInDb(t, r, header)
 
 	if header.State != "ORPHAN" {
 		t.Errorf("Header should belong to the orphan chain but is %s", header.State)
@@ -132,6 +112,168 @@ func TestAddHeaderToOrphanChain(t *testing.T) {
 
 	if header.Height != tip.Height+1 {
 		t.Errorf("Expect header to be at height %d but it is at heigh %d", tip.Height+1, header.Height)
+	}
+}
+
+func TestAddConcurrentChainBlock(t *testing.T) {
+	var blockFromLongestChain = testrepository.FirstHash
+	var blockFromStaleChain = testrepository.SecondStaleHash
+	const bitsExceedingCumulatedChainWork uint32 = 0x180f0dc7
+
+	testCases := map[string]struct {
+		previous             *chainhash.Hash
+		bits                 uint32
+		newBlockChainState   domains.HeaderState
+		oldLongestChainState domains.HeaderState
+	}{
+		"header with less chain work then concurrent block should be stale": {
+			previous:             blockFromLongestChain,
+			bits:                 testrepository.DefaultBits - 1,
+			newBlockChainState:   domains.Stale,
+			oldLongestChainState: domains.LongestChain,
+		},
+		"header with the same chain work as concurrent block should be stale": {
+			previous:             blockFromLongestChain,
+			bits:                 testrepository.DefaultBits,
+			newBlockChainState:   domains.Stale,
+			oldLongestChainState: domains.LongestChain,
+		},
+		"header with more chain work then concurrent block, but less then tip cumulated work should be stale": {
+			previous:             blockFromLongestChain,
+			bits:                 testrepository.DefaultBits + 1,
+			newBlockChainState:   domains.Stale,
+			oldLongestChainState: domains.LongestChain,
+		},
+		"header next to other stale block with less chain work then concurrent block should be stale": {
+			previous:             blockFromStaleChain,
+			bits:                 testrepository.DefaultBits - 1,
+			newBlockChainState:   domains.Stale,
+			oldLongestChainState: domains.LongestChain,
+		},
+		"header next to other stale block with the same chain work as concurrent block should be stale": {
+			previous:             blockFromStaleChain,
+			bits:                 testrepository.DefaultBits,
+			newBlockChainState:   domains.Stale,
+			oldLongestChainState: domains.LongestChain,
+		},
+		"header next to other stale block with more chain work then concurrent block, but less then tip cumulated work should be stale": {
+			previous:             blockFromStaleChain,
+			bits:                 testrepository.DefaultBits + 1,
+			newBlockChainState:   domains.Stale,
+			oldLongestChainState: domains.LongestChain,
+		},
+		"header with the greatest chainwork next to the middle of stale chain should become longest chain tip": {
+			previous:             testrepository.SecondStaleHash,
+			bits:                 bitsExceedingCumulatedChainWork,
+			newBlockChainState:   domains.LongestChain,
+			oldLongestChainState: domains.Stale,
+		},
+		"header with the greatest chainwork next to the tip of stale chain become longest chain tip": {
+			previous:             testrepository.ForthStaleHash,
+			bits:                 bitsExceedingCumulatedChainWork,
+			newBlockChainState:   domains.LongestChain,
+			oldLongestChainState: domains.Stale,
+		},
+	}
+
+	for name, params := range testCases {
+		t.Run(name, func(t *testing.T) {
+			r, _ := givenLongestChainInRepository()
+			givenStaleChainInRepository(&r)
+
+			prev, _ := r.Headers.GetHeaderByHash(params.previous.String())
+			h := givenHeaderToAddNextTo(prev)
+			h.Bits = params.bits
+
+			cs := createChainsService(serviceSetup{Repositories: &r})
+
+			//when
+			header, addErr := cs.Add(h)
+
+			//then
+			assert.NoError(t, addErr)
+			assertHeaderExist(t, header)
+
+			assertHeaderInDb(t, r, header)
+
+			if header.Height != prev.Height+1 {
+				t.Errorf("Expect header to be at height %d but it is at heigh %d", prev.Height+1, header.Height)
+			}
+
+			assertHeaderInState(t, header, params.newBlockChainState)
+
+			tc := getHeadersFromThisChainUpTo(t, r, prev.Height)
+			for _, ch := range tc {
+				assertHeaderInState(t, ch, params.newBlockChainState)
+			}
+
+			cc := getHeadersFromConcurrentChain(t, r)
+			for _, ch := range cc {
+				assertHeaderInState(t, &ch, params.oldLongestChainState)
+			}
+		})
+	}
+}
+
+func givenStaleChainInRepository(r *repository.Repositories) {
+	sc, _ := testrepository.StaleChain()
+	for _, h := range sc {
+		if h.Hash != chaincfg.GenesisHash {
+			r.Headers.AddHeaderToDatabase(h)
+		}
+	}
+}
+
+func assertHeaderInDb(t *testing.T, r repository.Repositories, header *domains.BlockHeader) {
+	_, err := r.Headers.GetHeaderByHash(header.Hash.String())
+	assert.NoError(t, err)
+}
+
+func getHeadersFromThisChainUpTo(t *testing.T, r repository.Repositories, height int32) []*domains.BlockHeader {
+	c, _ := testrepository.StaleChain()
+	hs := make([]*domains.BlockHeader, 0)
+	for _, h := range c {
+		if h.Hash != chaincfg.GenesisHash && h.Height <= height {
+			dbh, _ := r.Headers.GetHeaderByHash(h.Hash.String())
+			hs = append(hs, dbh)
+		}
+	}
+	return hs
+}
+
+func getHeadersFromConcurrentChain(t *testing.T, r repository.Repositories) []domains.BlockHeader {
+	o := make([]domains.BlockHeader, 0)
+
+	h, err := r.Headers.GetHeaderByHash(testrepository.FirstHash.String())
+	assert.NoError(t, err)
+	o = append(o, *h)
+
+	h, err = r.Headers.GetHeaderByHash(testrepository.SecondHash.String())
+	assert.NoError(t, err)
+	o = append(o, *h)
+
+	h, err = r.Headers.GetHeaderByHash(testrepository.ThirdHash.String())
+	assert.NoError(t, err)
+	o = append(o, *h)
+
+	h, err = r.Headers.GetHeaderByHash(testrepository.FourthHash.String())
+	assert.NoError(t, err)
+	o = append(o, *h)
+
+	return o
+}
+
+func assertHeaderExist(t *testing.T, h *domains.BlockHeader) {
+	t.Helper()
+	if h == nil {
+		t.Fatal("Expect to receive header, but doesn't get one")
+	}
+}
+
+func assertHeaderInState(t *testing.T, h *domains.BlockHeader, s domains.HeaderState) {
+	t.Helper()
+	if h.State != s {
+		t.Errorf("Header %s should be in a %s state but is %s. \n Details: %+v", h.Hash, s, h.State, h)
 	}
 }
 
@@ -151,13 +293,13 @@ func givenOrphanChainInRepository(r *repository.Repositories) *domains.BlockHead
 	return orphanTip
 }
 
-func givenHeaderToAddNextTo(prev *domains.BlockHeader) BlockHeaderSource {
+func givenHeaderToAddNextTo(prev *domains.BlockHeader) domains.BlockHeaderSource {
 	return createHeaderSource(prev.Hash)
 }
 
-func createHeaderSource(ph chainhash.Hash) BlockHeaderSource {
+func createHeaderSource(ph chainhash.Hash) domains.BlockHeaderSource {
 	t, _ := time.Parse("yyyy-MM-dd hh:mm:ss", "2009-01-09 04:23:48")
-	return BlockHeaderSource{
+	return domains.BlockHeaderSource{
 		Version:    1,
 		PrevBlock:  ph,
 		MerkleRoot: *testrepository.HashOf("63522845d294ee9b0188ae5cac91bf389a0c3723f084ca1025e7d9cdfe481ce1"),
@@ -167,12 +309,12 @@ func createHeaderSource(ph chainhash.Hash) BlockHeaderSource {
 	}
 }
 
-func givenIgnoredHeaderToAddNextTo(prev *domains.BlockHeader) (BlockHeaderSource, domains.BlockHash) {
+func givenIgnoredHeaderToAddNextTo(prev *domains.BlockHeader) (domains.BlockHeaderSource, domains.BlockHash) {
 	h := createHeaderSource(prev.Hash)
 	return h, DefaultBlockHasher().BlockHash(&h)
 }
 
-func givenOrphanedHeaderToAdd() BlockHeaderSource {
+func givenOrphanedHeaderToAdd() domains.BlockHeaderSource {
 	return createHeaderSource(*testrepository.HashOf("0000000000000000000000000000000000000000000000000000000000001ce1"))
 }
 
