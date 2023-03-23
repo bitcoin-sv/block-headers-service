@@ -352,6 +352,15 @@ func LoadConfig() error {
 		cfg.AddPeers = nil
 	}
 
+	// Parse command line options again to ensure they take precedence.
+	_, err = parser.Parse()
+	if err != nil {
+		if e, ok := err.(*flags.Error); !ok || e.Type != flags.ErrHelp {
+			fmt.Fprintln(os.Stderr, usageMessage)
+		}
+		return err
+	}
+
 	// Create the home directory if it doesn't already exist.
 	funcName := "loadConfig"
 	err = os.MkdirAll(defaultHomeDir, 0700)
