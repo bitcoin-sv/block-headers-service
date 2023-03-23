@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
+	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
 	"github.com/libsv/bitcoin-hc/internal/wire"
 	"github.com/libsv/bitcoin-hc/transports/p2p/peer"
 )
@@ -20,12 +21,14 @@ import (
 // active.
 func mockRemotePeer() error {
 	// Configure peer to act as a simnet node that offers no services.
+	log := testlog.InitializeMockLogger()
 	peerCfg := &peer.Config{
 		UserAgentName:          "peer",  // User agent name to advertise.
 		UserAgentVersion:       "1.0.0", // User agent version to advertise.
 		ChainParams:            &chaincfg.SimNetParams,
 		TrickleInterval:        time.Second * 10,
 		TstAllowSelfConnection: true,
+		Log:					log,
 	}
 
 	// Accept connections on the simnet port.
@@ -67,6 +70,7 @@ func Example_newOutboundPeer() {
 	// messages.  The verack listener is used here to signal the code below
 	// when the handshake has been finished by signaling a channel.
 	verack := make(chan struct{})
+	log := testlog.InitializeMockLogger()
 	peerCfg := &peer.Config{
 		UserAgentName:    "peer",  // User agent name to advertise.
 		UserAgentVersion: "1.0.0", // User agent version to advertise.
@@ -83,6 +87,7 @@ func Example_newOutboundPeer() {
 			},
 		},
 		TstAllowSelfConnection: true,
+		Log:					log,
 	}
 	p, err := peer.NewOutboundPeer(peerCfg, "127.0.0.1:18555")
 	if err != nil {
