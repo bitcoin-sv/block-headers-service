@@ -9,8 +9,6 @@ import (
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 )
 
-var log2FloorMasks = []uint32{0xffff0000, 0xff00, 0xf0, 0xc, 0x2}
-
 // BlockHeader defines a single block header, used in SPV validations.
 type BlockHeader struct {
 	Height           int32          `json:"-"`
@@ -28,6 +26,7 @@ type BlockHeader struct {
 	DifficultyTarget uint32         `json:"difficultyTarget"`
 }
 
+// DbBlockHeader represent header saved in db.
 type DbBlockHeader struct {
 	Height           int32     `db:"height"`
 	Hash             string    `db:"hash"`
@@ -49,6 +48,8 @@ type HeaderArgs struct {
 	Blockhash string `param:"blockhash" db:"blockHash"`
 }
 
+// BlockHeaderState is an extended version of the BlockHeader
+// that has more important informations. Mostly used in http server endpoints.
 type BlockHeaderState struct {
 	Header        BlockHeader `json:"header"`
 	State         string      `json:"state"`
@@ -57,8 +58,8 @@ type BlockHeaderState struct {
 	Confirmations int         `json:"confirmations"`
 }
 
-// Convert one or whole slice of DbBlockHeaders to BlockHeaders
-// used after getting records from db
+// ConvertToBlockHeader converts one or whole slice of DbBlockHeaders to BlockHeaders
+// used after getting records from db.
 func ConvertToBlockHeader(dbBlockHeaders []*DbBlockHeader) []*BlockHeader {
 	if dbBlockHeaders != nil {
 		var blockHeaders []*BlockHeader
@@ -72,7 +73,7 @@ func ConvertToBlockHeader(dbBlockHeaders []*DbBlockHeader) []*BlockHeader {
 	return nil
 }
 
-// Convert work from string to big.Int and return BlockHeader
+// ToBlockHeader converts work from string to big.Int and return BlockHeader.
 func (dbBlockHeader *DbBlockHeader) ToBlockHeader() *BlockHeader {
 	if dbBlockHeader.CumulatedWork == "" {
 		dbBlockHeader.CumulatedWork = "0"
@@ -108,8 +109,8 @@ func (dbBlockHeader *DbBlockHeader) ToBlockHeader() *BlockHeader {
 	}
 }
 
-// Convert BlockHeader to DbBlockHeader
-// used mainly to prepare record befor saving in db
+// ToDbBlockHeader converts BlockHeader to DbBlockHeader
+// used mainly to prepare record befor saving in db.
 func (blockHeader BlockHeader) ToDbBlockHeader() DbBlockHeader {
 	return DbBlockHeader{
 		Height:           blockHeader.Height,
@@ -128,25 +129,28 @@ func (blockHeader BlockHeader) ToDbBlockHeader() DbBlockHeader {
 	}
 }
 
-func (h *BlockHeader) CumulateWork(prevWork *big.Int) {
+// CumulateWork sums up cumulatedWork from previous header with chainwork from new header.
+func (blockHeader *BlockHeader) CumulateWork(prevWork *big.Int) {
 	work := prevWork
 	if work == nil {
 		work = big.NewInt(0)
 	}
-	h.CumulatedWork = work.Add(new(big.Int).SetUint64(h.Chainwork), work)
+	blockHeader.CumulatedWork = work.Add(new(big.Int).SetUint64(blockHeader.Chainwork), work)
 }
 
-func (h *BlockHeader) WrapWithHeaderState() BlockHeaderState {
+// WrapWithHeaderState wraps BlockHeader with additional information creating BlockHeaderState.
+func (blockHeader *BlockHeader) WrapWithHeaderState() BlockHeaderState {
 	model := BlockHeaderState{
-		Header:    *h,
+		Header:    *blockHeader,
 		State:     "LONGEST_CHAIN",
-		Height:    h.Height,
-		ChainWork: h.Chainwork,
+		Height:    blockHeader.Height,
+		ChainWork: blockHeader.Chainwork,
 	}
 
 	return model
 }
 
+// CreateGenesisHeaderBlock create filled genesis block.
 func CreateGenesisHeaderBlock() BlockHeader {
 	// Create a new node from the genesis block and set it as the best node.
 	genesisBlock := BlockHeader{
@@ -164,7 +168,11 @@ func CreateGenesisHeaderBlock() BlockHeader {
 	return genesisBlock
 }
 
+// FastLog2Floor calculates the floor of the base-2 logarithm of an input 32-bit 
+// unsigned integer using a bitwise algorithm that masks off decreasingly lower-order bits 
+//of the integer until it reaches the highest order bit, and returns the resulting integer value.
 func FastLog2Floor(n uint32) uint8 {
+	var log2FloorMasks = []uint32{0xffff0000, 0xff00, 0xf0, 0xc, 0x2}
 	rv := uint8(0)
 	exponent := uint8(16)
 	for i := 0; i < 5; i++ {

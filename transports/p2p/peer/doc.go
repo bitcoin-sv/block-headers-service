@@ -29,7 +29,7 @@ A quick overview of the major features peer provides are as follows:
     they see fit (proxies, etc)
   - User agent name and version
   - Bitcoin Cash network
-  - Service support signalling (full nodes, bloom filters, etc)
+  - Service support signaling (full nodes, bloom filters, etc)
   - Maximum supported protocol version
   - Ability to register callbacks for handling bitcoin cash protocol messages
   - Inventory message batching and send trickling with known inventory detection

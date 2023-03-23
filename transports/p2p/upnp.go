@@ -34,6 +34,7 @@ package p2p
 
 import (
 	"bytes"
+	"context"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -76,7 +77,7 @@ func Discover() (nat NAT, err error) {
 		return
 	}
 	socket := conn.(*net.UDPConn)
-	defer socket.Close()
+	defer socket.Close() //nolint:errcheck
 
 	err = socket.SetDeadline(time.Now().Add(3 * time.Second))
 	if err != nil {
@@ -224,21 +225,21 @@ func getOurIP() (ip string, err error) {
 // getServiceURL parses the xml description at the given root url to find the
 // url for the WANIPConnection service to be used for port forwarding.
 func getServiceURL(rootURL string) (url string, err error) {
-	r, err := http.Get(rootURL)
+	r, err := http.Get(rootURL) //nolint:all
 	if err != nil {
 		return
 	}
-	defer r.Body.Close()
+	defer r.Body.Close() //nolint:all
 	if r.StatusCode >= 400 {
 		err = errors.New(fmt.Sprint(r.StatusCode))
 		return
 	}
-	var root root
-	err = xml.NewDecoder(r.Body).Decode(&root)
+	var rt root
+	err = xml.NewDecoder(r.Body).Decode(&rt)
 	if err != nil {
 		return
 	}
-	a := &root.Device
+	a := &rt.Device
 	if a.DeviceType != "urn:schemas-upnp-org:device:InternetGatewayDevice:1" {
 		err = errors.New("no InternetGatewayDevice")
 		return
@@ -293,7 +294,7 @@ func soapRequest(url, function, message string) (replyXML []byte, err error) {
 		"<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\r\n" +
 		"<s:Body>" + message + "</s:Body></s:Envelope>"
 
-	req, err := http.NewRequest("POST", url, strings.NewReader(fullMessage))
+	req, err := http.NewRequestWithContext(context.Background(), "POST", url, strings.NewReader(fullMessage))
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +311,7 @@ func soapRequest(url, function, message string) (replyXML []byte, err error) {
 		return nil, err
 	}
 	if r.Body != nil {
-		defer r.Body.Close()
+		defer r.Body.Close() //nolint:all
 	}
 
 	if r.StatusCode >= 400 {

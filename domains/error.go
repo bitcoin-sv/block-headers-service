@@ -129,7 +129,7 @@ const (
 	ErrBadTxInput
 
 	// ErrMissingTxOut indicates a transaction output referenced by an input
-	// that does not exist
+	// that does not exist.
 	ErrMissingTxOut
 
 	// ErrSpentTxOut indicates a transaction output referenced by an input
@@ -225,55 +225,55 @@ const (
 	ErrInvalidTxOrder
 )
 
-// Map of ErrorCode values back to their constant names for pretty printing.
-var errorCodeStrings = map[ErrorCode]string{
-	ErrDuplicateBlock:        "ErrDuplicateBlock",
-	ErrBlockTooBig:           "ErrBlockTooBig",
-	ErrBlockVersionTooOld:    "ErrBlockVersionTooOld",
-	ErrInvalidTime:           "ErrInvalidTime",
-	ErrTimeTooOld:            "ErrTimeTooOld",
-	ErrTimeTooNew:            "ErrTimeTooNew",
-	ErrDifficultyTooLow:      "ErrDifficultyTooLow",
-	ErrUnexpectedDifficulty:  "ErrUnexpectedDifficulty",
-	ErrHighHash:              "ErrHighHash",
-	ErrBadMerkleRoot:         "ErrBadMerkleRoot",
-	ErrBadCheckpoint:         "ErrBadCheckpoint",
-	ErrForkTooOld:            "ErrForkTooOld",
-	ErrCheckpointTimeTooOld:  "ErrCheckpointTimeTooOld",
-	ErrNoTransactions:        "ErrNoTransactions",
-	ErrNoTxInputs:            "ErrNoTxInputs",
-	ErrNoTxOutputs:           "ErrNoTxOutputs",
-	ErrTxTooBig:              "ErrTxTooBig",
-	ErrTxTooSmall:            "ErrTxTooSmall",
-	ErrTxTooManySigOps:       "ErrTxTooManySigOps",
-	ErrBadTxOutValue:         "ErrBadTxOutValue",
-	ErrDuplicateTxInputs:     "ErrDuplicateTxInputs",
-	ErrBadTxInput:            "ErrBadTxInput",
-	ErrMissingTxOut:          "ErrMissingTxOut",
-	ErrSpentTxOut:            "ErrSpentTxOut",
-	ErrUnfinalizedTx:         "ErrUnfinalizedTx",
-	ErrDuplicateTx:           "ErrDuplicateTx",
-	ErrOverwriteTx:           "ErrOverwriteTx",
-	ErrImmatureSpend:         "ErrImmatureSpend",
-	ErrSpendTooHigh:          "ErrSpendTooHigh",
-	ErrBadFees:               "ErrBadFees",
-	ErrTooManySigOps:         "ErrTooManySigOps",
-	ErrFirstTxNotCoinbase:    "ErrFirstTxNotCoinbase",
-	ErrMultipleCoinbases:     "ErrMultipleCoinbases",
-	ErrBadCoinbaseScriptLen:  "ErrBadCoinbaseScriptLen",
-	ErrBadCoinbaseValue:      "ErrBadCoinbaseValue",
-	ErrMissingCoinbaseHeight: "ErrMissingCoinbaseHeight",
-	ErrBadCoinbaseHeight:     "ErrBadCoinbaseHeight",
-	ErrScriptMalformed:       "ErrScriptMalformed",
-	ErrScriptValidation:      "ErrScriptValidation",
-	ErrPreviousBlockUnknown:  "ErrPreviousBlockUnknown",
-	ErrInvalidAncestorBlock:  "ErrInvalidAncestorBlock",
-	ErrPrevBlockNotBest:      "ErrPrevBlockNotBest",
-	ErrInvalidTxOrder:        "ErrInvalidTxOrder",
-}
-
 // String returns the ErrorCode as a human-readable name.
 func (e ErrorCode) String() string {
+	// Map of ErrorCode values back to their constant names for pretty printing.
+	var errorCodeStrings = map[ErrorCode]string{
+		ErrDuplicateBlock:        "ErrDuplicateBlock",
+		ErrBlockTooBig:           "ErrBlockTooBig",
+		ErrBlockVersionTooOld:    "ErrBlockVersionTooOld",
+		ErrInvalidTime:           "ErrInvalidTime",
+		ErrTimeTooOld:            "ErrTimeTooOld",
+		ErrTimeTooNew:            "ErrTimeTooNew",
+		ErrDifficultyTooLow:      "ErrDifficultyTooLow",
+		ErrUnexpectedDifficulty:  "ErrUnexpectedDifficulty",
+		ErrHighHash:              "ErrHighHash",
+		ErrBadMerkleRoot:         "ErrBadMerkleRoot",
+		ErrBadCheckpoint:         "ErrBadCheckpoint",
+		ErrForkTooOld:            "ErrForkTooOld",
+		ErrCheckpointTimeTooOld:  "ErrCheckpointTimeTooOld",
+		ErrNoTransactions:        "ErrNoTransactions",
+		ErrNoTxInputs:            "ErrNoTxInputs",
+		ErrNoTxOutputs:           "ErrNoTxOutputs",
+		ErrTxTooBig:              "ErrTxTooBig",
+		ErrTxTooSmall:            "ErrTxTooSmall",
+		ErrTxTooManySigOps:       "ErrTxTooManySigOps",
+		ErrBadTxOutValue:         "ErrBadTxOutValue",
+		ErrDuplicateTxInputs:     "ErrDuplicateTxInputs",
+		ErrBadTxInput:            "ErrBadTxInput",
+		ErrMissingTxOut:          "ErrMissingTxOut",
+		ErrSpentTxOut:            "ErrSpentTxOut",
+		ErrUnfinalizedTx:         "ErrUnfinalizedTx",
+		ErrDuplicateTx:           "ErrDuplicateTx",
+		ErrOverwriteTx:           "ErrOverwriteTx",
+		ErrImmatureSpend:         "ErrImmatureSpend",
+		ErrSpendTooHigh:          "ErrSpendTooHigh",
+		ErrBadFees:               "ErrBadFees",
+		ErrTooManySigOps:         "ErrTooManySigOps",
+		ErrFirstTxNotCoinbase:    "ErrFirstTxNotCoinbase",
+		ErrMultipleCoinbases:     "ErrMultipleCoinbases",
+		ErrBadCoinbaseScriptLen:  "ErrBadCoinbaseScriptLen",
+		ErrBadCoinbaseValue:      "ErrBadCoinbaseValue",
+		ErrMissingCoinbaseHeight: "ErrMissingCoinbaseHeight",
+		ErrBadCoinbaseHeight:     "ErrBadCoinbaseHeight",
+		ErrScriptMalformed:       "ErrScriptMalformed",
+		ErrScriptValidation:      "ErrScriptValidation",
+		ErrPreviousBlockUnknown:  "ErrPreviousBlockUnknown",
+		ErrInvalidAncestorBlock:  "ErrInvalidAncestorBlock",
+		ErrPrevBlockNotBest:      "ErrPrevBlockNotBest",
+		ErrInvalidTxOrder:        "ErrInvalidTxOrder",
+	}
+
 	if s := errorCodeStrings[e]; s != "" {
 		return s
 	}
@@ -293,9 +293,4 @@ type RuleError struct {
 // Error satisfies the error interface and prints human-readable errors.
 func (e RuleError) Error() string {
 	return e.Description
-}
-
-// ruleError creates an RuleError given a set of arguments.
-func ruleError(c ErrorCode, desc string) RuleError {
-	return RuleError{ErrorCode: c, Description: desc}
 }

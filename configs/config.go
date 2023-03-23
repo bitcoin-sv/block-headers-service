@@ -30,6 +30,7 @@ import (
 	flags "github.com/jessevdk/go-flags"
 )
 
+// Default config for p2p app.
 const (
 	defaultConfigFilename          = "p2p.conf"
 	defaultLogLevel                = "info"
@@ -61,6 +62,7 @@ var (
 	logger = backendLog.Logger("HEADERS")
 )
 
+// Log instance of logger used in project.
 var Log p2plog.Logger
 
 // runServiceCommand is only set to a real function on Windows.  It is used
@@ -79,7 +81,11 @@ func maxUint32(a, b uint32) uint32 {
 type logWriter struct{}
 
 func (logWriter) Write(p []byte) (n int, err error) {
-	os.Stdout.Write(p)
+	_, err = os.Stdout.Write(p)
+
+	if err != nil {
+		return len(p), err
+	}
 	return len(p), nil
 }
 
@@ -130,6 +136,7 @@ type config struct {
 	TimeSource                MedianTimeSource
 }
 
+// Cfg instance of config used during defining config for app.
 var (
 	Cfg *config
 )
@@ -179,7 +186,7 @@ func normalizeAddress(addr, defaultPort string) string {
 }
 
 // normalizeAddresses returns a new slice with all the passed peer addresses
-// normalized with the given default port, and all duplicates removed.
+// normalised with the given default port, and all duplicates removed.
 func normalizeAddresses(addrs []string, defaultPort string) []string {
 	for i, addr := range addrs {
 		addrs[i] = normalizeAddress(addr, defaultPort)
@@ -240,12 +247,15 @@ func parseCheckpoints(checkpointStrings []string) ([]chaincfg.Checkpoint, error)
 func newConfigParser(cfg *config, so *serviceOptions, options flags.Options) *flags.Parser {
 	parser := flags.NewParser(cfg, options)
 	if runtime.GOOS == "windows" {
-		parser.AddGroup("Service Options", "Service Options", so)
+		_, err := parser.AddGroup("Service Options", "Service Options", so)
+		if err != nil {
+			Log.Error(err)
+		}
 	}
 	return parser
 }
 
-// loadConfig initializes and parses the config using a config file and command
+// LoadConfig initializes and parses the config using a config file and command
 // line options.
 //
 // The configuration proceeds as follows:
@@ -259,7 +269,7 @@ func newConfigParser(cfg *config, so *serviceOptions, options flags.Options) *fl
 // command line options.  Command line options always take precedence.
 func LoadConfig() error {
 	// Default config.
-	Log := useLogger(logger)
+	Log = useLogger(logger)
 	cfg := config{
 		ConfigFile:                defaultConfigFile,
 		DebugLevel:                defaultLogLevel,
@@ -614,7 +624,7 @@ func LoadConfig() error {
 	return nil
 }
 
-// createDefaultConfig copies the sample-bsvd.conf content to the given destination path
+// createDefaultConfig copies the sample-bsvd.conf content to the given destination path.
 func createDefaultConfigFile(destinationPath string) error {
 	// Create the destination directory if it does not exists
 	err := os.MkdirAll(filepath.Dir(destinationPath), 0700)
@@ -628,19 +638,18 @@ func createDefaultConfigFile(destinationPath string) error {
 	}
 	src := bytes.NewReader(sampleBytes)
 
-	dest, err := os.OpenFile(destinationPath,
-		os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+	dest, err := os.OpenFile(filepath.Clean(destinationPath), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}
-	defer dest.Close()
+	defer dest.Close() //nolint:all
 
-	// We copy every line from the sample config file to the destination,
+	// We copy every line from the sample config file to the destination.
 	reader := bufio.NewReader(src)
-	for err != io.EOF {
+	for errors.Is(err, io.EOF) {
 		var line string
 		line, err = reader.ReadString('\n')
-		if err != nil && err != io.EOF {
+		if err != nil && errors.Is(err, io.EOF) {
 			return err
 		}
 

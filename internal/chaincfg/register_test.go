@@ -31,10 +31,6 @@ func TestRegister(t *testing.T) {
 		magic byte
 		valid bool
 	}
-	type prefixTest struct {
-		prefix string
-		valid  bool
-	}
 	type hdTest struct {
 		priv []byte
 		want []byte
@@ -42,12 +38,11 @@ func TestRegister(t *testing.T) {
 	}
 
 	tests := []struct {
-		name             string
-		register         []registerTest
-		p2pkhMagics      []magicTest
-		p2shMagics       []magicTest
-		cashAddrPrefixes []prefixTest
-		hdMagics         []hdTest
+		name        string
+		register    []registerTest
+		p2pkhMagics []magicTest
+		p2shMagics  []magicTest
+		hdMagics    []hdTest
 	}{
 		{
 			name: "default networks",

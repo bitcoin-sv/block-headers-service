@@ -1,28 +1,34 @@
 package vconfig
 
-var (
+// Define basic db config.
+const (
+	// EnvDb db type e.g. sqlite.
+	EnvDb               = "db.type"
+	// EnvDbSchema path to db migration files.
+	EnvDbSchema         = "db.schema.path"
+	// EnvDbDsn data source name.
+	EnvDbDsn            = "db.dsn"
+	// EnvDbMigrate flag specifying wheather to run migrations.
+	EnvDbMigrate        = "db.migrate"
+	// EnvResetDbOnStartup flag specifying wheather to clear db
+	// and start synchronization from genesis header or start from last header in db.
 	EnvResetDbOnStartup = "db.resetState"
+	// EnvDbFilePath path to db file.
 	EnvDbFilePath       = "db.dbFile.path"
 )
 
-const (
-	EnvDb        = "db.type"
-	EnvDbSchema  = "db.schema.path"
-	EnvDbDsn     = "db.dsn"
-	EnvDbMigrate = "db.migrate"
-)
-
+// DbType database type.
 type DbType string
 
-const (
-	DBSqlite DbType = "sqlite"
-)
+// DBSqlite creating config for sqlite db.
+const DBSqlite DbType = "sqlite"
 
 // Config returns strongly typed config values.
 type Config struct {
 	Db *Db
 }
 
+// Db represents a database connection.
 type Db struct {
 	Type       DbType
 	SchemaPath string

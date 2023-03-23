@@ -9,7 +9,7 @@ import (
 	"io"
 )
 
-// BloomUpdateType specifies how the filter is updated when a match is found
+// BloomUpdateType specifies how the filter is updated when a match is found.
 type BloomUpdateType uint8
 
 const (

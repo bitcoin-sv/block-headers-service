@@ -65,7 +65,7 @@ func (msg *MsgBlock) ClearTransactions() {
 // See Deserialize for decoding blocks stored to disk, such as in a database, as
 // opposed to decoding blocks from the wire.
 func (msg *MsgBlock) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) error {
-	err := readBlockHeader(r, pver, &msg.Header)
+	err := readBlockHeader(r, &msg.Header)
 	if err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func (msg *MsgBlock) DeserializeTxLoc(r *bytes.Buffer) ([]TxLoc, error) {
 	// At the current time, there is no difference between the wire encoding
 	// at protocol version 0 and the stable long-term storage format.  As
 	// a result, make use of existing wire protocol functions.
-	err := readBlockHeader(r, 0, &msg.Header)
+	err := readBlockHeader(r, &msg.Header)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func (msg *MsgBlock) DeserializeTxLoc(r *bytes.Buffer) ([]TxLoc, error) {
 // See Serialize for encoding blocks to be stored to disk, such as in a
 // database, as opposed to encoding blocks for the wire.
 func (msg *MsgBlock) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) error {
-	err := writeBlockHeader(w, pver, &msg.Header)
+	err := writeBlockHeader(w, &msg.Header)
 	if err != nil {
 		return err
 	}

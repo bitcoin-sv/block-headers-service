@@ -257,7 +257,10 @@ out:
 
 				if _, ok := pending[connReq.id]; !ok {
 					if msg.conn != nil {
-						msg.conn.Close()
+						err := msg.conn.Close()
+						if err != nil {
+							cm.cfg.Log.Info(err)
+						}
 					}
 					cm.cfg.Log.Debugf("Ignoring connection for "+
 						"canceled connreq=%v", connReq)
@@ -305,7 +308,10 @@ out:
 				delete(conns, msg.id)
 
 				if connReq.conn != nil {
-					connReq.conn.Close()
+					err := connReq.conn.Close()
+					if err != nil {
+						cm.cfg.Log.Info(err)
+					}
 				}
 
 				if cm.cfg.OnDisconnection != nil {
@@ -410,7 +416,7 @@ func (cm *ConnManager) NewConnReq() {
 // connection request.
 func (cm *ConnManager) Connect(c *ConnReq) {
 	// During the time we wait for retry there is a chance that
-	// this connection was already cancelled.
+	// this connection was already canceled.
 	if c.State() == ConnCanceled {
 		cm.cfg.Log.Debugf("Ignoring connect for canceled connreq=%v", c)
 		return

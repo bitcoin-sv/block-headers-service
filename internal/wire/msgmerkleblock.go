@@ -51,7 +51,7 @@ func (msg *MsgMerkleBlock) Bsvdecode(r io.Reader, pver uint32, enc MessageEncodi
 		return messageError("MsgMerkleBlock.Bsvdecode", str)
 	}
 
-	err := readBlockHeader(r, pver, &msg.Header)
+	err := readBlockHeader(r, &msg.Header)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,10 @@ func (msg *MsgMerkleBlock) Bsvdecode(r io.Reader, pver uint32, enc MessageEncodi
 		if err != nil {
 			return err
 		}
-		msg.AddTxHash(hash)
+		err = msg.AddTxHash(hash)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
 	msg.Flags, err = ReadVarBytes(r, pver, maxFlagsPerMerkleBlock(),
@@ -113,7 +116,7 @@ func (msg *MsgMerkleBlock) BsvEncode(w io.Writer, pver uint32, enc MessageEncodi
 		return messageError("MsgMerkleBlock.Bsvdecode", str)
 	}
 
-	err := writeBlockHeader(w, pver, &msg.Header)
+	err := writeBlockHeader(w, &msg.Header)
 	if err != nil {
 		return err
 	}

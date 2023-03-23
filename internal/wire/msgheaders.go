@@ -55,7 +55,7 @@ func (msg *MsgHeaders) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) 
 	msg.Headers = make([]*BlockHeader, 0, count)
 	for i := uint64(0); i < count; i++ {
 		bh := &headers[i]
-		err := readBlockHeader(r, pver, bh)
+		err := readBlockHeader(r, bh)
 		if err != nil {
 			return err
 		}
@@ -71,7 +71,10 @@ func (msg *MsgHeaders) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) 
 				"transactions [count %v]", txCount)
 			return messageError("MsgHeaders.Bsvdecode", str)
 		}
-		msg.AddBlockHeader(bh)
+		err = msg.AddBlockHeader(bh)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
 	return nil
@@ -94,7 +97,7 @@ func (msg *MsgHeaders) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) 
 	}
 
 	for _, bh := range msg.Headers {
-		err := writeBlockHeader(w, pver, bh)
+		err := writeBlockHeader(w, bh)
 		if err != nil {
 			return err
 		}

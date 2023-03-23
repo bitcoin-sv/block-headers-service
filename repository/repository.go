@@ -5,6 +5,7 @@ import (
 	"github.com/libsv/bitcoin-hc/domains"
 )
 
+// Headers is a interface which represents methods performed on defined storage.
 type Headers interface {
 	AddHeaderToDatabase(header domains.BlockHeader) error
 	GetHeaderByHeight(height int32) (*domains.BlockHeader, error)
@@ -19,18 +20,13 @@ type Headers interface {
 	GetConfirmationsCountForBlock(hash string) (int, error)
 }
 
-type Tips interface {
-	GetConfirmedTip() (*domains.BlockHeader, error)
-}
-
+// Repositories represents all repositories in app and provide access to them.
 type Repositories struct {
 	Headers Headers
-	Tips    Tips
 }
-
+// NewRepositories creates and returns Repositories instance.
 func NewRepositories(db *sql.HeadersDb) *Repositories {
 	return &Repositories{
-		Tips:    NewTipRepository(db),
 		Headers: NewHeadersRepository(db),
 	}
 }

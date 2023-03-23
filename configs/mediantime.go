@@ -21,9 +21,7 @@ const (
 	// local clock that is used to determine that it is likley wrong and
 	// hence to show a warning.
 	similarTimeSecs = 5 * 60 // 5 minutes
-)
 
-var (
 	// maxMedianTimeEntries is the maximum number of entries allowed in the
 	// median time data.  This is a variable as opposed to a constant so the
 	// test code can modify it.

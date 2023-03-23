@@ -21,7 +21,7 @@ func init() {
 	maxRetryDuration = 2 * time.Millisecond
 }
 
-// mockAddr mocks a network address
+// mockAddr mocks a network address.
 type mockAddr struct {
 	net, address string
 }

@@ -11,7 +11,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math/rand"
+	"math/big"
+	"crypto/rand"
 	"net"
 	"strconv"
 	"sync"
@@ -83,6 +84,7 @@ var (
 	sentNonces = newMruNonceMap(50)
 )
 
+// PeerSyncState represents state of peer and if it is a sync candidate.
 type PeerSyncState struct {
 	SyncCandidate bool
 }
@@ -335,7 +337,7 @@ func newNetAddress(addr net.Addr, services wire.ServiceFlag) (*wire.NetAddress, 
 
 // outMsg is used to house a message to be sent along with a channel to signal
 // when the message has been sent (or won't be sent due to things such as
-// shutdown)
+// shutdown).
 type outMsg struct {
 	msg      wire.Message
 	doneChan chan<- struct{}
@@ -490,6 +492,7 @@ type Peer struct {
 	quit          chan struct{}
 }
 
+// PeerState represents basic info about peer address.
 type PeerState struct {
 	Ip   string `json:"ip"`
 	Port int    `json:"port"`
@@ -703,6 +706,7 @@ func (p *Peer) WantsHeaders() bool {
 	return sendHeadersPreferred
 }
 
+// ToPeerState return PeerState of the peer on which this method was called.
 func (p *Peer) ToPeerState() PeerState {
 	return PeerState{
 		Ip:   p.NA().IP.String(),
@@ -734,8 +738,12 @@ func (p *Peer) PushAddrMsg(addresses []*wire.NetAddress) ([]*wire.NetAddress, er
 	if addressCount > wire.MaxAddrPerMsg {
 		// Shuffle the address list.
 		for i := 0; i < wire.MaxAddrPerMsg; i++ {
-			j := i + rand.Intn(addressCount-i)
-			msg.AddrList[i], msg.AddrList[j] = msg.AddrList[j], msg.AddrList[i]
+			randInt, err := rand.Int(rand.Reader, big.NewInt(int64(addressCount-i)))
+
+			if err == nil {
+				j := i + int(randInt.Int64())
+				msg.AddrList[i], msg.AddrList[j] = msg.AddrList[j], msg.AddrList[i]
+			}
 		}
 
 		// Truncate it to the maximum size.
@@ -990,6 +998,7 @@ func (p *Peer) isAllowedReadError(err error) bool {
 	}
 
 	// Don't allow the error if it's not specifically a malformed message error.
+
 	if _, ok := err.(*wire.MessageError); !ok {
 		return false
 	}
@@ -1128,7 +1137,7 @@ out:
 				}
 
 			case sccHandlerStart:
-				// Warn on unbalanced callback signalling.
+				// Warn on unbalanced callback signaling.
 				if handlerActive {
 					p.cfg.Log.Warn("Received handler start " +
 						"control command while a " +
@@ -1140,7 +1149,7 @@ out:
 				handlersStartTime = time.Now()
 
 			case sccHandlerDone:
-				// Warn on unbalanced callback signalling.
+				// Warn on unbalanced callback signaling.
 				if !handlerActive {
 					p.cfg.Log.Warn("Received handler done " +
 						"control command when a " +
@@ -1523,7 +1532,10 @@ out:
 			// queue.
 			if iv.Type == wire.InvTypeBlock {
 				invMsg := wire.NewMsgInvSizeHint(1)
-				invMsg.AddInvVect(iv)
+				err := invMsg.AddInvVect(iv)
+				if err != nil {
+					p.cfg.Log.Info(err)
+				}
 				waiting = queuePacket(outMsg{msg: invMsg},
 					pendingMsgs, waiting)
 				continue
@@ -1541,7 +1553,10 @@ out:
 			}
 
 			invMsg := wire.NewMsgInvSizeHint(1)
-			invMsg.AddInvVect(iv)
+			err := invMsg.AddInvVect(iv)
+			if err != nil {
+				p.cfg.Log.Info(err)
+			}
 			waiting = queuePacket(outMsg{msg: invMsg}, pendingMsgs, waiting)
 
 		case <-trickleTicker.C:
@@ -1565,7 +1580,10 @@ out:
 					continue
 				}
 
-				invMsg.AddInvVect(iv)
+				err := invMsg.AddInvVect(iv)
+				if err != nil {
+					p.cfg.Log.Info(err)
+				}
 				if len(invMsg.InvList) >= maxInvTrickleSize {
 					waiting = queuePacket(
 						outMsg{msg: invMsg},
@@ -1799,7 +1817,10 @@ func (p *Peer) Disconnect() {
 
 	p.cfg.Log.Tracef("Disconnecting %s", p)
 	if atomic.LoadInt32(&p.connected) != 0 {
-		p.conn.Close()
+		err := p.conn.Close()
+		if err != nil {
+			p.cfg.Log.Info(err)
+		}
 	}
 	close(p.quit)
 }
@@ -1915,7 +1936,12 @@ func (p *Peer) localVersionMsg() (*wire.MsgVersion, error) {
 	// Generate a unique nonce for this peer so self connections can be
 	// detected.  This is accomplished by adding it to a size-limited map of
 	// recently seen nonces.
-	nonce := uint64(rand.Int63())
+	// nonce := uint64(rand.Int63())
+	n, err := rand.Int(rand.Reader, big.NewInt(9223372036854775807))
+	if err != nil {
+		panic(err)
+	}
+	nonce := n.Uint64()
 	sentNonces.Add(nonce)
 
 	// Create a wire.NetAddress to use as "addrme" in the
@@ -1938,8 +1964,11 @@ func (p *Peer) localVersionMsg() (*wire.MsgVersion, error) {
 
 	// Version message.
 	msg := wire.NewMsgVersion(ourNA, theirNA, nonce, blockNum)
-	msg.AddUserAgent(p.cfg.UserAgentName, p.cfg.UserAgentVersion,
+	err = msg.AddUserAgent(p.cfg.UserAgentName, p.cfg.UserAgentVersion,
 		p.cfg.UserAgentComments...)
+	if err != nil {
+		p.cfg.Log.Info(err)
+	}
 
 	// Advertise local services.
 	msg.Services = p.cfg.Services
@@ -2140,8 +2169,4 @@ func NewOutboundPeer(cfg *Config, addr string) (*Peer, error) {
 	}
 
 	return p, nil
-}
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
 }

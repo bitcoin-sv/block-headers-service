@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-package p2plog defines an interface and default implementation for subsystem
+Package p2plog defines an interface and default implementation for subsystem
 logging.
 
 Log level verbosity may be modified at runtime for each individual subsystem

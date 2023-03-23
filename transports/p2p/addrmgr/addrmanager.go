@@ -45,7 +45,6 @@ type AddrManager struct {
 	nNew           int
 	lamtx          sync.Mutex
 	localAddresses map[string]*localAddress
-	log            p2plog.Logger
 }
 
 type localAddress struct {
@@ -58,7 +57,7 @@ type localAddress struct {
 type AddressPriority int
 
 const (
-	// InterfacePrio signifies the address is on a local interface
+	// InterfacePrio signifies the address is on a local interface.
 	InterfacePrio AddressPriority = iota
 
 	// BoundPrio signifies the address has been explicitly bounded to.
@@ -128,7 +127,7 @@ const (
 	minBadDays = 7
 
 	// getAddrMax is the most addresses that we will send in response
-	// to a getAddr (in practise the most addresses we will return from a
+	// to a getAddr (in practice the most addresses we will return from a
 	// call to AddressCache()).
 	getAddrMax = 2500
 
@@ -337,17 +336,17 @@ func (a *AddrManager) Start() {
 }
 
 // Stop gracefully shuts down the address manager by stopping the main handler.
-func (a *AddrManager) Stop() error {
+func (a *AddrManager) Stop() {
 	if atomic.AddInt32(&a.shutdown, 1) != 1 {
 		log.Warnf("Address manager is already in the process of " +
 			"shutting down")
-		return nil
 	}
 
 	log.Infof("Address manager shutting down")
 	close(a.quit)
 	a.wg.Wait()
-	return nil
+
+	log.Infof("Address manager stopped")
 }
 
 // AddAddresses adds new addresses to the address manager.  It enforces a max
@@ -388,7 +387,7 @@ func (a *AddrManager) AddressCache() []*wire.NetAddress {
 	}
 
 	allAddr := make([]*wire.NetAddress, 0, addrIndexLen)
-	// Iteration order is undefined here, but we randomise it anyway.
+	// Iteration order is undefined here, but we randomize it anyway.
 	for _, v := range a.addrIndex {
 		allAddr = append(allAddr, v.na)
 	}
@@ -402,7 +401,7 @@ func (a *AddrManager) AddressCache() []*wire.NetAddress {
 	// `numAddresses' since we are throwing the rest.
 	for i := 0; i < numAddresses; i++ {
 		// pick a number between current index and the end
-		j := rand.Intn(addrIndexLen-i) + i
+		j := rand.Intn(addrIndexLen-i) + i //nolint:gosec
 		allAddr[i], allAddr[j] = allAddr[j], allAddr[i]
 	}
 
@@ -417,7 +416,10 @@ func (a *AddrManager) reset() {
 	a.addrIndex = make(map[string]*KnownAddress)
 
 	// fill key with bytes from a good random source.
-	io.ReadFull(crand.Reader, a.key[:])
+	_, err := io.ReadFull(crand.Reader, a.key[:])
+	if err != nil {
+		log.Error(err)
+	}
 	for i := range a.addrNew {
 		a.addrNew[i] = make(map[string]*KnownAddress)
 	}
@@ -779,10 +781,10 @@ func getReachabilityFrom(localAddr, remoteAddr *wire.NetAddress) int {
 	}
 
 	/* ipv6 */
-	var tunnelled bool
-	// Is our v6 is tunnelled?
+	var tunneled bool
+	// Is our v6 is tunneled?
 	if IsRFC3964(localAddr) || IsRFC6052(localAddr) || IsRFC6145(localAddr) {
-		tunnelled = true
+		tunneled = true
 	}
 
 	if !IsRoutable(localAddr) {
@@ -797,8 +799,8 @@ func getReachabilityFrom(localAddr, remoteAddr *wire.NetAddress) int {
 		return Ipv4
 	}
 
-	if tunnelled {
-		// only prioritise ipv6 if we aren't tunnelling it.
+	if tunneled {
+		// only prioritize ipv6 if we aren't tunneling it.
 		return Ipv6Weak
 	}
 
@@ -850,7 +852,7 @@ func New(lookupFunc func(string) ([]net.IP, error), log p2plog.Logger) *AddrMana
 	useLogger(log)
 	am := AddrManager{
 		lookupFunc:     lookupFunc,
-		rand:           rand.New(rand.NewSource(time.Now().UnixNano())),
+		rand:           rand.New(rand.NewSource(time.Now().UnixNano())), //nolint:gosec
 		quit:           make(chan struct{}),
 		localAddresses: make(map[string]*localAddress),
 	}

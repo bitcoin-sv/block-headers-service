@@ -89,7 +89,10 @@ func (msg *MsgCFHeaders) Bsvdecode(r io.Reader, pver uint32, _ MessageEncoding) 
 		if err != nil {
 			return err
 		}
-		msg.AddCFHash(&cfh)
+		err = msg.AddCFHash(&cfh)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
 	return nil

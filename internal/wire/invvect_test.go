@@ -241,7 +241,7 @@ func TestInvVectWire(t *testing.T) {
 	for i, test := range tests {
 		// Encode to wire format.
 		var buf bytes.Buffer
-		err := writeInvVect(&buf, test.pver, &test.in)
+		err := writeInvVect(&buf, &test.in)
 		if err != nil {
 			t.Errorf("writeInvVect #%d error %v", i, err)
 			continue
@@ -255,7 +255,7 @@ func TestInvVectWire(t *testing.T) {
 		// Decode the message from wire format.
 		var iv InvVect
 		rbuf := bytes.NewReader(test.buf)
-		err = readInvVect(rbuf, test.pver, &iv)
+		err = readInvVect(rbuf, &iv)
 		if err != nil {
 			t.Errorf("readInvVect #%d error %v", i, err)
 			continue

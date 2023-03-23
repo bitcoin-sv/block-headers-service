@@ -77,7 +77,10 @@ func (msg *MsgGetBlocks) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding
 		if err != nil {
 			return err
 		}
-		msg.AddBlockLocatorHash(hash)
+		err = msg.AddBlockLocatorHash(hash)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
 	return readElement(r, &msg.HashStop)

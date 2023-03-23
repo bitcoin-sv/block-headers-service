@@ -16,7 +16,7 @@ import (
 // version message (MsgVersion).
 const MaxUserAgentLen = 256
 
-// DefaultUserAgent for wire in the stack
+// DefaultUserAgent for wire in the stack.
 const DefaultUserAgent = "/bsvwire:0.5.0/"
 
 // MsgVersion implements the Message interface and represents a bitcoin version
@@ -140,7 +140,10 @@ func (msg *MsgVersion) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) 
 		// field is true when transactions should be relayed, so reverse
 		// it for the DisableRelayTx field.
 		var relayTx bool
-		readElement(r, &relayTx)
+		err := readElement(r, &relayTx)
+		if err != nil {
+			fmt.Println(err)
+		}
 		msg.DisableRelayTx = !relayTx
 	}
 
@@ -238,7 +241,7 @@ func NewMsgVersion(me *NetAddress, you *NetAddress, nonce uint64,
 	}
 }
 
-// validateUserAgent checks userAgent length against MaxUserAgentLen
+// validateUserAgent checks userAgent length against MaxUserAgentLen.
 func validateUserAgent(userAgent string) error {
 	if len(userAgent) > MaxUserAgentLen {
 		str := fmt.Sprintf("user agent too long [len %v, max %v]",

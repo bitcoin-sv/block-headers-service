@@ -52,7 +52,7 @@ const (
 	FeeFilterVersion uint32 = 70013
 
 	// ProtoconfVerisosn is the protocol version which added a new
-	// protoconf message
+	// protoconf message.
 	ProtoconfVerisosn uint32 = 70013
 )
 

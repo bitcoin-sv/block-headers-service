@@ -43,16 +43,14 @@ const (
 	// retries when connecting to persistent peers.  It is adjusted by the
 	// number of retries such that there is a retry backoff.
 	connectionRetryInterval = time.Second * 5
-)
 
-var (
 	// userAgentName is the user agent name and is used to help identify
 	// ourselves to other bitcoin peers.
 	userAgentName = "/bsv"
 
 	// userAgentVersion is the user agent version and is used to help
 	// identify ourselves to other bitcoin peers.
-	// userAgentVersion = fmt.Sprintf("%d.%d.%d", version.AppMajor, version.AppMinor, version.AppPatch)
+	// userAgentVersion = fmt.Sprintf("%d.%d.%d", version.AppMajor, version.AppMinor, version.AppPatch).
 	userAgentVersion = "1.0.11"
 )
 
@@ -81,7 +79,7 @@ func (oa *onionAddr) Network() string {
 // Ensure onionAddr implements the net.Addr interface.
 var _ net.Addr = (*onionAddr)(nil)
 
-// simpleAddr implements the net.Addr interface with two struct fields
+// simpleAddr implements the net.Addr interface with two struct fields.
 type simpleAddr struct {
 	net, addr string
 }
@@ -200,7 +198,6 @@ type server struct {
 	nat                  NAT
 	timeSource           configs.MedianTimeSource
 	wireServices         wire.ServiceFlag
-	services             *service.Services
 }
 
 // serverPeer extends the peer to maintain state shared by the server and
@@ -647,7 +644,7 @@ func (s *server) handleAddPeerMsg(state *peerState, sp *serverPeer) bool {
 	return true
 }
 
-// handleDonePeerMsg deals with peers that have signalled they are done.  It is
+// handleDonePeerMsg deals with peers that have signaled they are done.  It is
 // invoked from the peerHandler goroutine.
 func (s *server) handleDonePeerMsg(state *peerState, sp *serverPeer) {
 	var list map[int32]*serverPeer
@@ -1004,7 +1001,7 @@ func (s *server) peerHandler() {
 				// Bitcoind uses a lookup of the dns seeder here. This
 				// is rather strange since the values looked up by the
 				// DNS seed lookups will vary quite a lot.
-				// to replicate this behaviour we put all addresses as
+				// to replicate this behavior we put all addresses as
 				// having come from the first one.
 				s.addrManager.AddAddresses(addrs, addrs[0])
 			}, configs.Log)
@@ -1169,18 +1166,16 @@ func (s *server) Start() {
 
 // Stop gracefully shuts down the server by stopping and disconnecting all
 // peers and the main listener.
-func (s *server) Stop() error {
+func (s *server) Stop() {
 	// Make sure this only happens once.
 	if atomic.AddInt32(&s.shutdown, 1) != 1 {
 		configs.Log.Infof("Server is already in the process of shutting down")
-		return nil
 	}
 
 	configs.Log.Warnf("P2P Server shutting down")
 
 	// Signal the remaining goroutines to quit.
 	close(s.quit)
-	return nil
 }
 
 func (s *server) StopServer() {
@@ -1244,7 +1239,7 @@ func parseListeners(addrs []string) ([]net.Addr, error) {
 	for _, addr := range addrs {
 		host, _, err := net.SplitHostPort(addr)
 		if err != nil {
-			// Shouldn't happen due to already being normalized.
+			// Shouldn't happen due to already being normalised.
 			return nil, err
 		}
 
@@ -1311,7 +1306,7 @@ out:
 					s.wireServices)
 				err = s.addrManager.AddLocalAddress(na, addrmgr.UpnpPrio)
 				if err != nil {
-					// XXX DeletePortMapping?
+					configs.Log.Warnf("can't add local address: %v", err)
 				}
 				configs.Log.Warnf("Successfully bound via UPnP to %s", addrmgr.NetAddressKey(na))
 				first = false
@@ -1336,7 +1331,7 @@ out:
 // newServer returns a new bsvd server configured to listen on addr for the
 // bitcoin network type specified by chainParams.  Use start to begin accepting
 // connections from peers.
-func newServer(listenAddrs []string, chainParams *chaincfg.Params, interrupt <-chan struct{},
+func newServer(listenAddrs []string, chainParams *chaincfg.Params,
 	services *service.Services, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState) (*server, error) {
 	wireServices := defaultServices
 	if configs.Cfg.NoCFilters {
@@ -1671,7 +1666,10 @@ func addLocalAddress(addrMgr *addrmgr.AddrManager, addr string, services wire.Se
 			}
 
 			netAddr := wire.NewNetAddressIPPort(ifaceIP, uint16(port), services)
-			addrMgr.AddLocalAddress(netAddr, addrmgr.BoundPrio)
+			err = addrMgr.AddLocalAddress(netAddr, addrmgr.BoundPrio)
+			if err != nil {
+				configs.Log.Info(err)
+			}
 		}
 	} else {
 		netAddr, err := addrMgr.HostToNetAddress(host, uint16(port), services)
@@ -1679,7 +1677,10 @@ func addLocalAddress(addrMgr *addrmgr.AddrManager, addr string, services wire.Se
 			return err
 		}
 
-		addrMgr.AddLocalAddress(netAddr, addrmgr.BoundPrio)
+		err = addrMgr.AddLocalAddress(netAddr, addrmgr.BoundPrio)
+		if err != nil {
+			configs.Log.Info(err)
+		}
 	}
 
 	return nil
@@ -1708,7 +1709,7 @@ func dynamicTickDuration(remaining time.Duration) time.Duration {
 }
 
 // RunServer starts the server and also contain all deferred functions
-// beacuse they are not called in main method when os.Exit() is called.
+// because they are not called in main method when os.Exit() is called.
 // The optional serverChan parameter is mainly used by the service code to be
 // notified with the server once it is setup so it can gracefully stop it when
 // requested from the service control manager.
@@ -1720,7 +1721,7 @@ func RunServer(serverChan chan<- *server, services *service.Services, peers map[
 	defer configs.Log.Info("Shutdown complete")
 
 	// Create server and start it.
-	server, err := createAndStartServer(interrupt, serverChan, services, peers)
+	server, err := createAndStartServer(serverChan, services, peers)
 	if server == nil {
 		return err
 	}
@@ -1737,10 +1738,9 @@ func RunServer(serverChan chan<- *server, services *service.Services, peers map[
 	return nil
 }
 
-// Create and start server, return error if server was not created correctly
-func createAndStartServer(interrupt <-chan struct{}, serverChan chan<- *server, services *service.Services, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState) (*server, error) {
-	server, err := newServer(configs.Cfg.Listeners, configs.ActiveNetParams.Params,
-		interrupt, services, peers)
+// Create and start server, return error if server was not created correctly.
+func createAndStartServer(serverChan chan<- *server, services *service.Services, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState) (*server, error) {
+	server, err := newServer(configs.Cfg.Listeners, configs.ActiveNetParams.Params, services, peers)
 	if err != nil {
 		configs.Log.Errorf("Unable to start server on %v: %v",
 			configs.Cfg.Listeners, err)
@@ -1753,9 +1753,9 @@ func createAndStartServer(interrupt <-chan struct{}, serverChan chan<- *server, 
 	return server, nil
 }
 
+// NewServer creates and return p2p server.
 func NewServer(services *service.Services, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState) (*server, error) {
-	server, err := newServer(configs.Cfg.Listeners, configs.ActiveNetParams.Params,
-		nil, services, peers)
+	server, err := newServer(configs.Cfg.Listeners, configs.ActiveNetParams.Params, services, peers)
 	if err != nil {
 		configs.Log.Errorf("Unable to start server on %v: %v",
 			configs.Cfg.Listeners, err)

@@ -243,7 +243,7 @@ linters-settings:
     # Correct spellings using locale preferences for US or UK.
     # Default is to use a neutral variety of English.
     # Setting locale to US will correct the British spelling of 'colour' to 'color'.
-    locale: UK
+    locale: US
     ignore-words:
       - bsv
       - bitcoin
@@ -343,12 +343,8 @@ linters:
     - exportloopref
     - exhaustive
     - sqlclosecheck
-    - nolintlint
-    - nestif
     - goconst
-    - gochecknoglobals
     - godot
-    #- lll
   disable:
     - gocritic # use this for very opinionated linting
     - whitespace
@@ -357,6 +353,8 @@ linters:
     - testpackage
     - nlreturn
     - gci
+    - errorlint
+    - musttag
   disable-all: false
   presets:
     - bugs

@@ -5,10 +5,12 @@ import (
 	"github.com/libsv/bitcoin-hc/repository"
 )
 
+// TipService represents Tip service and provide access to repositories.
 type TipService struct {
 	repo *repository.Repositories
 }
 
+// GetTips returns slice with current tips.
 func (s *TipService) GetTips() ([]domains.BlockHeaderState, error) {
 	blockHeaders := make([]domains.BlockHeaderState, 0)
 	tips := s.GetAllTips()
@@ -19,17 +21,20 @@ func (s *TipService) GetTips() ([]domains.BlockHeaderState, error) {
 	return blockHeaders, nil
 }
 
+// PruneTip used to prune whole fork based on a tip - TO BE IMPLEMENTED.
 func (s *TipService) PruneTip() (string, error) {
 	return "", nil
 }
 
+// NewTipService creates and returns TipService instance.
 func NewTipService(repo *repository.Repositories) *TipService {
 	return &TipService{
 		repo: repo,
 	}
 }
 
-func (ts *TipService) GetAllTips() []domains.BlockHeader {
+// GetAllTips returns all current tips.
+func (s *TipService) GetAllTips() []domains.BlockHeader {
 	var headersSlice []domains.BlockHeader
 
 	// This method needs to be rewritten
