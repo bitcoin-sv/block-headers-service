@@ -169,7 +169,7 @@ func TestAddConcurrentChainBlock(t *testing.T) {
 			oldLongestChainState: domains.Stale,
 		},
 		"header with the greatest chainwork next to the tip of stale chain become longest chain tip": {
-			previous:             testrepository.ForthStaleHash,
+			previous:             testrepository.FourthStaleHash,
 			bits:                 bitsExceedingCumulatedChainWork,
 			newBlockChainState:   domains.LongestChain,
 			oldLongestChainState: domains.Stale,
@@ -234,7 +234,8 @@ func getHeadersFromThisChainUpTo(t *testing.T, r repository.Repositories, height
 	hs := make([]*domains.BlockHeader, 0)
 	for _, h := range c {
 		if h.Hash != chaincfg.GenesisHash && h.Height <= height {
-			dbh, _ := r.Headers.GetHeaderByHash(h.Hash.String())
+			dbh, err := r.Headers.GetHeaderByHash(h.Hash.String())
+			assert.NoError(t, err)
 			hs = append(hs, dbh)
 		}
 	}

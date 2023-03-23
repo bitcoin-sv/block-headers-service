@@ -5,10 +5,10 @@
 package p2psync
 
 import (
+	"crypto/rand"
 	"fmt"
 	"math"
 	"math/big"
-	"crypto/rand"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -195,16 +195,6 @@ func (sm *SyncManager) findNextHeaderCheckpoint(height int32) *chaincfg.Checkpoi
 		nextCheckpoint = &checkpoints[i]
 	}
 	return nextCheckpoint
-}
-
-func (sm *SyncManager) ignoreBlockHash(blockHash *chainhash.Hash) bool {
-	for _, hash := range sm.chainParams.HeadersToIgnore {
-		if blockHash.IsEqual(hash) {
-			return true
-		}
-	}
-
-	return false
 }
 
 // startSync will choose the best peer among the available candidate peers to

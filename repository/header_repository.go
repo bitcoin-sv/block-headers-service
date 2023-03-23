@@ -23,8 +23,8 @@ func (r *HeaderRepository) AddHeaderToDatabase(header domains.BlockHeader) error
 // UpdateState changes state value to provided one for each of headers with provided hash.
 func (r *HeaderRepository) UpdateState(hashes []chainhash.Hash, state domains.HeaderState) error {
 	hs := make([]string, len(hashes))
-	for _, h := range hashes {
-		hs = append(hs, h.String())
+	for i, h := range hashes {
+		hs[i] = h.String()
 	}
 
 	err := r.db.UpdateState(context.Background(), hs, state.String())

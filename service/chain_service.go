@@ -9,7 +9,9 @@ import (
 	"github.com/pkg/errors"
 )
 
+// BlockHasher is an interface which is exposing BlockHash method.
 type BlockHasher interface {
+	// BlockHash calculates BlockHash from given header source BlockHeaderSource
 	BlockHash(h *domains.BlockHeaderSource) domains.BlockHash
 }
 
@@ -20,7 +22,7 @@ type chainService struct {
 	BlockHasher
 }
 
-// ChainServiceDependencies is a configuration struct used to initialize a new Chains sevice
+// ChainServiceDependencies is a configuration struct used to initialize a new Chains service.
 type ChainServiceDependencies struct {
 	*repository.Repositories
 	*chaincfg.Params
@@ -28,6 +30,7 @@ type ChainServiceDependencies struct {
 	BlockHasher
 }
 
+// NewChainsService is a constructor for Chains service.
 func NewChainsService(deps ChainServiceDependencies) Chains {
 	return &chainService{
 		Repositories: deps.Repositories,
@@ -83,14 +86,14 @@ func (cs *chainService) hasConcurrentHeaderFromLongestChain(h *domains.BlockHead
 }
 
 // switchChainsStates marking chain connected to given block as longest chain
-// and concurrent part of (currently) "longest chain" as STALE
+// and concurrent part of (currently) "longest chain" as STALE.
 func (cs *chainService) switchChainsStates(h *domains.BlockHeader) error {
 	headerStaleChain, err := cs.stalePartOfChainOf(h)
 	if err != nil {
 		return ChainUpdateFail.causedBy(&err)
 	}
 
-	lh := lowestHeightOf(headerStaleChain, h)
+	lh := lowestHeightOf(&headerStaleChain, h)
 
 	concurrentChain, err := cs.longestChainFromHeight(lh)
 	if err != nil {
@@ -163,7 +166,7 @@ func (cs *chainService) insert(h *domains.BlockHeader) (*domains.BlockHeader, er
 
 type chain []*domains.BlockHeader
 
-func lowestHeightOf(c chain, oh *domains.BlockHeader) int32 {
+func lowestHeightOf(c *chain, oh *domains.BlockHeader) int32 {
 	f := c.first()
 	if f.Height < oh.Height {
 		return f.Height
@@ -173,7 +176,7 @@ func lowestHeightOf(c chain, oh *domains.BlockHeader) int32 {
 
 func (c *chain) first() *domains.BlockHeader {
 	hs := []*domains.BlockHeader(*c)
-	if c == nil || hs[0] == nil {
+	if len(hs) == 0 {
 		return nil
 	}
 
@@ -194,26 +197,34 @@ func (c *chain) hashes() []chainhash.Hash {
 	return hs
 }
 
+// AddBlockError errors that could occur during adding a header.
 type AddBlockError struct {
 	code  AddBlockErrorCode
 	cause *error
 }
 
+// AddBlockErrorCode error codes that could occur during adding a header.
 type AddBlockErrorCode string
 
 const (
+	//BlockRejected error code representing situation when block is on the blacklist.
 	BlockRejected AddBlockErrorCode = "BlockRejected"
 
+	//HeaderCreationFail error code representing situation when block cannot be created from source.
 	HeaderCreationFail AddBlockErrorCode = "HeaderCreationFail"
 
+	//ChainUpdateFail error code representing situation when STALE chain should become Longest chain but the update of chains failed.
 	ChainUpdateFail AddBlockErrorCode = "ChainUpdateFail"
-	HeaderSaveFail  AddBlockErrorCode = "HeaderSaveFail"
+
+	//HeaderSaveFail error code representing situation when saving header in the repository failed.
+	HeaderSaveFail AddBlockErrorCode = "HeaderSaveFail"
 )
 
 func (e *AddBlockError) Error() string {
 	return string(e.code)
 }
 
+// Cause returns a Cause of the error if there is any.
 func (e *AddBlockError) Cause() error {
 	return *e.cause
 }
@@ -230,6 +241,7 @@ func (c AddBlockErrorCode) causedBy(cause *error) error {
 	return errors.Wrap(*cause, c.String())
 }
 
+// Is checks if given error contains AddBlockErrorCode.
 func (c AddBlockErrorCode) Is(err error) bool {
 	return err != nil && err.Error() == c.String()
 }
