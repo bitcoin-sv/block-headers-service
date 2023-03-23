@@ -418,7 +418,7 @@ func (a *AddrManager) reset() {
 	// fill key with bytes from a good random source.
 	_, err := io.ReadFull(crand.Reader, a.key[:])
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 	}
 	for i := range a.addrNew {
 		a.addrNew[i] = make(map[string]*KnownAddress)

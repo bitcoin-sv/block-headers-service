@@ -249,7 +249,7 @@ func newConfigParser(cfg *config, so *serviceOptions, options flags.Options) *fl
 	if runtime.GOOS == "windows" {
 		_, err := parser.AddGroup("Service Options", "Service Options", so)
 		if err != nil {
-			fmt.Println(err)
+			Log.Error(err)
 		}
 	}
 	return parser
@@ -638,7 +638,7 @@ func createDefaultConfigFile(destinationPath string) error {
 	}
 	src := bytes.NewReader(sampleBytes)
 
-	dest, err := os.OpenFile(destinationPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600) //nolint:all
+	dest, err := os.OpenFile(filepath.Clean(destinationPath), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}

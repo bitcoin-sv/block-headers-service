@@ -11,7 +11,6 @@ import (
 
 // ActiveNetParams is a pointer to the parameters specific to the
 // currently active bitcoin network.
-// var ActiveNetParams = &mainNetParams.
 var ActiveNetParams = updatedMainNetParams(mainNetParams)
 
 // params is used to group parameters for various networks such as the main
@@ -36,7 +35,6 @@ var mainNetDNSSeeds = []chaincfg.DNSSeed{
 	{Host: "seed.bitcoinsv.io", HasFiltering: true},
 	{Host: "seed.cascharia.com", HasFiltering: true},
 	{Host: "seed.satoshisvision.network", HasFiltering: true},
-	// {Host: "btccash-seeder.bitcoinunlimited.info", HasFiltering: false},
 }
 
 func updatedMainNetParams(p params) *params {
