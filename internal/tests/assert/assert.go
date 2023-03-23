@@ -23,12 +23,14 @@ func NotEqual[T comparable](t *testing.T, actual, expected T) {
 	}
 }
 
+// NoError finishes test with t.Fatal when there is an error.
 func NoError(t *testing.T, err error) {
 	if err != nil {
 		t.Fatalf("Doesn't expect to receive error, but get one %s", err)
 	}
 }
 
+// IsError expects that error exists and its Error() is returning expected string.
 func IsError(t *testing.T, err error, expected string) {
 	if err == nil {
 		t.Error("Expect to receive error BlockRejected")

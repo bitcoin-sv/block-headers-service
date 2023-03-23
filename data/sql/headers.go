@@ -75,12 +75,6 @@ const (
 	FROM headers;
 	`
 
-	sqlGetTip = `
-	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
-	FROM headers 
-	ORDER BY height DESC LIMIT 1;
-	`
-
 	sqlVerifyIfGenesisPresent = `
 	SELECT hash 
 	FROM headers 
@@ -187,7 +181,7 @@ func (h *HeadersDb) CreateBatch(ctx context.Context, req []*domains.BlockHeader)
 	return errors.Wrap(tx.Commit(), "failed to commit tx")
 }
 
-// UpdateState will update state of headers of hashes to given state
+// UpdateState will update state of headers of hashes to given state.
 func (h *HeadersDb) UpdateState(ctx context.Context, hashes []string, state string) error {
 	tx, err := h.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -198,6 +192,9 @@ func (h *HeadersDb) UpdateState(ctx context.Context, hashes []string, state stri
 	}()
 
 	query, args, err := sqlx.In(sqlUpdateState, state, hashes)
+	if err != nil {
+		return errors.Wrapf(err, "failed to update headers state to %s", state)
+	}
 	if _, err := tx.ExecContext(ctx, h.db.Rebind(query), args...); err != nil {
 		return errors.Wrapf(err, "failed to update headers state to %s", state)
 	}
@@ -271,17 +268,19 @@ func (h *HeadersDb) GetHeaderByHeightRange(from int, to int) ([]*domains.DbBlock
 	return bh, nil
 }
 
+// GetLongestChainHeadersFromHeight returns from db the headers from "longest chain" starting from given height.
 func (h *HeadersDb) GetLongestChainHeadersFromHeight(height int32) ([]*domains.DbBlockHeader, error) {
 	var bh []*domains.DbBlockHeader
 	if err := h.db.Select(&bh, h.db.Rebind(sqlLongestChainHeadersFromHeight), height); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.Errorf("could not find headers in longest chain from height %s", height)
+			return nil, errors.Errorf("could not find headers in longest chain from height %d", height)
 		}
-		return nil, errors.Wrapf(err, "failed to get headers in longest chain from height %s", height)
+		return nil, errors.Wrapf(err, "failed to get headers in longest chain from height %d", height)
 	}
 	return bh, nil
 }
 
+// GetStaleHeadersBackFrom returns from db all the headers with state STALE, starting from header with hash and preceding that one.
 func (h *HeadersDb) GetStaleHeadersBackFrom(hash string) ([]*domains.DbBlockHeader, error) {
 	var bh []*domains.DbBlockHeader
 	if err := h.db.Select(&bh, h.db.Rebind(sqlStaleHeadersFrom), hash); err != nil {

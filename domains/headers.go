@@ -9,13 +9,18 @@ import (
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 )
 
+// HeaderState enum representing header state.
 type HeaderState string
 
 const (
-	Orphan       HeaderState = "ORPHAN"
-	Stale        HeaderState = "STALE"
+	// Orphan headers that are not connected to existing block or are connected with other orphan block.
+	Orphan HeaderState = "ORPHAN"
+	// Stale headers that are not part of the longest chain - it means they're forms concurrent chain to the longest chain.
+	Stale HeaderState = "STALE"
+	// LongestChain headers that are part of the longest chain - it means they're forms chain which cumulated chain work is the biggest.
 	LongestChain HeaderState = "LONGEST_CHAIN"
-	Rejected     HeaderState = "REJECTED"
+	// Rejected headers that are on the black list of headers.
+	Rejected HeaderState = "REJECTED"
 )
 
 func (s *HeaderState) String() string {
@@ -69,7 +74,7 @@ type BlockHeaderState struct {
 	Confirmations int         `json:"confirmations"`
 }
 
-// BlockHeaderSource defines source of information about a block header used by system
+// BlockHeaderSource defines source of information about a block header used by system.
 type BlockHeaderSource struct {
 	// Version of the block. This is not the same as the protocol version.
 	Version int32
@@ -90,16 +95,21 @@ type BlockHeaderSource struct {
 	Nonce uint32
 }
 
+// BlockHash is a representation of Hash of the block.
 type BlockHash chainhash.Hash
 
+// String returns the Hash as the hexadecimal string of the byte-reversed
+// hash.
 func (h *BlockHash) String() string {
 	return h.ChainHash().String()
 }
 
+// ChainHash returns chainhash.Hash representation of the block hash.
 func (h *BlockHash) ChainHash() chainhash.Hash {
 	return chainhash.Hash(*h)
 }
 
+// CreateHeader constructor for BlockHeader.
 func CreateHeader(hash *BlockHash, bs *BlockHeaderSource, ph *BlockHeader) BlockHeader {
 	cw := CalculateWork(bs.Bits)
 	ccw := CumulatedChainWorkOf(*ph.CumulatedWork).Add(cw)
@@ -126,6 +136,7 @@ func CreateHeader(hash *BlockHash, bs *BlockHeaderSource, ph *BlockHeader) Block
 	}
 }
 
+// NewRejectedBlockHeader constructs rejected block header.
 func NewRejectedBlockHeader(hash BlockHash) *BlockHeader {
 	return &BlockHeader{
 		Hash:  chainhash.Hash(hash),
@@ -133,6 +144,7 @@ func NewRejectedBlockHeader(hash BlockHash) *BlockHeader {
 	}
 }
 
+// NewOrphanPreviousBlockHeader constructor for previous block for orphaned block.
 func NewOrphanPreviousBlockHeader() *BlockHeader {
 	return &BlockHeader{
 		Height:        0,
@@ -142,10 +154,12 @@ func NewOrphanPreviousBlockHeader() *BlockHeader {
 	}
 }
 
+// IsOrphan is the block an orphan.
 func (bh *BlockHeader) IsOrphan() bool {
 	return bh.State == Orphan
 }
 
+// IsLongestChain is the block part of the longest chain.
 func (bh *BlockHeader) IsLongestChain() bool {
 	return bh.State == LongestChain
 }
@@ -252,7 +266,7 @@ func CreateGenesisHeaderBlock() BlockHeader {
 
 // FastLog2Floor calculates the floor of the base-2 logarithm of an input 32-bit
 // unsigned integer using a bitwise algorithm that masks off decreasingly lower-order bits
-//of the integer until it reaches the highest order bit, and returns the resulting integer value.
+// of the integer until it reaches the highest order bit, and returns the resulting integer value.
 func FastLog2Floor(n uint32) uint8 {
 	var log2FloorMasks = []uint32{0xffff0000, 0xff00, 0xf0, 0xc, 0x2}
 	rv := uint8(0)
