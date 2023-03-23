@@ -43,9 +43,9 @@ var (
 type ConnState uint8
 
 // ConnState can be either pending, established, disconnected or failed.  When
-// a new connection is requested, it is attempted and categorised as
+// a new connection is requested, it is attempted and categorized as
 // established or failed depending on the connection result.  An established
-// connection which was disconnected is categorised as disconnected.
+// connection which was disconnected is categorized as disconnected.
 const (
 	ConnPending ConnState = iota
 	ConnFailing
@@ -416,7 +416,7 @@ func (cm *ConnManager) NewConnReq() {
 // connection request.
 func (cm *ConnManager) Connect(c *ConnReq) {
 	// During the time we wait for retry there is a chance that
-	// this connection was already cancelled.
+	// this connection was already canceled.
 	if c.State() == ConnCanceled {
 		cm.cfg.Log.Debugf("Ignoring connect for canceled connreq=%v", c)
 		return

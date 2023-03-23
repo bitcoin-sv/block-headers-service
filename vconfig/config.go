@@ -11,7 +11,7 @@ const (
 	// EnvDbMigrate flag specifying wheather to run migrations.
 	EnvDbMigrate        = "db.migrate"
 	// EnvResetDbOnStartup flag specifying wheather to clear db
-	// and start synchronisation from genesis header or start from last header in db.
+	// and start synchronization from genesis header or start from last header in db.
 	EnvResetDbOnStartup = "db.resetState"
 	// EnvDbFilePath path to db file.
 	EnvDbFilePath       = "db.dbFile.path"

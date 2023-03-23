@@ -368,7 +368,7 @@ func (sm *SyncManager) isSyncCandidate(peer *peerpkg.Peer) bool {
 	return true
 }
 
-// handleNewPeerMsg deals with new peers that have signalled they may
+// handleNewPeerMsg deals with new peers that have signaled they may
 // be considered as a sync peer (they have already successfully negotiated).  It
 // also starts syncing if needed.  It is invoked from the syncHandler goroutine.
 func (sm *SyncManager) handleNewPeerMsg(peer *peerpkg.Peer) {
@@ -379,7 +379,7 @@ func (sm *SyncManager) handleNewPeerMsg(peer *peerpkg.Peer) {
 
 	sm.log.Infof("New valid peer %s (%s)", peer, peer.UserAgent())
 
-	// Initialise the peer state
+	// Initialize the peer state
 	isSyncCandidate := sm.isSyncCandidate(peer)
 
 	sm.peerStates[peer] = &peerpkg.PeerSyncState{
@@ -443,7 +443,7 @@ func (sm *SyncManager) topBlock() int32 {
 	return sm.syncPeer.StartingHeight()
 }
 
-// handleDonePeerMsg deals with peers that have signalled they are done.  It
+// handleDonePeerMsg deals with peers that have signaled they are done.  It
 // removes the peer as a candidate for syncing and in the case where it was
 // the current sync peer, attempts to select a new best peer to sync from.  It
 // is invoked from the syncHandler goroutine.
@@ -931,7 +931,7 @@ func New(config *Config, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState) (*SyncM
 	}
 
 	if !config.DisableCheckpoints {
-		// Initialise the next checkpoint based on the current height.
+		// Initialize the next checkpoint based on the current height.
 		height := config.Services.Headers.GetTipHeight()
 		sm.nextCheckpoint = sm.findNextHeaderCheckpoint(height)
 		if sm.nextCheckpoint != nil {

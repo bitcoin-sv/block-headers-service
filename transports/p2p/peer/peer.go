@@ -717,7 +717,7 @@ func (p *Peer) ToPeerState() PeerState {
 // PushAddrMsg sends an addr message to the connected peer using the provided
 // addresses.  This function is useful over manually sending the message via
 // QueueMessage since it automatically limits the addresses to the maximum
-// number allowed by the message and randomises the chosen addresses when there
+// number allowed by the message and randomizes the chosen addresses when there
 // are too many.  It returns the addresses that were actually sent and no
 // message will be sent if there are no entries in the provided addresses slice.
 //
@@ -734,7 +734,7 @@ func (p *Peer) PushAddrMsg(addresses []*wire.NetAddress) ([]*wire.NetAddress, er
 	msg.AddrList = make([]*wire.NetAddress, addressCount)
 	copy(msg.AddrList, addresses)
 
-	// Randomise the addresses sent if there are more than the maximum allowed.
+	// Randomize the addresses sent if there are more than the maximum allowed.
 	if addressCount > wire.MaxAddrPerMsg {
 		// Shuffle the address list.
 		for i := 0; i < wire.MaxAddrPerMsg; i++ {
@@ -1137,7 +1137,7 @@ out:
 				}
 
 			case sccHandlerStart:
-				// Warn on unbalanced callback signalling.
+				// Warn on unbalanced callback signaling.
 				if handlerActive {
 					p.cfg.Log.Warn("Received handler start " +
 						"control command while a " +
@@ -1149,7 +1149,7 @@ out:
 				handlersStartTime = time.Now()
 
 			case sccHandlerDone:
-				// Warn on unbalanced callback signalling.
+				// Warn on unbalanced callback signaling.
 				if !handlerActive {
 					p.cfg.Log.Warn("Received handler done " +
 						"control command when a " +
@@ -1653,7 +1653,7 @@ func (p *Peer) shouldLogWriteError(err error) bool {
 }
 
 // outHandler handles all outgoing messages for the peer.  It must be run as a
-// goroutine.  It uses a buffered channel to serialise output messages while
+// goroutine.  It uses a buffered channel to serialize output messages while
 // allowing the sender to continue running asynchronously.
 func (p *Peer) outHandler() {
 out:

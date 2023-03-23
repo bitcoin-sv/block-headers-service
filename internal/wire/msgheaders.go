@@ -104,7 +104,7 @@ func (msg *MsgHeaders) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) 
 
 		// The wire protocol encoding always includes a 0 for the number
 		// of transactions on header messages.  This is really just an
-		// artefact of the way the original implementation serialises
+		// artifact of the way the original implementation serializes
 		// block headers, but it is required.
 		err = WriteVarInt(w, pver, 0)
 		if err != nil {

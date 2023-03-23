@@ -66,7 +66,7 @@ func (h *BlockHeader) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) e
 
 // BsvEncode encodes the receiver to w using the bitcoin protocol encoding.
 // This is part of the Message interface implementation.
-// See Serialise for encoding block headers to be stored to disk, such as in a
+// See Serialize for encoding block headers to be stored to disk, such as in a
 // database, as opposed to encoding block headers for the wire.
 func (h *BlockHeader) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) error {
 	return writeBlockHeader(w, h)
@@ -82,10 +82,10 @@ func (h *BlockHeader) Deserialize(r io.Reader) error {
 	return readBlockHeader(r, h)
 }
 
-// Serialise encodes a block header from r into the receiver using a format
+// Serialize encodes a block header from r into the receiver using a format
 // that is suitable for long-term storage such as a database while respecting
 // the Version field.
-func (h *BlockHeader) Serialise(w io.Writer) error {
+func (h *BlockHeader) Serialize(w io.Writer) error {
 	// At the current time, there is no difference between the wire encoding
 	// at protocol version 0 and the stable long-term storage format.  As
 	// a result, make use of writeBlockHeader.
@@ -118,7 +118,7 @@ func readBlockHeader(r io.Reader, bh *BlockHeader) error {
 		(*uint32Time)(&bh.Timestamp), &bh.Bits, &bh.Nonce)
 }
 
-// writeBlockHeader writes a bitcoin block header to w.  See Serialise for
+// writeBlockHeader writes a bitcoin block header to w.  See Serialize for
 // encoding block headers to be stored to disk, such as in a database, as
 // opposed to encoding for the wire.
 func writeBlockHeader(w io.Writer, bh *BlockHeader) error {

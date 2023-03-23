@@ -48,18 +48,18 @@ import (
 	"github.com/libsv/bitcoin-hc/internal/wire"
 )
 
-// defaultFlags specifies changes to the default logger behaviour.  It is set
+// defaultFlags specifies changes to the default logger behavior.  It is set
 // during package init and configured using the LOGFLAGS environment variable.
 // New logger backends can override these default flags using WithFlags.
 var defaultFlags uint32
 
 const (
-	// maxRejectReasonLen is the maximum length of a sanitised reject reason
+	// maxRejectReasonLen is the maximum length of a sanitized reject reason
 	// that will be logged.
 	maxRejectReasonLen = 250
 )
 
-// Flags to modify Backend's behaviour.
+// Flags to modify Backend's behavior.
 const (
 	// Llongfile modifies the logger output to include full path and line number
 	// of the logging callsite, e.g. /a/b/c/main.go:123.
@@ -165,7 +165,7 @@ type Backend struct {
 	flag uint32
 }
 
-// BackendOption is a function used to modify the behaviour of a Backend.
+// BackendOption is a function used to modify the behavior of a Backend.
 type BackendOption func(b *Backend)
 
 // WithFlags configures a Backend to use the specified flags rather than using
@@ -567,7 +567,7 @@ func sanitizeString(str string, maxLength uint) string {
 	return str
 }
 
-// MessageSummary returns a human-readable string which summarises a message.
+// MessageSummary returns a human-readable string which summarizes a message.
 // Not all messages have or need a summary.  This is used for debug logging.
 func MessageSummary(msg wire.Message) string {
 	switch msg := msg.(type) {

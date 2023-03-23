@@ -54,7 +54,7 @@ func (hs *HeaderService) LatestHeaderLocator() domains.BlockLocator {
 	return hs.blockLocator()
 }
 
-// IsCurrent checks if the headers are synchronised and up to date.
+// IsCurrent checks if the headers are synchronized and up to date.
 func (hs *HeaderService) IsCurrent() bool {
 	// Not current if the latest main (best) chain height is before the
 	// latest known good checkpoint (when checkpoints are enabled).

@@ -55,7 +55,7 @@ var (
 
 var (
 	// backendLog is the logging backend used to create all subsystem loggers.
-	// The backend must not be used before the log rotator has been initialised,
+	// The backend must not be used before the log rotator has been initialized,
 	// or data races and/or nil pointer dereferences will occur.
 	backendLog = p2plog.NewBackend(logWriter{})
 
@@ -113,7 +113,7 @@ type config struct {
 	OnionProxyUser            string        `long:"onionuser" description:"Username for onion proxy server"`
 	OnionProxyPass            string        `long:"onionpass" default-mask:"-" description:"Password for onion proxy server"`
 	NoOnion                   bool          `long:"noonion" description:"Disable connecting to tor hidden services"`
-	TorIsolation              bool          `long:"torisolation" description:"Enable Tor stream isolation by randomising user credentials for each connection."`
+	TorIsolation              bool          `long:"torisolation" description:"Enable Tor stream isolation by randomizing user credentials for each connection."`
 	TestNet3                  bool          `long:"testnet" description:"Use the test network"`
 	RegressionTest            bool          `long:"regtest" description:"Use the regression test network"`
 	SimNet                    bool          `long:"simnet" description:"Use the simulation test network"`
@@ -255,7 +255,7 @@ func newConfigParser(cfg *config, so *serviceOptions, options flags.Options) *fl
 	return parser
 }
 
-// LoadConfig initialises and parses the config using a config file and command
+// LoadConfig initializes and parses the config using a config file and command
 // line options.
 //
 // The configuration proceeds as follows:
@@ -446,7 +446,7 @@ func LoadConfig() error {
 	// Excessive blocksize cannot be set less than the default but it can be higher.
 	cfg.ExcessiveBlockSize = maxUint32(cfg.ExcessiveBlockSize, defaultExcessiveBlockSize)
 
-	// Prepend ExcessiveBlockSize signalling to the UserAgentComments
+	// Prepend ExcessiveBlockSize signaling to the UserAgentComments
 	cfg.UserAgentComments = append([]string{fmt.Sprintf("EB%.1f", float64(cfg.ExcessiveBlockSize)/1000000)}, cfg.UserAgentComments...)
 
 	// Look for illegal characters in the user agent comments.
@@ -663,7 +663,7 @@ func createDefaultConfigFile(destinationPath string) error {
 
 // BsvdDial connects to the address on the named network using the appropriate
 // dial function depending on the address and configuration options.  For
-// example, .onion addresses will be dialled using the onion specific proxy if
+// example, .onion addresses will be dialed using the onion specific proxy if
 // one was specified, but will otherwise use the normal dial function (which
 // could itself use a proxy or not).
 func BsvdDial(addr net.Addr) (net.Conn, error) {

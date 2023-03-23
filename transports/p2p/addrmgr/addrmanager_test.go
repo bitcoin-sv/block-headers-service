@@ -99,7 +99,7 @@ func lookupFunc(host string) ([]net.IP, error) {
 }
 
 func TestStartStop(t *testing.T) {
-	log := testlog.InitialiseMockLogger()
+	log := testlog.InitializeMockLogger()
 	n := addrmgr.New(lookupFunc, log)
 	n.Start()
 	n.Stop()
@@ -159,7 +159,7 @@ func TestAddLocalAddress(t *testing.T) {
 }
 
 func TestGetBestLocalAddress(t *testing.T) {
-	log := testlog.InitialiseMockLogger()
+	log := testlog.InitializeMockLogger()
 	localAddrs := []wire.NetAddress{
 		{IP: net.ParseIP("192.168.0.100")},
 		{IP: net.ParseIP("::1")},

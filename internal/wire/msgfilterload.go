@@ -18,13 +18,13 @@ const (
 	BloomUpdateNone BloomUpdateType = 0
 
 	// BloomUpdateAll indicates if the filter matches any data element in a
-	// public key script, the outpoint is serialised and inserted into the
+	// public key script, the outpoint is serialized and inserted into the
 	// filter.
 	BloomUpdateAll BloomUpdateType = 1
 
 	// BloomUpdateP2PubkeyOnly indicates if the filter matches a data
 	// element in a public key script and the script is of the standard
-	// pay-to-pubkey or multisig, the outpoint is serialised and inserted
+	// pay-to-pubkey or multisig, the outpoint is serialized and inserted
 	// into the filter.
 	BloomUpdateP2PubkeyOnly BloomUpdateType = 2
 )

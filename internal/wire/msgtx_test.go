@@ -426,7 +426,7 @@ func TestTxWireErrors(t *testing.T) {
 	}
 }
 
-// TestTxSerialize tests MsgTx serialise and deserialize.
+// TestTxSerialize tests MsgTx serialize and deserialize.
 func TestTxSerialize(t *testing.T) {
 	noTx := NewMsgTx(1)
 	noTx.Version = 1
@@ -440,7 +440,7 @@ func TestTxSerialize(t *testing.T) {
 	tests := []struct {
 		in           *MsgTx // Message to encode
 		out          *MsgTx // Expected decoded message
-		buf          []byte // Serialised data
+		buf          []byte // Serialized data
 		pkScriptLocs []int  // Expected output script locations
 	}{
 		// No transactions.
@@ -462,15 +462,15 @@ func TestTxSerialize(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		// Serialise the transaction.
+		// Serialize the transaction.
 		var buf bytes.Buffer
-		err := test.in.Serialise(&buf)
+		err := test.in.Serialize(&buf)
 		if err != nil {
-			t.Errorf("Serialise #%d error %v", i, err)
+			t.Errorf("Serialize #%d error %v", i, err)
 			continue
 		}
 		if !bytes.Equal(buf.Bytes(), test.buf) {
-			t.Errorf("Serialise #%d\n got: %s want: %s", i,
+			t.Errorf("Serialize #%d\n got: %s want: %s", i,
 				spew.Sdump(buf.Bytes()), spew.Sdump(test.buf))
 			continue
 		}
@@ -515,7 +515,7 @@ func TestTxSerialize(t *testing.T) {
 func TestTxSerializeErrors(t *testing.T) {
 	tests := []struct {
 		in       *MsgTx // Value to encode
-		buf      []byte // Serialised data
+		buf      []byte // Serialized data
 		max      int    // Max size of fixed buffer to induce errors
 		writeErr error  // Expected write error
 		readErr  error  // Expected read error
@@ -548,11 +548,11 @@ func TestTxSerializeErrors(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		// Serialise the transaction.
+		// Serialize the transaction.
 		w := newFixedWriter(test.max)
-		err := test.in.Serialise(w)
+		err := test.in.Serialize(w)
 		if err != test.writeErr {
-			t.Errorf("Serialise #%d wrong error got: %v, want: %v",
+			t.Errorf("Serialize #%d wrong error got: %v, want: %v",
 				i, err, test.writeErr)
 			continue
 		}
@@ -666,7 +666,7 @@ func TestTxOverflowErrors(t *testing.T) {
 	}
 }
 
-// TestTxSerializeSizeStripped performs tests to ensure the serialise size for
+// TestTxSerializeSizeStripped performs tests to ensure the serialize size for
 // various transactions is accurate.
 func TestTxSerializeSizeStripped(t *testing.T) {
 	// Empty tx message.
@@ -675,7 +675,7 @@ func TestTxSerializeSizeStripped(t *testing.T) {
 
 	tests := []struct {
 		in   *MsgTx // Tx to encode
-		size int    // Expected serialised size
+		size int    // Expected serialized size
 	}{
 		// No inputs or outpus.
 		{noTx, 10},

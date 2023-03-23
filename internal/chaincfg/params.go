@@ -651,7 +651,7 @@ func newHashFromStr(hexStr string) *chainhash.Hash {
 }
 
 func init() {
-	// Register all default networks when the package is initialised.
+	// Register all default networks when the package is initialized.
 	mustRegister(&MainNetParams)
 	mustRegister(&TestNet3Params)
 	mustRegister(&RegressionNetParams)

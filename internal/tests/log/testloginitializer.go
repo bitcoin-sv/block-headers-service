@@ -16,8 +16,8 @@ func (logWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-// InitialiseMockLogger initialise logger for tests.
-func InitialiseMockLogger() p2plog.Logger {
+// InitializeMockLogger initialize logger for tests.
+func InitializeMockLogger() p2plog.Logger {
 	backendLog := p2plog.NewBackend(logWriter{})
 	logger := backendLog.Logger("TEST_LOGGER")
 	return logger

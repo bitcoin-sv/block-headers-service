@@ -20,7 +20,7 @@ const (
 	MaxVarIntPayload = 9
 
 	// binaryFreeListMaxItems is the number of buffers to keep in the free
-	// list to use for binary serialisation and deserialization.
+	// list to use for binary serialization and deserialization.
 	binaryFreeListMaxItems = 1024
 )
 
@@ -37,7 +37,7 @@ var (
 // binaryFreeList defines a concurrent safe free list of byte slices (up to the
 // maximum number defined by the binaryFreeListMaxItems constant) that have a
 // cap of 8 (thus it supports up to a uint64).  It is used to provide temporary
-// buffers for serialising and deserializing primitive numbers to and from their
+// buffers for serializing and deserializing primitive numbers to and from their
 // binary encoding in order to greatly reduce the number of allocations
 // required.
 //
@@ -134,7 +134,7 @@ func (l binaryFreeList) PutUint8(w io.Writer, val uint8) error {
 	return err
 }
 
-// PutUint16 serialises the provided uint16 using the given byte order into a
+// PutUint16 serializes the provided uint16 using the given byte order into a
 // buffer from the free list and writes the resulting two bytes to the given
 // writer.
 func (l binaryFreeList) PutUint16(w io.Writer, byteOrder binary.ByteOrder, val uint16) error {
@@ -145,7 +145,7 @@ func (l binaryFreeList) PutUint16(w io.Writer, byteOrder binary.ByteOrder, val u
 	return err
 }
 
-// PutUint32 serialises the provided uint32 using the given byte order into a
+// PutUint32 serializes the provided uint32 using the given byte order into a
 // buffer from the free list and writes the resulting four bytes to the given
 // writer.
 func (l binaryFreeList) PutUint32(w io.Writer, byteOrder binary.ByteOrder, val uint32) error {
@@ -156,7 +156,7 @@ func (l binaryFreeList) PutUint32(w io.Writer, byteOrder binary.ByteOrder, val u
 	return err
 }
 
-// PutUint64 serialises the provided uint64 using the given byte order into a
+// PutUint64 serializes the provided uint64 using the given byte order into a
 // buffer from the free list and writes the resulting eight bytes to the given
 // writer.
 func (l binaryFreeList) PutUint64(w io.Writer, byteOrder binary.ByteOrder, val uint64) error {
@@ -167,7 +167,7 @@ func (l binaryFreeList) PutUint64(w io.Writer, byteOrder binary.ByteOrder, val u
 	return err
 }
 
-// binarySerializer provides a free list of buffers to use for serialising and
+// binarySerializer provides a free list of buffers to use for serializing and
 // deserializing primitive integer values to and from io.Readers and io.Writers.
 var binarySerializer binaryFreeList = make(chan []byte, binaryFreeListMaxItems)
 
@@ -533,7 +533,7 @@ func ReadVarInt(r io.Reader, pver uint32) (uint64, error) {
 	return rv, nil
 }
 
-// WriteVarInt serialises val to w using a variable number of bytes depending
+// WriteVarInt serializes val to w using a variable number of bytes depending
 // on its value.
 func WriteVarInt(w io.Writer, pver uint32, val uint64) error {
 	if val < 0xfd {
@@ -563,7 +563,7 @@ func WriteVarInt(w io.Writer, pver uint32, val uint64) error {
 	return binarySerializer.PutUint64(w, littleEndian, val)
 }
 
-// VarIntSerializeSize returns the number of bytes it would take to serialise
+// VarIntSerializeSize returns the number of bytes it would take to serialize
 // val as a variable length integer.
 func VarIntSerializeSize(val uint64) int {
 	// The value is small enough to be represented by itself, so it's
@@ -615,7 +615,7 @@ func ReadVarString(r io.Reader, pver uint32) (string, error) {
 	return string(buf), nil
 }
 
-// WriteVarString serialises str to w as a variable length integer containing
+// WriteVarString serializes str to w as a variable length integer containing
 // the length of the string followed by the bytes that represent the string
 // itself.
 func WriteVarString(w io.Writer, pver uint32, str string) error {
@@ -659,7 +659,7 @@ func ReadVarBytes(r io.Reader, pver uint32, maxAllowed uint32,
 	return b, nil
 }
 
-// WriteVarBytes serialises a variable length byte array to w as a varInt
+// WriteVarBytes serializes a variable length byte array to w as a varInt
 // containing the number of bytes, followed by the bytes themselves.
 func WriteVarBytes(w io.Writer, pver uint32, bytes []byte) error {
 	slen := uint64(len(bytes))

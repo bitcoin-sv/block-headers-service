@@ -24,7 +24,7 @@ type PeerNotifier interface {
 	BanPeer(sp *peer.Peer)
 }
 
-// Config is a configuration struct used to initialise a new SyncManager.
+// Config is a configuration struct used to initialize a new SyncManager.
 type Config struct {
 	Logger       p2plog.Logger
 	PeerNotifier PeerNotifier

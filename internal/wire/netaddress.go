@@ -120,7 +120,7 @@ func readNetAddress(r io.Reader, pver uint32, na *NetAddress, ts bool) error {
 	return nil
 }
 
-// writeNetAddress serialises a NetAddress to w depending on the protocol
+// writeNetAddress serializes a NetAddress to w depending on the protocol
 // version and whether or not the timestamp is included per ts.  Some messages
 // like version do not include the timestamp.
 func writeNetAddress(w io.Writer, pver uint32, na *NetAddress, ts bool) error {

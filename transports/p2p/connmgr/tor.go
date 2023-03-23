@@ -32,7 +32,7 @@ var (
 	ErrTorInvalidProxyResponse = errors.New("invalid proxy response")
 
 	// ErrTorUnrecognizedAuthMethod indicates the authentication method
-	// provided is not recognised.
+	// provided is not recognized.
 	ErrTorUnrecognizedAuthMethod = errors.New("invalid proxy authentication method")
 
 	torStatusErrors = map[byte]error{

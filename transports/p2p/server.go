@@ -118,7 +118,7 @@ type relayMsg struct {
 // updatePeerHeightsMsg is a message sent from the blockmanager to the server
 // after a new block has been accepted. The purpose of the message is to update
 // the heights of peers that were known to announce the block before we
-// connected it to the main chain or recognised it as an orphan. With these
+// connected it to the main chain or recognized it as an orphan. With these
 // updates, peer heights will be kept up to date, allowing for fresh data when
 // selecting sync peer candidacy.
 type updatePeerHeightsMsg struct {
@@ -289,7 +289,7 @@ func (sp *serverPeer) OnVersion(_ *peer.Peer, msg *wire.MsgVersion) *wire.MsgRej
 	configs.Log.Infof("[Server] msg.ProtocolVersion: %d", msg.ProtocolVersion)
 	// Update the address manager with the advertised services for outbound
 	// connections in case they have changed.  This is not done for inbound
-	// connections to help prevent malicious behaviour and is skipped when
+	// connections to help prevent malicious behavior and is skipped when
 	// running on the simulation test network since it is only intended to
 	// connect to specified peers and actively avoids advertising and
 	// connecting to discovered peers.
@@ -406,7 +406,7 @@ func (sp *serverPeer) OnGetHeaders(_ *peer.Peer, msg *wire.MsgGetHeaders) {
 	// provided locator are known.  This does mean the client will start
 	// over with the genesis block if unknown block locators are provided.
 	//
-	// This mirrors the behaviour in the reference implementation.
+	// This mirrors the behavior in the reference implementation.
 	headers := sp.server.syncManager.Services.Headers.LocateHeaders(msg.BlockLocatorHashes, &msg.HashStop)
 
 	// Send found headers to the requesting peer.
@@ -644,7 +644,7 @@ func (s *server) handleAddPeerMsg(state *peerState, sp *serverPeer) bool {
 	return true
 }
 
-// handleDonePeerMsg deals with peers that have signalled they are done.  It is
+// handleDonePeerMsg deals with peers that have signaled they are done.  It is
 // invoked from the peerHandler goroutine.
 func (s *server) handleDonePeerMsg(state *peerState, sp *serverPeer) {
 	var list map[int32]*serverPeer
@@ -924,7 +924,7 @@ func newPeerConfig(sp *serverPeer) *peer.Config {
 }
 
 // inboundPeerConnected is invoked by the connection manager when a new inbound
-// connection is established.  It initialises a new inbound server peer
+// connection is established.  It initializes a new inbound server peer
 // instance, associates it with the connection, and starts a goroutine to wait
 // for disconnection.
 func (s *server) inboundPeerConnected(conn net.Conn) {
@@ -937,7 +937,7 @@ func (s *server) inboundPeerConnected(conn net.Conn) {
 }
 
 // outboundPeerConnected is invoked by the connection manager when a new
-// outbound connection is established.  It initialises a new outbound server
+// outbound connection is established.  It initializes a new outbound server
 // peer instance, associates it with the relevant state such as the connection
 // request instance and the connection itself, and finally notifies the address
 // manager of the attempt.
@@ -1001,7 +1001,7 @@ func (s *server) peerHandler() {
 				// Bitcoind uses a lookup of the dns seeder here. This
 				// is rather strange since the values looked up by the
 				// DNS seed lookups will vary quite a lot.
-				// to replicate this behaviour we put all addresses as
+				// to replicate this behavior we put all addresses as
 				// having come from the first one.
 				s.addrManager.AddAddresses(addrs, addrs[0])
 			}, configs.Log)
@@ -1133,7 +1133,7 @@ func (s *server) NetTotals() (uint64, uint64) {
 }
 
 // UpdatePeerHeights updates the heights of all peers who have have announced
-// the latest connected main chain block, or a recognised orphan. These height
+// the latest connected main chain block, or a recognized orphan. These height
 // updates allow us to dynamically refresh peer heights, ensuring sync peer
 // selection has access to the latest block heights for each peer.
 func (s *server) UpdatePeerHeights(latestBlkHash *chainhash.Hash, latestHeight int32, updateSource *peer.Peer) {
@@ -1486,7 +1486,7 @@ func newServer(listenAddrs []string, chainParams *chaincfg.Params,
 	return &s, nil
 }
 
-// initListeners initialises the configured net listeners and adds any bound
+// initListeners initializes the configured net listeners and adds any bound
 // addresses to the address manager. Returns the listeners and a NAT interface,
 // which is non-nil if UPnP is in use.
 func initListeners(amgr *addrmgr.AddrManager, listenAddrs []string, services wire.ServiceFlag) ([]net.Listener, NAT, error) {

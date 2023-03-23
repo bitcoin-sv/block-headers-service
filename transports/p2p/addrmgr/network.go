@@ -40,7 +40,7 @@ var (
 	// by RFC4193 (FC00::/7).
 	rfc4193Net = ipNet("FC00::", 7, 128)
 
-	// rfc4380Net specifies the IPv6 teredo tunnelling over UDP address block
+	// rfc4380Net specifies the IPv6 teredo tunneling over UDP address block
 	// as defined by RFC4380 (2001::/32).
 	rfc4380Net = ipNet("2001::", 32, 128)
 
@@ -160,7 +160,7 @@ func IsRFC4193(na *wire.NetAddress) bool {
 }
 
 // IsRFC4380 returns whether or not the passed address is part of the IPv6
-// teredo tunnelling over UDP range as defined by RFC4380 (2001::/32).
+// teredo tunneling over UDP range as defined by RFC4380 (2001::/32).
 func IsRFC4380(na *wire.NetAddress) bool {
 	return rfc4380Net.Contains(na.IP)
 }

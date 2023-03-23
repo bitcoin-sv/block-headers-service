@@ -29,7 +29,7 @@ A quick overview of the major features peer provides are as follows:
     they see fit (proxies, etc)
   - User agent name and version
   - Bitcoin Cash network
-  - Service support signalling (full nodes, bloom filters, etc)
+  - Service support signaling (full nodes, bloom filters, etc)
   - Maximum supported protocol version
   - Ability to register callbacks for handling bitcoin cash protocol messages
   - Inventory message batching and send trickling with known inventory detection
@@ -115,7 +115,7 @@ send these message manually via QueueMessage, these helper functions provided
 additional useful functionality that is typically desired.
 
 For example, the PushAddrMsg function automatically limits the addresses to the
-maximum number allowed by the message and randomises the chosen addresses when
+maximum number allowed by the message and randomizes the chosen addresses when
 there are too many.  This allows the caller to simply provide a slice of known
 addresses, such as that returned by the addrmgr package, without having to worry
 about the details.

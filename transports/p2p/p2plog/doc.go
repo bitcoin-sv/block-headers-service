@@ -14,10 +14,10 @@ Backends can write to any io.Writer, including multi-writers created by
 io.MultiWriter.  Multi-writers allow log output to be written to many writers,
 including standard output and log files.
 
-Optional logging behaviour can be specified by using the LOGFLAGS environment
+Optional logging behavior can be specified by using the LOGFLAGS environment
 variable and overridden per-Backend by using the WithFlags call option. Multiple
 LOGFLAGS options can be specified, separated by commas.  The following options
-are recognised:
+are recognized:
 
 	longfile: Include the full filepath and line number in all log messages
 

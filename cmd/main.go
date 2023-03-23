@@ -58,7 +58,7 @@ func main() {
 	}
 
 	// Load configuration and parse command line.  This function also
-	// initialises logging and configures it accordingly.
+	// initializes logging and configures it accordingly.
 	err := configs.LoadConfig()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to load config: %v\n", err)

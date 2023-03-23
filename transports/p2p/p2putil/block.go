@@ -32,7 +32,7 @@ func (e OutOfRangeError) Error() string {
 // repeat the relatively expensive hashing operations.
 type Block struct {
 	msgBlock        *wire.MsgBlock  // Underlying MsgBlock
-	serializedBlock []byte          // Serialised bytes for the block
+	serializedBlock []byte          // Serialized bytes for the block
 	blockHash       *chainhash.Hash // Cached block hash
 	blockHeight     int32           // Height in the main block chain
 }
@@ -43,24 +43,24 @@ func (b *Block) MsgBlock() *wire.MsgBlock {
 	return b.msgBlock
 }
 
-// Bytes returns the serialised bytes for the Block.  This is equivalent to
-// calling Serialise on the underlying wire.MsgBlock, however it caches the
+// Bytes returns the serialized bytes for the Block.  This is equivalent to
+// calling Serialize on the underlying wire.MsgBlock, however it caches the
 // result so subsequent calls are more efficient.
 func (b *Block) Bytes() ([]byte, error) {
-	// Return the cached serialised bytes if it has already been generated.
+	// Return the cached serialized bytes if it has already been generated.
 	if len(b.serializedBlock) != 0 {
 		return b.serializedBlock, nil
 	}
 
-	// Serialise the MsgBlock.
+	// Serialize the MsgBlock.
 	w := bytes.NewBuffer(make([]byte, 0, b.msgBlock.SerializeSize()))
-	err := b.msgBlock.Serialise(w)
+	err := b.msgBlock.Serialize(w)
 	if err != nil {
 		return nil, err
 	}
 	serializedBlock := w.Bytes()
 
-	// Cache the serialised bytes and return them.
+	// Cache the serialized bytes and return them.
 	b.serializedBlock = serializedBlock
 	return serializedBlock, nil
 }
@@ -101,7 +101,7 @@ func NewBlock(msgBlock *wire.MsgBlock) *Block {
 }
 
 // NewBlockFromBytes returns a new instance of a bitcoin block given the
-// serialised bytes.  See Block.
+// serialized bytes.  See Block.
 func NewBlockFromBytes(serializedBlock []byte) (*Block, error) {
 	br := bytes.NewReader(serializedBlock)
 	b, err := NewBlockFromReader(br)
@@ -130,7 +130,7 @@ func NewBlockFromReader(r io.Reader) (*Block, error) {
 }
 
 // NewBlockFromBlockAndBytes returns a new instance of a bitcoin block given
-// an underlying wire.MsgBlock and the serialised bytes for it.  See Block.
+// an underlying wire.MsgBlock and the serialized bytes for it.  See Block.
 func NewBlockFromBlockAndBytes(msgBlock *wire.MsgBlock, serializedBlock []byte) *Block {
 	return &Block{
 		msgBlock:        msgBlock,

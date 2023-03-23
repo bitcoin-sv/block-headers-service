@@ -37,7 +37,7 @@ const (
 	// exists.
 	ErrDuplicateBlock ErrorCode = iota
 
-	// ErrBlockTooBig indicates the serialised block size exceeds the
+	// ErrBlockTooBig indicates the serialized block size exceeds the
 	// maximum allowed size.
 	ErrBlockTooBig
 
@@ -104,11 +104,11 @@ const (
 	ErrNoTxOutputs
 
 	// ErrTxTooBig indicates a transaction exceeds the maximum allowed size
-	// when serialised.
+	// when serialized.
 	ErrTxTooBig
 
 	// ErrTxTooSmall indicates a transaction is smaller than the minimum
-	// allowed size when serialised.
+	// allowed size when serialized.
 	ErrTxTooSmall
 
 	// ErrTxTooManySigOps indicates a transaction exceeds the maximum allowable
@@ -136,8 +136,8 @@ const (
 	// that has already been spent.
 	ErrSpentTxOut
 
-	// ErrUnfinalizedTx indicates a transaction has not been finalised.
-	// A valid block may only contain finalised transactions.
+	// ErrUnfinalizedTx indicates a transaction has not been finalized.
+	// A valid block may only contain finalized transactions.
 	ErrUnfinalizedTx
 
 	// ErrDuplicateTx indicates a block contains an identical transaction
@@ -183,11 +183,11 @@ const (
 	ErrBadCoinbaseValue
 
 	// ErrMissingCoinbaseHeight indicates the coinbase transaction for a
-	// block does not start with the serialised block block height as
+	// block does not start with the serialized block block height as
 	// required for version 2 and higher blocks.
 	ErrMissingCoinbaseHeight
 
-	// ErrBadCoinbaseHeight indicates the serialised block height in the
+	// ErrBadCoinbaseHeight indicates the serialized block height in the
 	// coinbase transaction for version 2 and higher blocks does not match
 	// the expected value.
 	ErrBadCoinbaseHeight
@@ -215,7 +215,7 @@ const (
 	// for block proposals submitted via getblocktemplate RPC.
 	ErrPrevBlockNotBest
 
-	// ErrBlockTooSmall indicates the serialised block size is less than the
+	// ErrBlockTooSmall indicates the serialized block size is less than the
 	// minimum allowed size. This consensus rule currently only applies to
 	// the first block after the Uahf.
 	ErrBlockTooSmall

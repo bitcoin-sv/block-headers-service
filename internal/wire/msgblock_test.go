@@ -258,12 +258,12 @@ func TestBlockWireErrors(t *testing.T) {
 	}
 }
 
-// TestBlockSerialize tests MsgBlock serialise and deserialize.
+// TestBlockSerialize tests MsgBlock serialize and deserialize.
 func TestBlockSerialize(t *testing.T) {
 	tests := []struct {
 		in     *MsgBlock // Message to encode
 		out    *MsgBlock // Expected decoded message
-		buf    []byte    // Serialised data
+		buf    []byte    // Serialized data
 		txLocs []TxLoc   // Expected transaction locations
 	}{
 		{
@@ -276,15 +276,15 @@ func TestBlockSerialize(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		// Serialise the block.
+		// Serialize the block.
 		var buf bytes.Buffer
-		err := test.in.Serialise(&buf)
+		err := test.in.Serialize(&buf)
 		if err != nil {
-			t.Errorf("Serialise #%d error %v", i, err)
+			t.Errorf("Serialize #%d error %v", i, err)
 			continue
 		}
 		if !bytes.Equal(buf.Bytes(), test.buf) {
-			t.Errorf("Serialise #%d\n got: %s want: %s", i,
+			t.Errorf("Serialize #%d\n got: %s want: %s", i,
 				spew.Sdump(buf.Bytes()), spew.Sdump(test.buf))
 			continue
 		}
@@ -330,7 +330,7 @@ func TestBlockSerialize(t *testing.T) {
 func TestBlockSerializeErrors(t *testing.T) {
 	tests := []struct {
 		in       *MsgBlock // Value to encode
-		buf      []byte    // Serialised data
+		buf      []byte    // Serialized data
 		max      int       // Max size of fixed buffer to induce errors
 		writeErr error     // Expected write error
 		readErr  error     // Expected read error
@@ -355,11 +355,11 @@ func TestBlockSerializeErrors(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		// Serialise the block.
+		// Serialize the block.
 		w := newFixedWriter(test.max)
-		err := test.in.Serialise(w)
+		err := test.in.Serialize(w)
 		if err != test.writeErr {
-			t.Errorf("Serialise #%d wrong error got: %v, want: %v",
+			t.Errorf("Serialize #%d wrong error got: %v, want: %v",
 				i, err, test.writeErr)
 			continue
 		}
@@ -454,7 +454,7 @@ func TestBlockOverflowErrors(t *testing.T) {
 	}
 }
 
-// TestBlockSerializeSize performs tests to ensure the serialise size for
+// TestBlockSerializeSize performs tests to ensure the serialize size for
 // various blocks is accurate.
 func TestBlockSerializeSize(t *testing.T) {
 	// Block with no transactions.
@@ -462,7 +462,7 @@ func TestBlockSerializeSize(t *testing.T) {
 
 	tests := []struct {
 		in   *MsgBlock // Block to encode
-		size int       // Expected serialised size
+		size int       // Expected serialized size
 	}{
 		// Block with no transactions.
 		{noTxBlock, 81},
@@ -541,7 +541,7 @@ var blockOne = MsgBlock{
 	},
 }
 
-// Block one serialised bytes.
+// Block one serialized bytes.
 var blockOneBytes = []byte{
 	0x01, 0x00, 0x00, 0x00, // Version 1
 	0x6f, 0xe2, 0x8c, 0x0a, 0xb6, 0xf1, 0xb3, 0x72,

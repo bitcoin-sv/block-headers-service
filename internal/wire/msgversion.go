@@ -131,7 +131,7 @@ func (msg *MsgVersion) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) 
 	}
 
 	// There was no relay transactions field before BIP0037Version, but
-	// the default behaviour prior to the addition of the field was to always
+	// the default behavior prior to the addition of the field was to always
 	// relay transactions.
 	if buf.Len() > 0 {
 		// It's safe to ignore the error here since the buffer has at
