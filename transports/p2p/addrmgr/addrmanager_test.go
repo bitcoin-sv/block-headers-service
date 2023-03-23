@@ -142,7 +142,8 @@ func TestAddLocalAddress(t *testing.T) {
 			true,
 		},
 	}
-	amgr := addrmgr.New(nil, nil)
+	log := testlog.InitializeMockLogger()
+	amgr := addrmgr.New(nil, log)
 	for x, test := range tests {
 		result := amgr.AddLocalAddress(&test.address, test.priority)
 		if result == nil && !test.valid {
