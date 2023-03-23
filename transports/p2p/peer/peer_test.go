@@ -16,10 +16,9 @@ import (
 	"github.com/btcsuite/go-socks/socks"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
+	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
 	"github.com/libsv/bitcoin-hc/internal/wire"
 	"github.com/libsv/bitcoin-hc/transports/p2p/peer"
-
-	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
 )
 
 // fixedExcessiveBlockSize should not be the default -we want to ensure it will work in all cases.
@@ -707,7 +706,6 @@ func TestOutboundPeer(t *testing.T) {
 // Tests that the node disconnects from peers with an unsupported protocol
 // version.
 func TestUnsupportedVersionPeer(t *testing.T) {
-
 	log := testlog.InitializeMockLogger()
 	peerCfg := &peer.Config{
 		UserAgentName:          "peer",
@@ -830,7 +828,7 @@ func TestDuplicateVersionMsg(t *testing.T) {
 		ChainParams:            &chaincfg.MainNetParams,
 		Services:               0,
 		TstAllowSelfConnection: true,
-		Log:					log,
+		Log:                    log,
 	}
 	inConn, outConn := pipe(
 		&conn{laddr: "10.0.0.1:9108", raddr: "10.0.0.2:9108"},
