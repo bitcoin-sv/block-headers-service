@@ -1,0 +1,32 @@
+name: "Release Draft"
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  release-draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: git fetch --force --tags
+      - uses: actions/setup-go@v4
+        with:
+          go-version: stable
+      - name: OSXCross for CGO Support
+        run: |
+          mkdir -p $OSX_GCC_HOME
+          git clone https://github.com/plentico/osxcross-target.git $OSX_GCC_HOME
+        env:
+          OSX_GCC_HOME: /home/runner/work/osxcross/target
+      - uses: goreleaser/goreleaser-action@v4
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean --skip-docker
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OSX_GCC_BIN: /home/runner/work/osxcross/target/bin

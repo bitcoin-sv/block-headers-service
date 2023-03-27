@@ -1,0 +1,67 @@
+project_name: headers-client
+env:
+  - DOCKERHUB_USERNAME={{ if index .Env "DOCKERHUB_USERNAME"  }}{{ .Env.DOCKERHUB_USERNAME }}{{ else }}4chainstudiopulse{{ end }}
+  - OSX={{ if index .Env "OSX"  }}{{ .Env.OSX }}{{ else }}false{{ end }}
+
+before:
+  hooks:
+    - go mod tidy
+builds:
+  -
+    main: ./cmd/main.go
+    env:
+#      Look for compiler here: https://github.com/goreleaser/goreleaser-cross#supported-toolchainsplatforms
+      - CGO_ENABLED=1
+      - CC_darwin_arm64={{ OSX_GCC_BIN }}{{- if eq .Env.OSX "true" }}gcc{{ else }}oa64-clang{{ end }}
+      - CC_linux_amd64=x86_64-linux-musl-gcc
+      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+
+    ignore:
+      - goos: darwin
+        goarch: amd64
+      - goos: linux
+        goarch: arm64
+
+
+dockers:
+  - image_templates:
+      - "{{ .Env.DOCKERHUB_USERNAME }}/{{ .ProjectName }}:latest"
+      - "{{ .Env.DOCKERHUB_USERNAME }}/{{ .ProjectName }}:{{ .Version }}-{{ .ShortCommit }}"
+      - "{{ .Env.DOCKERHUB_USERNAME }}/{{ .ProjectName }}:{{ .Tag }}"
+      - "{{ .Env.DOCKERHUB_USERNAME }}/{{ .ProjectName }}:v{{ .Major }}"
+      - "{{ .Env.DOCKERHUB_USERNAME }}/{{ .ProjectName }}:v{{ .Major }}.{{ .Minor }}"
+    goos: linux
+    goarch: amd64
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--platform=linux/amd64"
+    dockerfile: Dockerfile.releaser
+    extra_files:
+      - data/sql/migrations/
+
+checksum:
+  name_template: 'checksums.txt'
+release:
+  name_template: "Release v{{.Version}}"
+  draft: true
+  replace_existing_draft: true
+  target_commitish: '{{ .Commit }}'
+  mode: append
+snapshot:
+  name_template: "{{ incminor .Version }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
