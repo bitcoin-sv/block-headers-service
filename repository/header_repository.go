@@ -120,6 +120,7 @@ func (r *HeaderRepository) GetTip() (*domains.BlockHeader, error) {
 	return header, err
 }
 
+// GetAncestorOnHeight provides ancestor for a hash on a specified height.
 func (r *HeaderRepository) GetAncestorOnHeight(hash string, height int32) (*domains.BlockHeader, error) {
 	bh, err := r.db.GetAncestorOnHeight(hash, height)
 	if err == nil {
@@ -128,6 +129,7 @@ func (r *HeaderRepository) GetAncestorOnHeight(hash string, height int32) (*doma
 	return nil, err
 }
 
+// GetAllTips returns all tips from db.
 func (r *HeaderRepository) GetAllTips() ([]*domains.BlockHeader, error) {
 	tips, err := r.db.GetAllTips()
 	if err == nil {
@@ -136,6 +138,7 @@ func (r *HeaderRepository) GetAllTips() ([]*domains.BlockHeader, error) {
 	return nil, err
 }
 
+// GetChainBetweenTwoHashes calculates and returnes chain between 2 hashes.
 func (r *HeaderRepository) GetChainBetweenTwoHashes(low string, high string) ([]*domains.BlockHeader, error) {
 	dbHeaders, err := r.db.GetChainBetweenTwoHashes(low, high)
 	if err == nil {

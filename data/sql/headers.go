@@ -372,6 +372,7 @@ func (h *HeadersDb) GetTip(ctx context.Context) (*domains.DbBlockHeader, error) 
 	return &tip[0], nil
 }
 
+// GetAncestorOnHeight provides ancestor for a hash on a specified height.
 func (h *HeadersDb) GetAncestorOnHeight(hash string, height int32) (*domains.DbBlockHeader, error) {
     var bh []*domains.DbBlockHeader
     if err := h.db.Select(&bh, h.db.Rebind(sqlSelectAncestorOnHeight), hash, int(height), int(height)); err != nil {
@@ -386,6 +387,7 @@ func (h *HeadersDb) GetAncestorOnHeight(hash string, height int32) (*domains.DbB
     return bh[0], nil
 }
 
+// GetAllTips returns all tips from db.
 func (h *HeadersDb) GetAllTips() ([]*domains.DbBlockHeader, error) {
 	var bh []*domains.DbBlockHeader
 	if err := h.db.Select(&bh, sqlSelectTips); err != nil {
@@ -394,6 +396,7 @@ func (h *HeadersDb) GetAllTips() ([]*domains.DbBlockHeader, error) {
 	return bh, nil
 }
 
+// GetChainBetweenTwoHashes calculates and returnes chain between 2 hashes.
 func (h *HeadersDb) GetChainBetweenTwoHashes(low string, high string) ([]*domains.DbBlockHeader, error) {
 	var bh []*domains.DbBlockHeader
 	if err := h.db.Select(&bh, h.db.Rebind(sqlChainBetweenTwoHashes), high, low, low); err != nil {

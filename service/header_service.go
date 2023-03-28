@@ -263,7 +263,7 @@ func (hs *HeaderService) LatestHeaderLocator() domains.BlockLocator {
 	return locator
 }
 
-// GetHeightByHash calculates height by hash
+// GetHeightByHash calculates height by hash.
 func (hs *HeaderService) GetHeightByHash(hash *chainhash.Hash) (int32, error) {
 	bh, err := hs.repo.Headers.GetHeaderByHash(hash.String())
 	if err != nil {
