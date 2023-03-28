@@ -428,12 +428,12 @@ func (hs *HeaderService) CalculateConfirmations(originHeader *domains.BlockHeade
 }
 
 // GetTips returns slice with current tips.
-func (s *HeaderService) GetTips() ([]*domains.BlockHeader, error) {
-	return s.repo.Headers.GetAllTips()
+func (hs *HeaderService) GetTips() ([]*domains.BlockHeader, error) {
+	return hs.repo.Headers.GetAllTips()
 }
 
-// PruneTip used to prune whole fork based on a tip - TO BE IMPLEMENTED.
-func (s *HeaderService) GetPruneTip() (string, error) {
+// GetPruneTip used to prune whole fork based on a tip - TO BE IMPLEMENTED.
+func (hs *HeaderService) GetPruneTip() (string, error) {
 	return "", nil
 }
 
