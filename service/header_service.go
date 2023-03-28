@@ -147,7 +147,7 @@ func (hs *HeaderService) GetHeaderAncestorsByHash(hash string, ancestorHash stri
 
 // GetCommonAncestors returns first ancestor for given slice of hashes.
 func (hs *HeaderService) GetCommonAncestors(hashes []string) (*domains.BlockHeader, error) {
-	var headers []*domains.BlockHeader
+	headers := make([]*domains.BlockHeader, 0, len(hashes) + 1)
     height := int32(math.MaxInt32)
 
     for _, hash := range hashes {
@@ -427,10 +427,12 @@ func (hs *HeaderService) CalculateConfirmations(originHeader *domains.BlockHeade
 	return conf
 }
 
+// GetTips returns slice with current tips.
 func (s *HeaderService) GetTips() ([]*domains.BlockHeader, error) {
 	return s.repo.Headers.GetAllTips()
 }
 
+// PruneTip used to prune whole fork based on a tip - TO BE IMPLEMENTED.
 func (s *HeaderService) GetPruneTip() (string, error) {
 	return "", nil
 }
