@@ -187,7 +187,7 @@ func (hs *HeaderService) GetHeadersState(hash string) (*domains.BlockHeaderState
 
 	state := domains.BlockHeaderState{
 		Header:        *header,
-		State:         "LONGEST_CHAIN",
+		State:         header.State.String(),
 		Height:        header.Height,
 		ChainWork:     header.Chainwork,
 		Confirmations: hs.CalculateConfirmations(header),

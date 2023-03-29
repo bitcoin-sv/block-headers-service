@@ -16,6 +16,7 @@ import (
 	"github.com/btcsuite/go-socks/socks"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
+	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
 	"github.com/libsv/bitcoin-hc/internal/wire"
 	"github.com/libsv/bitcoin-hc/transports/p2p/peer"
 )
@@ -168,6 +169,7 @@ func testPeer(t *testing.T, p *peer.Peer, s peerStats) {
 
 // TestPeerConnection tests connection between inbound and outbound peers.
 func TestPeerConnection(t *testing.T) {
+	log := testlog.InitializeMockLogger()
 	verack := make(chan struct{})
 	peer1Cfg := &peer.Config{
 		Listeners: peer.MessageListeners{
@@ -189,6 +191,7 @@ func TestPeerConnection(t *testing.T) {
 		Services:               0,
 		TrickleInterval:        time.Second * 10,
 		TstAllowSelfConnection: true,
+		Log:                    log,
 	}
 	peer2Cfg := &peer.Config{
 		Listeners:              peer1Cfg.Listeners,
@@ -199,6 +202,7 @@ func TestPeerConnection(t *testing.T) {
 		Services:               wire.SFNodeNetwork,
 		TrickleInterval:        time.Second * 10,
 		TstAllowSelfConnection: true,
+		Log:                    log,
 	}
 
 	wantStats1 := peerStats{
@@ -306,6 +310,7 @@ func TestPeerConnection(t *testing.T) {
 
 // TestPeerListeners tests that the peer listeners are called as expected.
 func TestPeerListeners(t *testing.T) {
+	log := testlog.InitializeMockLogger()
 	verack := make(chan struct{}, 1)
 	ok := make(chan wire.Message, 20)
 	peerCfg := &peer.Config{
@@ -400,6 +405,7 @@ func TestPeerListeners(t *testing.T) {
 		Services:               wire.SFNodeBloom,
 		TrickleInterval:        time.Second * 10,
 		TstAllowSelfConnection: true,
+		Log:                    log,
 	}
 	inConn, outConn := pipe(
 		&conn{raddr: "10.0.0.1:8333"},
@@ -553,6 +559,7 @@ func TestPeerListeners(t *testing.T) {
 // TestOutboundPeer tests that the outbound peer works as expected.
 func TestOutboundPeer(t *testing.T) {
 
+	log := testlog.InitializeMockLogger()
 	peerCfg := &peer.Config{
 		NewestBlock: func() (*chainhash.Hash, int32, error) {
 			return nil, 0, errors.New("newest block not found")
@@ -564,6 +571,7 @@ func TestOutboundPeer(t *testing.T) {
 		Services:               0,
 		TrickleInterval:        time.Second * 10,
 		TstAllowSelfConnection: true,
+		Log:                    log,
 	}
 
 	r, w := io.Pipe()
@@ -698,6 +706,7 @@ func TestOutboundPeer(t *testing.T) {
 // Tests that the node disconnects from peers with an unsupported protocol
 // version.
 func TestUnsupportedVersionPeer(t *testing.T) {
+	log := testlog.InitializeMockLogger()
 	peerCfg := &peer.Config{
 		UserAgentName:          "peer",
 		UserAgentVersion:       "1.0",
@@ -706,6 +715,7 @@ func TestUnsupportedVersionPeer(t *testing.T) {
 		Services:               0,
 		TrickleInterval:        time.Second * 10,
 		TstAllowSelfConnection: true,
+		Log:                    log,
 	}
 
 	localNA := wire.NewNetAddressIPPort(
@@ -805,6 +815,7 @@ func TestUnsupportedVersionPeer(t *testing.T) {
 func TestDuplicateVersionMsg(t *testing.T) {
 	// Create a pair of peers that are connected to each other using a fake
 	// connection.
+	log := testlog.InitializeMockLogger()
 	verack := make(chan struct{})
 	peerCfg := &peer.Config{
 		Listeners: peer.MessageListeners{
@@ -817,6 +828,7 @@ func TestDuplicateVersionMsg(t *testing.T) {
 		ChainParams:            &chaincfg.MainNetParams,
 		Services:               0,
 		TstAllowSelfConnection: true,
+		Log:                    log,
 	}
 	inConn, outConn := pipe(
 		&conn{laddr: "10.0.0.1:9108", raddr: "10.0.0.2:9108"},

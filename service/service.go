@@ -1,21 +1,22 @@
 package service
 
 import (
+	"github.com/libsv/bitcoin-hc/configs"
 	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/wire"
 	"github.com/libsv/bitcoin-hc/repository"
 	peerpkg "github.com/libsv/bitcoin-hc/transports/p2p/peer"
 )
 
-// Network is a interface which represents methods required for Network service.
+// Network is an interface which represents methods required for Network service.
 type Network interface {
 	GetPeers() []peerpkg.PeerState
 	GetPeersCount() int
 }
 
-
-// Headers is a interface which represents methods required for Headers service.
+// Headers is an interface which represents methods required for Headers service.
 type Headers interface {
 	AddHeader(h domains.BlockHeader, blocksToConfirmFork int) error
 	FindPreviousHeader(headerHash string) *domains.BlockHeader
@@ -35,7 +36,12 @@ type Headers interface {
 	GetHeadersState(hash string) (*domains.BlockHeaderState, error)
 }
 
-// Tip is a interface which represents methods required for Tip service.
+// Chains is an interface which represents methods exposed by Chains Service.
+type Chains interface {
+	Add(domains.BlockHeaderSource) (*domains.BlockHeader, error)
+}
+
+// Tip is an interface which represents methods required for Tip service.
 type Tip interface {
 	GetTips() ([]domains.BlockHeaderState, error)
 	PruneTip() (string, error)
@@ -47,12 +53,14 @@ type Services struct {
 	Network Network
 	Headers Headers
 	Tip     Tip
+	Chains  Chains
 }
 
-// Dept is a struct used to create Services. 
+// Dept is a struct used to create Services.
 type Dept struct {
 	Peers        map[*peerpkg.Peer]*peerpkg.PeerSyncState
 	Repositories *repository.Repositories
+	Params       *chaincfg.Params
 }
 
 // NewServices creates and returns Services instance.
@@ -61,6 +69,11 @@ func NewServices(d Dept) *Services {
 		Network: NewNetworkService(d.Peers),
 		Headers: NewHeaderService(d.Repositories),
 		Tip:     NewTipService(d.Repositories),
+		Chains: NewChainsService(ChainServiceDependencies{
+			Repositories: d.Repositories,
+			Params:       d.Params,
+			Logger:       configs.Log,
+			BlockHasher:  DefaultBlockHasher(),
+		}),
 	}
-
 }

@@ -18,6 +18,45 @@ func CalcWork(bits uint32) *big.Int {
 	return new(big.Int).Div(oneLsh256, denominator)
 }
 
+// ChainWork representation of the blockchain work for given block.
+type ChainWork uint64
+
+// Uint64 return uint64 representation of chain work.
+func (cw *ChainWork) Uint64() uint64 {
+	return uint64(*cw)
+}
+
+// CalculateWork calculate ChainWork based on provided bits.
+func CalculateWork(bits uint32) ChainWork {
+	return ChainWork(uint64(CalcWork(bits).Int64()))
+}
+
+// CumulatedChainWork representation of the cumulated blockchain work.
+type CumulatedChainWork big.Int
+
+// CumulatedChainWorkOf represents big.Int as CumulatedChainWork.
+func CumulatedChainWorkOf(v big.Int) *CumulatedChainWork {
+	ccv := CumulatedChainWork(v)
+	return &ccv
+}
+
+// BigInt return big.Int representation of CumulatedChainWork.
+func (ccw *CumulatedChainWork) BigInt() *big.Int {
+	if ccw != nil {
+		v := big.Int(*ccw)
+		return &v
+	}
+	return big.NewInt(0)
+}
+
+// Add returns a CumulatedChainWork as a sum of previous CumulatedChainWork and provided ChainWork.
+func (ccw *CumulatedChainWork) Add(cw ChainWork) CumulatedChainWork {
+	work := ccw.BigInt()
+	sum := big.NewInt(0)
+	sum = sum.Add(new(big.Int).SetUint64(cw.Uint64()), work)
+	return CumulatedChainWork(*sum)
+}
+
 // CompactToBig  takes a compact representation of a 256-bit number used in Bitcoin,
 // converts it to a big.Int, and returns the resulting big.Int value.
 func CompactToBig(compact uint32) *big.Int {

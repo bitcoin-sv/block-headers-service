@@ -93,6 +93,7 @@ func main() {
 	hs := service.NewServices(service.Dept{
 		Repositories: repo,
 		Peers:        peers,
+		Params:       configs.ActiveNetParams.Params,
 	})
 	p2pServer, err := p2p.NewServer(hs, peers)
 	if err != nil {
@@ -108,6 +109,7 @@ func main() {
 	go func() {
 		err := httpServer.Run()
 		if err != nil {
+			configs.Log.Errorf("cannot start server because of an error: %v", err)
 			os.Exit(1)
 		}
 	}()
@@ -137,6 +139,7 @@ func runDatabase(vconfig *vconfig.Config) *sqlx.DB {
 	db, err := databases.NewDbSetup().
 		SetupDb(vconfig.Db)
 	if err != nil {
+		configs.Log.Errorf("cannot setup database, because of error %v", err)
 		os.Exit(1)
 	}
 	return db
