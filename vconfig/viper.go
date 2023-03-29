@@ -21,6 +21,8 @@ func (c *Config) WithDb() *Config {
 	viper.SetDefault(EnvDbDsn, "file:./data/blockheaders.db?_foreign_keys=true&pooling=true")
 	viper.SetDefault(EnvDbSchema, "./data/sql/migrations")
 	viper.SetDefault(EnvDbMigrate, true)
+	viper.SetDefault(EnvPreparedDb, true)
+	viper.SetDefault(EnvPreparedDbFilePath, "./data/blockheaders.xz")
 	c.Db = &Db{
 		Type:       DbType(viper.GetString(EnvDb)),
 		Dsn:        viper.GetString(EnvDbDsn),

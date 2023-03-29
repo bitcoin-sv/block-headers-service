@@ -7,12 +7,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"runtime"
 	"runtime/debug"
-
 	"syscall"
+
+	"github.com/ulikunitz/xz"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/libsv/bitcoin-hc/configs"
@@ -34,12 +36,26 @@ import (
 const resetDbStateEnv = "db.resetState"
 const dbFileEnv = "db.dbFile.path"
 const appname = "headers"
+const preparedDb = "db.preparedDb"
+const preparedDbFilePath = "db.preparedDbFile.path"
 
 func main() {
 	vconfig := vconfig.NewViperConfig(appname).
 		WithDb()
 
 	freshDbIfConfigured()
+
+	// Unzip prepared db file if configured.
+	if viper.GetBool(preparedDb) {
+		err := os.Remove(viper.GetString(dbFileEnv))
+		if err != nil {
+			fmt.Println("Failed to remove old db file")
+		}
+		err = unzip(viper.GetString(preparedDbFilePath), viper.GetString(dbFileEnv))
+		if err != nil {
+			fmt.Println("Failed to unzip prepared db file")
+		}
+	}
 
 	db := runDatabase(vconfig)
 	// Use all processor cores.
@@ -135,4 +151,36 @@ func fileExists(filename string) bool {
 		return false
 	}
 	return !info.IsDir()
+}
+
+func unzip(src, dest string) error {
+	fmt.Println("Unzipping file: " + src + " to " + dest)
+	// Open the compressed file for reading
+	f, err := os.Open(src) //nolint:gosec //variable is taken from config
+	if err != nil {
+		return fmt.Errorf("failed to open file: %w", err)
+	}
+	defer f.Close() //nolint:all
+
+	// Create a new file for writing the uncompressed data
+	out, err := os.Create(dest) //nolint:gosec //variable is taken from config
+	if err != nil {
+		return fmt.Errorf("failed to create file: %w", err)
+	}
+	defer out.Close() //nolint:all
+
+	// Create an xz reader to uncompress the data
+	r, err := xz.NewReader(f)
+	if err != nil {
+		return fmt.Errorf("failed to create xz reader: %w", err)
+	}
+
+	// Copy the uncompressed data to the output file
+	_, err = io.Copy(out, r)
+	if err != nil {
+		return fmt.Errorf("failed to copy data: %w", err)
+	}
+
+	fmt.Println("DB file extracted successfully")
+	return nil
 }

@@ -247,9 +247,8 @@ func (sm *SyncManager) startSync() {
 		}
 	} else if len(okPeers) > 0 {
 		randInt, err := rand.Int(rand.Reader, big.NewInt(int64(len(okPeers))))
-
 		if err == nil {
-			bestPeer = bestPeers[int(randInt.Int64())]
+			bestPeer = okPeers[int(randInt.Int64())]
 		}
 	}
 
@@ -902,9 +901,8 @@ func New(config *Config, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState) (*SyncM
 		// Initialize the next checkpoint based on the current height.
 		height := config.Services.Headers.GetTipHeight()
 		sm.nextCheckpoint = sm.findNextHeaderCheckpoint(height)
-		if sm.nextCheckpoint != nil {
-			sm.headersFirstMode = false
-			sm.startHeader = nil
+		if sm.nextCheckpoint == nil {
+			sm.headersFirstMode = true
 		}
 	} else {
 		sm.log.Info("Checkpoints are disabled")

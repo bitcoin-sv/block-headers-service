@@ -3,18 +3,22 @@ package vconfig
 // Define basic db config.
 const (
 	// EnvDb db type e.g. sqlite.
-	EnvDb               = "db.type"
+	EnvDb               	= "db.type"
 	// EnvDbSchema path to db migration files.
-	EnvDbSchema         = "db.schema.path"
+	EnvDbSchema         	= "db.schema.path"
 	// EnvDbDsn data source name.
-	EnvDbDsn            = "db.dsn"
+	EnvDbDsn            	= "db.dsn"
 	// EnvDbMigrate flag specifying wheather to run migrations.
-	EnvDbMigrate        = "db.migrate"
+	EnvDbMigrate        	= "db.migrate"
 	// EnvResetDbOnStartup flag specifying wheather to clear db
 	// and start synchronization from genesis header or start from last header in db.
-	EnvResetDbOnStartup = "db.resetState"
+	EnvResetDbOnStartup 	= "db.resetState"
 	// EnvDbFilePath path to db file.
-	EnvDbFilePath       = "db.dbFile.path"
+	EnvDbFilePath       	= "db.dbFile.path"
+	// EnvPreparedDb flag specifying wheather to use prepared db.
+	EnvPreparedDb			= "db.preparedDb"
+	// EnvPreparedDbFilePath path to prepared db file.
+	EnvPreparedDbFilePath 	= "db.preparedDbFile.path"
 )
 
 // DbType database type.
