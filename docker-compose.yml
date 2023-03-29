@@ -12,4 +12,4 @@ services:
       - DB_SCHEMA_PATH=/migrations
     restart: unless-stopped
     volumes:
-      - ~/data/p2p-headers:/data
+      - ./p2p-headers-data:/data
