@@ -1,0 +1,10 @@
+# syntax=docker/dockerfile:1
+
+FROM --platform=$TARGETPLATFORM ubuntu:22.04
+
+WORKDIR /app
+
+COPY ./data data
+COPY ./headers-client .
+
+ENTRYPOINT "./headers-client"
