@@ -10,7 +10,7 @@ require (
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/kr/pretty v0.3.1
-	github.com/magiconair/properties v1.8.1
+	github.com/magiconair/properties v1.8.7
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.7.0
