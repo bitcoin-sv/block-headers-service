@@ -43,8 +43,6 @@ func main() {
 	vconfig := vconfig.NewViperConfig(appname).
 		WithDb()
 
-	freshDbIfConfigured()
-
 	// Unzip prepared db file if configured.
 	if viper.GetBool(preparedDb) {
 		err := os.Remove(viper.GetString(dbFileEnv))
@@ -53,9 +51,11 @@ func main() {
 		}
 		err = unzip(viper.GetString(preparedDbFilePath), viper.GetString(dbFileEnv))
 		if err != nil {
-			fmt.Println("Failed to unzip prepared db file")
+			fmt.Println("Failed to unzip prepared db file - ", err)
 		}
 	}
+
+	freshDbIfConfigured()
 
 	db := runDatabase(vconfig)
 	// Use all processor cores.
