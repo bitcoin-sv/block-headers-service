@@ -552,7 +552,7 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 			continue
 		}
 
-		sm.logSyncState(i, *h)
+		sm.logSyncState(i)
 
 		// Verify the header at the next checkpoint height matches.
 		var err error
@@ -623,17 +623,10 @@ func (sm *SyncManager) requestForNextHeaderBatch(prevHash *chainhash.Hash, peer 
 }
 
 // TODO: Consider removing this method after finishing devleopment.
-func (sm *SyncManager) logSyncState(i int, h domains.BlockHeader) {
+func (sm *SyncManager) logSyncState(i int) {
 	length := sm.Services.Headers.CountHeaders()
 	if math.Mod(float64(length), 1000) == 0 || length > 760000 {
 		sm.log.Infof("[Manager][%d] sm.headerList.Len()    : %#v", i, length)
-	}
-	if length > 762595 {
-		sm.log.Infof("[Manager][%d] -------------------", i)
-		sm.log.Infof("[Manager][%d] sm.headerList.Len()    : %#v", i, length)
-		sm.log.Infof("[Manager][%d] node.hash              : %#v", i, h.Hash)
-		sm.log.Infof("[Manager][%d] node.height            : %#v", i, h.Height)
-		sm.log.Infof("[Manager][%d] prevNode.hash          : %#v", i, h.PreviousBlock)
 	}
 }
 
