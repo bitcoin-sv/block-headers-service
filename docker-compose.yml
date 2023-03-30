@@ -8,8 +8,6 @@ services:
       - "8080:8080"
       - "8333:8333"
     environment:
-      - DB_DSN=file:/data/blockheaders.db?_foreign_keys=true&pooled=true
-      - DB_SCHEMA_PATH=/migrations
+      - DB_PREPAREDDB=true
+      - DB_PREPAREDDBFILE_PATH=./data/blockheaders.xz
     restart: unless-stopped
-    volumes:
-      - ~/data/p2p-headers:/data

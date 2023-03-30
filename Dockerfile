@@ -4,8 +4,6 @@ ENV GOPATH=/
 COPY ./ ./
 
 RUN go mod download
-RUN go build -o p2p-headers ./cmd/
+RUN go build -o pulse ./cmd/
 
-COPY ./data/sql/migrations/ /migrations
-
-CMD ["./p2p-headers"]
+CMD ["./pulse"]
