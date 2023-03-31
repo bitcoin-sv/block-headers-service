@@ -528,7 +528,7 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 	// previous and that checkpoints match.
 	receivedCheckpoint := false
 	var finalHash *chainhash.Hash
-	for i, blockHeader := range msg.Headers {
+	for _, blockHeader := range msg.Headers {
 		h, addErr := sm.Services.Chains.Add(domains.BlockHeaderSource(*blockHeader))
 
 		if service.BlockRejected.Is(addErr) {
@@ -552,7 +552,7 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 			continue
 		}
 
-		sm.logSyncState(i)
+		sm.logSyncState(h.Height)
 
 		// Verify the header at the next checkpoint height matches.
 		var err error
@@ -623,10 +623,9 @@ func (sm *SyncManager) requestForNextHeaderBatch(prevHash *chainhash.Hash, peer 
 }
 
 // TODO: Consider removing this method after finishing devleopment.
-func (sm *SyncManager) logSyncState(i int) {
-	length := sm.Services.Headers.CountHeaders()
-	if math.Mod(float64(length), 1000) == 0 || length > 760000 {
-		sm.log.Infof("[Manager][%d] sm.headerList.Len()    : %#v", i, length)
+func (sm *SyncManager) logSyncState(height int32) {
+	if math.Mod(float64(height), 1000) == 0 || height > 760000 {
+		sm.log.Infof("[Manager] Synced height: %d", height)
 	}
 }
 

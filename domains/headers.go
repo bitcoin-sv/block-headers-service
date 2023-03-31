@@ -117,8 +117,10 @@ func CreateHeader(hash *BlockHash, bs *BlockHeaderSource, ph *BlockHeader) Block
 	var state HeaderState
 	if ph.IsOrphan() {
 		state = Orphan
-	} else {
+	} else if ph.IsLongestChain() {
 		state = LongestChain
+	} else {
+		state = Stale
 	}
 
 	return BlockHeader{

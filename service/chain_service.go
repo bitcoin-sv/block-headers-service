@@ -61,7 +61,9 @@ func (cs *chainService) Add(bs domains.BlockHeaderSource) (*domains.BlockHeader,
 			return nil, HeaderCreationFail.causedBy(&err)
 		}
 
-		if tip.CumulatedWork.Cmp(h.CumulatedWork) > 0 {
+		if tip.CumulatedWork.Cmp(h.CumulatedWork) < 0 {
+			h.State = domains.LongestChain
+		} else {
 			h.State = domains.Stale
 		}
 	}
@@ -80,14 +82,17 @@ func (cs *chainService) hasConcurrentHeaderFromLongestChain(h *domains.BlockHead
 	if h.IsOrphan() {
 		return false
 	}
-	oh, _ := cs.Headers.GetHeaderByHeight(h.Height)
-	ph, _ := cs.Repositories.Headers.GetHeaderByHash(h.PreviousBlock.String())
-	return (oh != nil && oh.IsLongestChain()) || ph.State == domains.Stale
+	if h.IsLongestChain() {
+		oh, _ := cs.Headers.GetHeaderByHeight(h.Height)
+		return oh != nil && oh.IsLongestChain()
+	}
+	return true
 }
 
 // switchChainsStates marking chain connected to given block as longest chain
 // and concurrent part of (currently) "longest chain" as STALE.
 func (cs *chainService) switchChainsStates(h *domains.BlockHeader) error {
+	cs.log.Warnf("Promoting currently stale chain to be LONGEST chain ending on header %s", h.Hash)
 	headerStaleChain, err := cs.stalePartOfChainOf(h)
 	if err != nil {
 		return ChainUpdateFail.causedBy(&err)
