@@ -33,7 +33,7 @@ func (r *HeaderRepository) UpdateState(hashes []chainhash.Hash, state domains.He
 
 // GetHeaderByHeight returns header from db by given height.
 func (r *HeaderRepository) GetHeaderByHeight(height int32) (*domains.BlockHeader, error) {
-	bh, err := r.db.GetHeaderByHeight(context.Background(), height)
+	bh, err := r.db.GetHeaderByHeight(context.Background(), height, string(domains.LongestChain))
 	if err == nil {
 		return bh.ToBlockHeader(), nil
 	}
