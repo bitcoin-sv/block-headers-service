@@ -340,7 +340,7 @@ func (h *HeadersDb) GenesisExists(ctx context.Context) bool {
 // CalculateConfirmations will calculate number of confirmations for header with given hash.
 func (h *HeadersDb) CalculateConfirmations(ctx context.Context, hash string) (int, error) {
 	var amount int
-	if err := h.db.Select(&amount, h.db.Rebind(sqlCalculateConfirmations), hash); err != nil {
+	if err := h.db.GetContext(ctx, &amount, h.db.Rebind(sqlCalculateConfirmations), hash); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, errors.Errorf("header with %s hash does not exist", hash)
 		}
