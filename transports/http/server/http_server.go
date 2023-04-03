@@ -20,8 +20,8 @@ func NewHttpServer(port int, handler http.Handler) *HttpServer {
 		httpServer: &http.Server{
 			Addr:         ":" + fmt.Sprint(port),
 			Handler:      handler,
-			ReadTimeout:  5 * time.Second,
-			WriteTimeout: 5 * time.Second,
+			ReadTimeout:  10 * time.Second,
+			WriteTimeout: 10 * time.Second,
 		},
 	}
 }
