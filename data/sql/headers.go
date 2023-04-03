@@ -6,7 +6,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/libsv/bitcoin-hc/configs"
-	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/libsv/bitcoin-hc/repository/domains"
 	"github.com/libsv/bitcoin-hc/vconfig"
 	"github.com/pkg/errors"
 )
@@ -196,30 +196,6 @@ func (h *HeadersDb) Create(ctx context.Context, req domains.DbBlockHeader) error
 	return errors.Wrap(tx.Commit(), "failed to commit tx")
 }
 
-// CreateBatch will add a batch of records to the data store.
-func (h *HeadersDb) CreateBatch(ctx context.Context, req []*domains.BlockHeader) error {
-	tx, err := h.db.BeginTxx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = tx.Rollback()
-	}()
-	for i := 0; i < len(req); i += 1000 {
-		if i+1000 > len(req) {
-			if _, err = tx.NamedExecContext(ctx, h.sqls[h.dbType][insertBH], req[i:]); err != nil {
-				return errors.Wrap(err, "failed to bulk insert headers")
-			}
-			break
-		}
-		if _, err = tx.NamedExecContext(ctx, h.sqls[h.dbType][insertBH], req[i:i+100]); err != nil {
-			return errors.Wrap(err, "failed to bulk insert headers")
-		}
-	}
-
-	return errors.Wrap(tx.Commit(), "failed to commit tx")
-}
-
 // UpdateState will update state of headers of hashes to given state.
 func (h *HeadersDb) UpdateState(ctx context.Context, hashes []string, state string) error {
 	tx, err := h.db.BeginTxx(ctx, nil)
@@ -238,18 +214,6 @@ func (h *HeadersDb) UpdateState(ctx context.Context, hashes []string, state stri
 		return errors.Wrapf(err, "failed to update headers state to %s", state)
 	}
 	return errors.Wrap(tx.Commit(), "failed to commit tx")
-}
-
-// Header will return a single block header by blockhash.
-func (h *HeadersDb) Header(ctx context.Context, args domains.HeaderArgs) (*domains.DbBlockHeader, error) {
-	var bh domains.DbBlockHeader
-	if err := h.db.GetContext(ctx, &bh, h.db.Rebind(sqlHeader), args.Blockhash); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("could not find blockhash")
-		}
-		return nil, errors.Wrapf(err, "failed to get blockhash using hash %s", args.Blockhash)
-	}
-	return &bh, nil
 }
 
 // Height will return the current highest block height we have stored in the db.

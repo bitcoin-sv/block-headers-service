@@ -39,15 +39,6 @@ func (r *HeaderTestRepository) GetHeaderByHeight(height int32) (*domains.BlockHe
 	return nil, errors.New("could not find height")
 }
 
-// GetBlockByHash returns header from db by given arguments.
-func (r *HeaderTestRepository) GetBlockByHash(args domains.HeaderArgs) (*domains.BlockHeader, error) {
-	header := findHeader(args.Blockhash, r.db)
-	if header != nil {
-		return header, nil
-	}
-	return nil, errors.New("could not find blockhash")
-}
-
 // GetHeaderByHeightRange returns headers from db in specified height range.
 func (r *HeaderTestRepository) GetHeaderByHeightRange(from int, to int) ([]*domains.BlockHeader, error) {
 	filteredHeaders := make([]*domains.BlockHeader, 0)
