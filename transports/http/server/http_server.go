@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/libsv/bitcoin-hc/configs"
+	"github.com/spf13/viper"
 )
 
 // HttpServer represents server http.
@@ -20,8 +21,8 @@ func NewHttpServer(port int, handler http.Handler) *HttpServer {
 		httpServer: &http.Server{
 			Addr:         ":" + fmt.Sprint(port),
 			Handler:      handler,
-			ReadTimeout:  10 * time.Second,
-			WriteTimeout: 10 * time.Second,
+			ReadTimeout:  time.Duration(viper.GetInt("http.server.readTimeout")) * time.Second,
+			WriteTimeout: time.Duration(viper.GetInt("http.server.writeTimeout")) * time.Second,
 		},
 	}
 }
@@ -30,7 +31,6 @@ func NewHttpServer(port int, handler http.Handler) *HttpServer {
 func (s *HttpServer) Run() error {
 	return s.httpServer.ListenAndServe()
 }
-
 
 // Shutdown is used to stop http server.
 func (s *HttpServer) Shutdown(ctx context.Context) error {

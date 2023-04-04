@@ -10,6 +10,7 @@ import (
 func NewViperConfig(appname string) *Config {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	setHttpServerDefaults()
 	return &Config{}
 }
 
@@ -30,4 +31,11 @@ func (c *Config) WithDb() *Config {
 		MigrateDb:  viper.GetBool(EnvDbMigrate),
 	}
 	return c
+}
+
+// setHttpServerDefaults sets default values for http server.
+func setHttpServerDefaults() {
+	viper.SetDefault(EnvHttpServerReadTimeout, 10)
+	viper.SetDefault(EnvHttpServerWriteTimeout, 10)
+	viper.SetDefault(EnvHttpServerPort, 8080)
 }

@@ -21,6 +21,16 @@ const (
 	EnvPreparedDbFilePath 	= "db.preparedDbFile.path"
 )
 
+// Define basic http server config.
+const (
+	// EnvHttpServerReadTimeout http server read timeout.
+	EnvHttpServerReadTimeout  = "http.server.readTimeout"
+	// EnvHttpServerWriteTimeout http server write timeout.
+	EnvHttpServerWriteTimeout = "http.server.writeTimeout"
+	// EnvHttpServerPort http server port.
+	EnvHttpServerPort         = "http.server.port"
+)
+
 // DbType database type.
 type DbType string
 
