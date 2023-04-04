@@ -6,7 +6,7 @@ import (
 
 	"github.com/libsv/bitcoin-hc/data/sql"
 	"github.com/libsv/bitcoin-hc/domains"
-	rDomains "github.com/libsv/bitcoin-hc/repository/domains"
+	dto "github.com/libsv/bitcoin-hc/repository/dto"
 )
 
 // HeaderRepository provide access to repositories and implements methods for headers.
@@ -16,7 +16,7 @@ type HeaderRepository struct {
 
 // AddHeaderToDatabase adds new header to db.
 func (r *HeaderRepository) AddHeaderToDatabase(header domains.BlockHeader) error {
-	dbHeader := rDomains.ToDbBlockHeader(header)
+	dbHeader := dto.ToDbBlockHeader(header)
 	err := r.db.Create(context.Background(), dbHeader)
 	return err
 }
@@ -45,7 +45,7 @@ func (r *HeaderRepository) GetHeaderByHeight(height int32) (*domains.BlockHeader
 func (r *HeaderRepository) GetHeaderByHeightRange(from int, to int) ([]*domains.BlockHeader, error) {
 	dbHeaders, err := r.db.GetHeaderByHeightRange(from, to)
 	if err == nil {
-		return rDomains.ConvertToBlockHeader(dbHeaders), nil
+		return dto.ConvertToBlockHeader(dbHeaders), nil
 	}
 	return nil, err
 }
@@ -54,7 +54,7 @@ func (r *HeaderRepository) GetHeaderByHeightRange(from int, to int) ([]*domains.
 func (r *HeaderRepository) GetLongestChainHeadersFromHeight(height int32) ([]*domains.BlockHeader, error) {
 	dbHeaders, err := r.db.GetLongestChainHeadersFromHeight(height)
 	if err == nil {
-		return rDomains.ConvertToBlockHeader(dbHeaders), nil
+		return dto.ConvertToBlockHeader(dbHeaders), nil
 	}
 	return nil, err
 }
@@ -63,7 +63,7 @@ func (r *HeaderRepository) GetLongestChainHeadersFromHeight(height int32) ([]*do
 func (r *HeaderRepository) GetStaleChainHeadersBackFrom(hash string) ([]*domains.BlockHeader, error) {
 	dbHeaders, err := r.db.GetStaleHeadersBackFrom(hash)
 	if err == nil {
-		return rDomains.ConvertToBlockHeader(dbHeaders), nil
+		return dto.ConvertToBlockHeader(dbHeaders), nil
 	}
 	return nil, err
 }
@@ -134,7 +134,7 @@ func (r *HeaderRepository) GetAncestorOnHeight(hash string, height int32) (*doma
 func (r *HeaderRepository) GetAllTips() ([]*domains.BlockHeader, error) {
 	tips, err := r.db.GetAllTips()
 	if err == nil {
-		return rDomains.ConvertToBlockHeader(tips), nil
+		return dto.ConvertToBlockHeader(tips), nil
 	}
 	return nil, err
 }
@@ -143,7 +143,7 @@ func (r *HeaderRepository) GetAllTips() ([]*domains.BlockHeader, error) {
 func (r *HeaderRepository) GetChainBetweenTwoHashes(low string, high string) ([]*domains.BlockHeader, error) {
 	dbHeaders, err := r.db.GetChainBetweenTwoHashes(low, high)
 	if err == nil {
-		return rDomains.ConvertToBlockHeader(dbHeaders), nil
+		return dto.ConvertToBlockHeader(dbHeaders), nil
 	}
 	return nil, err
 }

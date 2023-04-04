@@ -1,4 +1,4 @@
-package domains
+package dto
 
 import (
 	"math/big"
