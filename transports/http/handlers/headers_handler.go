@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/libsv/bitcoin-hc/transports/http/domains"
+	headers "github.com/libsv/bitcoin-hc/transports/http"
 )
 
 // getHeaderByHash godoc.
@@ -20,10 +20,10 @@ import (
 //	@Param hash path string true "Requested Header Hash"
 func (h *Handler) getHeaderByHash(c *gin.Context) {
 	hash := c.Param("hash")
-	header, err := h.services.Headers.GetHeaderByHash(hash)
+	bh, err := h.services.Headers.GetHeaderByHash(hash)
 
 	if err == nil {
-		c.JSON(http.StatusOK, domains.MapToBlockHeaderReponse(*header))
+		c.JSON(http.StatusOK, headers.MapToBlockHeaderReponse(*bh))
 	} else {
 		c.JSON(http.StatusBadRequest, err.Error())
 	}
@@ -49,9 +49,9 @@ func (h *Handler) getHeaderByHeight(c *gin.Context) {
 		if err2 != nil {
 			countInt = 1
 		}
-		headers, err := h.services.Headers.GetHeadersByHeight(heightInt, countInt)
+		bh, err := h.services.Headers.GetHeadersByHeight(heightInt, countInt)
 		if err == nil {
-			c.JSON(http.StatusOK, domains.MapToBlockHeadersReponse(headers))
+			c.JSON(http.StatusOK, headers.MapToBlockHeadersReponse(bh))
 		} else {
 			c.JSON(http.StatusBadRequest, err.Error())
 		}
@@ -76,7 +76,7 @@ func (h *Handler) getHeaderAncestorsByHash(c *gin.Context) {
 	ancestors, err := h.services.Headers.GetHeaderAncestorsByHash(hash, ancestorHash)
 
 	if err == nil {
-		c.JSON(http.StatusOK, domains.MapToBlockHeadersReponse(ancestors))
+		c.JSON(http.StatusOK, headers.MapToBlockHeadersReponse(ancestors))
 	} else {
 		c.JSON(http.StatusBadRequest, err.Error())
 	}
@@ -99,7 +99,7 @@ func (h *Handler) getCommonAncestors(c *gin.Context) {
 		ancestor, err := h.services.Headers.GetCommonAncestors(body)
 
 		if err == nil {
-			c.JSON(http.StatusOK, domains.MapToBlockHeaderReponse(*ancestor))
+			c.JSON(http.StatusOK, headers.MapToBlockHeaderReponse(*ancestor))
 		} else {
 			c.JSON(http.StatusBadRequest, err.Error())
 		}
@@ -117,19 +117,11 @@ func (h *Handler) getCommonAncestors(c *gin.Context) {
 //	@Param hash path string true "Requested Header Hash"
 func (h *Handler) getHeadersState(c *gin.Context) {
 	hash := c.Param("hash")
-	header, err := h.services.Headers.GetHeaderByHash(hash)
+	bh, err := h.services.Headers.GetHeaderByHash(hash)
 
 	if err == nil {
-		confirmations := h.services.Headers.CalculateConfirmations(header)
-		// h.services.Headers.CalculateConfirmations(header)
-		// fmt.Println("confirmations")
-		// fmt.Println(confirmations)
-		// time.Sleep(4 * time.Second)
-		headerStateResponse := domains.MapToBlockHeaderStateReponse(*header, confirmations)
-		// headerStateResponse := domains.MapToBlockHeaderStateReponse(*header, 0)
-		// fmt.Println("headerStateResponse")
-		// fmt.Println(headerStateResponse)
-		// jb, _ := json.Marshal(headerStateResponse)
+		confirmations := h.services.Headers.CalculateConfirmations(bh)
+		headerStateResponse := headers.MapToBlockHeaderStateReponse(*bh, confirmations)
 		c.JSON(http.StatusOK, headerStateResponse)
 	} else {
 		c.JSON(http.StatusBadRequest, err.Error())

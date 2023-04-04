@@ -1,4 +1,4 @@
-package domains
+package http
 
 import (
 	"math/big"

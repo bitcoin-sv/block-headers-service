@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/libsv/bitcoin-hc/transports/http/domains"
+	headers "github.com/libsv/bitcoin-hc/transports/http"
 )
 
 // GetTips godoc.
@@ -19,7 +19,7 @@ func (h *Handler) getTips(c *gin.Context) {
 	tips, err := h.services.Headers.GetTips()
 
 	if err == nil {
-		c.JSON(http.StatusOK, domains.MapToBlockHeadersReponse(tips))
+		c.JSON(http.StatusOK, headers.MapToBlockHeadersReponse(tips))
 	} else {
 		c.JSON(http.StatusBadRequest, err.Error())
 	}
