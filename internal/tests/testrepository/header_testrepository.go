@@ -44,9 +44,9 @@ func (r *HeaderTestRepository) GetHeaderByHeight(height int32) (*domains.BlockHe
 func (r *HeaderTestRepository) GetHeaderByHeightRange(from int, to int) ([]*domains.BlockHeader, error) {
 	filteredHeaders := make([]*domains.BlockHeader, 0)
 
-	for _, header := range *r.db {
+	for i, header := range *r.db {
 		if header.Height >= int32(from) && header.Height <= int32(to) {
-			filteredHeaders = append(filteredHeaders, &header)
+			filteredHeaders = append(filteredHeaders, &(*r.db)[i])
 		}
 	}
 
@@ -170,16 +170,16 @@ func (r *HeaderTestRepository) GetAncestorOnHeight(hash string, height int32) (*
 
 // GetAllTips returns all tips from db.
 func (r *HeaderTestRepository) GetAllTips() ([]*domains.BlockHeader, error) {
-	prevHashes := make([]string, len(*r.db))
+	prevHashes := make([]string, 0)
 	tips := make([]*domains.BlockHeader, 0)
 
 	for _, h := range *r.db {
 		prevHashes = append(prevHashes, h.PreviousBlock.String())
 	}
 
-	for _, h := range *r.db {
+	for i, h := range *r.db {
 		if !contains(prevHashes, h.Hash.String()) {
-			tips = append(tips, &h)
+			tips = append(tips, &(*r.db)[i])
 		}
 	}
 
