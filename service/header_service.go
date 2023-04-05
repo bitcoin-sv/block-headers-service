@@ -25,11 +25,6 @@ func NewHeaderService(repo *repository.Repositories) *HeaderService {
 	}
 }
 
-// AddHeader used to pass BlockHeader to repository which will add it to db.
-func (hs *HeaderService) AddHeader(h domains.BlockHeader, blocksToConfirmFork int) error {
-	return hs.repo.Headers.AddHeaderToDatabase(h)
-}
-
 // FindPreviousHeader returns previous header for the header with given hash.
 func (hs *HeaderService) FindPreviousHeader(headerHash string) *domains.BlockHeader {
 	h, err := hs.repo.Headers.GetPreviousHeader(headerHash)

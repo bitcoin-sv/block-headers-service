@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/tests/assert"
 	"github.com/libsv/bitcoin-hc/internal/tests/testrepository"
 	"github.com/libsv/bitcoin-hc/repository"
@@ -12,15 +13,6 @@ import (
 type testData struct {
 	db *[]domains.BlockHeader
 	hs *Services
-}
-
-var blocksToConfirmFork = 4
-
-func TestAddHeader(t *testing.T) {
-	tData := setUpServices()
-	tData.hs.Headers.AddHeader(createFifthHeader(), blocksToConfirmFork)
-
-	assert.Equal(t, len(*tData.db), 6)
 }
 
 func TestGetHeadersByHeight(t *testing.T) {
@@ -106,7 +98,8 @@ func TestCountHeaders(t *testing.T) {
 	count := tData.hs.Headers.CountHeaders()
 	assert.Equal(t, count, 5)
 
-	tData.hs.Headers.AddHeader(createFifthHeader(), blocksToConfirmFork)
+	fifthHeader := createHeader(5, *testrepository.FifthHash, *testrepository.FourthHash)
+	*tData.db = append(*tData.db, fifthHeader)
 
 	count = tData.hs.Headers.CountHeaders()
 	assert.Equal(t, count, 6)
@@ -121,7 +114,8 @@ func TestGetTipAndGetTipHeight(t *testing.T) {
 	assert.Equal(t, tip.Height, 4)
 	assert.Equal(t, tip.Height, tipHeight)
 
-	tData.hs.Headers.AddHeader(createFifthHeader(), blocksToConfirmFork)
+	fifthHeader := createHeader(5, *testrepository.FifthHash, *testrepository.FourthHash)
+	*tData.db = append(*tData.db, fifthHeader)
 
 	tip = tData.hs.Headers.GetTip()
 	tipHeight = tData.hs.Headers.GetTipHeight()
@@ -246,7 +240,8 @@ func TestGetAllTips(t *testing.T) {
 	assert.Equal(t, len(tips), 1)
 
 	//Check tip with fork
-	tData.hs.Headers.AddHeader(createFork(), blocksToConfirmFork)
+	forkHeader := createHeader(4, *testrepository.SixthHash, *testrepository.FifthHash)
+	*tData.db = append(*tData.db, forkHeader)
 	tips, _ = tData.hs.Headers.GetTips()
 	assert.Equal(t, len(tips), 2)
 }
@@ -269,20 +264,11 @@ func setUpServices() *testData {
 	}
 }
 
-func createFifthHeader() domains.BlockHeader {
+func createHeader(height int32, hash chainhash.Hash, prevBlock chainhash.Hash) domains.BlockHeader {
 	return domains.BlockHeader{
-		Height:        5,
-		Hash:          *testrepository.FifthHash,
-		PreviousBlock: *testrepository.FourthHash,
-		Chainwork:     4295032833,
-	}
-}
-
-func createFork() domains.BlockHeader {
-	return domains.BlockHeader{
-		Height:        4,
-		Hash:          *testrepository.SixthHash,
-		PreviousBlock: *testrepository.FifthHash,
+		Height:        height,
+		Hash:          hash,
+		PreviousBlock: prevBlock,
 		Chainwork:     4295032833,
 	}
 }

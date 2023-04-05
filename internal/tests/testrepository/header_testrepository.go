@@ -188,9 +188,9 @@ func (r *HeaderTestRepository) GetAllTips() ([]*domains.BlockHeader, error) {
 
 // GetChainBetweenTwoHashes returns all headers between two hashes.
 func (r *HeaderTestRepository) GetChainBetweenTwoHashes(low string, high string) ([]*domains.BlockHeader, error) {
-	h1 := findHeader(low, *r.db)
-	h2 := findHeader(high, *r.db)
-	headers, err := r.GetHeaderByHeightRange(int(h1.Height), int(h2.Height))
+	hLow := findHeader(low, *r.db)
+	hHigh := findHeader(high, *r.db)
+	headers, err := r.GetHeaderByHeightRange(int(hLow.Height), int(hHigh.Height))
 	if err != nil {
 		return nil, err
 	}
