@@ -119,7 +119,7 @@ func (hs *HeaderService) GetHeaderAncestorsByHash(hash string, ancestorHash stri
 	ancestorHeader, err2 := hs.repo.Headers.GetHeaderByHash(ancestorHash)
 
 	// Check possible errors
-	if err != nil && err2 != nil {
+	if err != nil || err2 != nil {
 		return nil, errors.New("error during getting headers with given hashes")
 	} else if ancestorHeader.Height > reqHeader.Height {
 		return nil, errors.New("ancestor header height can not be higher than requested header heght")
@@ -142,7 +142,7 @@ func (hs *HeaderService) GetHeaderAncestorsByHash(hash string, ancestorHash stri
 	if err == nil {
 		return headers, nil
 	}
-	return nil, nil
+	return nil, err
 }
 
 // GetCommonAncestors returns first ancestor for given slice of hashes.

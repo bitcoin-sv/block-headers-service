@@ -280,12 +280,14 @@ func assertHeaderInState(t *testing.T, h *domains.BlockHeader, s domains.HeaderS
 
 func givenChainWithOnlyGenesisBlockInRepository() (repository.Repositories, *domains.BlockHeader) {
 	db, tip := testrepository.StartingChain()
-	return testrepository.NewTestRepositories(db), tip
+	return testrepository.NewTestRepositories(&db), tip
 }
 
 func givenLongestChainInRepository() (repository.Repositories, *domains.BlockHeader) {
 	db, tip := testrepository.LongestChain()
-	return testrepository.NewTestRepositories(db), tip
+
+	var array []domains.BlockHeader = db
+	return testrepository.NewTestRepositories(&array), tip
 }
 
 func givenOrphanChainInRepository(r *repository.Repositories) *domains.BlockHeader {
