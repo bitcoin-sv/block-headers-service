@@ -1,4 +1,3 @@
-project_name: headers-client
 env:
   - DOCKERHUB_USERNAME={{ if index .Env "DOCKERHUB_USERNAME"  }}{{ .Env.DOCKERHUB_USERNAME }}{{ else }}libsv{{ end }}
   - DOCKERHUB_REPONAME={{ if index .Env "DOCKERHUB_REPONAME"  }}{{ .Env.DOCKERHUB_REPONAME }}{{ else }}{{ .ProjectName }}{{ end }}
@@ -50,9 +49,14 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--platform=linux/amd64"
+      - "--build-arg=project_name={{.ProjectName}}"
+      - "--build-arg=version={{.Version}}"
+      - "--build-arg=gh_repository={{ .Env.GITHUB_REPOSITORY }}"
     dockerfile: Dockerfile.releaser
     extra_files:
       - data/sql/migrations/
+      - entrypoint.sh
+      - ./artifacts/README.DOCKER.md
   - goos: linux
     goarch: arm64
     image_templates:
@@ -69,9 +73,14 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--platform=linux/arm64/v8"
+      - "--build-arg=project_name={{.ProjectName}}"
+      - "--build-arg=version={{.Version}}"
+      - "--build-arg=gh_repository={{ .Env.GITHUB_REPOSITORY }}"
     dockerfile: Dockerfile.releaser
     extra_files:
       - data/sql/migrations/
+      - entrypoint.sh
+      - ./artifacts/README.DOCKER.md
 
 docker_manifests:
   - name_template: "{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:latest"

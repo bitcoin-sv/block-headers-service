@@ -2,9 +2,24 @@
 
 FROM --platform=$TARGETPLATFORM ubuntu:22.04
 
+RUN apt-get update && apt-get install -y wget
+
 WORKDIR /app
 
-COPY ./data data
-COPY ./headers-client .
+ENV DB_SCHEMA_PATH=./migrations
+COPY ./data/sql/migrations $DB_SCHEMA_PATH
+COPY ./entrypoint.sh .
+ARG project_name=pulse
+COPY ./$project_name .
+COPY ./artifacts/README.DOCKER.md ./README.md
 
-ENTRYPOINT "./headers-client"
+ARG version
+ARG gh_repository=libsv/$project_name
+ARG tag=${version:+v$version}
+ENV VERSION=${version:-develop}
+ENV TAG=${tag:-master}
+ENV PRELOADED_DB_URL="https://raw.githubusercontent.com/${gh_repository}/${TAG}/data/blockheaders.xz"
+
+VOLUME ["/app/data"]
+
+ENTRYPOINT ["./entrypoint.sh"]

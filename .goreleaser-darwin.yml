@@ -1,6 +1,4 @@
-project_name: headers-client
 env:
-  - DOCKERHUB_USERNAME={{ if index .Env "DOCKERHUB_USERNAME"  }}{{ .Env.DOCKERHUB_USERNAME }}{{ else }}4chainstudiopulse{{ end }}
   - CGO_ENABLED=1
 
 before:
@@ -15,8 +13,8 @@ builds:
     goarch:
       - amd64
       - arm64
-
-
+    goarm:
+      - '8'
 
 archives:
   - name_template: '{{ .ProjectName }}_{{ title .Os }}_{{ replace .Arch "amd64" "x86_64"  }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
@@ -28,10 +26,3 @@ release:
 
 snapshot:
   name_template: "{{ incminor .Version }}-next"
-
-changelog:
-  sort: asc
-  filters:
-    exclude:
-      - '^docs:'
-      - '^test:'
