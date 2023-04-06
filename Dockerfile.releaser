@@ -9,11 +9,12 @@ WORKDIR /app
 ENV DB_SCHEMA_PATH=./migrations
 COPY ./data/sql/migrations $DB_SCHEMA_PATH
 COPY ./entrypoint.sh .
-COPY ./headers-client .
-COPY ./README.docker.md ./README.md
+ARG project_name=pulse
+COPY ./$project_name .
+COPY ./artifacts/README.DOCKER.md ./README.md
 
 ARG version
-ARG gh_repository=libsv/pulse
+ARG gh_repository=libsv/$project_name
 ARG tag=${version:+v$version}
 ENV VERSION=${version:-develop}
 ENV TAG=${tag:-master}
