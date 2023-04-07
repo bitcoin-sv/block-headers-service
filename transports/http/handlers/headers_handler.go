@@ -5,36 +5,40 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+
+	headers "github.com/libsv/bitcoin-hc/transports/http"
 )
 
 // getHeaderByHash godoc.
-//  @Summary Gets header by hash
-//  @Tags headers
-//  @Accept */*
-//  @Success 200 {object} headers.BlockHeader
-//  @Produce json
-//  @Router /chain/header/{hash} [get]
-//  @Param hash path string true "Requested Header Hash"
+//
+//	@Summary Gets header by hash
+//	@Tags headers
+//	@Accept */*
+//	@Success 200 {object} headers.BlockHeader
+//	@Produce json
+//	@Router /chain/header/{hash} [get]
+//	@Param hash path string true "Requested Header Hash"
 func (h *Handler) getHeaderByHash(c *gin.Context) {
 	hash := c.Param("hash")
-	header, err := h.services.Headers.GetHeaderByHash(hash)
+	bh, err := h.services.Headers.GetHeaderByHash(hash)
 
 	if err == nil {
-		c.JSON(http.StatusOK, header)
+		c.JSON(http.StatusOK, headers.MapToBlockHeaderReponse(*bh))
 	} else {
 		c.JSON(http.StatusBadRequest, err.Error())
 	}
 }
 
 // getHeaderByHeight godoc.
-//  @Summary Gets header by height
-//  @Tags headers
-//  @Accept */*
-//  @Produce json
-//  @Success 200 {object} []headers.BlockHeader
-//  @Router /chain/header/byHeight [get]
-//  @Param height query int true "Height to start from"
-//  @Param count query int false "Headers count (optional)"
+//
+//	@Summary Gets header by height
+//	@Tags headers
+//	@Accept */*
+//	@Produce json
+//	@Success 200 {object} []headers.BlockHeader
+//	@Router /chain/header/byHeight [get]
+//	@Param height query int true "Height to start from"
+//	@Param count query int false "Headers count (optional)"
 func (h *Handler) getHeaderByHeight(c *gin.Context) {
 	height, _ := c.GetQuery("height")
 	count, _ := c.GetQuery("count")
@@ -45,9 +49,9 @@ func (h *Handler) getHeaderByHeight(c *gin.Context) {
 		if err2 != nil {
 			countInt = 1
 		}
-		header, err := h.services.Headers.GetHeadersByHeight(heightInt, countInt)
+		bh, err := h.services.Headers.GetHeadersByHeight(heightInt, countInt)
 		if err == nil {
-			c.JSON(http.StatusOK, header)
+			c.JSON(http.StatusOK, headers.MapToBlockHeadersReponse(bh))
 		} else {
 			c.JSON(http.StatusBadRequest, err.Error())
 		}
@@ -57,43 +61,45 @@ func (h *Handler) getHeaderByHeight(c *gin.Context) {
 }
 
 // getHeaderAncestorsByHash godoc.
-//  @Summary Gets header ancestors
-//  @Tags headers
-//  @Accept */*
-//  @Produce json
-//  @Success 200 {object} []headers.BlockHeader
-//  @Router /chain/header/{hash}/{ancestorHash}/ancestors [get]
-//  @Param hash path string true "Requested Header Hash"
-//  @Param ancestorHash path string true "Ancestor Header Hash"
+//
+//	@Summary Gets header ancestors
+//	@Tags headers
+//	@Accept */*
+//	@Produce json
+//	@Success 200 {object} []headers.BlockHeader
+//	@Router /chain/header/{hash}/{ancestorHash}/ancestors [get]
+//	@Param hash path string true "Requested Header Hash"
+//	@Param ancestorHash path string true "Ancestor Header Hash"
 func (h *Handler) getHeaderAncestorsByHash(c *gin.Context) {
 	hash := c.Param("hash")
 	ancestorHash := c.Param("ancestorHash")
 	ancestors, err := h.services.Headers.GetHeaderAncestorsByHash(hash, ancestorHash)
 
 	if err == nil {
-		c.JSON(http.StatusOK, ancestors)
+		c.JSON(http.StatusOK, headers.MapToBlockHeadersReponse(ancestors))
 	} else {
 		c.JSON(http.StatusBadRequest, err.Error())
 	}
 }
 
 // getCommonAncestors godoc.
-//  @Summary Gets common ancestors
-//  @Tags headers
-//  @Accept */*
-//  @Produce json
-//  @Success 200 {object} headers.BlockHeader
-//  @Router /chain/header/commonAncestor [post]
-//  @Param ancesstors body []string true "JSON"
+//
+//	@Summary Gets common ancestors
+//	@Tags headers
+//	@Accept */*
+//	@Produce json
+//	@Success 200 {object} headers.BlockHeader
+//	@Router /chain/header/commonAncestor [post]
+//	@Param ancesstors body []string true "JSON"
 func (h *Handler) getCommonAncestors(c *gin.Context) {
 	var body []string
 	if err := c.BindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, err.Error())
 	} else {
-		ancestors, err := h.services.Headers.GetCommonAncestors(body)
+		ancestor, err := h.services.Headers.GetCommonAncestors(body)
 
 		if err == nil {
-			c.JSON(http.StatusOK, ancestors)
+			c.JSON(http.StatusOK, headers.MapToBlockHeaderReponse(*ancestor))
 		} else {
 			c.JSON(http.StatusBadRequest, err.Error())
 		}
@@ -101,19 +107,22 @@ func (h *Handler) getCommonAncestors(c *gin.Context) {
 }
 
 // getHeadersState godoc.
-//  @Summary Gets header state
-//  @Tags headers
-//  @Accept */*
-//  @Produce json
-//  @Success 200 {object} headers.BlockHeaderState
-//  @Router /chain/header/state/{hash} [get]
-//  @Param hash path string true "Requested Header Hash"
+//
+//	@Summary Gets header state
+//	@Tags headers
+//	@Accept */*
+//	@Produce json
+//	@Success 200 {object} BlockHeaderStateResponse
+//	@Router /chain/header/state/{hash} [get]
+//	@Param hash path string true "Requested Header Hash"
 func (h *Handler) getHeadersState(c *gin.Context) {
 	hash := c.Param("hash")
-	state, err := h.services.Headers.GetHeadersState(hash)
+	bh, err := h.services.Headers.GetHeaderByHash(hash)
 
 	if err == nil {
-		c.JSON(http.StatusOK, state)
+		confirmations := h.services.Headers.CalculateConfirmations(bh)
+		headerStateResponse := headers.MapToBlockHeaderStateReponse(*bh, confirmations)
+		c.JSON(http.StatusOK, headerStateResponse)
 	} else {
 		c.JSON(http.StatusBadRequest, err.Error())
 	}

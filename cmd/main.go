@@ -38,6 +38,7 @@ const dbFileEnv = "db.dbFile.path"
 const appname = "headers"
 const preparedDb = "db.preparedDb"
 const preparedDbFilePath = "db.preparedDbFile.path"
+const httpServerPort = "http.server.port"
 
 func main() {
 	vconfig := vconfig.NewViperConfig(appname).
@@ -102,7 +103,7 @@ func main() {
 	}
 
 	handlers := handler.NewHandler(hs)
-	httpServer := httpserver.NewHttpServer(8080, handlers.Init())
+	httpServer := httpserver.NewHttpServer(viper.GetInt(httpServerPort), handlers.Init())
 
 	go p2pServer.Start()
 

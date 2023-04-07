@@ -6,7 +6,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/libsv/bitcoin-hc/configs"
-	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/libsv/bitcoin-hc/repository/dto"
 	"github.com/libsv/bitcoin-hc/vconfig"
 	"github.com/pkg/errors"
 )
@@ -182,7 +182,7 @@ func NewHeadersDb(db *sqlx.DB, dbType vconfig.DbType) *HeadersDb {
 }
 
 // Create method will add new record into db.
-func (h *HeadersDb) Create(ctx context.Context, req domains.DbBlockHeader) error {
+func (h *HeadersDb) Create(ctx context.Context, req dto.DbBlockHeader) error {
 	tx, err := h.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return err
@@ -193,30 +193,6 @@ func (h *HeadersDb) Create(ctx context.Context, req domains.DbBlockHeader) error
 	if _, err := tx.NamedExecContext(ctx, h.sqls[h.dbType][insertBH], req); err != nil {
 		return errors.Wrap(err, "failed to insert header")
 	}
-	return errors.Wrap(tx.Commit(), "failed to commit tx")
-}
-
-// CreateBatch will add a batch of records to the data store.
-func (h *HeadersDb) CreateBatch(ctx context.Context, req []*domains.BlockHeader) error {
-	tx, err := h.db.BeginTxx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = tx.Rollback()
-	}()
-	for i := 0; i < len(req); i += 1000 {
-		if i+1000 > len(req) {
-			if _, err = tx.NamedExecContext(ctx, h.sqls[h.dbType][insertBH], req[i:]); err != nil {
-				return errors.Wrap(err, "failed to bulk insert headers")
-			}
-			break
-		}
-		if _, err = tx.NamedExecContext(ctx, h.sqls[h.dbType][insertBH], req[i:i+100]); err != nil {
-			return errors.Wrap(err, "failed to bulk insert headers")
-		}
-	}
-
 	return errors.Wrap(tx.Commit(), "failed to commit tx")
 }
 
@@ -240,18 +216,6 @@ func (h *HeadersDb) UpdateState(ctx context.Context, hashes []string, state stri
 	return errors.Wrap(tx.Commit(), "failed to commit tx")
 }
 
-// Header will return a single block header by blockhash.
-func (h *HeadersDb) Header(ctx context.Context, args domains.HeaderArgs) (*domains.DbBlockHeader, error) {
-	var bh domains.DbBlockHeader
-	if err := h.db.GetContext(ctx, &bh, h.db.Rebind(sqlHeader), args.Blockhash); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("could not find blockhash")
-		}
-		return nil, errors.Wrapf(err, "failed to get blockhash using hash %s", args.Blockhash)
-	}
-	return &bh, nil
-}
-
 // Height will return the current highest block height we have stored in the db.
 func (h *HeadersDb) Height(ctx context.Context) (int, error) {
 	var height int
@@ -272,8 +236,8 @@ func (h *HeadersDb) Count(ctx context.Context) (int, error) {
 }
 
 // GetHeaderByHash will return header from db with given hash.
-func (h *HeadersDb) GetHeaderByHash(ctx context.Context, hash string) (*domains.DbBlockHeader, error) {
-	var bh domains.DbBlockHeader
+func (h *HeadersDb) GetHeaderByHash(ctx context.Context, hash string) (*dto.DbBlockHeader, error) {
+	var bh dto.DbBlockHeader
 	if err := h.db.GetContext(ctx, &bh, h.db.Rebind(sqlHeader), hash); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("could not find hash")
@@ -284,8 +248,8 @@ func (h *HeadersDb) GetHeaderByHash(ctx context.Context, hash string) (*domains.
 }
 
 // GetHeaderByHeight will return header from db with given height and in given state.
-func (h *HeadersDb) GetHeaderByHeight(ctx context.Context, height int32, state string) (*domains.DbBlockHeader, error) {
-	var bh domains.DbBlockHeader
+func (h *HeadersDb) GetHeaderByHeight(ctx context.Context, height int32, state string) (*dto.DbBlockHeader, error) {
+	var bh dto.DbBlockHeader
 	if err := h.db.GetContext(ctx, &bh, h.db.Rebind(sqlHeaderByHeight), height, state); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("could not find height")
@@ -296,8 +260,8 @@ func (h *HeadersDb) GetHeaderByHeight(ctx context.Context, height int32, state s
 }
 
 // GetHeaderByHeightRange will return headers from db for given height range (including sended height).
-func (h *HeadersDb) GetHeaderByHeightRange(from int, to int) ([]*domains.DbBlockHeader, error) {
-	var bh []*domains.DbBlockHeader
+func (h *HeadersDb) GetHeaderByHeightRange(from int, to int) ([]*dto.DbBlockHeader, error) {
+	var bh []*dto.DbBlockHeader
 	if err := h.db.Select(&bh, h.db.Rebind(sqlHeaderByHeightRange), from, to); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("could not find headers in given range")
@@ -308,8 +272,8 @@ func (h *HeadersDb) GetHeaderByHeightRange(from int, to int) ([]*domains.DbBlock
 }
 
 // GetLongestChainHeadersFromHeight returns from db the headers from "longest chain" starting from given height.
-func (h *HeadersDb) GetLongestChainHeadersFromHeight(height int32) ([]*domains.DbBlockHeader, error) {
-	var bh []*domains.DbBlockHeader
+func (h *HeadersDb) GetLongestChainHeadersFromHeight(height int32) ([]*dto.DbBlockHeader, error) {
+	var bh []*dto.DbBlockHeader
 	if err := h.db.Select(&bh, h.db.Rebind(sqlLongestChainHeadersFromHeight), height); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.Errorf("could not find headers in longest chain from height %d", height)
@@ -320,8 +284,8 @@ func (h *HeadersDb) GetLongestChainHeadersFromHeight(height int32) ([]*domains.D
 }
 
 // GetStaleHeadersBackFrom returns from db all the headers with state STALE, starting from header with hash and preceding that one.
-func (h *HeadersDb) GetStaleHeadersBackFrom(hash string) ([]*domains.DbBlockHeader, error) {
-	var bh []*domains.DbBlockHeader
+func (h *HeadersDb) GetStaleHeadersBackFrom(hash string) ([]*dto.DbBlockHeader, error) {
+	var bh []*dto.DbBlockHeader
 	if err := h.db.Select(&bh, h.db.Rebind(sqlStaleHeadersFrom), hash); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.Errorf("header with %s hash does not exist", hash)
@@ -340,7 +304,7 @@ func (h *HeadersDb) GenesisExists(ctx context.Context) bool {
 // CalculateConfirmations will calculate number of confirmations for header with given hash.
 func (h *HeadersDb) CalculateConfirmations(ctx context.Context, hash string) (int, error) {
 	var amount int
-	if err := h.db.Select(&amount, h.db.Rebind(sqlCalculateConfirmations), hash); err != nil {
+	if err := h.db.GetContext(ctx, &amount, h.db.Rebind(sqlCalculateConfirmations), hash); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, errors.Errorf("header with %s hash does not exist", hash)
 		}
@@ -350,8 +314,8 @@ func (h *HeadersDb) CalculateConfirmations(ctx context.Context, hash string) (in
 }
 
 // GetPreviousHeader will return previous header for this with given hash.
-func (h *HeadersDb) GetPreviousHeader(ctx context.Context, hash string) (*domains.DbBlockHeader, error) {
-	var bh domains.DbBlockHeader
+func (h *HeadersDb) GetPreviousHeader(ctx context.Context, hash string) (*dto.DbBlockHeader, error) {
+	var bh dto.DbBlockHeader
 	if err := h.db.GetContext(ctx, &bh, h.db.Rebind(sqlSelectPreviousBlock), hash); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("could not find header")
@@ -362,8 +326,8 @@ func (h *HeadersDb) GetPreviousHeader(ctx context.Context, hash string) (*domain
 }
 
 // GetTip will return highest header from db.
-func (h *HeadersDb) GetTip(ctx context.Context) (*domains.DbBlockHeader, error) {
-	var tip []domains.DbBlockHeader
+func (h *HeadersDb) GetTip(ctx context.Context) (*dto.DbBlockHeader, error) {
+	var tip []dto.DbBlockHeader
 	if err := h.db.Select(&tip, sqlSelectTip); err != nil {
 		configs.Log.Error("sql error", err)
 		return nil, errors.Wrap(err, "failed to get tip")
@@ -372,23 +336,23 @@ func (h *HeadersDb) GetTip(ctx context.Context) (*domains.DbBlockHeader, error) 
 }
 
 // GetAncestorOnHeight provides ancestor for a hash on a specified height.
-func (h *HeadersDb) GetAncestorOnHeight(hash string, height int32) (*domains.DbBlockHeader, error) {
-	var bh []*domains.DbBlockHeader
-	if err := h.db.Select(&bh, h.db.Rebind(sqlSelectAncestorOnHeight), hash, int(height), int(height)); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("could not find ancestors for a providen hash")
-		}
-		return nil, errors.Wrapf(err, "failed to get ancestors using given hash: %s ", hash)
-	}
-	if bh == nil {
-		return nil, errors.New("could not find ancestors for a providen hash")
-	}
-	return bh[0], nil
+func (h *HeadersDb) GetAncestorOnHeight(hash string, height int32) (*dto.DbBlockHeader, error) {
+    var bh []*dto.DbBlockHeader
+    if err := h.db.Select(&bh, h.db.Rebind(sqlSelectAncestorOnHeight), hash, int(height), int(height)); err != nil {
+        if errors.Is(err, sql.ErrNoRows) {
+            return nil, errors.New("could not find ancestors for a providen hash")
+        }
+        return nil, errors.Wrapf(err, "failed to get ancestors using given hash: %s ", hash)
+    }
+    if bh == nil {
+        return nil, errors.New("could not find ancestors for a providen hash")
+    }
+    return bh[0], nil
 }
 
 // GetAllTips returns all tips from db.
-func (h *HeadersDb) GetAllTips() ([]*domains.DbBlockHeader, error) {
-	var bh []*domains.DbBlockHeader
+func (h *HeadersDb) GetAllTips() ([]*dto.DbBlockHeader, error) {
+	var bh []*dto.DbBlockHeader
 	if err := h.db.Select(&bh, sqlSelectTips); err != nil {
 		return nil, errors.Wrapf(err, "failed to get tips")
 	}
@@ -396,8 +360,8 @@ func (h *HeadersDb) GetAllTips() ([]*domains.DbBlockHeader, error) {
 }
 
 // GetChainBetweenTwoHashes calculates and returnes chain between 2 hashes.
-func (h *HeadersDb) GetChainBetweenTwoHashes(low string, high string) ([]*domains.DbBlockHeader, error) {
-	var bh []*domains.DbBlockHeader
+func (h *HeadersDb) GetChainBetweenTwoHashes(low string, high string) ([]*dto.DbBlockHeader, error) {
+	var bh []*dto.DbBlockHeader
 	if err := h.db.Select(&bh, h.db.Rebind(sqlChainBetweenTwoHashes), high, low, low); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("could not find headers in given range")
