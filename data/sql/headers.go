@@ -81,21 +81,6 @@ const (
 	WHERE height = 0
 	`
 
-	sqlCalculateConfirmations = `
-	WITH RECURSIVE recur(hash, height, cumulatedwork, confirmations) AS (
-		SELECT hash, height, cumulatedwork, 1 confirmations
-		FROM headers
-		WHERE hash = ?
-		UNION ALL
-		SELECT h.hash, h.height, h.cumulatedwork, confirmations + 1
-		FROM headers h JOIN recur r
-		  ON h.previousblock = r.hash
-	  )
-	  SELECT MAX(confirmations)
-	  FROM recur
-	  WHERE CAST(cumulatedwork AS INTEGER) = (SELECT MAX(CAST(cumulatedwork AS INTEGER)) FROM recur)
-	`
-
 	sqlSelectPreviousBlock = `
 	SELECT prev.hash,
 		   prev.height,
@@ -302,14 +287,13 @@ func (h *HeadersDb) GenesisExists(ctx context.Context) bool {
 }
 
 // CalculateConfirmations will calculate number of confirmations for header with given hash.
-func (h *HeadersDb) CalculateConfirmations(ctx context.Context, hash string) (int, error) {
-	var amount int
-	if err := h.db.GetContext(ctx, &amount, h.db.Rebind(sqlCalculateConfirmations), hash); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return 0, errors.Errorf("header with %s hash does not exist", hash)
-		}
-		return 0, errors.Wrapf(err, "failed to calculate confirmations for %s hash", hash)
+func (h *HeadersDb) CalculateConfirmations(ctx context.Context, height int32) (int, error) {
+	var tip []dto.DbBlockHeader
+	if err := h.db.Select(&tip, sqlSelectTip); err != nil {
+		configs.Log.Error("sql error", err)
+		return 0, errors.Wrapf(err, "failed to calculate confirmations for block at height: %d", height)
 	}
+	amount := int(tip[0].Height - height)
 	return amount, nil
 }
 
@@ -337,17 +321,17 @@ func (h *HeadersDb) GetTip(ctx context.Context) (*dto.DbBlockHeader, error) {
 
 // GetAncestorOnHeight provides ancestor for a hash on a specified height.
 func (h *HeadersDb) GetAncestorOnHeight(hash string, height int32) (*dto.DbBlockHeader, error) {
-    var bh []*dto.DbBlockHeader
-    if err := h.db.Select(&bh, h.db.Rebind(sqlSelectAncestorOnHeight), hash, int(height), int(height)); err != nil {
-        if errors.Is(err, sql.ErrNoRows) {
-            return nil, errors.New("could not find ancestors for a providen hash")
-        }
-        return nil, errors.Wrapf(err, "failed to get ancestors using given hash: %s ", hash)
-    }
-    if bh == nil {
-        return nil, errors.New("could not find ancestors for a providen hash")
-    }
-    return bh[0], nil
+	var bh []*dto.DbBlockHeader
+	if err := h.db.Select(&bh, h.db.Rebind(sqlSelectAncestorOnHeight), hash, int(height), int(height)); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("could not find ancestors for a providen hash")
+		}
+		return nil, errors.Wrapf(err, "failed to get ancestors using given hash: %s ", hash)
+	}
+	if bh == nil {
+		return nil, errors.New("could not find ancestors for a providen hash")
+	}
+	return bh[0], nil
 }
 
 // GetAllTips returns all tips from db.

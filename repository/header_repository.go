@@ -97,8 +97,8 @@ func (r *HeaderRepository) GetHeaderByHash(hash string) (*domains.BlockHeader, e
 }
 
 // GetConfirmationsCountForBlock returns number of confirmations for header with given hash.
-func (r *HeaderRepository) GetConfirmationsCountForBlock(hash string) (int, error) {
-	return r.db.CalculateConfirmations(context.Background(), hash)
+func (r *HeaderRepository) GetConfirmationsCountForBlock(height int32) (int, error) {
+	return r.db.CalculateConfirmations(context.Background(), height)
 }
 
 // GenesisExists check if genesis header is in db.

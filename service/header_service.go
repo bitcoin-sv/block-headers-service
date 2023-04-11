@@ -25,6 +25,11 @@ func NewHeaderService(repo *repository.Repositories) *HeaderService {
 	}
 }
 
+// AddHeader used to pass BlockHeader to repository which will add it to db.
+func (hs *HeaderService) AddHeader(h domains.BlockHeader, blocksToConfirmFork int) error {
+	return hs.repo.Headers.AddHeaderToDatabase(h)
+}
+
 // FindPreviousHeader returns previous header for the header with given hash.
 func (hs *HeaderService) FindPreviousHeader(headerHash string) *domains.BlockHeader {
 	h, err := hs.repo.Headers.GetPreviousHeader(headerHash)
@@ -413,7 +418,7 @@ func (hs *HeaderService) InsertGenesisHeaderInDatabase() error {
 // CalculateConfirmations returns number of confirmations for given header.
 func (hs *HeaderService) CalculateConfirmations(originHeader *domains.BlockHeader) int {
 	conf, err := hs.repo.Headers.
-		GetConfirmationsCountForBlock(originHeader.Hash.String())
+		GetConfirmationsCountForBlock(originHeader.Height)
 	if err != nil {
 		configs.Log.Errorf("%v", err.Error())
 		return conf
@@ -433,10 +438,10 @@ func (hs *HeaderService) GetPruneTip() (string, error) {
 }
 
 func areAllElementsEqual(slice []*domains.BlockHeader) bool {
-    for _, val := range slice {
-        if val.Hash != slice[0].Hash{
-            return false
-        }
-    }
-    return true
+	for _, val := range slice {
+		if val.Hash != slice[0].Hash {
+			return false
+		}
+	}
+	return true
 }
