@@ -25,11 +25,6 @@ func NewHeaderService(repo *repository.Repositories) *HeaderService {
 	}
 }
 
-// AddHeader used to pass BlockHeader to repository which will add it to db.
-func (hs *HeaderService) AddHeader(h domains.BlockHeader, blocksToConfirmFork int) error {
-	return hs.repo.Headers.AddHeaderToDatabase(h)
-}
-
 // FindPreviousHeader returns previous header for the header with given hash.
 func (hs *HeaderService) FindPreviousHeader(headerHash string) *domains.BlockHeader {
 	h, err := hs.repo.Headers.GetPreviousHeader(headerHash)
@@ -119,7 +114,7 @@ func (hs *HeaderService) GetHeaderAncestorsByHash(hash string, ancestorHash stri
 	ancestorHeader, err2 := hs.repo.Headers.GetHeaderByHash(ancestorHash)
 
 	// Check possible errors
-	if err != nil && err2 != nil {
+	if err != nil || err2 != nil {
 		return nil, errors.New("error during getting headers with given hashes")
 	} else if ancestorHeader.Height > reqHeader.Height {
 		return nil, errors.New("ancestor header height can not be higher than requested header heght")
@@ -142,7 +137,7 @@ func (hs *HeaderService) GetHeaderAncestorsByHash(hash string, ancestorHash stri
 	if err == nil {
 		return headers, nil
 	}
-	return nil, nil
+	return nil, err
 }
 
 // GetCommonAncestors returns first ancestor for given slice of hashes.

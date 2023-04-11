@@ -1,10 +1,11 @@
 package testrepository
 
 import (
-	"github.com/libsv/bitcoin-hc/domains"
-	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"math/big"
 	"time"
+
+	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 )
 
 const (
@@ -24,6 +25,10 @@ var (
 	ThirdHash = HashOf("0000000082b5015589a3fdf2d4baff403e6f0be035a5d9742c1cae6295464449")
 	//FourthHash is a hash of Fourth block in the LongestChain() fixture result.
 	FourthHash = HashOf("000000004ebadb55ee9096c9a2f8880e09da59c0d68b1c228da88e48844a1485")
+	//FifthHash is a hash of Fifth block in the LongestChain() fixture result.
+	FifthHash = HashOf("0000000082b5015589a3fdf2d4baff403e6f0be035a5d9742c1cae6295464449")
+	//SixthHash is a hash of Sixth block in the LongestChain() fixture result.
+	SixthHash = HashOf("000000009b7262315dbf071787ad3656097b892abffd1f95a1a022f896f533fd")
 
 	//FirstStaleHash is a hash of first block in the OrphanChain() fixture result.
 	FirstStaleHash = HashOf("000000000000839a77380d4690994eb38b7a8b67e4295121079ee6e98c7a8c5")

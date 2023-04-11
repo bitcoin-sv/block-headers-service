@@ -6,7 +6,7 @@ import (
 )
 
 // NewTestRepositories creates repository.Repositories for unit testing usage.
-func NewTestRepositories(db []domains.BlockHeader) repository.Repositories {
+func NewTestRepositories(db *[]domains.BlockHeader) repository.Repositories {
 	return repository.Repositories{
 		Headers: NewHeadersTestRepository(db),
 	}

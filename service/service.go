@@ -18,7 +18,6 @@ type Network interface {
 
 // Headers is an interface which represents methods required for Headers service.
 type Headers interface {
-	AddHeader(h domains.BlockHeader, blocksToConfirmFork int) error
 	FindPreviousHeader(headerHash string) *domains.BlockHeader
 	LatestHeaderLocator() domains.BlockLocator
 	IsCurrent() bool
