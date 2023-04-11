@@ -3,6 +3,7 @@ debug
 .idea/*
 .DS_Store
 build/
+artifacts/
 dist/
 data/blockheaders.db
 data/blockheaders.db-journal

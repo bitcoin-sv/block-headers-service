@@ -1,0 +1,127 @@
+env:
+  - DOCKERHUB_USERNAME={{ if index .Env "DOCKERHUB_USERNAME"  }}{{ .Env.DOCKERHUB_USERNAME }}{{ else }}libsv{{ end }}
+  - DOCKERHUB_REPONAME={{ if index .Env "DOCKERHUB_REPONAME"  }}{{ .Env.DOCKERHUB_REPONAME }}{{ else }}{{ .ProjectName }}{{ end }}
+  - CGO_ENABLED=1
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: linux-build
+    main: ./cmd/main.go
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    goarm:
+      - '8'
+    env:
+      - CC_linux_arm64={{ if index .Env "CC_linux_arm64"  }}{{.Env.CC_linux_arm64}}{{ else }}aarch64-linux-gnu-gcc{{ end }}
+      - CC_linux_amd64={{ if index .Env "CC_linux_amd64"  }}{{.Env.CC_linux_amd64}}{{ else }}gcc{{ end }}
+      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+
+archives:
+  - name_template: '{{ .ProjectName }}_{{ title .Os }}_{{ replace .Arch "amd64" "x86_64"  }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    files:
+      - data/**/*
+
+checksum:
+  extra_files:
+    - glob: ./artifacts/darwin/*
+
+dockers:
+  - goos: linux
+    goarch: amd64
+    image_templates:
+      - '{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:latest-amd64'
+      - '{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:{{ .Version }}-amd64'
+      - '{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:{{ .Version }}-{{ .ShortCommit }}-amd64'
+      - '{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:{{ .Tag }}-amd64'
+      - '{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:v{{ .Major }}-amd64'
+      - '{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:v{{ .Major }}.{{ .Minor }}-amd64'
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--platform=linux/amd64"
+      - "--build-arg=project_name={{.ProjectName}}"
+      - "--build-arg=version={{.Version}}"
+      - "--build-arg=gh_repository={{ .Env.GITHUB_REPOSITORY }}"
+    dockerfile: Dockerfile.releaser
+    extra_files:
+      - data/sql/migrations/
+      - entrypoint.sh
+      - ./artifacts/README.DOCKER.md
+  - goos: linux
+    goarch: arm64
+    image_templates:
+      - '{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:latest-arm64'
+      - '{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:{{ .Version }}-{{ .ShortCommit }}-arm64'
+      - '{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:{{ .Tag }}-arm64'
+      - '{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:v{{ .Major }}-arm64'
+      - '{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:v{{ .Major }}.{{ .Minor }}-arm64'
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--platform=linux/arm64/v8"
+      - "--build-arg=project_name={{.ProjectName}}"
+      - "--build-arg=version={{.Version}}"
+      - "--build-arg=gh_repository={{ .Env.GITHUB_REPOSITORY }}"
+    dockerfile: Dockerfile.releaser
+    extra_files:
+      - data/sql/migrations/
+      - entrypoint.sh
+      - ./artifacts/README.DOCKER.md
+
+docker_manifests:
+  - name_template: "{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:latest"
+    image_templates:
+      - "{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:latest-amd64"
+      - "{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:latest-arm64"
+  - name_template: "{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:{{ .Version }}-{{ .ShortCommit }}"
+    image_templates:
+      - "{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:{{ .Version }}-{{ .ShortCommit }}-amd64"
+      - "{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:{{ .Version }}-{{ .ShortCommit }}-arm64"
+  - name_template: "{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:{{ .Tag }}"
+    image_templates:
+      - "{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:{{ .Tag }}-amd64"
+      - "{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:{{ .Tag }}-arm64"
+  - name_template: "{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:v{{ .Major }}"
+    image_templates:
+      - "{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:v{{ .Major }}-amd64"
+      - "{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:v{{ .Major }}-arm64"
+  - name_template: "{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:v{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "{{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:v{{ .Major }}.{{ .Minor }}-arm64"
+
+release:
+  name_template: "Release v{{.Version}}"
+  extra_files:
+    - glob: ./artifacts/darwin/*
+  footer: |
+    ## Docker images
+
+    `docker pull {{ .Env.DOCKERHUB_USERNAME }}/{{ .Env.DOCKERHUB_REPONAME }}:{{ .Tag }}`
+    
+    
+
+snapshot:
+  name_template: "{{ incminor .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
