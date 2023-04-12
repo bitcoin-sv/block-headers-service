@@ -105,7 +105,7 @@ jobs:
         run: |
           envsubst < README.DOCKER.md > ./artifacts/README.DOCKER.md
         env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_OWNER }}
           DOCKERHUB_REPONAME: ${{ github.event.repository.name }}
       - name: Go Release
         uses: goreleaser/goreleaser-action@v4
@@ -115,7 +115,7 @@ jobs:
           args:  -f .goreleaser-linux.yml release  --clean --debug
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_OWNER }}
           DOCKERHUB_REPONAME: ${{ github.event.repository.name }}
       - name: Docker Hub Description
         uses: peter-evans/dockerhub-description@v3
@@ -123,5 +123,5 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           short-description: ${{ github.event.repository.description }}
-          repository: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}
+          repository: ${{ vars.DOCKERHUB_OWNER }}/${{ github.event.repository.name }}
           readme-filepath: ./artifacts/README.DOCKER.md
