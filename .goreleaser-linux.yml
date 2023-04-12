@@ -122,6 +122,4 @@ changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
-      - '^ci:'
+      - '^(ci|build|chore|ops|docs|test)(\\(#\\d+\\))(!)?: (.*)$'

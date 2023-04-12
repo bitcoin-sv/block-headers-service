@@ -1,0 +1,31 @@
+name: Greetings
+
+on:
+  push:
+    tags:
+      - '*'
+    branches: [ master,main,dev ]
+  pull_request:
+    branches: [ master,main ]
+
+jobs:
+  setupvar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Dockerhub owner based on var
+        if: vars.DOCKERHUB_REPO != null
+        run: |
+          echo "DOCKERHUB_REPO=${{vars.DOCKERHUB_REPO}}" >> $GITHUB_ENV
+      - name: Setup Dockerhub owner based on dockerhub username
+        if: vars.DOCKERHUB_REPO == null
+        run: |
+          echo "DOCKERHUB_REPO=${{ github.event.repository.name }}" >> $GITHUB_ENV
+      - name: Docker Hub Description
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          short-description: ${{ github.sha }}
+          repository: ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPO }}
+
+
