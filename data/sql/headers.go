@@ -293,7 +293,7 @@ func (h *HeadersDb) CalculateConfirmations(ctx context.Context, height int32) (i
 		configs.Log.Error("sql error", err)
 		return 0, errors.Wrapf(err, "failed to calculate confirmations for block at height: %d", height)
 	}
-	amount := int(tip[0].Height - height)
+	amount := int(tip[0].Height - height + 1)
 	return amount, nil
 }
 
