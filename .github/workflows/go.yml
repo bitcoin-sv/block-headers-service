@@ -77,6 +77,23 @@ jobs:
     needs: [build-darwin-artifacts]
     runs-on: ubuntu-latest
     steps:
+      - name: Setup Dockerhub repo based on var
+        if: vars.DOCKERHUB_REPO != null
+        run: |
+          echo "DOCKERHUB_REPO=${{vars.DOCKERHUB_REPO}}" >> $GITHUB_ENV
+      - name: Default Dockerhub repo to on project name
+        if: vars.DOCKERHUB_REPO == null
+        run: |
+          echo "DOCKERHUB_REPO=${{ github.event.repository.name }}" >> $GITHUB_ENV
+      - name: Setup Dockerhub owner based on var
+        if: vars.DOCKERHUB_OWNER != null
+        run: |
+          echo "DOCKERHUB_OWNER=${{vars.DOCKERHUB_OWNER}}" >> $GITHUB_ENV
+      - name: Default Dockerhub owner to dockerhub username
+        if: vars.DOCKERHUB_OWNER == null
+        run: |
+          echo "DOCKERHUB_OWNER=${{secrets.DOCKERHUB_USERNAME}}" >> $GITHUB_ENV
+
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
@@ -104,9 +121,6 @@ jobs:
       - name: Prepare README for dockerhub
         run: |
           envsubst < README.DOCKER.md > ./artifacts/README.DOCKER.md
-        env:
-          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_OWNER }}
-          DOCKERHUB_REPONAME: ${{ github.event.repository.name }}
       - name: Go Release
         uses: goreleaser/goreleaser-action@v4
         with:
@@ -115,13 +129,13 @@ jobs:
           args:  -f .goreleaser-linux.yml release  --clean --debug
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_OWNER }}
-          DOCKERHUB_REPONAME: ${{ github.event.repository.name }}
+          DOCKERHUB_USERNAME: ${{ env.DOCKERHUB_OWNER }}
+          DOCKERHUB_REPONAME: ${{ env.DOCKERHUB_REPO }}
       - name: Docker Hub Description
         uses: peter-evans/dockerhub-description@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           short-description: ${{ github.event.repository.description }}
-          repository: ${{ vars.DOCKERHUB_OWNER }}/${{ github.event.repository.name }}
+          repository: ${{ env.DOCKERHUB_OWNER }}/${{ env.DOCKERHUB_REPO }}
           readme-filepath: ./artifacts/README.DOCKER.md
