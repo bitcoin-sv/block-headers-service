@@ -23,7 +23,7 @@ builds:
       - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
 
 archives:
-  - name_template: '{{ .ProjectName }}_{{ title .Os }}_{{ replace .Arch "amd64" "x86_64"  }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+  - name_template: '{{ .ProjectName }}_{{ .Version }}_{{ title .Os }}_{{ replace .Arch "amd64" "x86_64"  }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
     files:
       - data/**/*
 
