@@ -2,8 +2,8 @@ package domains
 
 import "math/big"
 
-// CalcWork calculate chainwork for header based on given bits.
-func CalcWork(bits uint32) *big.Int {
+// calcWork calculate chainwork for header based on given bits.
+func calcWork(bits uint32) *big.Int {
 	// Return a work value of zero if the passed difficulty bits represent
 	// a negative number. Note this should not happen in practice with valid
 	// blocks, but an invalid block could trigger it.
@@ -19,16 +19,27 @@ func CalcWork(bits uint32) *big.Int {
 }
 
 // ChainWork representation of the blockchain work for given block.
-type ChainWork uint64
+type ChainWork big.Int
 
-// Uint64 return uint64 representation of chain work.
-func (cw *ChainWork) Uint64() uint64 {
-	return uint64(*cw)
+// BigInt return big.Int representation of chain work.
+func (cw *ChainWork) BigInt() *big.Int {
+	if cw != nil {
+		v := big.Int(*cw)
+		return &v
+	}
+	return big.NewInt(0)
 }
 
 // CalculateWork calculate ChainWork based on provided bits.
-func CalculateWork(bits uint32) ChainWork {
-	return ChainWork(uint64(CalcWork(bits).Int64()))
+func CalculateWork(bits uint32) *ChainWork {
+	cw := *calcWork(bits)
+	return ChainWorkOf(cw)
+}
+
+// ChainWorkOf represents big.Int as ChainWork.
+func ChainWorkOf(v big.Int) *ChainWork {
+	cw := ChainWork(v)
+	return &cw
 }
 
 // CumulatedChainWork representation of the cumulated blockchain work.
@@ -50,10 +61,9 @@ func (ccw *CumulatedChainWork) BigInt() *big.Int {
 }
 
 // Add returns a CumulatedChainWork as a sum of previous CumulatedChainWork and provided ChainWork.
-func (ccw *CumulatedChainWork) Add(cw ChainWork) CumulatedChainWork {
-	work := ccw.BigInt()
+func (ccw *CumulatedChainWork) Add(cw *ChainWork) CumulatedChainWork {
 	sum := big.NewInt(0)
-	sum = sum.Add(new(big.Int).SetUint64(cw.Uint64()), work)
+	sum = sum.Add(ccw.BigInt(), cw.BigInt())
 	return CumulatedChainWork(*sum)
 }
 

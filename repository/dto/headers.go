@@ -35,7 +35,7 @@ func (dbh *DbBlockHeader) ToBlockHeader() *domains.BlockHeader {
 		cumulatedWork = big.NewInt(0)
 	}
 
-	chainWork, err := strconv.ParseUint(dbh.Chainwork, 10, 64)
+	chainWork, err := strconv.ParseInt(dbh.Chainwork, 10, 64)
 	if err != nil {
 		chainWork = 0
 	}
@@ -52,7 +52,7 @@ func (dbh *DbBlockHeader) ToBlockHeader() *domains.BlockHeader {
 		Timestamp:        dbh.Timestamp,
 		Bits:             dbh.Bits,
 		Nonce:            dbh.Nonce,
-		Chainwork:        chainWork,
+		Chainwork:        big.NewInt(chainWork),
 		CumulatedWork:    cumulatedWork,
 		State:            domains.HeaderState(dbh.State),
 		PreviousBlock:    *prevBlock,
@@ -87,7 +87,7 @@ func ToDbBlockHeader(bh domains.BlockHeader) DbBlockHeader {
 		Bits:             bh.Bits,
 		Nonce:            bh.Nonce,
 		State:            bh.State.String(),
-		Chainwork:        strconv.FormatUint(bh.Chainwork, 10),
+		Chainwork:        bh.Chainwork.String(),
 		CumulatedWork:    bh.CumulatedWork.String(),
 		PreviousBlock:    bh.PreviousBlock.String(),
 		DifficultyTarget: bh.DifficultyTarget,

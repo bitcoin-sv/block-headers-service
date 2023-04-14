@@ -111,7 +111,7 @@ func newBlockHeader(height int32, hash chainhash.Hash, prev chainhash.Hash, mark
 		Timestamp:        bt.Add(time.Duration(10*h) * time.Minute),
 		Bits:             DefaultBits,
 		Nonce:            nonce,
-		Chainwork:        DefaultChainWork,
+		Chainwork:        big.NewInt(DefaultChainWork),
 		CumulatedWork:    big.NewInt(0).Mul(big.NewInt(DefaultChainWork), big.NewInt(h)),
 		PreviousBlock:    prev,
 		DifficultyTarget: 0,
