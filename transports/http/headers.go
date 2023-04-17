@@ -15,7 +15,7 @@ type BlockHeaderResponse struct {
 	Timestamp        uint32   `json:"creationTimestamp"`
 	DifficultyTarget uint32   `json:"difficultyTarget"`
 	Nonce            uint32   `json:"nonce"`
-	CumulatedWork    *big.Int `json:"work"`
+	Work             *big.Int `json:"work"`
 }
 
 // BlockHeaderStateResponse is an extended version of the BlockHeaderResponse
@@ -38,7 +38,7 @@ func MapToBlockHeaderReponse(header domains.BlockHeader) BlockHeaderResponse {
 		Timestamp:        uint32(header.Timestamp.Unix()),
 		DifficultyTarget: header.DifficultyTarget,
 		Nonce:            header.Nonce,
-		CumulatedWork:    header.CumulatedWork,
+		Work:             header.Chainwork,
 	}
 }
 
