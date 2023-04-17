@@ -18,8 +18,8 @@ import (
 func (h *Handler) getTips(c *gin.Context) {
 	tips, err := h.services.Headers.GetTips()
 
-	if err == nil {
-		c.JSON(http.StatusOK, headers.MapToBlockHeadersReponse(tips))
+	if err == nil {	
+		c.JSON(http.StatusOK, headers.MapToBlockHeadersStateResponse(tips))
 	} else {
 		c.JSON(http.StatusBadRequest, err.Error())
 	}
