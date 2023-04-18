@@ -75,6 +75,28 @@ func ConvertToBlockHeader(dbBlockHeaders []*DbBlockHeader) []*domains.BlockHeade
 	return nil
 }
 
+// ConvertToBlockHeaderState converts one or whole slice of DbBlockHeaders to BlockHeaderState
+// used after getting records from db.
+func ConvertToBlockHeaderState(dbBlockHeaders []*DbBlockHeader) []*domains.BlockHeaderState {
+	if dbBlockHeaders != nil {
+		var blockHeaders []*domains.BlockHeaderState
+
+		for _, header := range dbBlockHeaders {
+			h := header.ToBlockHeader()
+			hs := &domains.BlockHeaderState{
+				Header:        *h,
+				State:         h.State.String(),
+				Height:        h.Height,
+				ChainWork:     h.Chainwork,
+				Confirmations: 1,
+			}
+			blockHeaders = append(blockHeaders, hs)
+		}
+		return blockHeaders
+	}
+	return nil
+}
+
 // ToDbBlockHeader converts BlockHeader to DbBlockHeader
 // used mainly to prepare record befor saving in db.
 func ToDbBlockHeader(bh domains.BlockHeader) DbBlockHeader {

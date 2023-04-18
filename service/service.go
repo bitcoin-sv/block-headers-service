@@ -32,7 +32,7 @@ type Headers interface {
 	GetHeaderAncestorsByHash(hash string, ancestorHash string) ([]*domains.BlockHeader, error)
 	GetCommonAncestors(hashes []string) (*domains.BlockHeader, error)
 	GetHeadersState(hash string) (*domains.BlockHeaderState, error)
-	GetTips() ([]*domains.BlockHeader, error)
+	GetTips() ([]*domains.BlockHeaderState, error)
 	GetPruneTip() (string, error)
 	CalculateConfirmations(originHeader *domains.BlockHeader) int
 }

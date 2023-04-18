@@ -131,10 +131,10 @@ func (r *HeaderRepository) GetAncestorOnHeight(hash string, height int32) (*doma
 }
 
 // GetAllTips returns all tips from db.
-func (r *HeaderRepository) GetAllTips() ([]*domains.BlockHeader, error) {
+func (r *HeaderRepository) GetAllTips() ([]*domains.BlockHeaderState, error) {
 	tips, err := r.db.GetAllTips()
 	if err == nil {
-		return dto.ConvertToBlockHeader(tips), nil
+		return dto.ConvertToBlockHeaderState(tips), nil
 	}
 	return nil, err
 }

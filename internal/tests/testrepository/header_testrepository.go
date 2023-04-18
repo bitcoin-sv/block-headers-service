@@ -164,9 +164,9 @@ func (r *HeaderTestRepository) GetAncestorOnHeight(hash string, height int32) (*
 }
 
 // GetAllTips returns all tips from db.
-func (r *HeaderTestRepository) GetAllTips() ([]*domains.BlockHeader, error) {
+func (r *HeaderTestRepository) GetAllTips() ([]*domains.BlockHeaderState, error) {
 	prevHashes := make([]string, 0)
-	tips := make([]*domains.BlockHeader, 0)
+	bhTips := make([]*domains.BlockHeader, 0)
 
 	for _, h := range *r.db {
 		prevHashes = append(prevHashes, h.PreviousBlock.String())
@@ -174,9 +174,11 @@ func (r *HeaderTestRepository) GetAllTips() ([]*domains.BlockHeader, error) {
 
 	for i, h := range *r.db {
 		if !contains(prevHashes, h.Hash.String()) {
-			tips = append(tips, &(*r.db)[i])
+			bhTips = append(bhTips, &(*r.db)[i])
 		}
 	}
+
+	tips := r.MapToBlockHeadersStateResponse(bhTips)
 
 	return tips, nil
 }

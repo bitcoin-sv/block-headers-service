@@ -428,7 +428,7 @@ func (hs *HeaderService) CalculateConfirmations(originHeader *domains.BlockHeade
 }
 
 // GetTips returns slice with current tips.
-func (hs *HeaderService) GetTips() ([]*domains.BlockHeader, error) {
+func (hs *HeaderService) GetTips() ([]*domains.BlockHeaderState, error) {
 	return hs.repo.Headers.GetAllTips()
 }
 
