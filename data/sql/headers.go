@@ -121,7 +121,7 @@ const (
     `
 
 	sqlSelectTips = `
-	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, cumulatedWork
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, cumulatedWork, header_state
 	FROM headers
 	WHERE hash NOT IN (SELECT previousblock
 					   FROM headers)

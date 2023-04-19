@@ -63,3 +63,14 @@ func MapToBlockHeaderStateReponse(header domains.BlockHeader, confirmations int)
 		Confirmations: confirmations,
 	}
 }
+
+// MapToBlockHeaderStatesReponse maps a slice of domain BlockHeader to a slice of transport BlockHeaderStateResponse.
+func MapToBlockHeaderStatesReponse(headers []*domains.BlockHeader) []BlockHeaderStateResponse {
+	blockHeaderStatesResponse := make([]BlockHeaderStateResponse, 0)
+
+	for _, header := range headers {
+		blockHeaderStatesResponse = append(blockHeaderStatesResponse, MapToBlockHeaderStateReponse(*header, 1))
+	}
+
+	return blockHeaderStatesResponse
+}
