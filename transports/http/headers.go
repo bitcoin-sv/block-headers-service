@@ -25,7 +25,6 @@ type BlockHeaderStateResponse struct {
 	State         string              `json:"state"`
 	ChainWork     *big.Int            `json:"chainWork"`
 	Height        int32               `json:"height"`
-	Confirmations int                 `json:"confirmations"`
 }
 
 // MapToBlockHeaderReponse maps a domain BlockHeader to a transport BlockHeaderResponse.
@@ -54,13 +53,12 @@ func MapToBlockHeadersReponse(headers []*domains.BlockHeader) []BlockHeaderRespo
 }
 
 // MapToBlockHeaderStateReponse maps a domain BlockHeader to a transport BlockHeaderStateResponse.
-func MapToBlockHeaderStateReponse(header domains.BlockHeader, confirmations int) BlockHeaderStateResponse {
+func MapToBlockHeaderStateReponse(header domains.BlockHeader) BlockHeaderStateResponse {
 	return BlockHeaderStateResponse{
 		Header:        MapToBlockHeaderReponse(header),
 		State:         header.State.String(),
 		ChainWork:     header.CumulatedWork,
 		Height:        header.Height,
-		Confirmations: confirmations,
 	}
 }
 
@@ -69,7 +67,7 @@ func MapToBlockHeaderStatesReponse(headers []*domains.BlockHeader) []BlockHeader
 	blockHeaderStatesResponse := make([]BlockHeaderStateResponse, 0)
 
 	for _, header := range headers {
-		blockHeaderStatesResponse = append(blockHeaderStatesResponse, MapToBlockHeaderStateReponse(*header, 1))
+		blockHeaderStatesResponse = append(blockHeaderStatesResponse, MapToBlockHeaderStateReponse(*header))
 	}
 
 	return blockHeaderStatesResponse

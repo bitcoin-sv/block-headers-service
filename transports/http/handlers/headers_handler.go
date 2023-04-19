@@ -120,8 +120,7 @@ func (h *Handler) getHeadersState(c *gin.Context) {
 	bh, err := h.services.Headers.GetHeaderByHash(hash)
 
 	if err == nil {
-		confirmations := h.services.Headers.CalculateConfirmations(bh)
-		headerStateResponse := headers.MapToBlockHeaderStateReponse(*bh, confirmations)
+		headerStateResponse := headers.MapToBlockHeaderStateReponse(*bh)
 		c.JSON(http.StatusOK, headerStateResponse)
 	} else {
 		c.JSON(http.StatusBadRequest, err.Error())
