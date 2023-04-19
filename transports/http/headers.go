@@ -15,7 +15,7 @@ type BlockHeaderResponse struct {
 	Timestamp        uint32   `json:"creationTimestamp"`
 	DifficultyTarget uint32   `json:"difficultyTarget"`
 	Nonce            uint32   `json:"nonce"`
-	CumulatedWork    *big.Int `json:"work"`
+	Work             *big.Int `json:"work"`
 }
 
 // BlockHeaderStateResponse is an extended version of the BlockHeaderResponse
@@ -23,7 +23,7 @@ type BlockHeaderResponse struct {
 type BlockHeaderStateResponse struct {
 	Header        BlockHeaderResponse `json:"header"`
 	State         string              `json:"state"`
-	ChainWork     uint64              `json:"chainWork"`
+	ChainWork     *big.Int            `json:"chainWork"`
 	Height        int32               `json:"height"`
 	Confirmations int                 `json:"confirmations"`
 }
@@ -38,7 +38,7 @@ func MapToBlockHeaderReponse(header domains.BlockHeader) BlockHeaderResponse {
 		Timestamp:        uint32(header.Timestamp.Unix()),
 		DifficultyTarget: header.DifficultyTarget,
 		Nonce:            header.Nonce,
-		CumulatedWork:    header.CumulatedWork,
+		Work:             header.Chainwork,
 	}
 }
 
@@ -58,7 +58,7 @@ func MapToBlockHeaderStateReponse(header domains.BlockHeader, confirmations int)
 	return BlockHeaderStateResponse{
 		Header:        MapToBlockHeaderReponse(header),
 		State:         header.State.String(),
-		ChainWork:     header.Chainwork,
+		ChainWork:     header.CumulatedWork,
 		Height:        header.Height,
 		Confirmations: confirmations,
 	}

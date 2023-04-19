@@ -36,7 +36,7 @@ type BlockHeader struct {
 	Bits             uint32         `json:"-"`
 	Nonce            uint32         `json:"nonce"`
 	State            HeaderState    `json:"-"`
-	Chainwork        uint64         `json:"-"`
+	Chainwork        *big.Int       `json:"-"`
 	CumulatedWork    *big.Int       `json:"work"`
 	PreviousBlock    chainhash.Hash `json:"prevBlockHash"`
 	DifficultyTarget uint32         `json:"difficultyTarget"`
@@ -52,7 +52,7 @@ type HeaderArgs struct {
 type BlockHeaderState struct {
 	Header        BlockHeader `json:"header"`
 	State         string      `json:"state"`
-	ChainWork     uint64      `json:"chainWork"`
+	ChainWork     *big.Int    `json:"chainWork"`
 	Height        int32       `json:"height"`
 	Confirmations int         `json:"confirmations"`
 }
@@ -115,7 +115,7 @@ func CreateHeader(hash *BlockHash, bs *BlockHeaderSource, ph *BlockHeader) Block
 		Bits:          bs.Bits,
 		Nonce:         bs.Nonce,
 		State:         state,
-		Chainwork:     cw.Uint64(),
+		Chainwork:     cw.BigInt(),
 		CumulatedWork: ccw.BigInt(),
 		PreviousBlock: bs.PrevBlock,
 	}
@@ -174,7 +174,8 @@ func CreateGenesisHeaderBlock() BlockHeader {
 		Bits:          0x1d00ffff,
 		Nonce:         0x7c2bac1d,
 		State:         LongestChain,
-		CumulatedWork: big.NewInt(0),
+		Chainwork:     big.NewInt(4295032833),
+		CumulatedWork: big.NewInt(4295032833),
 	}
 
 	return genesisBlock

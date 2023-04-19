@@ -1,6 +1,7 @@
 package service
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/libsv/bitcoin-hc/domains"
@@ -269,6 +270,6 @@ func createHeader(height int32, hash chainhash.Hash, prevBlock chainhash.Hash) d
 		Height:        height,
 		Hash:          hash,
 		PreviousBlock: prevBlock,
-		Chainwork:     4295032833,
+		Chainwork:     big.NewInt(4295032833),
 	}
 }

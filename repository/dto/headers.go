@@ -2,7 +2,6 @@ package dto
 
 import (
 	"math/big"
-	"strconv"
 	"time"
 
 	"github.com/libsv/bitcoin-hc/domains"
@@ -35,9 +34,9 @@ func (dbh *DbBlockHeader) ToBlockHeader() *domains.BlockHeader {
 		cumulatedWork = big.NewInt(0)
 	}
 
-	chainWork, err := strconv.ParseUint(dbh.Chainwork, 10, 64)
-	if err != nil {
-		chainWork = 0
+	chainWork, ok := new(big.Int).SetString(dbh.Chainwork, 10)
+	if !ok {
+		chainWork = big.NewInt(0)
 	}
 
 	hash, _ := chainhash.NewHashFromStr(dbh.Hash)
@@ -87,7 +86,7 @@ func ToDbBlockHeader(bh domains.BlockHeader) DbBlockHeader {
 		Bits:             bh.Bits,
 		Nonce:            bh.Nonce,
 		State:            bh.State.String(),
-		Chainwork:        strconv.FormatUint(bh.Chainwork, 10),
+		Chainwork:        bh.Chainwork.String(),
 		CumulatedWork:    bh.CumulatedWork.String(),
 		PreviousBlock:    bh.PreviousBlock.String(),
 		DifficultyTarget: bh.DifficultyTarget,
