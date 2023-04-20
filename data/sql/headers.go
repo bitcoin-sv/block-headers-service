@@ -286,17 +286,6 @@ func (h *HeadersDb) GenesisExists(ctx context.Context) bool {
 	return err == nil
 }
 
-// CalculateConfirmations will calculate number of confirmations for header with given hash.
-func (h *HeadersDb) CalculateConfirmations(ctx context.Context, height int32) (int, error) {
-	var tip []dto.DbBlockHeader
-	if err := h.db.Select(&tip, sqlSelectTip); err != nil {
-		configs.Log.Error("sql error", err)
-		return 0, errors.Wrapf(err, "failed to calculate confirmations for block at height: %d", height)
-	}
-	amount := int(tip[0].Height - height + 1)
-	return amount, nil
-}
-
 // GetPreviousHeader will return previous header for this with given hash.
 func (h *HeadersDb) GetPreviousHeader(ctx context.Context, hash string) (*dto.DbBlockHeader, error) {
 	var bh dto.DbBlockHeader

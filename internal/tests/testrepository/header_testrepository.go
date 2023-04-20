@@ -120,18 +120,6 @@ func (r *HeaderTestRepository) GetHeaderByHash(hash string) (*domains.BlockHeade
 	return nil, errors.New("could not find hash")
 }
 
-// GetConfirmationsCountForBlock returns number of confirmations for header with given height.
-func (r *HeaderTestRepository) GetConfirmationsCountForBlock(height int32) (int, error) {
-	highestHeader := domains.BlockHeader{}
-	for _, header := range *r.db {
-		if header.Height > highestHeader.Height {
-			highestHeader = header
-		}
-	}
-	count := highestHeader.Height - height
-	return int(count), nil
-}
-
 // GenesisExists check if genesis header is in db.
 func (r *HeaderTestRepository) GenesisExists() bool {
 	for _, header := range *r.db {

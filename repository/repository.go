@@ -21,7 +21,6 @@ type Headers interface {
 	GetPreviousHeader(hash string) (*domains.BlockHeader, error)
 	GetTip() (*domains.BlockHeader, error)
 	GetAllTips() ([]*domains.BlockHeader, error)
-	GetConfirmationsCountForBlock(height int32) (int, error)
 	GetAncestorOnHeight(hash string, height int32) (*domains.BlockHeader, error)
 	GetChainBetweenTwoHashes(low string, high string) ([]*domains.BlockHeader, error)
 }
