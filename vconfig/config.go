@@ -29,6 +29,10 @@ const (
 	EnvHttpServerWriteTimeout = "http.server.writeTimeout"
 	// EnvHttpServerPort http server port.
 	EnvHttpServerPort         = "http.server.port"
+	// EnvHttpServerUseAuth http server use auth.
+	EnvHttpServerUseAuth      = "http.server.useAuth"
+	// EnvHttpServerAuthToken http server auth token.
+	EnvHttpServerAuthToken    = "http.server.authToken" // nolint:gosec
 )
 
 // DbType database type.

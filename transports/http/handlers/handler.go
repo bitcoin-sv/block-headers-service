@@ -20,21 +20,23 @@ func NewHandler(services *p2pservice.Services) *Handler {
 }
 
 // Init is used to create router and init all routes for http server.
-//  @title P2P Headers API
-//  @version 1.0
-//  @description P2P headers API
-//  @host localhost:8080
-//  @BasePath /
-//  @schemes http.
+//
+//	@title P2P Headers API
+//	@version 1.0
+//	@description P2P headers API
+//	@host localhost:8080
+//	@BasePath /
+//	@schemes http.
 func (h *Handler) Init() *gin.Engine {
 	router := gin.Default()
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
-	v1 := router.Group("/api/v1/")
+	v1 := router.Group("/api/v1/", h.tokenIdentity)
 	h.initHeadersRoutes(v1)
 	h.initNetworkRoutes(v1)
 	h.initTipRoutes(v1)
+	h.initAccessRoutes(v1)
 
 	return router
 }

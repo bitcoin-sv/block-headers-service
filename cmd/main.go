@@ -42,7 +42,8 @@ const httpServerPort = "http.server.port"
 
 func main() {
 	vconfig := vconfig.NewViperConfig(appname).
-		WithDb()
+		WithDb().
+		WithAuthorization()
 
 	// Unzip prepared db file if configured.
 	if viper.GetBool(preparedDb) {

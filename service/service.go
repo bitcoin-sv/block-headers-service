@@ -42,11 +42,19 @@ type Chains interface {
 	Add(domains.BlockHeaderSource) (*domains.BlockHeader, error)
 }
 
+// Tokens is an interface which represents methods required for Tokens service.
+type Tokens interface {
+	GenerateToken() (*domains.Token, error)
+	GetToken(token string) (*domains.Token, error)
+	DeleteToken(token string) error
+}
+
 // Services represents all services in app and provide access to them.
 type Services struct {
 	Network Network
 	Headers Headers
 	Chains  Chains
+	Tokens  Tokens
 }
 
 // Dept is a struct used to create Services.
@@ -67,5 +75,6 @@ func NewServices(d Dept) *Services {
 			Logger:       configs.Log,
 			BlockHasher:  DefaultBlockHasher(),
 		}),
+		Tokens: NewTokenService(d.Repositories),
 	}
 }
