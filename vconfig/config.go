@@ -29,10 +29,14 @@ const (
 	EnvHttpServerWriteTimeout = "http.server.writeTimeout"
 	// EnvHttpServerPort http server port.
 	EnvHttpServerPort         = "http.server.port"
+	// EnvHttpServerUrlPrefix http server url prefix.
+	EnvHttpServerUrlPrefix	= "http.server.urlPrefix"
 	// EnvHttpServerUseAuth http server use auth.
 	EnvHttpServerUseAuth      = "http.server.useAuth"
-	// EnvHttpServerAuthToken http server auth token.
+	// EnvHttpServerAuthToken http server admin auth token.
 	EnvHttpServerAuthToken    = "http.server.authToken" // nolint:gosec
+	// EnvHttpServerAdminOnly endpoints ehich should be authoriazed only with admin token.
+	EnvHttpServerAdminOnly = "http.server.adminOnly"
 )
 
 // DbType database type.

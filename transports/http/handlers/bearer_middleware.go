@@ -12,6 +12,7 @@ import (
 
 const useAuth = "http.server.useAuth"
 const authToken = "http.server.authToken" //nolint:gosec
+const adminEndpoints = "http.server.adminOnly"
 
 const (
 	authorizationHeader = "Authorization"
@@ -42,13 +43,31 @@ func (h *Handler) parseAuthHeader(c *gin.Context) error {
 	aToken := viper.GetString(authToken)
 	// check if given token is the global token
 	if headerParts[1] != aToken {
+		path := c.Request.URL.Path
 
-		// check if given token is saved in the database
-		_, err := h.services.Tokens.GetToken(headerParts[1])
-		if err != nil {
+		// if endpoint is only for admin tokens, return error
+		// if not check if token is valid
+		if isAdminEndpoint(path) {
 			return errors.New("invalid auth token")
+		} else if _, err := h.services.Tokens.GetToken(headerParts[1]); err != nil {
+			return errors.New("invalid access token")
 		}
 	}
 
 	return nil
+}
+
+// isAdminEndpoint checks if the given path is an admin endpoint
+// or if it can be authorized by generated tokens.
+func isAdminEndpoint(path string) bool {
+	endpoints := viper.GetStringSlice(adminEndpoints)
+	prefix := viper.GetString(urlPrefix)
+
+	for _, v := range endpoints {
+		if (prefix + v) == path {
+			return true
+		}
+	}
+
+	return false
 }
