@@ -205,7 +205,6 @@ func (hs *HeaderService) GetHeadersState(hash string) (*domains.BlockHeaderState
 		State:         header.State.String(),
 		Height:        header.Height,
 		ChainWork:     header.Chainwork,
-		Confirmations: hs.CalculateConfirmations(header),
 	}
 	return &state, nil
 }
@@ -413,18 +412,6 @@ func (hs *HeaderService) InsertGenesisHeaderInDatabase() error {
 	err := hs.repo.Headers.AddHeaderToDatabase(genesisBlock)
 
 	return err
-}
-
-// CalculateConfirmations returns number of confirmations for given header.
-func (hs *HeaderService) CalculateConfirmations(originHeader *domains.BlockHeader) int {
-	conf, err := hs.repo.Headers.
-		GetConfirmationsCountForBlock(originHeader.Height)
-	if err != nil {
-		configs.Log.Errorf("%v", err.Error())
-		return conf
-	}
-
-	return conf
 }
 
 // GetTips returns slice with current tips.

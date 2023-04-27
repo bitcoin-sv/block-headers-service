@@ -54,7 +54,6 @@ type BlockHeaderState struct {
 	State         string      `json:"state"`
 	ChainWork     *big.Int    `json:"chainWork"`
 	Height        int32       `json:"height"`
-	Confirmations int         `json:"confirmations"`
 }
 
 // BlockHeaderSource defines source of information about a block header used by system.

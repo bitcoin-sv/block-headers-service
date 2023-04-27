@@ -34,7 +34,6 @@ type Headers interface {
 	GetHeadersState(hash string) (*domains.BlockHeaderState, error)
 	GetTips() ([]*domains.BlockHeader, error)
 	GetPruneTip() (string, error)
-	CalculateConfirmations(originHeader *domains.BlockHeader) int
 }
 
 // Chains is an interface which represents methods exposed by Chains Service.

@@ -121,7 +121,7 @@ const (
     `
 
 	sqlSelectTips = `
-	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, cumulatedWork
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, cumulatedWork, header_state
 	FROM headers
 	WHERE hash NOT IN (SELECT previousblock
 					   FROM headers)
@@ -284,17 +284,6 @@ func (h *HeadersDb) GetStaleHeadersBackFrom(hash string) ([]*dto.DbBlockHeader, 
 func (h *HeadersDb) GenesisExists(ctx context.Context) bool {
 	err := h.db.QueryRow(sqlVerifyIfGenesisPresent)
 	return err == nil
-}
-
-// CalculateConfirmations will calculate number of confirmations for header with given hash.
-func (h *HeadersDb) CalculateConfirmations(ctx context.Context, height int32) (int, error) {
-	var tip []dto.DbBlockHeader
-	if err := h.db.Select(&tip, sqlSelectTip); err != nil {
-		configs.Log.Error("sql error", err)
-		return 0, errors.Wrapf(err, "failed to calculate confirmations for block at height: %d", height)
-	}
-	amount := int(tip[0].Height - height + 1)
-	return amount, nil
 }
 
 // GetPreviousHeader will return previous header for this with given hash.
