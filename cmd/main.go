@@ -40,6 +40,9 @@ const preparedDb = "db.preparedDb"
 const preparedDbFilePath = "db.preparedDbFile.path"
 const httpServerPort = "http.server.port"
 
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
 func main() {
 	vconfig := vconfig.NewViperConfig(appname).
 		WithDb().

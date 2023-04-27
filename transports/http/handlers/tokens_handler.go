@@ -15,6 +15,7 @@ import (
 //	@Produce json
 //	@Success 200 {object} domains.Token
 //	@Router /access [get]
+//  @Security Bearer
 func (h *Handler) createToken(c *gin.Context) {
 	bh, err := h.services.Tokens.GenerateToken()
 
@@ -34,6 +35,7 @@ func (h *Handler) createToken(c *gin.Context) {
 //	@Produce json
 //	@Router /access/{token} [delete]
 //	@Param token path string true "Token to delete"
+//  @Security Bearer
 func (h *Handler) revokeToken(c *gin.Context) {
 	token := c.Param("token")
 	fmt.Println("token", token)

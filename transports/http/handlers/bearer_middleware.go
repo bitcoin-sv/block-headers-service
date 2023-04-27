@@ -64,7 +64,7 @@ func isAdminEndpoint(path string) bool {
 	prefix := viper.GetString(urlPrefix)
 
 	for _, v := range endpoints {
-		if (prefix + v) == path {
+		if strings.Contains(path, (prefix + v)) {
 			return true
 		}
 	}

@@ -1,8 +1,53 @@
 definitions:
-  headers.BlockHeader:
+  domains.BlockHeader:
     properties:
       creationTimestamp:
         type: string
+      difficultyTarget:
+        type: integer
+      hash:
+        items:
+          type: integer
+        type: array
+      merkleRoot:
+        items:
+          type: integer
+        type: array
+      nonce:
+        type: integer
+      prevBlockHash:
+        items:
+          type: integer
+        type: array
+      version:
+        type: integer
+      work:
+        type: string
+    type: object
+  domains.BlockHeaderState:
+    properties:
+      chainWork:
+        type: string
+      confirmations:
+        type: integer
+      header:
+        $ref: '#/definitions/domains.BlockHeader'
+      height:
+        type: integer
+      state:
+        type: string
+    type: object
+  domains.Token:
+    properties:
+      createdAt:
+        type: string
+      token:
+        type: string
+    type: object
+  http.BlockHeaderResponse:
+    properties:
+      creationTimestamp:
+        type: integer
       difficultyTarget:
         type: integer
       hash:
@@ -13,21 +58,19 @@ definitions:
         type: integer
       prevBlockHash:
         type: string
-      transactionCount:
-        type: integer
       version:
         type: integer
       work:
-        type: integer
+        type: string
     type: object
-  headers.BlockHeaderState:
+  http.BlockHeaderStateResponse:
     properties:
       chainWork:
-        type: integer
+        type: string
       confirmations:
         type: integer
       header:
-        $ref: '#/definitions/headers.BlockHeader'
+        $ref: '#/definitions/http.BlockHeaderResponse'
       height:
         type: integer
       state:
@@ -36,6 +79,42 @@ definitions:
 info:
   contact: {}
 paths:
+  /access:
+    get:
+      consumes:
+      - '*/*'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domains.Token'
+      security:
+      - Bearer: []
+      summary: Creates new token
+      tags:
+      - access
+  /access/{token}:
+    delete:
+      consumes:
+      - '*/*'
+      parameters:
+      - description: Token to delete
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      security:
+      - Bearer: []
+      summary: Gets header state
+      tags:
+      - access
   /chain/header/{hash}:
     get:
       consumes:
@@ -52,7 +131,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/headers.BlockHeader'
+            $ref: '#/definitions/domains.BlockHeader'
+      security:
+      - Bearer: []
       summary: Gets header by hash
       tags:
       - headers
@@ -78,8 +159,10 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/headers.BlockHeader'
+              $ref: '#/definitions/domains.BlockHeader'
             type: array
+      security:
+      - Bearer: []
       summary: Gets header ancestors
       tags:
       - headers
@@ -104,8 +187,10 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/headers.BlockHeader'
+              $ref: '#/definitions/domains.BlockHeader'
             type: array
+      security:
+      - Bearer: []
       summary: Gets header by height
       tags:
       - headers
@@ -128,7 +213,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/headers.BlockHeader'
+            $ref: '#/definitions/domains.BlockHeader'
+      security:
+      - Bearer: []
       summary: Gets common ancestors
       tags:
       - headers
@@ -148,7 +235,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/headers.BlockHeaderState'
+            $ref: '#/definitions/http.BlockHeaderStateResponse'
+      security:
+      - Bearer: []
       summary: Gets header state
       tags:
       - headers
@@ -163,8 +252,10 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/headers.BlockHeaderState'
+              $ref: '#/definitions/domains.BlockHeaderState'
             type: array
+      security:
+      - Bearer: []
       summary: Gets all tips
       tags:
       - tip
@@ -185,6 +276,8 @@ paths:
           description: OK
           schema:
             type: string
+      security:
+      - Bearer: []
       summary: Prune tip
       tags:
       - tip
@@ -197,6 +290,8 @@ paths:
       responses:
         "200":
           description: OK
+      security:
+      - Bearer: []
       summary: Gets all peers
       tags:
       - network
@@ -211,7 +306,14 @@ paths:
           description: OK
           schema:
             type: integer
+      security:
+      - Bearer: []
       summary: Gets peers count
       tags:
       - network
+securityDefinitions:
+  Bearer:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

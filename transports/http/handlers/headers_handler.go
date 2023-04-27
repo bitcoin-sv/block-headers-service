@@ -14,10 +14,11 @@ import (
 //	@Summary Gets header by hash
 //	@Tags headers
 //	@Accept */*
-//	@Success 200 {object} headers.BlockHeader
+//	@Success 200 {object} domains.BlockHeader
 //	@Produce json
 //	@Router /chain/header/{hash} [get]
 //	@Param hash path string true "Requested Header Hash"
+//  @Security Bearer
 func (h *Handler) getHeaderByHash(c *gin.Context) {
 	hash := c.Param("hash")
 	bh, err := h.services.Headers.GetHeaderByHash(hash)
@@ -35,10 +36,11 @@ func (h *Handler) getHeaderByHash(c *gin.Context) {
 //	@Tags headers
 //	@Accept */*
 //	@Produce json
-//	@Success 200 {object} []headers.BlockHeader
+//	@Success 200 {object} []domains.BlockHeader
 //	@Router /chain/header/byHeight [get]
 //	@Param height query int true "Height to start from"
 //	@Param count query int false "Headers count (optional)"
+//  @Security Bearer
 func (h *Handler) getHeaderByHeight(c *gin.Context) {
 	height, _ := c.GetQuery("height")
 	count, _ := c.GetQuery("count")
@@ -66,10 +68,11 @@ func (h *Handler) getHeaderByHeight(c *gin.Context) {
 //	@Tags headers
 //	@Accept */*
 //	@Produce json
-//	@Success 200 {object} []headers.BlockHeader
+//	@Success 200 {object} []domains.BlockHeader
 //	@Router /chain/header/{hash}/{ancestorHash}/ancestors [get]
 //	@Param hash path string true "Requested Header Hash"
 //	@Param ancestorHash path string true "Ancestor Header Hash"
+//  @Security Bearer
 func (h *Handler) getHeaderAncestorsByHash(c *gin.Context) {
 	hash := c.Param("hash")
 	ancestorHash := c.Param("ancestorHash")
@@ -88,9 +91,10 @@ func (h *Handler) getHeaderAncestorsByHash(c *gin.Context) {
 //	@Tags headers
 //	@Accept */*
 //	@Produce json
-//	@Success 200 {object} headers.BlockHeader
+//	@Success 200 {object} domains.BlockHeader
 //	@Router /chain/header/commonAncestor [post]
 //	@Param ancesstors body []string true "JSON"
+//  @Security Bearer
 func (h *Handler) getCommonAncestors(c *gin.Context) {
 	var body []string
 	if err := c.BindJSON(&body); err != nil {
@@ -112,9 +116,10 @@ func (h *Handler) getCommonAncestors(c *gin.Context) {
 //	@Tags headers
 //	@Accept */*
 //	@Produce json
-//	@Success 200 {object} BlockHeaderStateResponse
+//	@Success 200 {object} http.BlockHeaderStateResponse
 //	@Router /chain/header/state/{hash} [get]
 //	@Param hash path string true "Requested Header Hash"
+//  @Security Bearer
 func (h *Handler) getHeadersState(c *gin.Context) {
 	hash := c.Param("hash")
 	bh, err := h.services.Headers.GetHeaderByHash(hash)
