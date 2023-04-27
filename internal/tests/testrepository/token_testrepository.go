@@ -47,7 +47,7 @@ func (r *TokensTestRepository) DeleteToken(token string) error {
 	return errors.New("could not find token")
 }
 
-// NewHeadersTestRepository constructor for HeaderTestRepository.
+// NewTokensTestRepository constructor for TokensTestRepository.
 func NewTokensTestRepository(db *[]domains.Token) *TokensTestRepository {
 	return &TokensTestRepository{
 		db: db,

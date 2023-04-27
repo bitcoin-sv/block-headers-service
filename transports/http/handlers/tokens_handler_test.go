@@ -16,9 +16,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Tests for authorization
+// Tests for authorization.
 
-// Tests the GET /access endpoint without authorization header
+// Tests the GET /access endpoint without authorization header.
 func TestAccessEndpointWithoutAuthHeader(t *testing.T) {
 	r := setUp()
 
@@ -33,7 +33,7 @@ func TestAccessEndpointWithoutAuthHeader(t *testing.T) {
 	}
 }
 
-// Tests the GET /access endpoint with wrong header
+// Tests the GET /access endpoint with wrong header.
 func TestAccessEndpointWithWrongAuthHeader(t *testing.T) {
 	r := setUp()
 
@@ -48,11 +48,11 @@ func TestAccessEndpointWithWrongAuthHeader(t *testing.T) {
 	}
 }
 
-// Tests the GET /access endpoint with global auth token
+// Tests the GET /access endpoint with global auth token.
 func TestAccessEndpointWithGlobalAuthHeader(t *testing.T) {
 	r := setUp()
 
-	// Try to get access token with global authorization header
+	// Try to get access token with global authorization header.
 	authToken := viper.GetString("http.server.authToken")
 	res, err := callEndpoint(r, authToken, nil)
 	if err != nil {
@@ -64,11 +64,11 @@ func TestAccessEndpointWithGlobalAuthHeader(t *testing.T) {
 	}
 }
 
-// Tests the GET /access endpoint with created auth token
+// Tests the GET /access endpoint with created auth token.
 func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 	r := setUp()
 
-	// Try to get access token with global authorization header
+	// Try to get access token with global authorization header.
 	authToken := viper.GetString("http.server.authToken")
 	res, err := callEndpoint(r, authToken, nil)
 	if err != nil {
@@ -79,14 +79,14 @@ func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusOK, res.Code)
 	}
 
-	// Get the token from the response
+	// Get the token from the response.
 	var token domains.Token
 	err = json.Unmarshal(res.Body.Bytes(), &token)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
 
-	// Try to get access token with created authorization header
+	// Try to get access token with created authorization header.
 	res2, err := callEndpoint(r, token.Token, nil)
 	if err != nil {
 		t.Fatalf("%v\n", err)
@@ -97,11 +97,11 @@ func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 	}
 }
 
-// Tests the DELETE method for the /access endpoint for created auth token
+// Tests the DELETE method for the /access endpoint for created auth token.
 func TestDeleteTokenEndpoint(t *testing.T) {
 	r := setUp()
 
-	// Try to get access token with global authorization header
+	// Try to get access token with global authorization header.
 	authToken := viper.GetString("http.server.authToken")
 	res, err := callEndpoint(r, authToken, nil)
 	if err != nil {
@@ -112,14 +112,14 @@ func TestDeleteTokenEndpoint(t *testing.T) {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusOK, res.Code)
 	}
 
-	// Get the token from the response
+	// Get the token from the response.
 	var token domains.Token
 	err = json.Unmarshal(res.Body.Bytes(), &token)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
 
-	// Call DELETE endpoint with created token
+	// Call DELETE endpoint with created token.
 	res, err = callEndpoint(r, authToken, &token.Token)
 	if err != nil {
 		t.Fatalf("%v\n", err)
@@ -131,11 +131,11 @@ func TestDeleteTokenEndpoint(t *testing.T) {
 }
 
 func setUp() (router *gin.Engine) {
-	// Load config
+	// Load config.
 	vconfig.NewViperConfig("pulse-test").
 		WithAuthorization()
 
-	// Create the handler
+	// Create the handler.
 	var tokensTable []domains.Token
 
 	repo := &repository.Repositories{
@@ -149,7 +149,7 @@ func setUp() (router *gin.Engine) {
 
 	h := NewHandler(hs)
 
-	// Create the router
+	// Create the router.
 	gin.SetMode(gin.TestMode)
 	router = gin.Default()
 	prefix := viper.GetString(urlPrefix)
@@ -161,9 +161,9 @@ func setUp() (router *gin.Engine) {
 }
 
 // Call GET or DELETE /access endpoint with given authorization token
-// If tokenToDelete is not nil, DELETE method will be called
+// If tokenToDelete is not nil, DELETE method will be called.
 func callEndpoint(r *gin.Engine, headerToken string, tokenToDelete *string) (*httptest.ResponseRecorder, error) {
-	// Create the request
+	// Create the request.
 	prefix := viper.GetString(urlPrefix)
 	var req *http.Request
 	var err error
@@ -180,12 +180,12 @@ func callEndpoint(r *gin.Engine, headerToken string, tokenToDelete *string) (*ht
 		}
 	}
 
-	// Add the authorization header
+	// Add the authorization header.
 	if authToken != "" {
 		req.Header.Add("Authorization", "Bearer "+headerToken)
 	}
 
-	// Serve the request
+	// Serve the request.
 	res := httptest.NewRecorder()
 	r.ServeHTTP(res, req)
 
