@@ -8,7 +8,7 @@ services:
       - "8080:8080"
       - "8333:8333"
     environment:
-      - DB_PREPAREDDB=false
+      - DB_PREPAREDDB=true
       - DB_PREPAREDDBFILE_PATH=./data/blockheaders.xz
       - HTTP_SERVER_AUTHTOKEN=admin_only_afUMlv5iiDgQtj22O9n5fADeSb
     restart: unless-stopped
