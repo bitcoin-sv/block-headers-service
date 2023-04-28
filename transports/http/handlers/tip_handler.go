@@ -13,8 +13,9 @@ import (
 //  @Tags tip
 //  @Accept */*
 //  @Produce json
-//  @Success 200 {object} []headers.BlockHeaderState
+//  @Success 200 {object} []domains.BlockHeaderState
 //  @Router /chain/tips [get]
+//  @Security Bearer
 func (h *Handler) getTips(c *gin.Context) {
 	tips, err := h.services.Headers.GetTips()
 
@@ -33,6 +34,7 @@ func (h *Handler) getTips(c *gin.Context) {
 //  @Success 200 {object} string
 //  @Router /chain/tips/prune/{hash} [get]
 //  @Param hash path string true "Requested Header Hash"
+//  @Security Bearer
 func (h *Handler) pruneTip(c *gin.Context) {
 	param := c.Param("hash")
 	fmt.Println(param)

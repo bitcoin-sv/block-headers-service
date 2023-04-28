@@ -13,6 +13,7 @@ import (
 //  @Produce json
 //  @Success 200
 //  @Router /network/peers [get]
+//  @Security Bearer
 func (h *Handler) getPeers(c *gin.Context) {
 	peers := h.services.Network.GetPeers()
 	c.JSON(http.StatusOK, peers)
@@ -25,6 +26,7 @@ func (h *Handler) getPeers(c *gin.Context) {
 //  @Produce json
 //  @Success 200 {object} int
 //  @Router /network/peers/count [get]
+//  @Security Bearer
 func (h *Handler) getPeersCount(c *gin.Context) {
 	count := h.services.Network.GetPeersCount()
 	c.JSON(http.StatusOK, count)

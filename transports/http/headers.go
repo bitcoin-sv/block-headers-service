@@ -15,7 +15,7 @@ type BlockHeaderResponse struct {
 	Timestamp        uint32   `json:"creationTimestamp"`
 	DifficultyTarget uint32   `json:"difficultyTarget"`
 	Nonce            uint32   `json:"nonce"`
-	Work             *big.Int `json:"work"`
+	Work             *big.Int `json:"work" swaggertype:"string"`
 }
 
 // BlockHeaderStateResponse is an extended version of the BlockHeaderResponse
@@ -23,7 +23,7 @@ type BlockHeaderResponse struct {
 type BlockHeaderStateResponse struct {
 	Header        BlockHeaderResponse `json:"header"`
 	State         string              `json:"state"`
-	ChainWork     *big.Int            `json:"chainWork"`
+	ChainWork     *big.Int            `json:"chainWork"  swaggertype:"string"`
 	Height        int32               `json:"height"`
 }
 

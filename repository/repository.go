@@ -6,7 +6,7 @@ import (
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 )
 
-// Headers is a interface which represents methods performed on defined storage.
+// Headers is a interface which represents methods performed on header table in defined storage.
 type Headers interface {
 	AddHeaderToDatabase(header domains.BlockHeader) error
 	UpdateState([]chainhash.Hash, domains.HeaderState) error
@@ -25,13 +25,22 @@ type Headers interface {
 	GetChainBetweenTwoHashes(low string, high string) ([]*domains.BlockHeader, error)
 }
 
+// Tokens is a interface which represents methods performed on tokens table in defined storage.
+type Tokens interface{
+	AddTokenToDatabase(token *domains.Token) error
+	GetTokenByValue(token string) (*domains.Token, error)
+	DeleteToken(token string) error
+}
+
 // Repositories represents all repositories in app and provide access to them.
 type Repositories struct {
 	Headers Headers
+	Tokens  Tokens
 }
 // NewRepositories creates and returns Repositories instance.
 func NewRepositories(db *sql.HeadersDb) *Repositories {
 	return &Repositories{
 		Headers: NewHeadersRepository(db),
+		Tokens:	 NewTokensRepository(db),
 	}
 }

@@ -36,8 +36,8 @@ type BlockHeader struct {
 	Bits             uint32         `json:"-"`
 	Nonce            uint32         `json:"nonce"`
 	State            HeaderState    `json:"-"`
-	Chainwork        *big.Int       `json:"-"`
-	CumulatedWork    *big.Int       `json:"work"`
+	Chainwork        *big.Int       `json:"-" swaggertype:"string"`
+	CumulatedWork    *big.Int       `json:"work" swaggertype:"string"`
 	PreviousBlock    chainhash.Hash `json:"prevBlockHash"`
 	DifficultyTarget uint32         `json:"difficultyTarget"`
 }
@@ -52,7 +52,7 @@ type HeaderArgs struct {
 type BlockHeaderState struct {
 	Header        BlockHeader `json:"header"`
 	State         string      `json:"state"`
-	ChainWork     *big.Int    `json:"chainWork"`
+	ChainWork     *big.Int    `json:"chainWork" swaggertype:"string"`
 	Height        int32       `json:"height"`
 }
 

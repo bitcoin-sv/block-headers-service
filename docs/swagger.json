@@ -4,8 +4,73 @@
         "contact": {}
     },
     "paths": {
+        "/access": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "access"
+                ],
+                "summary": "Creates new token",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domains.Token"
+                        }
+                    }
+                }
+            }
+        },
+        "/access/{token}": {
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "access"
+                ],
+                "summary": "Gets header state",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token to delete",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/chain/header/byHeight": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "*/*"
                 ],
@@ -37,7 +102,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/headers.BlockHeader"
+                                "$ref": "#/definitions/domains.BlockHeader"
                             }
                         }
                     }
@@ -46,6 +111,11 @@
         },
         "/chain/header/commonAncestor": {
             "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "*/*"
                 ],
@@ -74,7 +144,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/headers.BlockHeader"
+                            "$ref": "#/definitions/domains.BlockHeader"
                         }
                     }
                 }
@@ -82,6 +152,11 @@
         },
         "/chain/header/state/{hash}": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "*/*"
                 ],
@@ -105,7 +180,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/headers.BlockHeaderState"
+                            "$ref": "#/definitions/http.BlockHeaderStateResponse"
                         }
                     }
                 }
@@ -113,6 +188,11 @@
         },
         "/chain/header/{hash}": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "*/*"
                 ],
@@ -136,7 +216,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/headers.BlockHeader"
+                            "$ref": "#/definitions/domains.BlockHeader"
                         }
                     }
                 }
@@ -144,6 +224,11 @@
         },
         "/chain/header/{hash}/{ancestorHash}/ancestors": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "*/*"
                 ],
@@ -176,7 +261,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/headers.BlockHeader"
+                                "$ref": "#/definitions/domains.BlockHeader"
                             }
                         }
                     }
@@ -185,6 +270,11 @@
         },
         "/chain/tips": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "*/*"
                 ],
@@ -201,7 +291,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/headers.BlockHeaderState"
+                                "$ref": "#/definitions/domains.BlockHeaderState"
                             }
                         }
                     }
@@ -210,6 +300,11 @@
         },
         "/chain/tips/prune/{hash}": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "*/*"
                 ],
@@ -241,6 +336,11 @@
         },
         "/network/peers": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "*/*"
                 ],
@@ -260,6 +360,11 @@
         },
         "/network/peers/count": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "*/*"
                 ],
@@ -282,11 +387,80 @@
         }
     },
     "definitions": {
-        "headers.BlockHeader": {
+        "domains.BlockHeader": {
             "type": "object",
             "properties": {
                 "creationTimestamp": {
                     "type": "string"
+                },
+                "difficultyTarget": {
+                    "type": "integer"
+                },
+                "hash": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "merkleRoot": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "nonce": {
+                    "type": "integer"
+                },
+                "prevBlockHash": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "version": {
+                    "type": "integer"
+                },
+                "work": {
+                    "type": "string"
+                }
+            }
+        },
+        "domains.BlockHeaderState": {
+            "type": "object",
+            "properties": {
+                "chainWork": {
+                    "type": "string"
+                },
+                "confirmations": {
+                    "type": "integer"
+                },
+                "header": {
+                    "$ref": "#/definitions/domains.BlockHeader"
+                },
+                "height": {
+                    "type": "integer"
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "domains.Token": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.BlockHeaderResponse": {
+            "type": "object",
+            "properties": {
+                "creationTimestamp": {
+                    "type": "integer"
                 },
                 "difficultyTarget": {
                     "type": "integer"
@@ -303,28 +477,25 @@
                 "prevBlockHash": {
                     "type": "string"
                 },
-                "transactionCount": {
-                    "type": "integer"
-                },
                 "version": {
                     "type": "integer"
                 },
                 "work": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
-        "headers.BlockHeaderState": {
+        "http.BlockHeaderStateResponse": {
             "type": "object",
             "properties": {
                 "chainWork": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "confirmations": {
                     "type": "integer"
                 },
                 "header": {
-                    "$ref": "#/definitions/headers.BlockHeader"
+                    "$ref": "#/definitions/http.BlockHeaderResponse"
                 },
                 "height": {
                     "type": "integer"
@@ -333,6 +504,13 @@
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }
