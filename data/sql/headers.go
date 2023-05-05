@@ -120,6 +120,13 @@ const (
     WHERE height = ?
     `
 
+	sqlSelectHighestHundred = `
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
+	FROM headers
+	ORDER BY height DESC
+	LIMIT 100
+	`
+
 	sqlSelectTips = `
 	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, cumulatedWork, header_state
 	FROM headers
@@ -164,6 +171,16 @@ func NewHeadersDb(db *sqlx.DB, dbType vconfig.DbType) *HeadersDb {
 			},
 		},
 	}
+}
+
+func contains(slice []string, item string) bool {
+	set := make(map[string]struct{}, len(slice))
+	for _, s := range slice {
+		set[s] = struct{}{}
+	}
+
+	_, ok := set[item]
+	return ok
 }
 
 // Create method will add new record into db.
@@ -323,13 +340,25 @@ func (h *HeadersDb) GetAncestorOnHeight(hash string, height int32) (*dto.DbBlock
 	return bh[0], nil
 }
 
-// GetAllTips returns all tips from db.
+// GetAllTips returns headers whose hash does not appear as previous block hashes in any header within the highest 100 headers.
 func (h *HeadersDb) GetAllTips() ([]*dto.DbBlockHeader, error) {
 	var bh []*dto.DbBlockHeader
-	if err := h.db.Select(&bh, sqlSelectTips); err != nil {
-		return nil, errors.Wrapf(err, "failed to get tips")
+	if err := h.db.Select(&bh, sqlSelectHighestHundred); err != nil {
+		return nil, errors.Wrapf(err, "failed to get top hundred headers by height")
 	}
-	return bh, nil
+
+	previousBlocks := make([]string, 0, len(bh))
+	for _, header := range bh {
+		previousBlocks = append(previousBlocks, header.PreviousBlock)
+	}
+
+	var tips []*dto.DbBlockHeader
+	for _, header := range bh {
+		if !contains(previousBlocks, header.Hash) {
+			tips = append(tips, header)
+		}
+	}
+	return tips, nil
 }
 
 // GetChainBetweenTwoHashes calculates and returnes chain between 2 hashes.
