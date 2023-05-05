@@ -127,13 +127,6 @@ const (
 	LIMIT 100
 	`
 
-	sqlSelectTips = `
-	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, cumulatedWork, header_state
-	FROM headers
-	WHERE hash NOT IN (SELECT previousblock
-					   FROM headers)
-				   `
-
 	sqlChainBetweenTwoHashes = `
 	WITH RECURSIVE ancestors(hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, cumulatedWork, level) AS (
 		SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, cumulatedWork, 0 level
