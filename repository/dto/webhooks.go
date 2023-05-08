@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/libsv/bitcoin-hc/notification"
 )
 
 // DbWebhook represent webhook saved in db.
@@ -19,8 +19,8 @@ type DbWebhook struct {
 }
 
 // ToWebhook converts DbWebhook to Webhook.
-func (dbt *DbWebhook) ToWebhook() *domains.Webhook {
-	return &domains.Webhook{
+func (dbt *DbWebhook) ToWebhook() *notification.Webhook {
+	return &notification.Webhook{
 		Url:         dbt.Url,
 		TokenHeader: dbt.TokenHeader,
 		Token:       dbt.Token,
@@ -31,7 +31,7 @@ func (dbt *DbWebhook) ToWebhook() *domains.Webhook {
 }
 
 // ToDbWebhook converts Webhook to DbWebhook.
-func ToDbWebhook(t *domains.Webhook) *DbWebhook {
+func ToDbWebhook(t *notification.Webhook) *DbWebhook {
 	return &DbWebhook{
 		Url:         t.Url,
 		TokenHeader: t.TokenHeader,

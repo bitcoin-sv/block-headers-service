@@ -2,11 +2,12 @@ package auth
 
 import (
 	"errors"
+	"net/http"
+	"strings"
+
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/service"
 	"github.com/libsv/bitcoin-hc/vconfig"
-	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -62,10 +63,6 @@ func (h *TokenMiddleware) parseAuthHeader(c *gin.Context) (string, error) {
 }
 
 func (h *TokenMiddleware) getToken(token string) (*domains.Token, error) {
-	adminToken := viper.GetString(vconfig.EnvHttpServerAuthToken)
-	if token == adminToken {
-		return domains.CreateAdminToken(token), nil
-	}
 	t, err := h.tokens.GetToken(token)
 	if err != nil {
 		return nil, errors.New("invalid access token")

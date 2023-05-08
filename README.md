@@ -49,6 +49,7 @@
         <li><a href="#authentication">Authentication</a></li>
       </ul>
       <ul>
+        <li><a href="#websocket">Websocket</a></li>
         <li><a href="#webhooks">Webhooks</a></li>
       </ul>
     </li>
@@ -201,6 +202,20 @@ DELETE https://{{pulse_url}}/api/v1/access/{{some_token_created_by_server}}
 Authorization: Bearer replace_me_with_token_you_want_to_use_as_admin_token
 ```
 After this request succeeded the token can't be used to authenticate in pulse.
+
+### Websocket
+
+Pulse can notify a client via websockets that new header was received and store by it.
+
+#### Subscribing
+
+Pulse use [centrifugal/centrifuge](https://github.com/centrifugal/centrifuge) to run a server. 
+Therefore, to integrate you need to choose a client library matching a programming language of your choice.
+
+Example how to subscribe using GO lang library [centrifugal/centrifuge-go](https://github.com/centrifugal/centrifuge-go) 
+can be found in [./examples/ws-subscribe-to-new-headers/](./examples/ws-subscribe-to-new-headers/main.go)
+
+### Webhooks
 
 #### Creating webhook
 Creating a new webhook is done via POST request

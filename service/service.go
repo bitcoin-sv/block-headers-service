@@ -6,7 +6,9 @@ import (
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/wire"
+	"github.com/libsv/bitcoin-hc/notification"
 	"github.com/libsv/bitcoin-hc/repository"
+	"github.com/libsv/bitcoin-hc/transports/http/client"
 	peerpkg "github.com/libsv/bitcoin-hc/transports/p2p/peer"
 )
 
@@ -48,21 +50,14 @@ type Tokens interface {
 	DeleteToken(token string) error
 }
 
-// Webhooks is an interface which represents methods required for Webhooks service.
-type Webhooks interface {
-	CreateWebhook(authType, header, token, url string) (*domains.Webhook, error)
-	DeleteWebhook(value string) error
-	NotifyWebhooks(h *domains.BlockHeader) error
-	GetWebhookByUrl(url string) (*domains.Webhook, error)
-}
-
 // Services represents all services in app and provide access to them.
 type Services struct {
 	Network  Network
 	Headers  Headers
 	Chains   Chains
 	Tokens   Tokens
-	Webhooks Webhooks
+	Notifier *notification.Notifier
+	Webhooks *notification.WebhooksService
 }
 
 // Dept is a struct used to create Services.
@@ -70,21 +65,38 @@ type Dept struct {
 	Peers         map[*peerpkg.Peer]*peerpkg.PeerSyncState
 	Repositories  *repository.Repositories
 	Params        *chaincfg.Params
+	AdminToken    string
 	LoggerFactory logging.LoggerFactory
 }
 
 // NewServices creates and returns Services instance.
 func NewServices(d Dept) *Services {
+	notifier := newNotifier()
+
 	return &Services{
-		Network: NewNetworkService(d.Peers),
-		Headers: NewHeaderService(d.Repositories),
-		Chains: NewChainsService(ChainServiceDependencies{
-			Repositories:  d.Repositories,
-			Params:        d.Params,
-			LoggerFactory: d.LoggerFactory,
-			BlockHasher:   DefaultBlockHasher(),
-		}),
-		Tokens:   NewTokenService(d.Repositories),
-		Webhooks: NewWebhooksService(d.Repositories),
+		Network:  NewNetworkService(d.Peers),
+		Headers:  NewHeaderService(d.Repositories),
+		Notifier: notifier,
+		Chains:   newChainService(d, notifier),
+		Tokens:   NewTokenService(d.Repositories, d.AdminToken),
+		Webhooks: newWebhooks(d),
 	}
+}
+
+func newChainService(d Dept, notifier *notification.Notifier) Chains {
+	return NewChainsService(
+		d.Repositories,
+		d.Params,
+		d.LoggerFactory,
+		DefaultBlockHasher(),
+		notifier,
+	)
+}
+
+func newWebhooks(d Dept) *notification.WebhooksService {
+	return notification.NewWebhooksService(d.Repositories.Webhooks, client.NewWebhookTargetClient(), d.LoggerFactory)
+}
+
+func newNotifier() *notification.Notifier {
+	return notification.NewNotifier()
 }

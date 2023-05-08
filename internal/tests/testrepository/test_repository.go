@@ -3,6 +3,7 @@ package testrepository
 import (
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/internal/tests/fixtures"
+	"github.com/libsv/bitcoin-hc/notification"
 	"github.com/libsv/bitcoin-hc/repository"
 )
 
@@ -21,6 +22,6 @@ func NewCleanTestRepositories() repository.Repositories {
 	return repository.Repositories{
 		Headers:  NewHeadersTestRepository(&db),
 		Tokens:   NewTokensTestRepository(&tokensTable),
-		Webhooks: NewWebhooksTestRepository(&[]domains.Webhook{}),
+		Webhooks: NewWebhooksTestRepository(&[]notification.Webhook{}),
 	}
 }
