@@ -46,6 +46,7 @@ func (h *Handler) Init() *gin.Engine {
 	h.initNetworkRoutes(v1)
 	h.initTipRoutes(v1)
 	h.initAccessRoutes(v1)
+	h.initRegisteredWehooksRoutes(v1)
 
 	return router
 }

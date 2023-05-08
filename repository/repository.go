@@ -26,21 +26,33 @@ type Headers interface {
 }
 
 // Tokens is a interface which represents methods performed on tokens table in defined storage.
-type Tokens interface{
+type Tokens interface {
 	AddTokenToDatabase(token *domains.Token) error
 	GetTokenByValue(token string) (*domains.Token, error)
 	DeleteToken(token string) error
 }
 
+// Webhooks is a interface which represents methods performed on registered_webhooks table in defined storage.
+type Webhooks interface {
+	AddWebhookToDatabase(token *domains.Webhook) error
+	DeleteWebhookByName(name string) error
+	DeleteWebhookByUrl(url string) error
+	GetWebhookByName(name string) (*domains.Webhook, error)
+	GetWebhookByUrl(url string) (*domains.Webhook, error)
+}
+
 // Repositories represents all repositories in app and provide access to them.
 type Repositories struct {
-	Headers Headers
-	Tokens  Tokens
+	Headers  Headers
+	Tokens   Tokens
+	Webhooks Webhooks
 }
+
 // NewRepositories creates and returns Repositories instance.
 func NewRepositories(db *sql.HeadersDb) *Repositories {
 	return &Repositories{
-		Headers: NewHeadersRepository(db),
-		Tokens:	 NewTokensRepository(db),
+		Headers:  NewHeadersRepository(db),
+		Tokens:   NewTokensRepository(db),
+		Webhooks: NewWebhooksRepository(db),
 	}
 }
