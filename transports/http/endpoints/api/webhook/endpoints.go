@@ -4,12 +4,20 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/libsv/bitcoin-hc/notification"
 	"github.com/libsv/bitcoin-hc/service"
 	router "github.com/libsv/bitcoin-hc/transports/http/endpoints/routes"
 )
 
+// Webhooks is an interface which represents methods required for Webhooks service.
+type Webhooks interface {
+	CreateWebhook(authType, header, token, url string) (*notification.Webhook, error)
+	DeleteWebhook(value string) error
+	GetWebhookByUrl(url string) (*notification.Webhook, error)
+}
+
 type handler struct {
-	service service.Webhooks
+	service Webhooks
 }
 
 // NewHandler creates new endpoint handler.

@@ -7,7 +7,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/libsv/bitcoin-hc/transports/http/endpoints"
 	"io"
 	"net/http"
 	"os"
@@ -15,6 +14,10 @@ import (
 	"runtime"
 	"runtime/debug"
 	"syscall"
+
+	"github.com/libsv/bitcoin-hc/notification"
+	"github.com/libsv/bitcoin-hc/transports/http/endpoints"
+	"github.com/libsv/bitcoin-hc/transports/websocket"
 
 	"github.com/libsv/bitcoin-hc/app/logger"
 	"github.com/libsv/bitcoin-hc/domains/logging"
@@ -104,6 +107,7 @@ func main() {
 		Repositories:  repo,
 		Peers:         peers,
 		Params:        configs.ActiveNetParams.Params,
+		AdminToken:    viper.GetString(vconfig.EnvHttpServerAuthToken),
 		LoggerFactory: lf,
 	})
 	p2pServer, err := p2p.NewServer(hs, peers)
@@ -115,16 +119,31 @@ func main() {
 	server := httpserver.NewHttpServer(viper.GetInt(vconfig.EnvHttpServerPort))
 	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs))
 
-	go func() {
-		if err := p2pServer.Start(); err != nil {
-			configs.Log.Errorf("cannot start p2p server because of an error: %v", err)
-			os.Exit(1)
-		}
-	}()
+	ws, err := websocket.NewServer(lf, hs, viper.GetBool(vconfig.EnvHttpServerUseAuth))
+	if err != nil {
+		log.Errorf("failed to init a new websocket server: %v\n", err)
+		os.Exit(1)
+	}
+	server.ApplyConfiguration(ws.SetupEntrypoint)
+
+	hs.Notifier.AddChannel(hs.Webhooks)
+	hs.Notifier.AddChannel(notification.NewWebsocketChannel(lf, ws.Publisher()))
 
 	go func() {
 		if err := server.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			configs.Log.Errorf("cannot start server because of an error: %v", err)
+			os.Exit(1)
+		}
+	}()
+
+	if err := ws.Start(); err != nil {
+		configs.Log.Errorf("cannot start websocket server because of an error: %v", err)
+		os.Exit(1)
+	}
+
+	go func() {
+		if err := p2pServer.Start(); err != nil {
+			configs.Log.Errorf("cannot start p2p server because of an error: %v", err)
 			os.Exit(1)
 		}
 	}()
@@ -136,6 +155,10 @@ func main() {
 
 	if err := p2pServer.Shutdown(); err != nil {
 		configs.Log.Errorf("failed to stop p2p server: %v", err)
+	}
+
+	if err := ws.Shutdown(); err != nil {
+		configs.Log.Errorf("failed to stop websocket server: %v", err)
 	}
 
 	if err := server.Shutdown(); err != nil {

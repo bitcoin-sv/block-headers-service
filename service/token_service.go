@@ -1,15 +1,23 @@
 package service
 
 import (
+	"github.com/dchest/uniuri"
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/repository"
-
-	"github.com/dchest/uniuri"
 )
 
 // TokenService represents Token service and provide access to repositories.
 type TokenService struct {
-	repo *repository.Repositories
+	repo       *repository.Repositories
+	adminToken string
+}
+
+// NewTokenService creates and returns TokenService instance.
+func NewTokenService(repo *repository.Repositories, adminToken string) *TokenService {
+	return &TokenService{
+		repo:       repo,
+		adminToken: adminToken,
+	}
 }
 
 // GenerateToken generates and save new token.
@@ -23,8 +31,11 @@ func (s *TokenService) GenerateToken() (*domains.Token, error) {
 	return token, nil
 }
 
-// GetToken returns token from db by given value.
+// GetToken returns token by given value.
 func (s *TokenService) GetToken(token string) (*domains.Token, error) {
+	if token == s.adminToken {
+		return domains.CreateAdminToken(token), nil
+	}
 	t, err := s.repo.Tokens.GetTokenByValue(token)
 	if err != nil {
 		return nil, err
@@ -35,9 +46,4 @@ func (s *TokenService) GetToken(token string) (*domains.Token, error) {
 // DeleteToken deletes token from db.
 func (s *TokenService) DeleteToken(token string) error {
 	return s.repo.Tokens.DeleteToken(token)
-}
-
-// NewTokenService creates and returns TokenService instance.
-func NewTokenService(repo *repository.Repositories) *TokenService {
-	return &TokenService{repo: repo}
 }

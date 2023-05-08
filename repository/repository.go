@@ -4,6 +4,7 @@ import (
 	"github.com/libsv/bitcoin-hc/data/sql"
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
+	"github.com/libsv/bitcoin-hc/notification"
 )
 
 // Headers is a interface which represents methods performed on header table in defined storage.
@@ -32,20 +33,11 @@ type Tokens interface {
 	DeleteToken(token string) error
 }
 
-// Webhooks is a interface which represents methods performed on registered_webhooks table in defined storage.
-type Webhooks interface {
-	AddWebhookToDatabase(token *domains.Webhook) error
-	DeleteWebhookByUrl(url string) error
-	GetWebhookByUrl(url string) (*domains.Webhook, error)
-	GetAllWebhooks() ([]*domains.Webhook, error)
-	UpdateWebhook(w *domains.Webhook) error
-}
-
 // Repositories represents all repositories in app and provide access to them.
 type Repositories struct {
 	Headers  Headers
 	Tokens   Tokens
-	Webhooks Webhooks
+	Webhooks notification.Webhooks
 }
 
 // NewRepositories creates and returns Repositories instance.

@@ -15,10 +15,17 @@ type BlockHasher interface {
 	BlockHash(h *domains.BlockHeaderSource) domains.BlockHash
 }
 
+// Notification is "port" through which chain service can notify clients about important events.
+type Notification interface {
+	//Notify notifies about new header stored.
+	Notify(any)
+}
+
 type chainService struct {
 	*repository.Repositories
-	chainParams *chaincfg.Params
-	log         logging.Logger
+	chainParams  *chaincfg.Params
+	log          logging.Logger
+	notification Notification
 	BlockHasher
 }
 
@@ -27,16 +34,24 @@ type ChainServiceDependencies struct {
 	*repository.Repositories
 	*chaincfg.Params
 	logging.LoggerFactory
+	Notification
 	BlockHasher
 }
 
 // NewChainsService is a constructor for Chains service.
-func NewChainsService(deps ChainServiceDependencies) Chains {
+func NewChainsService(
+	repos *repository.Repositories,
+	params *chaincfg.Params,
+	lf logging.LoggerFactory,
+	hasher BlockHasher,
+	notification Notification,
+) Chains {
 	return &chainService{
-		Repositories: deps.Repositories,
-		chainParams:  deps.Params,
-		log:          deps.NewLogger("Chain"),
-		BlockHasher:  deps.BlockHasher,
+		Repositories: repos,
+		chainParams:  params,
+		log:          lf.NewLogger("Chain"),
+		BlockHasher:  hasher,
+		notification: notification,
 	}
 }
 
@@ -75,7 +90,13 @@ func (cs *chainService) Add(bs domains.BlockHeaderSource) (*domains.BlockHeader,
 		}
 	}
 
-	return cs.insert(h)
+	h, err = cs.insert(h)
+	if err != nil {
+		return nil, err
+	}
+
+	cs.notification.Notify(domains.HeaderAdded(h))
+	return h, err
 }
 
 func (cs *chainService) hasConcurrentHeaderFromLongestChain(h *domains.BlockHeader) bool {

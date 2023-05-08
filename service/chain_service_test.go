@@ -356,12 +356,13 @@ func givenOrphanedHeaderToAdd() domains.BlockHeaderSource {
 }
 
 func createChainsService(s serviceSetup) Chains {
-	return NewChainsService(ChainServiceDependencies{
-		Repositories:  s.Repositories,
-		Params:        s.Params(),
-		LoggerFactory: testlog.NewTestLoggerFactory(),
-		BlockHasher:   DefaultBlockHasher(),
-	})
+	return NewChainsService(
+		s.Repositories,
+		s.Params(),
+		testlog.NewTestLoggerFactory(),
+		DefaultBlockHasher(),
+		newRecordingNotification(),
+	)
 }
 
 type serviceSetup struct {
@@ -375,4 +376,22 @@ func (s *serviceSetup) Params() *chaincfg.Params {
 	return &chaincfg.Params{
 		HeadersToIgnore: []*chainhash.Hash{&ign},
 	}
+}
+
+type recordingNotification struct {
+	Events []interface{}
+}
+
+func newRecordingNotification() *recordingNotification {
+	return &recordingNotification{
+		Events: make([]interface{}, 0),
+	}
+}
+
+func (r *recordingNotification) Notify(event any) {
+	r.Events = append(r.Events, event)
+}
+
+func (r *recordingNotification) Clear() {
+	r.Events = make([]interface{}, 0)
 }

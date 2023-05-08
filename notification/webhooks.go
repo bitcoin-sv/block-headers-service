@@ -1,4 +1,4 @@
-package domains
+package notification
 
 import (
 	"fmt"
@@ -26,18 +26,18 @@ const WebhookMaxTries = "webhook.maxTries"
 
 // WebhookTargetClient is the interface for the webhooks http calls.
 type WebhookTargetClient interface {
-	Call(headers map[string]string, method string, url string, body *BlockHeader) (*http.Response, error)
+	Call(headers map[string]string, method string, url string, body any) (*http.Response, error)
 }
 
 // Notify sends notification to webhook.
-func (w *Webhook) Notify(h *BlockHeader, client WebhookTargetClient) error {
+func (w *Webhook) Notify(event Event, client WebhookTargetClient) error {
 	// Prepare headers
 	headers := map[string]string{
 		w.TokenHeader:  w.Token,
 		"Content-Type": "application/json",
 	}
 
-	res, err := client.Call(headers, http.MethodPost, w.Url, h)
+	res, err := client.Call(headers, http.MethodPost, w.Url, event)
 
 	if err != nil {
 		// Update the webhook after failed notification.
