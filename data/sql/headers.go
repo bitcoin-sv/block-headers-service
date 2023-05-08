@@ -121,10 +121,20 @@ const (
     `
 
 	sqlSelectTips = `
-	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, cumulatedWork, header_state
-	FROM headers
-	WHERE hash NOT IN (SELECT previousblock
-					   FROM headers)
+	with mainTip as (
+	select hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
+	from headers
+	where header_state = 'LONGEST_CHAIN'
+	order by height
+	limit 1
+	)
+	select hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
+	from mainTip
+	union
+	select hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
+	from headers
+	where header_state != 'LONGEST_CHAIN' and
+			hash not in (select previousblock from headers where header_state != 'LONGEST_CHAIN')
 				   `
 
 	sqlChainBetweenTwoHashes = `
