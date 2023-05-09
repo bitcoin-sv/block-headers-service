@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/libsv/bitcoin-hc/data/sql"
 	"github.com/libsv/bitcoin-hc/domains"
@@ -20,26 +21,10 @@ func (r *WebhooksRepository) AddWebhookToDatabase(rWebhook *domains.Webhook) err
 	return err
 }
 
-// DeleteWebhookByName deletes webhook by name from db.
-func (r *WebhooksRepository) DeleteWebhookByName(name string) error {
-	err := r.db.DeleteWebhookByName(context.Background(), name)
-	return err
-}
-
 // DeleteWebhookByUrl deletes webhook by url from db.
 func (r *WebhooksRepository) DeleteWebhookByUrl(url string) error {
 	err := r.db.DeleteWebhookByUrl(context.Background(), url)
 	return err
-}
-
-// GetWebhookByName returns webhook from db by given name.
-func (r *WebhooksRepository) GetWebhookByName(name string) (*domains.Webhook, error) {
-	w, err := r.db.GetWebhookByName(context.Background(), name)
-	if err != nil {
-		return nil, err
-	}
-	dbw := w.ToWebhook()
-	return dbw, err
 }
 
 // GetWebhookByUrl returns webhook from db by given url.
@@ -50,6 +35,26 @@ func (r *WebhooksRepository) GetWebhookByUrl(url string) (*domains.Webhook, erro
 	}
 	dbw := w.ToWebhook()
 	return dbw, err
+}
+
+// GetAllWebhooks returns all webhooks from db.
+func (r *WebhooksRepository) GetAllWebhooks() ([]*domains.Webhook, error) {
+	webhooks, err := r.db.GetAllWebhooks(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	var dbWebhooks []*domains.Webhook
+	for _, w := range webhooks {
+		dbw := w.ToWebhook()
+		dbWebhooks = append(dbWebhooks, dbw)
+	}
+	return dbWebhooks, err
+}
+
+// UpdateWebhook updates webhook in db.
+func (r *WebhooksRepository) UpdateWebhook(w *domains.Webhook, lastEmitTimestamp time.Time, lastEmitStatus string, errorsCount int, active bool) error {
+	err := r.db.UpdateWebhook(context.Background(), w.Url, lastEmitTimestamp, lastEmitStatus, errorsCount, active)
+	return err
 }
 
 // NewWebhooksRepository creates and returns WebhooksRepository instance.

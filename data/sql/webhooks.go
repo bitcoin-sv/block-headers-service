@@ -3,38 +3,39 @@ package sql
 import (
 	"context"
 	"database/sql"
+	"time"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/libsv/bitcoin-hc/repository/dto"
 	"github.com/pkg/errors"
 )
 
 const (
 	sqlInsertWebhook = `
-	INSERT INTO webhooks(name, url, tokenHeader, token, createdAt)
-	VALUES(:name, :url, :tokenHeader, :token, :createdAt)
-	ON CONFLICT DO NOTHING
-	`
-
-	sqlGetWebhookByName = ` 
-	SELECT name, url, tokenHeader, token, createdAt, lastEmitStatus, lastEmitTimestamp, errorsCount
-	FROM webhooks
-	WHERE name = ?
+	INSERT INTO webhooks(url, tokenHeader, token, createdAt)
+	VALUES(:url, :tokenHeader, :token, :createdAt)
 	`
 
 	sqlGetWebhookByUrl = ` 
-	SELECT name, url, tokenHeader, token, createdAt, lastEmitStatus, lastEmitTimestamp, errorsCount
+	SELECT url, tokenHeader, token, createdAt, lastEmitStatus, lastEmitTimestamp, errorsCount, active
 	FROM webhooks
 	WHERE url = ?
 	`
 
-	sqlDeleteWebhookByName = `
-	DELETE FROM webhooks
-	WHERE name = ?
+	sqlGetAllWebhooks = `
+	SELECT url, tokenHeader, token, createdAt, lastEmitStatus, lastEmitTimestamp, errorsCount, active
+	FROM webhooks
 	`
 
 	sqlDeleteWebhookByUrl = `
 	DELETE FROM webhooks
 	WHERE url = ?
+	`
+
+	sqlUpdateWebhook = `
+	UPDATE webhooks
+	SET lastEmitStatus = ?, lastEmitTimestamp = ?, errorsCount = ?, active = ?
+	WHERE url IN (?)
 	`
 )
 
@@ -54,18 +55,6 @@ func (h *HeadersDb) CreateWebhook(ctx context.Context, rWebhook *dto.DbWebhook) 
 	return errors.Wrap(tx.Commit(), "failed to commit tx")
 }
 
-// GetWebhookByName method will search and return webhook by name.
-func (h *HeadersDb) GetWebhookByName(ctx context.Context, name string) (*dto.DbWebhook, error) {
-	var rWebhook dto.DbWebhook
-	if err := h.db.GetContext(ctx, &rWebhook, h.db.Rebind(sqlGetWebhookByName), name); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("could not find webhook")
-		}
-		return nil, errors.Wrapf(err, "failed to get webhook using name %s", name)
-	}
-	return &rWebhook, nil
-}
-
 // GetWebhookByUrl method will search and return webhook by url.
 func (h *HeadersDb) GetWebhookByUrl(ctx context.Context, url string) (*dto.DbWebhook, error) {
 	var rWebhook dto.DbWebhook
@@ -78,26 +67,13 @@ func (h *HeadersDb) GetWebhookByUrl(ctx context.Context, url string) (*dto.DbWeb
 	return &rWebhook, nil
 }
 
-// DeleteWebhookByName method will delete webhook by name from db.
-func (h *HeadersDb) DeleteWebhookByName(ctx context.Context, name string) error {
-	tx, err := h.db.BeginTxx(ctx, nil)
-	if err != nil {
-		return err
+// GetAllWebhooks method will return all webhooks from db.
+func (h *HeadersDb) GetAllWebhooks(ctx context.Context) ([]*dto.DbWebhook, error) {
+	var rWebhooks []*dto.DbWebhook
+	if err := h.db.SelectContext(ctx, &rWebhooks, h.db.Rebind(sqlGetAllWebhooks)); err != nil {
+		return nil, errors.Wrap(err, "failed to get all webhooks")
 	}
-	defer func() {
-		_ = tx.Rollback()
-	}()
-
-	stmt, err := h.db.Prepare(sqlDeleteWebhookByName)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close() //nolint:all
-
-	if _, err = stmt.Exec(name); err != nil {
-		return errors.Wrap(err, "failed to delete webhook")
-	}
-	return errors.Wrap(tx.Commit(), "failed to commit tx")
+	return rWebhooks, nil
 }
 
 // DeleteWebhookByUrl method will delete webhook by url from db.
@@ -120,4 +96,25 @@ func (h *HeadersDb) DeleteWebhookByUrl(ctx context.Context, url string) error {
 		return errors.Wrap(err, "failed to delete webhook")
 	}
 	return errors.Wrap(tx.Commit(), "failed to commit tx")
+}
+
+// UpdateWebhook method will update webhook in db.
+func (h *HeadersDb) UpdateWebhook(ctx context.Context, url string, lastEmitTimestamp time.Time, lastEmitStatus string, errorsCount int, active bool) error {
+	tx, err := h.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+
+	query, args, err := sqlx.In(sqlUpdateWebhook, lastEmitStatus, lastEmitTimestamp, errorsCount, active, url)
+	if err != nil {
+		return errors.Wrapf(err, "failed to update webhook with url %s", url)
+	}
+	if _, err := tx.ExecContext(ctx, h.db.Rebind(query), args...); err != nil {
+		return errors.Wrapf(err, "failed to update webhook with name %s", url)
+	}
+	return errors.Wrap(tx.Commit(), "failed to commit tx")
+
 }

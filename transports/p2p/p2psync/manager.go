@@ -568,6 +568,9 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 		if sm.startHeader == nil {
 			sm.startHeader = h
 		}
+
+		// Notify webhooks about the new header.
+		sm.Services.Webhooks.NotifyWebhooks(h)
 	}
 
 	// When this header is a checkpoint, switch to fetching the blocks for

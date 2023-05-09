@@ -50,8 +50,9 @@ type Tokens interface {
 
 // Tokens is an interface which represents methods required for Tokens service.
 type Webhooks interface {
-	GenerateWebhook(name, url, tHeader, token string) (*domains.Webhook, error)
+	GenerateWebhook(url, tHeader, token string) (*domains.Webhook, error)
 	DeleteWebhook(value string) error
+	NotifyWebhooks(h *domains.BlockHeader) error
 }
 
 // Services represents all services in app and provide access to them.

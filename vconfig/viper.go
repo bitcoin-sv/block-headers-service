@@ -11,6 +11,7 @@ func NewViperConfig(appname string) *Config {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	setHttpServerDefaults()
+	setWebhookDefaults()
 	return &Config{}
 }
 
@@ -46,4 +47,9 @@ func setHttpServerDefaults() {
 	viper.SetDefault(EnvHttpServerWriteTimeout, 10)
 	viper.SetDefault(EnvHttpServerPort, 8080)
 	viper.SetDefault(EnvHttpServerUrlPrefix, "/api/v1")
+}
+
+// setWebhookDefaults sets default values for webhook.
+func setWebhookDefaults() {
+	viper.SetDefault(EnvWebhookMaxTries, 10)
 }
