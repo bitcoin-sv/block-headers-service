@@ -125,7 +125,7 @@ const (
 	select hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
 	from headers
 	where header_state = 'LONGEST_CHAIN'
-	order by height
+	order by height desc
 	limit 1
 	)
 	select hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
