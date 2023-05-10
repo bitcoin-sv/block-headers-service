@@ -5,36 +5,37 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	headers "github.com/libsv/bitcoin-hc/transports/http"
 )
 
 // GetTips godoc.
-//  @Summary Gets all tips
-//  @Tags tip
-//  @Accept */*
-//  @Produce json
-//  @Success 200 {object} []domains.BlockHeaderState
-//  @Router /chain/tips [get]
-//  @Security Bearer
+//
+//	@Summary Gets all tips
+//	@Tags tip
+//	@Accept */*
+//	@Produce json
+//	@Success 200 {object} []domains.BlockHeaderState
+//	@Router /chain/tips [get]
+//	@Security Bearer
 func (h *Handler) getTips(c *gin.Context) {
 	tips, err := h.services.Headers.GetTips()
 
 	if err == nil {
-		c.JSON(http.StatusOK, headers.MapToBlockHeaderStatesReponse(tips))
+		c.JSON(http.StatusOK, MapToBlockHeaderStatesReponse(tips))
 	} else {
 		c.JSON(http.StatusBadRequest, err.Error())
 	}
 }
 
 // PruneTip godoc.
-//  @Summary Prune tip
-//  @Tags tip
-//  @Accept */*
-//  @Produce json
-//  @Success 200 {object} string
-//  @Router /chain/tips/prune/{hash} [get]
-//  @Param hash path string true "Requested Header Hash"
-//  @Security Bearer
+//
+//	@Summary Prune tip
+//	@Tags tip
+//	@Accept */*
+//	@Produce json
+//	@Success 200 {object} string
+//	@Router /chain/tips/prune/{hash} [get]
+//	@Param hash path string true "Requested Header Hash"
+//	@Security Bearer
 func (h *Handler) pruneTip(c *gin.Context) {
 	param := c.Param("hash")
 	fmt.Println(param)

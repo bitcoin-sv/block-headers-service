@@ -37,7 +37,6 @@ func (c *Config) WithDb() *Config {
 func (c *Config) WithAuthorization() *Config {
 	viper.SetDefault(EnvHttpServerUseAuth, true)
 	viper.SetDefault(EnvHttpServerAuthToken, "mQZQ6WmxURxWz5ch")
-	viper.SetDefault(EnvHttpServerAdminOnly, []string{"/access"})
 	return c
 }
 

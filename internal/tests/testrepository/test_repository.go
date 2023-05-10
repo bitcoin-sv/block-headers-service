@@ -11,3 +11,14 @@ func NewTestRepositories(db *[]domains.BlockHeader) repository.Repositories {
 		Headers: NewHeadersTestRepository(db),
 	}
 }
+
+// NewCleanTestRepositories creates repository.Repositories with minimal needed data (ex. with genesis block).
+func NewCleanTestRepositories() repository.Repositories {
+	db, _ := StartingChain()
+	var tokensTable []domains.Token
+
+	return repository.Repositories{
+		Headers: NewHeadersTestRepository(&db),
+		Tokens:  NewTokensTestRepository(&tokensTable),
+	}
+}

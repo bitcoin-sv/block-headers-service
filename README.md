@@ -116,7 +116,7 @@ DB_PREPAREDDBFILE_PATH define path to prepared db.
 Settings related to admin auth:
       - HTTP_SERVER_AUTHTOKEN=admin_only_afUMlv5iiDgQtj22O9n5fADeSb
 
-This admin token should be used as a Bearer token in the Authorization header when dynamically creating secure tokens for applications to then use at the GET /api/v1/access endpoint.  
+This admin token should be used as a Bearer token in the Authorization header when dynamically creating secure tokens for applications to then use at the POST /api/v1/access endpoint.  
 
 ## 
 
