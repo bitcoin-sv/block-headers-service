@@ -32,6 +32,31 @@ const docTemplate = `{
                 "tags": [
                     "access"
                 ],
+                "summary": "Get information about token",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domains.Token"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "access"
+                ],
                 "summary": "Creates new token",
                 "responses": {
                     "200": {
@@ -192,7 +217,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/http.BlockHeaderStateResponse"
+                            "$ref": "#/definitions/handler.BlockHeaderStateResponse"
                         }
                     }
                 }
@@ -443,9 +468,6 @@ const docTemplate = `{
                 "chainWork": {
                     "type": "string"
                 },
-                "confirmations": {
-                    "type": "integer"
-                },
                 "header": {
                     "$ref": "#/definitions/domains.BlockHeader"
                 },
@@ -463,12 +485,15 @@ const docTemplate = `{
                 "createdAt": {
                     "type": "string"
                 },
+                "isAdmin": {
+                    "type": "boolean"
+                },
                 "token": {
                     "type": "string"
                 }
             }
         },
-        "http.BlockHeaderResponse": {
+        "handler.BlockHeaderResponse": {
             "type": "object",
             "properties": {
                 "creationTimestamp": {
@@ -497,17 +522,14 @@ const docTemplate = `{
                 }
             }
         },
-        "http.BlockHeaderStateResponse": {
+        "handler.BlockHeaderStateResponse": {
             "type": "object",
             "properties": {
                 "chainWork": {
                     "type": "string"
                 },
-                "confirmations": {
-                    "type": "integer"
-                },
                 "header": {
-                    "$ref": "#/definitions/http.BlockHeaderResponse"
+                    "$ref": "#/definitions/handler.BlockHeaderResponse"
                 },
                 "height": {
                     "type": "integer"

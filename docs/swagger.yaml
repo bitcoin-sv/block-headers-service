@@ -28,8 +28,6 @@ definitions:
     properties:
       chainWork:
         type: string
-      confirmations:
-        type: integer
       header:
         $ref: '#/definitions/domains.BlockHeader'
       height:
@@ -41,10 +39,12 @@ definitions:
     properties:
       createdAt:
         type: string
+      isAdmin:
+        type: boolean
       token:
         type: string
     type: object
-  http.BlockHeaderResponse:
+  handler.BlockHeaderResponse:
     properties:
       creationTimestamp:
         type: integer
@@ -63,14 +63,12 @@ definitions:
       work:
         type: string
     type: object
-  http.BlockHeaderStateResponse:
+  handler.BlockHeaderStateResponse:
     properties:
       chainWork:
         type: string
-      confirmations:
-        type: integer
       header:
-        $ref: '#/definitions/http.BlockHeaderResponse'
+        $ref: '#/definitions/handler.BlockHeaderResponse'
       height:
         type: integer
       state:
@@ -81,6 +79,21 @@ info:
 paths:
   /access:
     get:
+      consumes:
+      - '*/*'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domains.Token'
+      security:
+      - Bearer: []
+      summary: Get information about token
+      tags:
+      - access
+    post:
       consumes:
       - '*/*'
       produces:
@@ -235,7 +248,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/http.BlockHeaderStateResponse'
+            $ref: '#/definitions/handler.BlockHeaderStateResponse'
       security:
       - Bearer: []
       summary: Gets header state

@@ -10,7 +10,7 @@ import (
 
 // getToken godoc.
 //
-//		@Summary Creates new token
+//		@Summary Get information about token
 //		@Tags access
 //		@Accept */*
 //		@Produce json

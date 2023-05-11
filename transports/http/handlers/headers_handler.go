@@ -114,7 +114,7 @@ func (h *Handler) getCommonAncestors(c *gin.Context) {
 //		@Tags headers
 //		@Accept */*
 //		@Produce json
-//		@Success 200 {object} http.BlockHeaderStateResponse
+//		@Success 200 {object} BlockHeaderStateResponse
 //		@Router /chain/header/state/{hash} [get]
 //		@Param hash path string true "Requested Header Hash"
 //	 @Security Bearer

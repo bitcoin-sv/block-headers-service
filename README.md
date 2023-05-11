@@ -129,11 +129,64 @@ or with Docker
 docker compose up --build
 ```
 
+## How to use it
+
 ### Endpoints documentation
 For endpoints documentation you can visit swagger which is exposed on port 8080 by default.
 ```
 http://localhost:8080/swagger/index.html
 ```
+
+### Authentication
+
+#### Enabling
+
+To setup and enable authentication with token setup the following environment variables
+- HTTP_SERVER_USEAUTH=true
+- HTTP_SERVER_AUTHTOKEN=replace_me_with_token_you_want_to_use_as_admin_token
+
+ℹ️ actually authorization is enabled by default so only the HTTP_SERVER_AUTHTOKEN env is required
+
+#### Disabling
+To disable authentication set the following environment variables
+- HTTP_SERVER_USEAUTH=false
+
+
+#### Authenticate with admin token
+
+After the setup of authentication you can use provided token to authenticate.
+To do it, just add the following header to all the requests to pulse
+```
+Authorization Bearer replace_me_with_token_you_want_to_use_as_admin_token
+```
+
+#### Additional tokens
+
+If you have a need for additional tokens to authenticate in pulse 
+you can generate such with the following request:
+```http request
+POST https://{{pulse_url}}/api/v1/access
+Authorization: Bearer replace_me_with_token_you_want_to_use_as_admin_token
+```
+In response you should receive something like
+```json
+{
+  "token": "some_token_created_by_server",
+  "createdAt": "2023-05-11T10:20:16.227582Z",
+  "isAdmin": false
+}
+```
+Now you can put a value from "token" property from the response and use it in all requests to server by setting header:
+```http header
+Authorization: Bearer some_token_created_by_server
+```
+
+If at some point you want to revoke this additional token you can make a request:
+```http request
+DELETE https://{{pulse_url}}/api/v1/access/{{some_token_created_by_server}}
+Authorization: Bearer replace_me_with_token_you_want_to_use_as_admin_token
+```
+After this request succeeded the token can't be used to authenticate in pulse.
 
 <!-- PROJECT LOGO -->
 <br />
