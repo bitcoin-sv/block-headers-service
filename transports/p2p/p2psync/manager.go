@@ -570,7 +570,10 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 		}
 
 		// Notify webhooks about the new header.
-		sm.Services.Webhooks.NotifyWebhooks(h)
+		err = sm.Services.Webhooks.NotifyWebhooks(h)
+		if err != nil {
+			sm.log.Errorf("Error notifying webhooks: %v", err)
+		}
 	}
 
 	// When this header is a checkpoint, switch to fetching the blocks for

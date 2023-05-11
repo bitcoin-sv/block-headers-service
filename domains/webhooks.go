@@ -2,6 +2,7 @@ package domains
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -20,11 +21,14 @@ type Webhook struct {
 	Active            bool      `json:"active"`
 }
 
-// Nofify sends notification to webhook.
+// Notify sends notification to webhook.
 func (w *Webhook) Notify(h *BlockHeader) (int, string, error) {
 	// Prepare the request.
-	headerBytes, _ := json.Marshal(h)
-	req, err := http.NewRequest(http.MethodPost, w.Url, bytes.NewReader(headerBytes))
+	headerBytes, err := json.Marshal(h)
+	if err != nil {
+		return 0, "", err
+	}
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, w.Url, bytes.NewReader(headerBytes))
 
 	if err != nil {
 		return 0, "", err
@@ -41,7 +45,7 @@ func (w *Webhook) Notify(h *BlockHeader) (int, string, error) {
 		return 0, "", err
 	}
 
-	defer res.Body.Close()
+	defer res.Body.Close() // nolint: all
 
 	// Read the response.
 	body, _ := io.ReadAll(res.Body)

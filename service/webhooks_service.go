@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+// WebhookMaxTries is the maximum number of times a webhook will be retried.
 const WebhookMaxTries = "webhook.maxTries"
 
 // WebhooksService represents Webhooks service and provide access to repositories.
@@ -22,10 +23,8 @@ type WebhooksService struct {
 func (s *WebhooksService) GenerateWebhook(url, tHeader, token string) (*domains.Webhook, error) {
 	webhook := domains.CreateWebhook(url, tHeader, token)
 	err := s.repo.Webhooks.AddWebhookToDatabase(webhook)
-	fmt.Println("Webhook", webhook, err)
 	if err != nil {
-		w, err := s.repo.Webhooks.GetWebhookByUrl(url)
-		fmt.Println("Webhook 2: ", w, err)
+		w, _ := s.repo.Webhooks.GetWebhookByUrl(url)
 		if w != nil && !w.Active {
 			err = s.repo.Webhooks.UpdateWebhook(w, w.LastEmitTimestamp, w.LastEmitStatus, 0, true)
 			w.Active = true
@@ -51,6 +50,7 @@ func (s *WebhooksService) DeleteWebhook(value string) error {
 	return err
 }
 
+// NotifyWebhooks notifies all active webhooks.
 func (s *WebhooksService) NotifyWebhooks(h *domains.BlockHeader) error {
 	webhooks, err := s.repo.Webhooks.GetAllWebhooks()
 	if err != nil {
@@ -60,9 +60,10 @@ func (s *WebhooksService) NotifyWebhooks(h *domains.BlockHeader) error {
 	// Notify all active webhooks
 	for _, webhook := range webhooks {
 		if webhook.Active {
+			var lastEmitStatus string
+			var err error
 			timestamp := time.Now()
 			statusCode, body, err := webhook.Notify(h)
-			var lastEmitStatus string
 
 			if err != nil {
 				lastEmitStatus = fmt.Sprint(err)
@@ -79,10 +80,14 @@ func (s *WebhooksService) NotifyWebhooks(h *domains.BlockHeader) error {
 					active = false
 				}
 
-				s.repo.Webhooks.UpdateWebhook(webhook, timestamp, lastEmitStatus, errorsCount, active)
+				err = s.repo.Webhooks.UpdateWebhook(webhook, timestamp, lastEmitStatus, errorsCount, active)
 			} else {
 				// If status code is 200, reset errors count and set active to true
-				s.repo.Webhooks.UpdateWebhook(webhook, timestamp, lastEmitStatus, 0, true)
+				err = s.repo.Webhooks.UpdateWebhook(webhook, timestamp, lastEmitStatus, 0, true)
+			}
+
+			if err != nil {
+				return err
 			}
 		}
 	}

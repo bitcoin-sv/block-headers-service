@@ -11,15 +11,14 @@ import (
 
 // registerWebhook godoc.
 //
-//	@Summary Register new webhook
-//	@Tags webshooks
-//	@Accept */*
-//	@Produce json
-//	@Success 200 {object} domains.Webhook
-//	@Router /webhook [post]
-//
-// @Param body body requestBody true "Webhook to register"
-// @Security Bearer
+//		@Summary Register new webhook
+//		@Tags webshooks
+//		@Accept */*
+//		@Produce json
+//		@Success 200 {object} domains.Webhook
+//		@Router /webhook [post]
+//	 @Param body body http.WebhookRequest true "Webhook to register"
+//	 @Security Bearer
 func (h *Handler) registerWebhook(c *gin.Context) {
 	var reqBody webhook.WebhookRequest
 	err := c.Bind(&reqBody)
@@ -42,6 +41,7 @@ func (h *Handler) registerWebhook(c *gin.Context) {
 			fmt.Println("WEBHOOK2: ", webhook)
 			c.JSON(http.StatusOK, webhook)
 		} else if webhook == nil {
+			fmt.Println("ERROR: ", err.Error())
 			c.JSON(http.StatusOK, err.Error())
 		}
 	}
@@ -53,18 +53,21 @@ func (h *Handler) registerWebhook(c *gin.Context) {
 
 // revokeWebhook godoc.
 //
-//	@Summary Revoke webhook
-//	@Tags webhooks
-//	@Accept */*
-//	@Success 200
-//	@Produce json
-//	@Router /webhook/{value} [delete]
-//	@Param value path string true "Name or url of webhook to revoke"
-
-// @Security Bearer
+//		@Summary Revoke webhook
+//		@Tags webhooks
+//		@Accept */*
+//		@Success 200
+//		@Produce json
+//		@Router /webhook?url={url} [delete]
+//		@Param url path string true "Url of webhook to revoke"
+//	 @Security Bearer
 func (h *Handler) revokeWebhook(c *gin.Context) {
-	value := c.Param("value")
-	err := h.services.Webhooks.DeleteWebhook(value)
+	url := c.Query("url")
+	if url == "" {
+		c.JSON(http.StatusBadRequest, "Url param is required")
+		return
+	}
+	err := h.services.Webhooks.DeleteWebhook(url)
 
 	if err == nil {
 		c.JSON(http.StatusOK, "Webhook revoked")
@@ -77,6 +80,6 @@ func (h *Handler) initRegisteredWehooksRoutes(router *gin.RouterGroup) {
 	webhooks := router.Group("")
 	{
 		webhooks.POST("/webhook", h.registerWebhook)
-		webhooks.DELETE("/webhook/:value", h.revokeWebhook)
+		webhooks.DELETE("/webhook", h.revokeWebhook)
 	}
 }

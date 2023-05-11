@@ -37,7 +37,7 @@ const (
 	EnvHttpServerAuthToken = "http.server.authToken" // nolint:gosec
 )
 
-// EnvWebhooksMaxTries max tries for webhook.
+// EnvWebhookMaxTries max tries for webhook.
 const EnvWebhookMaxTries = "webhook.maxTries"
 
 // DbType database type.

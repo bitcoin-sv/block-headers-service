@@ -14,7 +14,7 @@ type WebhooksRepository struct {
 	db *sql.HeadersDb
 }
 
-// AddWebhooksToDatabase adds new webhook to db.
+// AddWebhookToDatabase adds new webhook to db.
 func (r *WebhooksRepository) AddWebhookToDatabase(rWebhook *domains.Webhook) error {
 	dbWebhook := dto.ToDbWebhook(rWebhook)
 	err := r.db.CreateWebhook(context.Background(), dbWebhook)
@@ -43,7 +43,7 @@ func (r *WebhooksRepository) GetAllWebhooks() ([]*domains.Webhook, error) {
 	if err != nil {
 		return nil, err
 	}
-	var dbWebhooks []*domains.Webhook
+	dbWebhooks := make([]*domains.Webhook, 0)
 	for _, w := range webhooks {
 		dbw := w.ToWebhook()
 		dbWebhooks = append(dbWebhooks, dbw)

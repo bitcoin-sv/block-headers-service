@@ -48,7 +48,7 @@ type Tokens interface {
 	DeleteToken(token string) error
 }
 
-// Tokens is an interface which represents methods required for Tokens service.
+// Webhooks is an interface which represents methods required for Webhooks service.
 type Webhooks interface {
 	GenerateWebhook(url, tHeader, token string) (*domains.Webhook, error)
 	DeleteWebhook(value string) error
