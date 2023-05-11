@@ -40,6 +40,15 @@
         <li><a href="#run-application">Run application</a></li>
       </ul>
     </li>
+    <li>
+      <a href="#how-to-use-it">How to use it</a>
+      <ul>
+        <li><a href="#endpoints-documentation">Endpoints documentation</a></li>
+      </ul>
+      <ul>
+        <li><a href="#webhooks">Webhooks</a></li>
+      </ul>
+    </li>
   </ol>
 </details>
 
