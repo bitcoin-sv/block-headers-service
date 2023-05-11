@@ -139,18 +139,20 @@ http://localhost:8080/swagger/index.html
 
 ### Authentication
 
-#### Enabling
+#### Enabled by Default
 
-To setup and enable authentication with token setup the following environment variables
-- HTTP_SERVER_USEAUTH=true
-- HTTP_SERVER_AUTHTOKEN=replace_me_with_token_you_want_to_use_as_admin_token
+The default assumes you want to use Authentication. This requires a single environment variable.  
 
-ℹ️ actually authorization is enabled by default so only the HTTP_SERVER_AUTHTOKEN env is required
+`HTTP_SERVER_AUTHTOKEN=replace_me_with_token_you_want_to_use_as_admin_token`  
 
-#### Disabling
-To disable authentication set the following environment variables
-- HTTP_SERVER_USEAUTH=false
+#### Disabling Auth Requirement  
 
+To disable authentication exposing all endpoints openly, set the following environment variable. 
+This is available if you prefer to use your own authentication in a separate proxy or similar. 
+We do not recommend you expose the server to the internet without authentication, 
+as it would then be possible for anyone to prune your headers at will.  
+
+`HTTP_SERVER_USEAUTH=false`  
 
 #### Authenticate with admin token
 
