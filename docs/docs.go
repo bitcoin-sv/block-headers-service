@@ -84,7 +84,7 @@ const docTemplate = `{
                 "tags": [
                     "access"
                 ],
-                "summary": "Gets header state",
+                "summary": "Revoke token",
                 "parameters": [
                     {
                         "type": "string",
@@ -421,6 +421,75 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/webhook": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhooks"
+                ],
+                "summary": "Register new webhook",
+                "parameters": [
+                    {
+                        "description": "Webhook to register",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.WebhookRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domains.Webhook"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhooks"
+                ],
+                "summary": "Revoke webhook",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Url of webhook to revoke",
+                        "name": "url",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -535,6 +604,31 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.RequiredAuth": {
+            "type": "object",
+            "properties": {
+                "header": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.WebhookRequest": {
+            "type": "object",
+            "properties": {
+                "requiredAuth": {
+                    "$ref": "#/definitions/http.RequiredAuth"
+                },
+                "url": {
                     "type": "string"
                 }
             }

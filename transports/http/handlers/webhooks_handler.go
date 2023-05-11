@@ -11,19 +11,27 @@ import (
 
 // registerWebhook godoc.
 //
-//		@Summary Register new webhook
-//		@Tags webshooks
-//		@Accept */*
-//		@Produce json
-//		@Success 200 {object} domains.Webhook
-//		@Router /webhook [post]
-//	 @Param body body http.WebhookRequest true "Webhook to register"
-//	 @Security Bearer
+//	@Summary Register new webhook
+//	@Tags webhooks
+//	@Accept json
+//	@Produce json
+//	@Success 200 {object} domains.Webhook
+//	@Router /webhook [post]
+//	@Param data body http.WebhookRequest true "Webhook to register"
+//
+// @Security Bearer
 func (h *Handler) registerWebhook(c *gin.Context) {
 	var reqBody webhook.WebhookRequest
 	err := c.Bind(&reqBody)
 
+	fmt.Println("WEBHOOK: ", reqBody)
+
 	if err == nil {
+
+		if reqBody.Url == "" {
+			c.JSON(http.StatusBadRequest, "Url is required")
+			return
+		}
 		var tHeader, token string
 
 		// If custom header is specified, use it, otherwise use default
@@ -36,12 +44,9 @@ func (h *Handler) registerWebhook(c *gin.Context) {
 		}
 
 		webhook, err := h.services.Webhooks.GenerateWebhook(reqBody.Url, tHeader, token)
-		fmt.Println("ERROR: ", err)
 		if err == nil {
-			fmt.Println("WEBHOOK2: ", webhook)
 			c.JSON(http.StatusOK, webhook)
 		} else if webhook == nil {
-			fmt.Println("ERROR: ", err.Error())
 			c.JSON(http.StatusOK, err.Error())
 		}
 	}
@@ -53,14 +58,15 @@ func (h *Handler) registerWebhook(c *gin.Context) {
 
 // revokeWebhook godoc.
 //
-//		@Summary Revoke webhook
-//		@Tags webhooks
-//		@Accept */*
-//		@Success 200
-//		@Produce json
-//		@Router /webhook?url={url} [delete]
-//		@Param url path string true "Url of webhook to revoke"
-//	 @Security Bearer
+//	@Summary Revoke webhook
+//	@Tags webhooks
+//	@Accept */*
+//	@Success 200
+//	@Produce json
+//	@Router /webhook [delete]
+//	@Param url query string true "Url of webhook to revoke"
+//
+// @Security Bearer
 func (h *Handler) revokeWebhook(c *gin.Context) {
 	url := c.Query("url")
 	if url == "" {

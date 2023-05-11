@@ -42,7 +42,7 @@ const httpServerPort = "http.server.port"
 
 // @securityDefinitions.apikey Bearer
 // @in header
-// @name Authorization.
+// @name Authorization
 func main() {
 	vconfig := vconfig.NewViperConfig(appname).
 		WithDb().

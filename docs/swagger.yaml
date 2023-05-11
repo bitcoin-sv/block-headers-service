@@ -74,6 +74,22 @@ definitions:
       state:
         type: string
     type: object
+  http.RequiredAuth:
+    properties:
+      header:
+        type: string
+      token:
+        type: string
+      type:
+        type: string
+    type: object
+  http.WebhookRequest:
+    properties:
+      requiredAuth:
+        $ref: '#/definitions/http.RequiredAuth'
+      url:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
@@ -125,7 +141,7 @@ paths:
           description: OK
       security:
       - Bearer: []
-      summary: Gets header state
+      summary: Revoke token
       tags:
       - access
   /chain/header/{hash}:
@@ -324,6 +340,48 @@ paths:
       summary: Gets peers count
       tags:
       - network
+  /webhook:
+    delete:
+      consumes:
+      - '*/*'
+      parameters:
+      - description: Url of webhook to revoke
+        in: query
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      security:
+      - Bearer: []
+      summary: Revoke webhook
+      tags:
+      - webhooks
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Webhook to register
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/http.WebhookRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domains.Webhook'
+      security:
+      - Bearer: []
+      summary: Register new webhook
+      tags:
+      - webhooks
 securityDefinitions:
   Bearer:
     in: header
