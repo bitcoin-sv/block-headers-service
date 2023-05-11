@@ -9,6 +9,7 @@ import (
 	webhook "github.com/libsv/bitcoin-hc/transports/http"
 )
 
+// nolint: godot
 // registerWebhook godoc.
 //
 //	@Summary Register new webhook
@@ -56,6 +57,7 @@ func (h *Handler) registerWebhook(c *gin.Context) {
 	}
 }
 
+// nolint: godot
 // revokeWebhook godoc.
 //
 //	@Summary Revoke webhook
