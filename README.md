@@ -116,7 +116,7 @@ DB_PREPAREDDBFILE_PATH define path to prepared db.
 Settings related to admin auth:
       - HTTP_SERVER_AUTHTOKEN=admin_only_afUMlv5iiDgQtj22O9n5fADeSb
 
-This admin token should be used as a Bearer token in the Authorization header when dynamically creating secure tokens for applications to then use at the GET /api/v1/access endpoint.  
+This admin token should be used as a Bearer token in the Authorization header when dynamically creating secure tokens for applications to then use at the POST /api/v1/access endpoint.  
 
 ## 
 
@@ -129,11 +129,66 @@ or with Docker
 docker compose up --build
 ```
 
+## How to use it
+
 ### Endpoints documentation
 For endpoints documentation you can visit swagger which is exposed on port 8080 by default.
 ```
 http://localhost:8080/swagger/index.html
 ```
+
+### Authentication
+
+#### Enabled by Default
+
+The default assumes you want to use Authentication. This requires a single environment variable.  
+
+`HTTP_SERVER_AUTHTOKEN=replace_me_with_token_you_want_to_use_as_admin_token`  
+
+#### Disabling Auth Requirement  
+
+To disable authentication exposing all endpoints openly, set the following environment variable. 
+This is available if you prefer to use your own authentication in a separate proxy or similar. 
+We do not recommend you expose the server to the internet without authentication, 
+as it would then be possible for anyone to prune your headers at will.  
+
+`HTTP_SERVER_USEAUTH=false`  
+
+#### Authenticate with admin token
+
+After the setup of authentication you can use provided token to authenticate.
+To do it, just add the following header to all the requests to pulse
+```
+Authorization Bearer replace_me_with_token_you_want_to_use_as_admin_token
+```
+
+#### Additional tokens
+
+If you have a need for additional tokens to authenticate in pulse 
+you can generate such with the following request:
+```http request
+POST https://{{pulse_url}}/api/v1/access
+Authorization: Bearer replace_me_with_token_you_want_to_use_as_admin_token
+```
+In response you should receive something like
+```json
+{
+  "token": "some_token_created_by_server",
+  "createdAt": "2023-05-11T10:20:16.227582Z",
+  "isAdmin": false
+}
+```
+Now you can put a value from "token" property from the response and use it in all requests to server by setting header:
+```http header
+Authorization: Bearer some_token_created_by_server
+```
+
+If at some point you want to revoke this additional token you can make a request:
+```http request
+DELETE https://{{pulse_url}}/api/v1/access/{{some_token_created_by_server}}
+Authorization: Bearer replace_me_with_token_you_want_to_use_as_admin_token
+```
+After this request succeeded the token can't be used to authenticate in pulse.
 
 <!-- PROJECT LOGO -->
 <br />

@@ -1,4 +1,4 @@
-package http
+package handler
 
 import (
 	"math/big"
@@ -21,10 +21,10 @@ type BlockHeaderResponse struct {
 // BlockHeaderStateResponse is an extended version of the BlockHeaderResponse
 // that has more important informations.
 type BlockHeaderStateResponse struct {
-	Header        BlockHeaderResponse `json:"header"`
-	State         string              `json:"state"`
-	ChainWork     *big.Int            `json:"chainWork"  swaggertype:"string"`
-	Height        int32               `json:"height"`
+	Header    BlockHeaderResponse `json:"header"`
+	State     string              `json:"state"`
+	ChainWork *big.Int            `json:"chainWork"  swaggertype:"string"`
+	Height    int32               `json:"height"`
 }
 
 // MapToBlockHeaderReponse maps a domain BlockHeader to a transport BlockHeaderResponse.
@@ -55,10 +55,10 @@ func MapToBlockHeadersReponse(headers []*domains.BlockHeader) []BlockHeaderRespo
 // MapToBlockHeaderStateReponse maps a domain BlockHeader to a transport BlockHeaderStateResponse.
 func MapToBlockHeaderStateReponse(header domains.BlockHeader) BlockHeaderStateResponse {
 	return BlockHeaderStateResponse{
-		Header:        MapToBlockHeaderReponse(header),
-		State:         header.State.String(),
-		ChainWork:     header.CumulatedWork,
-		Height:        header.Height,
+		Header:    MapToBlockHeaderReponse(header),
+		State:     header.State.String(),
+		ChainWork: header.CumulatedWork,
+		Height:    header.Height,
 	}
 }
 
