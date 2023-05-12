@@ -7,6 +7,7 @@ import (
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/wire"
 	"github.com/libsv/bitcoin-hc/repository"
+	"github.com/libsv/bitcoin-hc/transports/http"
 	peerpkg "github.com/libsv/bitcoin-hc/transports/p2p/peer"
 )
 
@@ -50,7 +51,7 @@ type Tokens interface {
 
 // Webhooks is an interface which represents methods required for Webhooks service.
 type Webhooks interface {
-	GenerateWebhook(url, tHeader, token string) (*domains.Webhook, error)
+	CreateWebhook(wRequest http.WebhookRequest) (*domains.Webhook, error)
 	DeleteWebhook(value string) error
 	NotifyWebhooks(h *domains.BlockHeader) error
 }

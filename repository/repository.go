@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"time"
-
 	"github.com/libsv/bitcoin-hc/data/sql"
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
@@ -37,12 +35,10 @@ type Tokens interface {
 // Webhooks is a interface which represents methods performed on registered_webhooks table in defined storage.
 type Webhooks interface {
 	AddWebhookToDatabase(token *domains.Webhook) error
-	// DeleteWebhookByName(name string) error
 	DeleteWebhookByUrl(url string) error
-	// GetWebhookByName(name string) (*domains.Webhook, error)
 	GetWebhookByUrl(url string) (*domains.Webhook, error)
 	GetAllWebhooks() ([]*domains.Webhook, error)
-	UpdateWebhook(w *domains.Webhook, lastEmitTimestamp time.Time, lastEmitStatus string, errorsCount int, active bool) error
+	UpdateWebhook(w *domains.Webhook) error
 }
 
 // Repositories represents all repositories in app and provide access to them.

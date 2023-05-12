@@ -1,8 +1,8 @@
 package testrepository
 
 import (
+	"errors"
 	"fmt"
-	"time"
 
 	"github.com/libsv/bitcoin-hc/domains"
 )
@@ -25,7 +25,17 @@ func (r *WebhooksTestRepository) AddWebhookToDatabase(webhook *domains.Webhook) 
 
 // DeleteWebhookByUrl deletes webhook by url from db.
 func (r *WebhooksTestRepository) DeleteWebhookByUrl(url string) error {
-	return nil
+	for i, w := range *r.db {
+		if w.Url == url {
+			arr := *r.db
+			// Replace the element at index i with the last element.
+			arr[i] = arr[len(arr)-1]
+			// Assign slice without last element.
+			*r.db = arr[:len(arr)-1]
+			return nil
+		}
+	}
+	return errors.New("could not find webhook")
 }
 
 // GetWebhookByUrl returns webhook from db by given url.
@@ -39,7 +49,7 @@ func (r *WebhooksTestRepository) GetAllWebhooks() ([]*domains.Webhook, error) {
 }
 
 // UpdateWebhook updates webhook in db.
-func (r *WebhooksTestRepository) UpdateWebhook(w *domains.Webhook, lastEmitTimestamp time.Time, lastEmitStatus string, errorsCount int, active bool) error {
+func (r *WebhooksTestRepository) UpdateWebhook(w *domains.Webhook) error {
 	return nil
 }
 

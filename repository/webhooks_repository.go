@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"time"
 
 	"github.com/libsv/bitcoin-hc/data/sql"
 	"github.com/libsv/bitcoin-hc/domains"
@@ -52,8 +51,8 @@ func (r *WebhooksRepository) GetAllWebhooks() ([]*domains.Webhook, error) {
 }
 
 // UpdateWebhook updates webhook in db.
-func (r *WebhooksRepository) UpdateWebhook(w *domains.Webhook, lastEmitTimestamp time.Time, lastEmitStatus string, errorsCount int, active bool) error {
-	err := r.db.UpdateWebhook(context.Background(), w.Url, lastEmitTimestamp, lastEmitStatus, errorsCount, active)
+func (r *WebhooksRepository) UpdateWebhook(w *domains.Webhook) error {
+	err := r.db.UpdateWebhook(context.Background(), w.Url, w.LastEmitTimestamp, w.LastEmitStatus, w.ErrorsCount, w.Active)
 	return err
 }
 

@@ -2,7 +2,6 @@ package testrepository
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/libsv/bitcoin-hc/domains"
 )
@@ -30,10 +29,6 @@ func (r *TokensTestRepository) GetTokenByValue(token string) (*domains.Token, er
 
 // DeleteToken deletes token from db.
 func (r *TokensTestRepository) DeleteToken(token string) error {
-	fmt.Println("delete token")
-	fmt.Println(*r.db)
-	fmt.Println(token)
-
 	for i, t := range *r.db {
 		if t.Token == token {
 			arr := *r.db

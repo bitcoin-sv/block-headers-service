@@ -1,9 +1,7 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	webhook "github.com/libsv/bitcoin-hc/transports/http"
@@ -25,26 +23,13 @@ func (h *Handler) registerWebhook(c *gin.Context) {
 	var reqBody webhook.WebhookRequest
 	err := c.Bind(&reqBody)
 
-	fmt.Println("WEBHOOK: ", reqBody)
-
 	if err == nil {
-
 		if reqBody.Url == "" {
 			c.JSON(http.StatusBadRequest, "Url is required")
 			return
 		}
-		var tHeader, token string
 
-		// If custom header is specified, use it, otherwise use default
-		if strings.ToLower(reqBody.RequiredAuth.Type) == "custom_header" {
-			tHeader = reqBody.RequiredAuth.Header
-			token = reqBody.RequiredAuth.Token
-		} else {
-			tHeader = "Authorization"
-			token = "Bearer " + reqBody.RequiredAuth.Token
-		}
-
-		webhook, err := h.services.Webhooks.GenerateWebhook(reqBody.Url, tHeader, token)
+		webhook, err := h.services.Webhooks.CreateWebhook(reqBody)
 		if err == nil {
 			c.JSON(http.StatusOK, webhook)
 		} else if webhook == nil {
