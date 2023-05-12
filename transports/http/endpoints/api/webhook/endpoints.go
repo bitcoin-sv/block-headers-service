@@ -1,10 +1,31 @@
-package handler
+package webhook
 
 import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/libsv/bitcoin-hc/service"
+	router "github.com/libsv/bitcoin-hc/transports/http/endpoints/routes"
 )
+
+type handler struct {
+	service service.Webhooks
+}
+
+// NewHandler creates new endpoint handler.
+func NewHandler(s *service.Services) router.ApiEndpoints {
+	return &handler{service: s.Webhooks}
+}
+
+// RegisterApiEndpoints registers routes that are part of service API.
+func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup) {
+	webhooks := router.Group("/webhook")
+	{
+		webhooks.POST("", h.registerWebhook)
+		webhooks.GET("", h.getWebhook)
+		webhooks.DELETE("", h.revokeWebhook)
+	}
+}
 
 // nolint: godot
 // registerWebhook godoc.
@@ -15,10 +36,10 @@ import (
 //	@Produce json
 //	@Success 200 {object} domains.Webhook
 //	@Router /webhook [post]
-//	@Param data body http.WebhookRequest true "Webhook to register"
+//	@Param data body webhook.WebhookRequest true "Webhook to register"
 //
 // @Security Bearer
-func (h *Handler) registerWebhook(c *gin.Context) {
+func (h *handler) registerWebhook(c *gin.Context) {
 	var reqBody WebhookRequest
 	err := c.Bind(&reqBody)
 
@@ -31,7 +52,7 @@ func (h *Handler) registerWebhook(c *gin.Context) {
 		return
 	}
 
-	webhook, err := h.services.Webhooks.CreateWebhook(reqBody.RequiredAuth.Type, reqBody.RequiredAuth.Header, reqBody.RequiredAuth.Token, reqBody.Url)
+	webhook, err := h.service.CreateWebhook(reqBody.RequiredAuth.Type, reqBody.RequiredAuth.Header, reqBody.RequiredAuth.Token, reqBody.Url)
 	if err == nil {
 		c.JSON(http.StatusOK, webhook)
 	} else if webhook == nil {
@@ -51,13 +72,13 @@ func (h *Handler) registerWebhook(c *gin.Context) {
 //	@Param url query string true "Url of webhook to check"
 //
 // @Security Bearer
-func (h *Handler) getWebhook(c *gin.Context) {
+func (h *handler) getWebhook(c *gin.Context) {
 	url := c.Query("url")
 	if url == "" {
 		c.JSON(http.StatusBadRequest, "Url param is required")
 		return
 	}
-	w, err := h.services.Webhooks.GetWebhookByUrl(url)
+	w, err := h.service.GetWebhookByUrl(url)
 
 	if err == nil {
 		c.JSON(http.StatusOK, w)
@@ -78,26 +99,17 @@ func (h *Handler) getWebhook(c *gin.Context) {
 //	@Param url query string true "Url of webhook to revoke"
 //
 // @Security Bearer
-func (h *Handler) revokeWebhook(c *gin.Context) {
+func (h *handler) revokeWebhook(c *gin.Context) {
 	url := c.Query("url")
 	if url == "" {
 		c.JSON(http.StatusBadRequest, "Url param is required")
 		return
 	}
-	err := h.services.Webhooks.DeleteWebhook(url)
+	err := h.service.DeleteWebhook(url)
 
 	if err == nil {
 		c.JSON(http.StatusOK, "Webhook revoked")
 	} else {
 		c.JSON(http.StatusBadRequest, err.Error())
-	}
-}
-
-func (h *Handler) initRegisteredWehooksRoutes(router *gin.RouterGroup) {
-	webhooks := router.Group("")
-	{
-		webhooks.POST("/webhook", h.registerWebhook)
-		webhooks.GET("/webhook", h.getWebhook)
-		webhooks.DELETE("/webhook", h.revokeWebhook)
 	}
 }

@@ -4,6 +4,25 @@
         "contact": {}
     },
     "paths": {
+        "/../../status": {
+            "get": {
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "status"
+                ],
+                "summary": "Check the status of the server",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/access": {
             "get": {
                 "security": [
@@ -205,7 +224,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.BlockHeaderStateResponse"
+                            "$ref": "#/definitions/headers.blockHeaderStateResponse"
                         }
                     }
                 }
@@ -293,6 +312,33 @@
                 }
             }
         },
+        "/chain/tip": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tip"
+                ],
+                "summary": "Gets tip of longest chain",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/tips.tipStateResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/chain/tips": {
             "get": {
                 "security": [
@@ -316,7 +362,10 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/domains.BlockHeaderState"
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/tips.tipStateResponse"
+                                }
                             }
                         }
                     }
@@ -468,7 +517,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.WebhookRequest"
+                            "$ref": "#/definitions/webhook.WebhookRequest"
                         }
                     }
                 ],
@@ -550,23 +599,6 @@
                 }
             }
         },
-        "domains.BlockHeaderState": {
-            "type": "object",
-            "properties": {
-                "chainWork": {
-                    "type": "string"
-                },
-                "header": {
-                    "$ref": "#/definitions/domains.BlockHeader"
-                },
-                "height": {
-                    "type": "integer"
-                },
-                "state": {
-                    "type": "string"
-                }
-            }
-        },
         "domains.Token": {
             "type": "object",
             "properties": {
@@ -604,7 +636,7 @@
                 }
             }
         },
-        "handler.BlockHeaderResponse": {
+        "headers.blockHeaderResponse": {
             "type": "object",
             "properties": {
                 "creationTimestamp": {
@@ -633,14 +665,14 @@
                 }
             }
         },
-        "handler.BlockHeaderStateResponse": {
+        "headers.blockHeaderStateResponse": {
             "type": "object",
             "properties": {
                 "chainWork": {
                     "type": "string"
                 },
                 "header": {
-                    "$ref": "#/definitions/handler.BlockHeaderResponse"
+                    "$ref": "#/definitions/headers.blockHeaderResponse"
                 },
                 "height": {
                     "type": "integer"
@@ -650,7 +682,53 @@
                 }
             }
         },
-        "http.RequiredAuth": {
+        "tips.tipResponse": {
+            "type": "object",
+            "properties": {
+                "creationTimestamp": {
+                    "type": "integer"
+                },
+                "difficultyTarget": {
+                    "type": "integer"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "merkleRoot": {
+                    "type": "string"
+                },
+                "nonce": {
+                    "type": "integer"
+                },
+                "prevBlockHash": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                },
+                "work": {
+                    "type": "string"
+                }
+            }
+        },
+        "tips.tipStateResponse": {
+            "type": "object",
+            "properties": {
+                "chainWork": {
+                    "type": "string"
+                },
+                "header": {
+                    "$ref": "#/definitions/tips.tipResponse"
+                },
+                "height": {
+                    "type": "integer"
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "webhook.RequiredAuth": {
             "type": "object",
             "properties": {
                 "header": {
@@ -664,11 +742,11 @@
                 }
             }
         },
-        "http.WebhookRequest": {
+        "webhook.WebhookRequest": {
             "type": "object",
             "properties": {
                 "requiredAuth": {
-                    "$ref": "#/definitions/http.RequiredAuth"
+                    "$ref": "#/definitions/webhook.RequiredAuth"
                 },
                 "url": {
                     "type": "string"

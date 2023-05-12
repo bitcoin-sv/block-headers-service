@@ -54,6 +54,11 @@ const (
 	userAgentVersion = "1.0.11"
 )
 
+var (
+	// ServerAlreadyStarted represents starting error when a p2p server is already started.
+	ServerAlreadyStarted = errors.New("p2p server already started")
+)
+
 // addrMe specifies the server address to send peers.
 var addrMe *wire.NetAddress
 
@@ -1145,10 +1150,10 @@ func (s *server) UpdatePeerHeights(latestBlkHash *chainhash.Hash, latestHeight i
 }
 
 // Start begins accepting connections from peers.
-func (s *server) Start() {
+func (s *server) Start() error {
 	// Already started?
 	if atomic.AddInt32(&s.started, 1) != 1 {
-		return
+		return ServerAlreadyStarted
 	}
 
 	configs.Log.Trace("Starting server")
@@ -1162,6 +1167,8 @@ func (s *server) Start() {
 		s.wg.Add(1)
 		go s.upnpUpdateThread()
 	}
+
+	return nil
 }
 
 // Stop gracefully shuts down the server by stopping and disconnecting all
@@ -1178,11 +1185,14 @@ func (s *server) Stop() {
 	close(s.quit)
 }
 
-func (s *server) StopServer() {
+// Shutdown gracefully shuts down the server by stopping and disconnecting all
+// peers and the main listener and waits for server to stop.
+func (s *server) Shutdown() error {
 	configs.Log.Infof("Gracefully shutting down the P2P server...")
 	s.Stop()
 	s.WaitForShutdown()
 	configs.Log.Infof("P2P Server shutdown complete")
+	return nil
 }
 
 // WaitForShutdown blocks until the main listener and peer handlers are stopped.
@@ -1746,7 +1756,11 @@ func createAndStartServer(serverChan chan<- *server, services *service.Services,
 			configs.Cfg.Listeners, err)
 		return nil, err
 	}
-	server.Start()
+	err = server.Start()
+	if err != nil {
+		configs.Log.Errorf("Unable to start p2p server: %v", err)
+		return nil, err
+	}
 	if serverChan != nil {
 		serverChan <- server
 	}

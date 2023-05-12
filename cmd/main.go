@@ -5,9 +5,11 @@
 package main
 
 import (
-	"context"
+	"errors"
 	"fmt"
+	"github.com/libsv/bitcoin-hc/transports/http/endpoints"
 	"io"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
@@ -23,7 +25,6 @@ import (
 	"github.com/libsv/bitcoin-hc/internal/wire"
 	"github.com/libsv/bitcoin-hc/repository"
 	"github.com/libsv/bitcoin-hc/service"
-	handler "github.com/libsv/bitcoin-hc/transports/http/handlers"
 	httpserver "github.com/libsv/bitcoin-hc/transports/http/server"
 	"github.com/libsv/bitcoin-hc/transports/p2p"
 	peerpkg "github.com/libsv/bitcoin-hc/transports/p2p/peer"
@@ -102,14 +103,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	handlers := handler.NewHandler(hs)
-	httpServer := httpserver.NewHttpServer(viper.GetInt(vconfig.EnvHttpServerPort), handlers.Init())
-
-	go p2pServer.Start()
+	server := httpserver.NewHttpServer(viper.GetInt(vconfig.EnvHttpServerPort))
+	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs))
 
 	go func() {
-		err := httpServer.Run()
-		if err != nil {
+		if err := p2pServer.Start(); err != nil {
+			configs.Log.Errorf("cannot start p2p server because of an error: %v", err)
+			os.Exit(1)
+		}
+	}()
+
+	go func() {
+		if err := server.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			configs.Log.Errorf("cannot start server because of an error: %v", err)
 			os.Exit(1)
 		}
@@ -120,8 +125,11 @@ func main() {
 
 	<-quit
 
-	p2pServer.StopServer()
-	if err := httpServer.Shutdown(context.Background()); err != nil {
+	if err := p2pServer.Shutdown(); err != nil {
+		configs.Log.Errorf("failed to stop p2p server: %v", err)
+	}
+
+	if err := server.Shutdown(); err != nil {
 		configs.Log.Errorf("failed to stop http server: %v", err)
 	}
 }
