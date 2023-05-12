@@ -1,4 +1,4 @@
-package http
+package webhook_test
 
 import (
 	"bytes"
@@ -10,14 +10,14 @@ import (
 	"testing"
 
 	"github.com/libsv/bitcoin-hc/internal/tests/testpulse"
-	handler "github.com/libsv/bitcoin-hc/transports/http/handlers"
+	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/webhook"
 )
 
 var webhookUrl = "http://localhost:8080/api/v1/webhook/notify"
 
-var preparedWebhook = handler.WebhookRequest{
+var preparedWebhook = webhook.WebhookRequest{
 	Url: webhookUrl,
-	RequiredAuth: handler.RequiredAuth{
+	RequiredAuth: webhook.RequiredAuth{
 		Type:  "BEARER",
 		Token: "test-token",
 	},

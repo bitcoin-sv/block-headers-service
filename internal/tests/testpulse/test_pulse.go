@@ -1,7 +1,7 @@
 package testpulse
 
 import (
-	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -12,7 +12,7 @@ import (
 	"github.com/libsv/bitcoin-hc/internal/tests/testrepository"
 	"github.com/libsv/bitcoin-hc/repository"
 	"github.com/libsv/bitcoin-hc/service"
-	handler "github.com/libsv/bitcoin-hc/transports/http/handlers"
+	"github.com/libsv/bitcoin-hc/transports/http/endpoints"
 	httpserver "github.com/libsv/bitcoin-hc/transports/http/server"
 	"github.com/libsv/bitcoin-hc/vconfig"
 	"github.com/spf13/viper"
@@ -28,9 +28,6 @@ type ConfigOpt func(*vconfig.Config)
 
 // RepoOpt represents functions to configure test repositories.
 type RepoOpt func(*repository.Repositories)
-
-// ServerOpt represents functions to configure test server.
-type ServerOpt func(*gin.Engine)
 
 // Cleanup represents function that is used to clean up TestPulse app.
 type Cleanup func()
@@ -73,10 +70,6 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 		Peers:        nil,
 	})
 
-	handlers := handler.NewHandler(hs)
-	gin.SetMode(gin.TestMode)
-	ginEngine := handlers.Init()
-
 	for _, opt := range ops {
 		switch opt := opt.(type) {
 		case ConfigOpt:
@@ -85,18 +78,19 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 			opt(&repo)
 		case ServicesOpt:
 			opt(hs)
-		case ServerOpt:
-			opt(ginEngine)
 		}
 	}
 
 	port := viper.GetInt(vconfig.EnvHttpServerPort)
 	urlPrefix := viper.GetString(vconfig.EnvHttpServerUrlPrefix)
-	httpServer := httpserver.NewHttpServer(port, ginEngine)
+	gin.SetMode(gin.TestMode)
+	server := httpserver.NewHttpServer(port)
+	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs))
+	engine := hijackEngine(server)
 
 	go func() {
-		err := httpServer.Run()
-		if err != nil && err != http.ErrServerClosed {
+		err := server.Start()
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			panic(fmt.Sprintf("cannot start server because of an error: %v", err))
 		}
 	}()
@@ -106,16 +100,24 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 		config:       conf,
 		services:     hs,
 		repositories: &repo,
-		engine:       ginEngine,
+		engine:       engine,
 		port:         port,
 		urlPrefix:    urlPrefix,
 	}
 
 	cleanup := func() {
-		if err := httpServer.Shutdown(context.Background()); err != nil {
+		if err := server.Shutdown(); err != nil {
 			t.Fatalf("failed to stop http server: %v", err)
 		}
 	}
 
 	return pulse, cleanup
+}
+
+func hijackEngine(server *httpserver.HttpServer) *gin.Engine {
+	var engine *gin.Engine
+	server.ApplyConfiguration(func(e *gin.Engine) {
+		engine = e
+	})
+	return engine
 }

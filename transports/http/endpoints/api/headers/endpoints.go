@@ -1,11 +1,35 @@
-package handler
+package headers
 
 import (
 	"net/http"
 	"strconv"
 
+	"github.com/libsv/bitcoin-hc/service"
+	router "github.com/libsv/bitcoin-hc/transports/http/endpoints/routes"
+
 	"github.com/gin-gonic/gin"
 )
+
+type handler struct {
+	service service.Headers
+}
+
+// NewHandler creates new endpoint handler.
+func NewHandler(s *service.Services) router.ApiEndpoints {
+	return &handler{service: s.Headers}
+}
+
+// RegisterApiEndpoints registers routes that are part of service API.
+func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup) {
+	headers := router.Group("/chain/header")
+	{
+		headers.GET("/:hash", h.getHeaderByHash)
+		headers.GET("/byHeight", h.getHeaderByHeight)
+		headers.GET("/:hash/:ancestorHash/ancestors", h.getHeaderAncestorsByHash)
+		headers.POST("/commonAncestor", h.getCommonAncestors)
+		headers.GET("/state/:hash", h.getHeadersState)
+	}
+}
 
 // getHeaderByHash godoc.
 //
@@ -17,12 +41,12 @@ import (
 //		@Router /chain/header/{hash} [get]
 //		@Param hash path string true "Requested Header Hash"
 //	 @Security Bearer
-func (h *Handler) getHeaderByHash(c *gin.Context) {
+func (h *handler) getHeaderByHash(c *gin.Context) {
 	hash := c.Param("hash")
-	bh, err := h.services.Headers.GetHeaderByHash(hash)
+	bh, err := h.service.GetHeaderByHash(hash)
 
 	if err == nil {
-		c.JSON(http.StatusOK, MapToBlockHeaderReponse(*bh))
+		c.JSON(http.StatusOK, newBlockHeaderResponse(bh))
 	} else {
 		c.JSON(http.StatusBadRequest, err.Error())
 	}
@@ -39,7 +63,7 @@ func (h *Handler) getHeaderByHash(c *gin.Context) {
 //		@Param height query int true "Height to start from"
 //		@Param count query int false "Headers count (optional)"
 //	 @Security Bearer
-func (h *Handler) getHeaderByHeight(c *gin.Context) {
+func (h *handler) getHeaderByHeight(c *gin.Context) {
 	height, _ := c.GetQuery("height")
 	count, _ := c.GetQuery("count")
 	heightInt, err := strconv.Atoi(height)
@@ -49,9 +73,9 @@ func (h *Handler) getHeaderByHeight(c *gin.Context) {
 		if err2 != nil {
 			countInt = 1
 		}
-		bh, err := h.services.Headers.GetHeadersByHeight(heightInt, countInt)
+		bh, err := h.service.GetHeadersByHeight(heightInt, countInt)
 		if err == nil {
-			c.JSON(http.StatusOK, MapToBlockHeadersReponse(bh))
+			c.JSON(http.StatusOK, mapToBlockHeadersResponses(bh))
 		} else {
 			c.JSON(http.StatusBadRequest, err.Error())
 		}
@@ -71,13 +95,13 @@ func (h *Handler) getHeaderByHeight(c *gin.Context) {
 //		@Param hash path string true "Requested Header Hash"
 //		@Param ancestorHash path string true "Ancestor Header Hash"
 //	 @Security Bearer
-func (h *Handler) getHeaderAncestorsByHash(c *gin.Context) {
+func (h *handler) getHeaderAncestorsByHash(c *gin.Context) {
 	hash := c.Param("hash")
 	ancestorHash := c.Param("ancestorHash")
-	ancestors, err := h.services.Headers.GetHeaderAncestorsByHash(hash, ancestorHash)
+	ancestors, err := h.service.GetHeaderAncestorsByHash(hash, ancestorHash)
 
 	if err == nil {
-		c.JSON(http.StatusOK, MapToBlockHeadersReponse(ancestors))
+		c.JSON(http.StatusOK, mapToBlockHeadersResponses(ancestors))
 	} else {
 		c.JSON(http.StatusBadRequest, err.Error())
 	}
@@ -93,15 +117,15 @@ func (h *Handler) getHeaderAncestorsByHash(c *gin.Context) {
 //		@Router /chain/header/commonAncestor [post]
 //		@Param ancesstors body []string true "JSON"
 //	 @Security Bearer
-func (h *Handler) getCommonAncestors(c *gin.Context) {
+func (h *handler) getCommonAncestors(c *gin.Context) {
 	var body []string
 	if err := c.BindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, err.Error())
 	} else {
-		ancestor, err := h.services.Headers.GetCommonAncestors(body)
+		ancestor, err := h.service.GetCommonAncestors(body)
 
 		if err == nil {
-			c.JSON(http.StatusOK, MapToBlockHeaderReponse(*ancestor))
+			c.JSON(http.StatusOK, newBlockHeaderResponse(ancestor))
 		} else {
 			c.JSON(http.StatusBadRequest, err.Error())
 		}
@@ -114,29 +138,18 @@ func (h *Handler) getCommonAncestors(c *gin.Context) {
 //		@Tags headers
 //		@Accept */*
 //		@Produce json
-//		@Success 200 {object} BlockHeaderStateResponse
+//		@Success 200 {object} blockHeaderStateResponse
 //		@Router /chain/header/state/{hash} [get]
 //		@Param hash path string true "Requested Header Hash"
 //	 @Security Bearer
-func (h *Handler) getHeadersState(c *gin.Context) {
+func (h *handler) getHeadersState(c *gin.Context) {
 	hash := c.Param("hash")
-	bh, err := h.services.Headers.GetHeaderByHash(hash)
+	bh, err := h.service.GetHeaderByHash(hash)
 
 	if err == nil {
-		headerStateResponse := MapToBlockHeaderStateReponse(*bh)
+		headerStateResponse := newBlockHeaderStateResponse(bh)
 		c.JSON(http.StatusOK, headerStateResponse)
 	} else {
 		c.JSON(http.StatusBadRequest, err.Error())
-	}
-}
-
-func (h *Handler) initHeadersRoutes(router *gin.RouterGroup) {
-	headers := router.Group("/chain/header")
-	{
-		headers.GET("/:hash", h.getHeaderByHash)
-		headers.GET("/byHeight", h.getHeaderByHeight)
-		headers.GET("/:hash/:ancestorHash/ancestors", h.getHeaderAncestorsByHash)
-		headers.POST("/commonAncestor", h.getCommonAncestors)
-		headers.GET("/state/:hash", h.getHeadersState)
 	}
 }

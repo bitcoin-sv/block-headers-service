@@ -22,17 +22,6 @@ definitions:
       work:
         type: string
     type: object
-  domains.BlockHeaderState:
-    properties:
-      chainWork:
-        type: string
-      header:
-        $ref: '#/definitions/domains.BlockHeader'
-      height:
-        type: integer
-      state:
-        type: string
-    type: object
   domains.Token:
     properties:
       createdAt:
@@ -57,7 +46,7 @@ definitions:
       url:
         type: string
     type: object
-  handler.BlockHeaderResponse:
+  headers.blockHeaderResponse:
     properties:
       creationTimestamp:
         type: integer
@@ -76,18 +65,48 @@ definitions:
       work:
         type: string
     type: object
-  handler.BlockHeaderStateResponse:
+  headers.blockHeaderStateResponse:
     properties:
       chainWork:
         type: string
       header:
-        $ref: '#/definitions/handler.BlockHeaderResponse'
+        $ref: '#/definitions/headers.blockHeaderResponse'
       height:
         type: integer
       state:
         type: string
     type: object
-  http.RequiredAuth:
+  tips.tipResponse:
+    properties:
+      creationTimestamp:
+        type: integer
+      difficultyTarget:
+        type: integer
+      hash:
+        type: string
+      merkleRoot:
+        type: string
+      nonce:
+        type: integer
+      prevBlockHash:
+        type: string
+      version:
+        type: integer
+      work:
+        type: string
+    type: object
+  tips.tipStateResponse:
+    properties:
+      chainWork:
+        type: string
+      header:
+        $ref: '#/definitions/tips.tipResponse'
+      height:
+        type: integer
+      state:
+        type: string
+    type: object
+  webhook.RequiredAuth:
     properties:
       header:
         type: string
@@ -96,16 +115,28 @@ definitions:
       type:
         type: string
     type: object
-  http.WebhookRequest:
+  webhook.WebhookRequest:
     properties:
       requiredAuth:
-        $ref: '#/definitions/http.RequiredAuth'
+        $ref: '#/definitions/webhook.RequiredAuth'
       url:
         type: string
     type: object
 info:
   contact: {}
 paths:
+  /../../status:
+    get:
+      consumes:
+      - '*/*'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Check the status of the server
+      tags:
+      - status
   /access:
     get:
       consumes:
@@ -277,12 +308,28 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.BlockHeaderStateResponse'
+            $ref: '#/definitions/headers.blockHeaderStateResponse'
       security:
       - Bearer: []
       summary: Gets header state
       tags:
       - headers
+  /chain/tip:
+    get:
+      consumes:
+      - '*/*'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/tips.tipStateResponse'
+      security:
+      - Bearer: []
+      summary: Gets tip of longest chain
+      tags:
+      - tip
   /chain/tips:
     get:
       consumes:
@@ -294,7 +341,9 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/domains.BlockHeaderState'
+              items:
+                $ref: '#/definitions/tips.tipStateResponse'
+              type: array
             type: array
       security:
       - Bearer: []
@@ -403,7 +452,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/http.WebhookRequest'
+          $ref: '#/definitions/webhook.WebhookRequest'
       produces:
       - application/json
       responses:

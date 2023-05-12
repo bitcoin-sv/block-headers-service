@@ -3,7 +3,7 @@ package auth
 import (
 	"errors"
 	"github.com/libsv/bitcoin-hc/domains"
-	p2pservice "github.com/libsv/bitcoin-hc/service"
+	"github.com/libsv/bitcoin-hc/service"
 	"github.com/libsv/bitcoin-hc/vconfig"
 	"net/http"
 	"strings"
@@ -18,18 +18,18 @@ const (
 
 // TokenMiddleware middleware that is retrieving token from Authorization header.
 type TokenMiddleware struct {
-	tokens p2pservice.Tokens
+	tokens service.Tokens
 }
 
-// NewAuthTokenMiddleware create Token middleware that is retrieving token from Authorization header.
-func NewAuthTokenMiddleware(tokens p2pservice.Tokens) TokenMiddleware {
-	return TokenMiddleware{
-		tokens: tokens,
+// NewMiddleware create Token middleware that is retrieving token from Authorization header.
+func NewMiddleware(s *service.Services) *TokenMiddleware {
+	return &TokenMiddleware{
+		tokens: s.Tokens,
 	}
 }
 
-// Apply is a middleware which checks if the request has a valid token.
-func (h *TokenMiddleware) Apply(c *gin.Context) {
+// ApplyToApi is a middleware which checks if the request has a valid token.
+func (h *TokenMiddleware) ApplyToApi(c *gin.Context) {
 	if viper.GetBool(vconfig.EnvHttpServerUseAuth) {
 		rawToken, err := h.parseAuthHeader(c)
 		if err != nil {
