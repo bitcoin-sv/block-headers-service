@@ -8,6 +8,7 @@ import (
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/repository"
 	webhook "github.com/libsv/bitcoin-hc/transports/http"
+	"github.com/libsv/bitcoin-hc/transports/http/client"
 )
 
 // WebhookMaxTries is the maximum number of times a webhook will be retried.
@@ -15,7 +16,8 @@ const WebhookMaxTries = "webhook.maxTries"
 
 // WebhooksService represents Webhooks service and provide access to repositories.
 type WebhooksService struct {
-	repo *repository.Repositories
+	repo   *repository.Repositories
+	client domains.WebhookTargetClient
 }
 
 // CreateWebhook creates and save new webhook.
@@ -34,7 +36,7 @@ func (s *WebhooksService) CreateWebhook(wRequest webhook.WebhookRequest) (*domai
 	webhook := domains.CreateWebhook(wRequest.Url, tHeader, token)
 	err := s.repo.Webhooks.AddWebhookToDatabase(webhook)
 	if err != nil {
-		s.refreshWebhook(wRequest.Url)
+		return s.refreshWebhook(wRequest.Url)
 	}
 	return webhook, nil
 }
@@ -57,7 +59,6 @@ func (s *WebhooksService) DeleteWebhook(value string) error {
 func (s *WebhooksService) NotifyWebhooks(h *domains.BlockHeader) error {
 	webhooks, err := s.repo.Webhooks.GetAllWebhooks()
 
-	fmt.Println("webhooks", webhooks)
 	if err != nil {
 		return err
 	}
@@ -65,7 +66,7 @@ func (s *WebhooksService) NotifyWebhooks(h *domains.BlockHeader) error {
 	// Notify all active webhooks
 	for _, webhook := range webhooks {
 		if webhook.Active {
-			err := webhook.Notify(h)
+			err := webhook.Notify(h, s.client)
 
 			if err != nil {
 				fmt.Println(err)
@@ -99,5 +100,8 @@ func (s *WebhooksService) refreshWebhook(url string) (*domains.Webhook, error) {
 
 // NewWebhooksService creates and returns WebhooksService instance.
 func NewWebhooksService(repo *repository.Repositories) *WebhooksService {
-	return &WebhooksService{repo: repo}
+	return &WebhooksService{
+		repo:   repo,
+		client: client.NewWebhookTargetClient(),
+	}
 }

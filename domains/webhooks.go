@@ -1,9 +1,6 @@
 package domains
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -27,27 +24,23 @@ type Webhook struct {
 // WebhookMaxTries is the maximum number of times a webhook will be retried.
 const WebhookMaxTries = "webhook.maxTries"
 
+// WebhookTargetClient is the interface for the webhooks http calls.
+type WebhookTargetClient interface {
+	Call(headers map[string]string, method string, url string, body *BlockHeader) (*http.Response, error)
+}
+
 // Notify sends notification to webhook.
-func (w *Webhook) Notify(h *BlockHeader) error {
-	// Prepare the request.
-	headerBytes, err := json.Marshal(h)
-	if err != nil {
-		return err
-	}
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, w.Url, bytes.NewReader(headerBytes))
-
-	if err != nil {
-		return err
+func (w *Webhook) Notify(h *BlockHeader, client WebhookTargetClient) error {
+	// Prepare headers
+	headers := map[string]string{
+		w.TokenHeader:  w.Token,
+		"Content-Type": "application/json",
 	}
 
-	// Add the necessary headers.
-	req.Header.Add(w.TokenHeader, w.Token)
-	req.Header.Add("Content-Type", "application/json")
+	res, err := client.Call(headers, http.MethodPost, w.Url, h)
 
-	// Send the request.
-	client := &http.Client{}
-	res, err := client.Do(req)
 	if err != nil {
+		// Update the webhook after failed notification.
 		w.updateWebhookAfterNotification(0, "", err)
 		return err
 	}
@@ -61,7 +54,7 @@ func (w *Webhook) Notify(h *BlockHeader) error {
 		return err
 	}
 
-	// Update the webhook after successfull notification.
+	// Update the webhook after successful notification.
 	strBody := string(body)
 	w.updateWebhookAfterNotification(res.StatusCode, strBody, err)
 

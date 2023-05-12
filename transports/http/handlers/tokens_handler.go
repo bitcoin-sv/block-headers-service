@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/libsv/bitcoin-hc/transports/http/auth"
 	"net/http"
 
@@ -58,7 +57,6 @@ func (h *Handler) createToken(c *gin.Context) {
 //	 @Security Bearer
 func (h *Handler) revokeToken(c *gin.Context) {
 	token := c.Param("token")
-	fmt.Println("token", token)
 	err := h.services.Tokens.DeleteToken(token)
 
 	if err == nil {
