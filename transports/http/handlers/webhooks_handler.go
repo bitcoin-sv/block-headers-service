@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	webhook "github.com/libsv/bitcoin-hc/transports/http"
 )
 
 // nolint: godot
@@ -20,7 +19,7 @@ import (
 //
 // @Security Bearer
 func (h *Handler) registerWebhook(c *gin.Context) {
-	var reqBody webhook.WebhookRequest
+	var reqBody WebhookRequest
 	err := c.Bind(&reqBody)
 
 	if err == nil {
@@ -29,7 +28,7 @@ func (h *Handler) registerWebhook(c *gin.Context) {
 			return
 		}
 
-		webhook, err := h.services.Webhooks.CreateWebhook(reqBody)
+		webhook, err := h.services.Webhooks.CreateWebhook(reqBody.RequiredAuth.Type, reqBody.RequiredAuth.Header, reqBody.RequiredAuth.Token, reqBody.Url)
 		if err == nil {
 			c.JSON(http.StatusOK, webhook)
 		} else if webhook == nil {

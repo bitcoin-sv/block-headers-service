@@ -7,7 +7,6 @@ import (
 
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/repository"
-	webhook "github.com/libsv/bitcoin-hc/transports/http"
 	"github.com/libsv/bitcoin-hc/transports/http/client"
 )
 
@@ -21,22 +20,18 @@ type WebhooksService struct {
 }
 
 // CreateWebhook creates and save new webhook.
-func (s *WebhooksService) CreateWebhook(wRequest webhook.WebhookRequest) (*domains.Webhook, error) {
-	var tHeader, token string
-
+func (s *WebhooksService) CreateWebhook(authType, header, token, url string) (*domains.Webhook, error) {
 	// If custom header is specified, use it, otherwise use default
-	if strings.ToLower(wRequest.RequiredAuth.Type) == "custom_header" {
-		tHeader = wRequest.RequiredAuth.Header
-		token = wRequest.RequiredAuth.Token
-	} else {
-		tHeader = "Authorization"
-		token = "Bearer " + wRequest.RequiredAuth.Token
+	if strings.ToLower(authType) == "bearer" {
+		header = "Authorization"
+		token = "Bearer " + token
 	}
 
-	webhook := domains.CreateWebhook(wRequest.Url, tHeader, token)
+	webhook := domains.CreateWebhook(url, header, token)
+
 	err := s.repo.Webhooks.AddWebhookToDatabase(webhook)
 	if err != nil {
-		return s.refreshWebhook(wRequest.Url)
+		return s.refreshWebhook(url)
 	}
 	return webhook, nil
 }

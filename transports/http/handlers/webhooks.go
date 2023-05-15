@@ -1,4 +1,4 @@
-package http
+package handler
 
 // WebhookRequest defines a request body for webhook registration.
 type WebhookRequest struct {

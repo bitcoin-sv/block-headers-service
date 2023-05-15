@@ -41,6 +41,12 @@ func (c *Config) WithAuthorization() *Config {
 	return c
 }
 
+// WithoutAuthorization edits and returns viper configuration with disabled authorization.
+func (c *Config) WithoutAuthorization() *Config {
+	viper.SetDefault(EnvHttpServerUseAuth, false)
+	return c
+}
+
 // setHttpServerDefaults sets default values for http server.
 func setHttpServerDefaults() {
 	viper.SetDefault(EnvHttpServerReadTimeout, 10)

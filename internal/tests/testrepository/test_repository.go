@@ -18,7 +18,8 @@ func NewCleanTestRepositories() repository.Repositories {
 	var tokensTable []domains.Token
 
 	return repository.Repositories{
-		Headers: NewHeadersTestRepository(&db),
-		Tokens:  NewTokensTestRepository(&tokensTable),
+		Headers:  NewHeadersTestRepository(&db),
+		Tokens:   NewTokensTestRepository(&tokensTable),
+		Webhooks: NewWebhooksTestRepository(&[]domains.Webhook{}),
 	}
 }
