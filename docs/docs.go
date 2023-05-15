@@ -84,7 +84,7 @@ const docTemplate = `{
                 "tags": [
                     "access"
                 ],
-                "summary": "Revoke token",
+                "summary": "Gets header state",
                 "parameters": [
                     {
                         "type": "string",
@@ -423,6 +423,40 @@ const docTemplate = `{
             }
         },
         "/webhook": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhooks"
+                ],
+                "summary": "Get webhook",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Url of webhook to check",
+                        "name": "url",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domains.Webhook"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -558,6 +592,29 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "domains.Webhook": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "errorsCount": {
+                    "type": "integer"
+                },
+                "lastEmitStatus": {
+                    "type": "string"
+                },
+                "lastEmitTimestamp": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }
