@@ -10,10 +10,3 @@ func WithApiAuthorization() ConfigOpt {
 		c.WithAuthorization()
 	}
 }
-
-// WithoutApiAuthorization disable API authorization.
-func WithoutApiAuthorization() ConfigOpt {
-	return func(c *vconfig.Config) {
-		c.WithoutAuthorization()
-	}
-}

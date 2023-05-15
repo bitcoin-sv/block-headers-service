@@ -48,7 +48,7 @@ func (w *Webhook) Notify(h *BlockHeader, client WebhookTargetClient) error {
 	defer res.Body.Close() // nolint: all
 
 	// Read the response.
-	body, _ := io.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		w.updateWebhookAfterNotification(0, "", err)
 		return err

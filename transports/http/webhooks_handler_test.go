@@ -26,7 +26,7 @@ var preparedWebhook = handler.WebhookRequest{
 // TestCreateWebhookEndpoint tests the webhook registration.
 func TestCreateWebhookEndpoint(t *testing.T) {
 	//setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithoutApiAuthorization())
+	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
 	//when
@@ -41,7 +41,7 @@ func TestCreateWebhookEndpoint(t *testing.T) {
 // TestMultipleIdenticalWebhooks tests creating mutltiple webhooks with this same Url.
 func TestMultipleIdenticalWebhooks(t *testing.T) {
 	//setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithoutApiAuthorization())
+	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
 	//when
@@ -70,7 +70,7 @@ func TestMultipleIdenticalWebhooks(t *testing.T) {
 // TestRevokeWebhookEndpoint tests the webhook revocation.
 func TestRevokeWebhookEndpoint(t *testing.T) {
 	//setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithoutApiAuthorization())
+	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
 	//when

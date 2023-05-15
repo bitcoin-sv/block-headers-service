@@ -93,7 +93,10 @@ func (s *WebhooksService) refreshWebhook(url string) (*domains.Webhook, error) {
 		w.Active = true
 		w.ErrorsCount = 0
 		err = s.repo.Webhooks.UpdateWebhook(w)
-		return w, err
+		if err != nil {
+			return nil, err
+		}
+		return w, nil
 	}
 	return nil, errors.New("webhook already exists and is active")
 }

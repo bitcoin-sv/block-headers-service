@@ -22,22 +22,20 @@ func (h *Handler) registerWebhook(c *gin.Context) {
 	var reqBody WebhookRequest
 	err := c.Bind(&reqBody)
 
-	if err == nil {
-		if reqBody.Url == "" {
-			c.JSON(http.StatusBadRequest, "Url is required")
-			return
-		}
-
-		webhook, err := h.services.Webhooks.CreateWebhook(reqBody.RequiredAuth.Type, reqBody.RequiredAuth.Header, reqBody.RequiredAuth.Token, reqBody.Url)
-		if err == nil {
-			c.JSON(http.StatusOK, webhook)
-		} else if webhook == nil {
-			c.JSON(http.StatusOK, err.Error())
-		}
-	}
-
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	if reqBody.Url == "" {
+		c.JSON(http.StatusBadRequest, "Url is required")
+		return
+	}
+
+	webhook, err := h.services.Webhooks.CreateWebhook(reqBody.RequiredAuth.Type, reqBody.RequiredAuth.Header, reqBody.RequiredAuth.Token, reqBody.Url)
+	if err == nil {
+		c.JSON(http.StatusOK, webhook)
+	} else if webhook == nil {
+		c.JSON(http.StatusOK, err.Error())
 	}
 }
 
