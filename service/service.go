@@ -54,6 +54,7 @@ type Webhooks interface {
 	CreateWebhook(wRequest http.WebhookRequest) (*domains.Webhook, error)
 	DeleteWebhook(value string) error
 	NotifyWebhooks(h *domains.BlockHeader) error
+	GetWebhookByUrl(url string) (*domains.Webhook, error)
 }
 
 // Services represents all services in app and provide access to them.

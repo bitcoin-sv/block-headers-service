@@ -46,6 +46,9 @@
         <li><a href="#endpoints-documentation">Endpoints documentation</a></li>
       </ul>
       <ul>
+        <li><a href="#authentication">Authentication</a></li>
+      </ul>
+      <ul>
         <li><a href="#webhooks">Webhooks</a></li>
       </ul>
     </li>

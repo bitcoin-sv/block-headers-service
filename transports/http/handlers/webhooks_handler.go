@@ -43,6 +43,33 @@ func (h *Handler) registerWebhook(c *gin.Context) {
 }
 
 // nolint: godot
+// getWebhook godoc.
+//
+//	@Summary Get webhook
+//	@Tags webhooks
+//	@Accept */*
+//	@Produce json
+//	@Success 200 {object} domains.Webhook
+//	@Router /webhook [get]
+//	@Param url query string true "Url of webhook to check"
+//
+// @Security Bearer
+func (h *Handler) getWebhook(c *gin.Context) {
+	url := c.Query("url")
+	if url == "" {
+		c.JSON(http.StatusBadRequest, "Url param is required")
+		return
+	}
+	w, err := h.services.Webhooks.GetWebhookByUrl(url)
+
+	if err == nil {
+		c.JSON(http.StatusOK, w)
+	} else {
+		c.JSON(http.StatusBadRequest, err.Error())
+	}
+}
+
+// nolint: godot
 // revokeWebhook godoc.
 //
 //	@Summary Revoke webhook
@@ -73,6 +100,7 @@ func (h *Handler) initRegisteredWehooksRoutes(router *gin.RouterGroup) {
 	webhooks := router.Group("")
 	{
 		webhooks.POST("/webhook", h.registerWebhook)
+		webhooks.GET("/webhook", h.getWebhook)
 		webhooks.DELETE("/webhook", h.revokeWebhook)
 	}
 }

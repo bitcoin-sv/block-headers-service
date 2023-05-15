@@ -82,6 +82,11 @@ func (s *WebhooksService) NotifyWebhooks(h *domains.BlockHeader) error {
 	return nil
 }
 
+// GetWebhookByUrl returns webhook by url.
+func (s *WebhooksService) GetWebhookByUrl(url string) (*domains.Webhook, error) {
+	return s.repo.Webhooks.GetWebhookByUrl(url)
+}
+
 // refreshWebhook refresh webhook by resetting ErrorsCount and Active fields.
 func (s *WebhooksService) refreshWebhook(url string) (*domains.Webhook, error) {
 	w, err := s.repo.Webhooks.GetWebhookByUrl(url)
