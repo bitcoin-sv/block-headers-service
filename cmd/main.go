@@ -40,9 +40,10 @@ const preparedDb = "db.preparedDb"
 const preparedDbFilePath = "db.preparedDbFile.path"
 const httpServerPort = "http.server.port"
 
+// nolint: godot
 // @securityDefinitions.apikey Bearer
 // @in header
-// @name Authorization.
+// @name Authorization
 func main() {
 	vconfig := vconfig.NewViperConfig(appname).
 		WithDb().

@@ -3,6 +3,10 @@ package testpulse
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"os"
+	"testing"
+
 	"github.com/gin-gonic/gin"
 	"github.com/libsv/bitcoin-hc/configs"
 	"github.com/libsv/bitcoin-hc/internal/tests/testrepository"
@@ -12,9 +16,6 @@ import (
 	httpserver "github.com/libsv/bitcoin-hc/transports/http/server"
 	"github.com/libsv/bitcoin-hc/vconfig"
 	"github.com/spf13/viper"
-	"net/http"
-	"os"
-	"testing"
 )
 
 type pulseOpt interface{}
@@ -52,6 +53,7 @@ func (p *TestPulse) Api() *Api {
 
 // NewTestPulse Start pulse for testing reason.
 func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
+	viper.Reset()
 	conf := vconfig.NewViperConfig("test-pulse")
 
 	//override arguments otherwise all flags provided to go test command will be parsed by LoadConfig

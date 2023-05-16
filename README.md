@@ -40,6 +40,18 @@
         <li><a href="#run-application">Run application</a></li>
       </ul>
     </li>
+    <li>
+      <a href="#how-to-use-it">How to use it</a>
+      <ul>
+        <li><a href="#endpoints-documentation">Endpoints documentation</a></li>
+      </ul>
+      <ul>
+        <li><a href="#authentication">Authentication</a></li>
+      </ul>
+      <ul>
+        <li><a href="#webhooks">Webhooks</a></li>
+      </ul>
+    </li>
   </ol>
 </details>
 
@@ -189,6 +201,60 @@ DELETE https://{{pulse_url}}/api/v1/access/{{some_token_created_by_server}}
 Authorization: Bearer replace_me_with_token_you_want_to_use_as_admin_token
 ```
 After this request succeeded the token can't be used to authenticate in pulse.
+
+#### Creating webhook
+Creating a new webhook is done via POST request
+```http request
+ POST https://{{pulse_url}}/api/v1/webhook
+ ```
+
+ Data which should be sent in body:
+ ```
+{
+  "url": "<server_url>",
+  "requiredAuth": {
+    "type": "BEARER|CUSTOM_HEADER",
+    "token": "<authorization_token>",
+    "header": "<custom_header_name>",      
+  }
+}
+ ```
+
+ Information:
+  - If authorization is enabled this request also requires `Authorization` header
+  - url have to include http or https protocol example: `https://test-url.com`
+  - requiredAuth is used to define authorization for webhook
+    - type `BEARER` - token will be placed in `Authorization: Bearer {{token}}` header
+    - type `CUSTOM_HEADER`  - authorization header will be build from given variables `{{header}}: {{token}}`
+
+Example response:
+````json
+{
+  "url": "http://example.com/api/v1/webhook/new-header",
+  "createdAt": "2023-05-11T13:05:23.297808+02:00",
+  "lastEmitStatus": "",
+  "lastEmitTimestamp": "0001-01-01T00:00:00Z",
+  "errorsCount": 0,
+  "active": true
+}
+````
+After that webhook is created and will be informed about new headers.
+
+#### Check webhook
+To check webhook you can use the GET request which will return webhook object (same as when creating new webhook) from which you can get all the information
+```http request
+ GET https://{{pulse_url}}/api/v1/webhook?url={{webhook_url}}
+ ```
+
+#### Revoke webhook
+If you want to revoke webhook you can use the following request:
+```http request
+ DELETE https://{{pulse_url}}/api/v1/webhook?url={{webhook_url}}
+ ```
+This request will delete webhook permanently
+
+#### Refresh webhook
+If the number of failed requests wil exceed `WEBHOOK_MAXTRIES`, webhook will be set to inactive. To refresh webhook you can use this same endpoint as for webhook creation.
 
 <!-- PROJECT LOGO -->
 <br />

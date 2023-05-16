@@ -44,6 +44,21 @@ definitions:
       token:
         type: string
     type: object
+  domains.Webhook:
+    properties:
+      active:
+        type: boolean
+      createdAt:
+        type: string
+      errorsCount:
+        type: integer
+      lastEmitStatus:
+        type: string
+      lastEmitTimestamp:
+        type: string
+      url:
+        type: string
+    type: object
   handler.BlockHeaderResponse:
     properties:
       creationTimestamp:
@@ -72,6 +87,22 @@ definitions:
       height:
         type: integer
       state:
+        type: string
+    type: object
+  http.RequiredAuth:
+    properties:
+      header:
+        type: string
+      token:
+        type: string
+      type:
+        type: string
+    type: object
+  http.WebhookRequest:
+    properties:
+      requiredAuth:
+        $ref: '#/definitions/http.RequiredAuth'
+      url:
         type: string
     type: object
 info:
@@ -324,6 +355,69 @@ paths:
       summary: Gets peers count
       tags:
       - network
+  /webhook:
+    delete:
+      consumes:
+      - '*/*'
+      parameters:
+      - description: Url of webhook to revoke
+        in: query
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      security:
+      - Bearer: []
+      summary: Revoke webhook
+      tags:
+      - webhooks
+    get:
+      consumes:
+      - '*/*'
+      parameters:
+      - description: Url of webhook to check
+        in: query
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domains.Webhook'
+      security:
+      - Bearer: []
+      summary: Get webhook
+      tags:
+      - webhooks
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Webhook to register
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/http.WebhookRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domains.Webhook'
+      security:
+      - Bearer: []
+      summary: Register new webhook
+      tags:
+      - webhooks
 securityDefinitions:
   Bearer:
     in: header

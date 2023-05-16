@@ -11,6 +11,7 @@ func NewViperConfig(appname string) *Config {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	setHttpServerDefaults()
+	setWebhookDefaults()
 	return &Config{}
 }
 
@@ -40,10 +41,21 @@ func (c *Config) WithAuthorization() *Config {
 	return c
 }
 
+// WithoutAuthorization edits and returns viper configuration with disabled authorization.
+func (c *Config) WithoutAuthorization() *Config {
+	viper.SetDefault(EnvHttpServerUseAuth, false)
+	return c
+}
+
 // setHttpServerDefaults sets default values for http server.
 func setHttpServerDefaults() {
 	viper.SetDefault(EnvHttpServerReadTimeout, 10)
 	viper.SetDefault(EnvHttpServerWriteTimeout, 10)
 	viper.SetDefault(EnvHttpServerPort, 8080)
 	viper.SetDefault(EnvHttpServerUrlPrefix, "/api/v1")
+}
+
+// setWebhookDefaults sets default values for webhook.
+func setWebhookDefaults() {
+	viper.SetDefault(EnvWebhookMaxTries, 10)
 }

@@ -48,12 +48,21 @@ type Tokens interface {
 	DeleteToken(token string) error
 }
 
+// Webhooks is an interface which represents methods required for Webhooks service.
+type Webhooks interface {
+	CreateWebhook(authType, header, token, url string) (*domains.Webhook, error)
+	DeleteWebhook(value string) error
+	NotifyWebhooks(h *domains.BlockHeader) error
+	GetWebhookByUrl(url string) (*domains.Webhook, error)
+}
+
 // Services represents all services in app and provide access to them.
 type Services struct {
-	Network Network
-	Headers Headers
-	Chains  Chains
-	Tokens  Tokens
+	Network  Network
+	Headers  Headers
+	Chains   Chains
+	Tokens   Tokens
+	Webhooks Webhooks
 }
 
 // Dept is a struct used to create Services.
@@ -74,6 +83,7 @@ func NewServices(d Dept) *Services {
 			Logger:       configs.Log,
 			BlockHasher:  DefaultBlockHasher(),
 		}),
-		Tokens: NewTokenService(d.Repositories),
+		Tokens:   NewTokenService(d.Repositories),
+		Webhooks: NewWebhooksService(d.Repositories),
 	}
 }

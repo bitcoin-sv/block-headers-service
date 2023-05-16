@@ -421,6 +421,109 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/webhook": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhooks"
+                ],
+                "summary": "Get webhook",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Url of webhook to check",
+                        "name": "url",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domains.Webhook"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhooks"
+                ],
+                "summary": "Register new webhook",
+                "parameters": [
+                    {
+                        "description": "Webhook to register",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.WebhookRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domains.Webhook"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhooks"
+                ],
+                "summary": "Revoke webhook",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Url of webhook to revoke",
+                        "name": "url",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -493,6 +596,29 @@ const docTemplate = `{
                 }
             }
         },
+        "domains.Webhook": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "errorsCount": {
+                    "type": "integer"
+                },
+                "lastEmitStatus": {
+                    "type": "string"
+                },
+                "lastEmitTimestamp": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "handler.BlockHeaderResponse": {
             "type": "object",
             "properties": {
@@ -535,6 +661,31 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.RequiredAuth": {
+            "type": "object",
+            "properties": {
+                "header": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.WebhookRequest": {
+            "type": "object",
+            "properties": {
+                "requiredAuth": {
+                    "$ref": "#/definitions/http.RequiredAuth"
+                },
+                "url": {
                     "type": "string"
                 }
             }
