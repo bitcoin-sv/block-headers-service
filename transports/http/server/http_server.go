@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/libsv/bitcoin-hc/configs"
+	"github.com/libsv/bitcoin-hc/vconfig"
 	"github.com/spf13/viper"
 )
 
@@ -21,8 +22,8 @@ func NewHttpServer(port int, handler http.Handler) *HttpServer {
 		httpServer: &http.Server{
 			Addr:         ":" + fmt.Sprint(port),
 			Handler:      handler,
-			ReadTimeout:  time.Duration(viper.GetInt("http.server.readTimeout")) * time.Second,
-			WriteTimeout: time.Duration(viper.GetInt("http.server.writeTimeout")) * time.Second,
+			ReadTimeout:  time.Duration(viper.GetInt(vconfig.EnvHttpServerReadTimeout)) * time.Second,
+			WriteTimeout: time.Duration(viper.GetInt(vconfig.EnvHttpServerWriteTimeout)) * time.Second,
 		},
 	}
 }

@@ -3,8 +3,6 @@ definitions:
     properties:
       creationTimestamp:
         type: string
-      difficultyTarget:
-        type: integer
       hash:
         items:
           type: integer

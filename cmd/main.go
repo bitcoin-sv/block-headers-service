@@ -33,29 +33,24 @@ import (
 	"github.com/spf13/viper"
 )
 
-const resetDbStateEnv = "db.resetState"
-const dbFileEnv = "db.dbFile.path"
 const appname = "headers"
-const preparedDb = "db.preparedDb"
-const preparedDbFilePath = "db.preparedDbFile.path"
-const httpServerPort = "http.server.port"
 
 // nolint: godot
 // @securityDefinitions.apikey Bearer
 // @in header
 // @name Authorization
 func main() {
-	vconfig := vconfig.NewViperConfig(appname).
+	c := vconfig.NewViperConfig(appname).
 		WithDb().
 		WithAuthorization()
 
 	// Unzip prepared db file if configured.
-	if viper.GetBool(preparedDb) {
-		err := os.Remove(viper.GetString(dbFileEnv))
+	if viper.GetBool(vconfig.EnvPreparedDb) {
+		err := os.Remove(viper.GetString(vconfig.EnvDbFilePath))
 		if err != nil {
 			fmt.Println("Failed to remove old db file")
 		}
-		err = unzip(viper.GetString(preparedDbFilePath), viper.GetString(dbFileEnv))
+		err = unzip(viper.GetString(vconfig.EnvPreparedDbFilePath), viper.GetString(vconfig.EnvDbFilePath))
 		if err != nil {
 			fmt.Println("Failed to unzip prepared db file - ", err)
 		}
@@ -63,7 +58,7 @@ func main() {
 
 	freshDbIfConfigured()
 
-	db := runDatabase(vconfig)
+	db := runDatabase(c)
 	// Use all processor cores.
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
@@ -94,7 +89,7 @@ func main() {
 	configs.Cfg.Logger.Infof("Version %s", version.String())
 
 	peers := make(map[*peerpkg.Peer]*peerpkg.PeerSyncState)
-	headersStore := sql.NewHeadersDb(db, vconfig.Db.Type)
+	headersStore := sql.NewHeadersDb(db, c.Db.Type)
 	repo := repository.NewRepositories(headersStore)
 	hs := service.NewServices(service.Dept{
 		Repositories: repo,
@@ -108,7 +103,7 @@ func main() {
 	}
 
 	handlers := handler.NewHandler(hs)
-	httpServer := httpserver.NewHttpServer(viper.GetInt(httpServerPort), handlers.Init())
+	httpServer := httpserver.NewHttpServer(viper.GetInt(vconfig.EnvHttpServerPort), handlers.Init())
 
 	go p2pServer.Start()
 
@@ -132,9 +127,9 @@ func main() {
 }
 
 func freshDbIfConfigured() {
-	if viper.GetBool(resetDbStateEnv) {
-		err := os.Remove(viper.GetString(dbFileEnv))
-		if err != nil && fileExists(viper.GetString(dbFileEnv)) {
+	if viper.GetBool(vconfig.EnvResetDbOnStartup) {
+		err := os.Remove(viper.GetString(vconfig.EnvDbFilePath))
+		if err != nil && fileExists(viper.GetString(vconfig.EnvDbFilePath)) {
 			fmt.Fprintf(os.Stdout, "%s", err.Error())
 			os.Exit(1)
 		}

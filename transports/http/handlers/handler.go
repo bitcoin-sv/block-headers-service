@@ -5,12 +5,11 @@ import (
 	"github.com/libsv/bitcoin-hc/docs"
 	p2pservice "github.com/libsv/bitcoin-hc/service"
 	"github.com/libsv/bitcoin-hc/transports/http/auth"
+	"github.com/libsv/bitcoin-hc/vconfig"
 	"github.com/spf13/viper"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
-
-const urlPrefix = "http.server.urlPrefix"
 
 // Handler represents handler which creates all routes for http server
 // and provide access to repositories.
@@ -37,7 +36,7 @@ func NewHandler(services *p2pservice.Services) *Handler {
 //	@schemes http.
 func (h *Handler) Init() *gin.Engine {
 	router := gin.Default()
-	prefix := viper.GetString(urlPrefix)
+	prefix := viper.GetString(vconfig.EnvHttpServerUrlPrefix)
 	docs.SwaggerInfo.BasePath = prefix
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 

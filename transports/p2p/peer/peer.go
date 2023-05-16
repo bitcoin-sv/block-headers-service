@@ -8,11 +8,11 @@ package peer
 import (
 	"bytes"
 	"container/list"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"io"
 	"math/big"
-	"crypto/rand"
 	"net"
 	"strconv"
 	"sync"

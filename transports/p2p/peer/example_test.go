@@ -28,7 +28,7 @@ func mockRemotePeer() error {
 		ChainParams:            &chaincfg.SimNetParams,
 		TrickleInterval:        time.Second * 10,
 		TstAllowSelfConnection: true,
-		Log:					log,
+		Log:                    log,
 	}
 
 	// Accept connections on the simnet port.
@@ -87,7 +87,7 @@ func Example_newOutboundPeer() {
 			},
 		},
 		TstAllowSelfConnection: true,
-		Log:					log,
+		Log:                    log,
 	}
 	p, err := peer.NewOutboundPeer(peerCfg, "127.0.0.1:18555")
 	if err != nil {
