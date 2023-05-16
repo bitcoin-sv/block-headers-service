@@ -35,7 +35,7 @@ func MapToBlockHeaderReponse(header domains.BlockHeader) BlockHeaderResponse {
 		PreviousBlock:    header.PreviousBlock.String(),
 		MerkleRoot:       header.MerkleRoot.String(),
 		Timestamp:        uint32(header.Timestamp.Unix()),
-		DifficultyTarget: header.DifficultyTarget,
+		DifficultyTarget: header.Bits,
 		Nonce:            header.Nonce,
 		Work:             header.Chainwork,
 	}

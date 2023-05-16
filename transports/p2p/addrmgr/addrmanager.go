@@ -853,7 +853,7 @@ func New(lookupFunc func(string) ([]net.IP, error), log p2plog.Logger) *AddrMana
 		rand:           rand.New(rand.NewSource(time.Now().UnixNano())), //nolint:gosec
 		quit:           make(chan struct{}),
 		localAddresses: make(map[string]*localAddress),
-		log:			log,
+		log:            log,
 	}
 	am.reset()
 	return &am

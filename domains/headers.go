@@ -28,18 +28,17 @@ func (s *HeaderState) String() string {
 
 // BlockHeader defines a single block header, used in SPV validations.
 type BlockHeader struct {
-	Height           int32          `json:"-"`
-	Hash             chainhash.Hash `json:"hash"`
-	Version          int32          `json:"version"`
-	MerkleRoot       chainhash.Hash `json:"merkleRoot"`
-	Timestamp        time.Time      `json:"creationTimestamp"`
-	Bits             uint32         `json:"-"`
-	Nonce            uint32         `json:"nonce"`
-	State            HeaderState    `json:"-"`
-	Chainwork        *big.Int       `json:"-" swaggertype:"string"`
-	CumulatedWork    *big.Int       `json:"work" swaggertype:"string"`
-	PreviousBlock    chainhash.Hash `json:"prevBlockHash"`
-	DifficultyTarget uint32         `json:"difficultyTarget"`
+	Height        int32          `json:"-"`
+	Hash          chainhash.Hash `json:"hash"`
+	Version       int32          `json:"version"`
+	MerkleRoot    chainhash.Hash `json:"merkleRoot"`
+	Timestamp     time.Time      `json:"creationTimestamp"`
+	Bits          uint32         `json:"-"`
+	Nonce         uint32         `json:"nonce"`
+	State         HeaderState    `json:"-"`
+	Chainwork     *big.Int       `json:"-" swaggertype:"string"`
+	CumulatedWork *big.Int       `json:"work" swaggertype:"string"`
+	PreviousBlock chainhash.Hash `json:"prevBlockHash"`
 }
 
 // HeaderArgs are sued to retrieve a single block header.
@@ -50,10 +49,10 @@ type HeaderArgs struct {
 // BlockHeaderState is an extended version of the BlockHeader
 // that has more important informations. Mostly used in http server endpoints.
 type BlockHeaderState struct {
-	Header        BlockHeader `json:"header"`
-	State         string      `json:"state"`
-	ChainWork     *big.Int    `json:"chainWork" swaggertype:"string"`
-	Height        int32       `json:"height"`
+	Header    BlockHeader `json:"header"`
+	State     string      `json:"state"`
+	ChainWork *big.Int    `json:"chainWork" swaggertype:"string"`
+	Height    int32       `json:"height"`
 }
 
 // BlockHeaderSource defines source of information about a block header used by system.

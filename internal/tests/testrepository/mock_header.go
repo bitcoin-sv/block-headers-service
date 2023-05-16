@@ -103,18 +103,17 @@ func newBlockHeader(height int32, hash chainhash.Hash, prev chainhash.Hash, mark
 	bt, _ := time.Parse("yyyy-MM-dd hh:mm:ss", "2009-01-09 03:54:25")
 	h := int64(height)
 	return domains.BlockHeader{
-		Height:           height,
-		Hash:             hash,
-		Version:          1,
-		State:            s,
-		MerkleRoot:       markleRoot,
-		Timestamp:        bt.Add(time.Duration(10*h) * time.Minute),
-		Bits:             DefaultBits,
-		Nonce:            nonce,
-		Chainwork:        big.NewInt(DefaultChainWork),
-		CumulatedWork:    big.NewInt(0).Mul(big.NewInt(DefaultChainWork), big.NewInt(h)),
-		PreviousBlock:    prev,
-		DifficultyTarget: 0,
+		Height:        height,
+		Hash:          hash,
+		Version:       1,
+		State:         s,
+		MerkleRoot:    markleRoot,
+		Timestamp:     bt.Add(time.Duration(10*h) * time.Minute),
+		Bits:          DefaultBits,
+		Nonce:         nonce,
+		Chainwork:     big.NewInt(DefaultChainWork),
+		CumulatedWork: big.NewInt(0).Mul(big.NewInt(DefaultChainWork), big.NewInt(h)),
+		PreviousBlock: prev,
 	}
 }
 

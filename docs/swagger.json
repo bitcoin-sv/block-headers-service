@@ -521,9 +521,6 @@
                 "creationTimestamp": {
                     "type": "string"
                 },
-                "difficultyTarget": {
-                    "type": "integer"
-                },
                 "hash": {
                     "type": "array",
                     "items": {

@@ -90,8 +90,8 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 		}
 	}
 
-	port := viper.GetInt("http.server.port")
-	urlPrefix := viper.GetString("http.server.urlPrefix")
+	port := viper.GetInt(vconfig.EnvHttpServerPort)
+	urlPrefix := viper.GetString(vconfig.EnvHttpServerUrlPrefix)
 	httpServer := httpserver.NewHttpServer(port, ginEngine)
 
 	go func() {

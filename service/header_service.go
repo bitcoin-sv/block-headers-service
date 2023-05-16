@@ -128,9 +128,9 @@ func (hs *HeaderService) GetHeaderAncestorsByHash(hash string, ancestorHash stri
 	}
 
 	a, err := hs.repo.Headers.GetAncestorOnHeight(reqHeader.Hash.String(), ancestorHeader.Height)
-        if err != nil {
-            return nil, errors.New("the headers provided are not part of the same chain")
-        }
+	if err != nil {
+		return nil, errors.New("the headers provided are not part of the same chain")
+	}
 
 	if a.Hash != ancestorHeader.Hash {
 		return nil, errors.New("the headers provided are not part of the same chain")
@@ -148,48 +148,48 @@ func (hs *HeaderService) GetHeaderAncestorsByHash(hash string, ancestorHash stri
 // GetCommonAncestors returns first ancestor for given slice of hashes.
 func (hs *HeaderService) GetCommonAncestors(hashes []string) (*domains.BlockHeader, error) {
 	headers := make([]*domains.BlockHeader, 0, len(hashes) + 1)
-    height := int32(math.MaxInt32)
+	height := int32(math.MaxInt32)
 
-    for _, hash := range hashes {
-        header, err := hs.repo.Headers.GetHeaderByHash(hash)
-        if err != nil {
-            return nil, err
-        }
+	for _, hash := range hashes {
+		header, err := hs.repo.Headers.GetHeaderByHash(hash)
+		if err != nil {
+			return nil, err
+		}
 
-        headers = append(headers, header)
-        if header.Height < height {
-            height = header.Height
-        }
-    }
+		headers = append(headers, header)
+		if header.Height < height {
+			height = header.Height
+		}
+	}
 
-    if height < 1 {
-        return nil, nil
-    }
-    height--
+	if height < 1 {
+		return nil, nil
+	}
+	height--
 
-    for i, h := range headers {
-        a, err := hs.repo.Headers.GetAncestorOnHeight(h.Hash.String(), height)
-        if err != nil {
-            return nil, err
-        }
-        headers[i] = a
-    }
+	for i, h := range headers {
+		a, err := hs.repo.Headers.GetAncestorOnHeight(h.Hash.String(), height)
+		if err != nil {
+			return nil, err
+		}
+		headers[i] = a
+	}
 
-    for height >= 0 {
-        if areAllElementsEqual(headers) {
-            return headers[0], nil
-        }
-        for i := range headers {
-            h, err := hs.repo.Headers.GetPreviousHeader(headers[i].Hash.String())
-            if err != nil {
-                return nil, err
-            }
-            headers[i] = h
-        } 
-        height--
-    }
+	for height >= 0 {
+		if areAllElementsEqual(headers) {
+			return headers[0], nil
+		}
+		for i := range headers {
+			h, err := hs.repo.Headers.GetPreviousHeader(headers[i].Hash.String())
+			if err != nil {
+				return nil, err
+			}
+			headers[i] = h
+		}
+		height--
+	}
 
-    return nil, nil
+	return nil, nil
 }
 
 // GetHeadersState returns state of the header with given hash.
@@ -201,10 +201,10 @@ func (hs *HeaderService) GetHeadersState(hash string) (*domains.BlockHeaderState
 	}
 
 	state := domains.BlockHeaderState{
-		Header:        *header,
-		State:         header.State.String(),
-		Height:        header.Height,
-		ChainWork:     header.Chainwork,
+		Header:    *header,
+		State:     header.State.String(),
+		Height:    header.Height,
+		ChainWork: header.Chainwork,
 	}
 	return &state, nil
 }
