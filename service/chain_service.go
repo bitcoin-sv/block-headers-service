@@ -2,10 +2,10 @@ package service
 
 import (
 	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/libsv/bitcoin-hc/domains/logging"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/repository"
-	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
 	"github.com/pkg/errors"
 )
 
@@ -18,7 +18,7 @@ type BlockHasher interface {
 type chainService struct {
 	*repository.Repositories
 	chainParams *chaincfg.Params
-	log         p2plog.Logger
+	log         logging.Logger
 	BlockHasher
 }
 
@@ -26,7 +26,7 @@ type chainService struct {
 type ChainServiceDependencies struct {
 	*repository.Repositories
 	*chaincfg.Params
-	p2plog.Logger
+	logging.LoggerFactory
 	BlockHasher
 }
 
@@ -35,7 +35,7 @@ func NewChainsService(deps ChainServiceDependencies) Chains {
 	return &chainService{
 		Repositories: deps.Repositories,
 		chainParams:  deps.Params,
-		log:          deps.Logger,
+		log:          deps.NewLogger("Chain"),
 		BlockHasher:  deps.BlockHasher,
 	}
 }

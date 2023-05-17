@@ -7,6 +7,7 @@ package peer_test
 
 import (
 	"fmt"
+	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
 	"net"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 func mockRemotePeer() error {
 	// Configure peer to act as a simnet node that offers no services.
 	log := testlog.InitializeMockLogger()
+	log.SetLevel(p2plog.LevelInfo)
 	peerCfg := &peer.Config{
 		UserAgentName:          "peer",  // User agent name to advertise.
 		UserAgentVersion:       "1.0.0", // User agent version to advertise.
@@ -71,6 +73,7 @@ func Example_newOutboundPeer() {
 	// when the handshake has been finished by signaling a channel.
 	verack := make(chan struct{})
 	log := testlog.InitializeMockLogger()
+	log.SetLevel(p2plog.LevelInfo)
 	peerCfg := &peer.Config{
 		UserAgentName:    "peer",  // User agent name to advertise.
 		UserAgentVersion: "1.0.0", // User agent version to advertise.
