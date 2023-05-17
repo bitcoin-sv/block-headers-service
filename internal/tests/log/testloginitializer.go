@@ -1,24 +1,23 @@
 package testlog
 
 import (
-	"os"
-
+	"github.com/libsv/bitcoin-hc/app/logger"
+	"github.com/libsv/bitcoin-hc/domains/logging"
 	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
+	"os"
 )
-
-type logWriter struct{}
-
-func (logWriter) Write(p []byte) (n int, err error) {
-	_, err = os.Stdout.Write(p)
-	if err != nil {
-		return len(p), err
-	}
-	return len(p), nil
-}
 
 // InitializeMockLogger initialize logger for tests.
 func InitializeMockLogger() p2plog.Logger {
-	backendLog := p2plog.NewBackend(logWriter{})
-	logger := backendLog.Logger("TEST_LOGGER")
-	return logger
+	l := NewTestLoggerFactory().NewLogger("")
+	log, ok := logger.UnwrapP2plog(l)
+	if !ok {
+		panic("expect to unwrap P2plog from logger")
+	}
+	return log
+}
+
+// NewTestLoggerFactory creates new logger factory for tests.
+func NewTestLoggerFactory() logging.LoggerFactory {
+	return logger.NewLoggerFactory("PULSE_TEST", logging.Debug, os.Stdout.Write)
 }

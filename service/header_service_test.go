@@ -1,6 +1,7 @@
 package service
 
 import (
+	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
 	"math/big"
 	"testing"
 
@@ -255,8 +256,9 @@ func setUpServices() *testData {
 	}
 
 	hs := NewServices(Dept{
-		Repositories: repo,
-		Peers:        nil,
+		Repositories:  repo,
+		Peers:         nil,
+		LoggerFactory: testlog.NewTestLoggerFactory(),
 	})
 
 	return &testData{

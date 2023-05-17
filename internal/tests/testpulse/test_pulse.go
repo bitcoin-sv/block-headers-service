@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/libsv/bitcoin-hc/configs"
+	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
 	"github.com/libsv/bitcoin-hc/internal/tests/testrepository"
 	"github.com/libsv/bitcoin-hc/repository"
 	"github.com/libsv/bitcoin-hc/service"
@@ -66,8 +67,9 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	repo := testrepository.NewCleanTestRepositories()
 
 	hs := service.NewServices(service.Dept{
-		Repositories: &repo,
-		Peers:        nil,
+		Repositories:  &repo,
+		Peers:         nil,
+		LoggerFactory: testlog.NewTestLoggerFactory(),
 	})
 
 	for _, opt := range ops {

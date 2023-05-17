@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/libsv/bitcoin-hc/configs"
 	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/libsv/bitcoin-hc/domains/logging"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/wire"
@@ -67,9 +67,10 @@ type Services struct {
 
 // Dept is a struct used to create Services.
 type Dept struct {
-	Peers        map[*peerpkg.Peer]*peerpkg.PeerSyncState
-	Repositories *repository.Repositories
-	Params       *chaincfg.Params
+	Peers         map[*peerpkg.Peer]*peerpkg.PeerSyncState
+	Repositories  *repository.Repositories
+	Params        *chaincfg.Params
+	LoggerFactory logging.LoggerFactory
 }
 
 // NewServices creates and returns Services instance.
@@ -78,10 +79,10 @@ func NewServices(d Dept) *Services {
 		Network: NewNetworkService(d.Peers),
 		Headers: NewHeaderService(d.Repositories),
 		Chains: NewChainsService(ChainServiceDependencies{
-			Repositories: d.Repositories,
-			Params:       d.Params,
-			Logger:       configs.Log,
-			BlockHasher:  DefaultBlockHasher(),
+			Repositories:  d.Repositories,
+			Params:        d.Params,
+			LoggerFactory: d.LoggerFactory,
+			BlockHasher:   DefaultBlockHasher(),
 		}),
 		Tokens:   NewTokenService(d.Repositories),
 		Webhooks: NewWebhooksService(d.Repositories),

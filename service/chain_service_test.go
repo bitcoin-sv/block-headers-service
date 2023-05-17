@@ -1,6 +1,9 @@
 package service
 
 import (
+	"testing"
+	"time"
+
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
@@ -8,8 +11,6 @@ import (
 	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
 	"github.com/libsv/bitcoin-hc/internal/tests/testrepository"
 	"github.com/libsv/bitcoin-hc/repository"
-	"testing"
-	"time"
 )
 
 func TestRejectBlockHeader(t *testing.T) {
@@ -323,10 +324,10 @@ func givenOrphanedHeaderToAdd() domains.BlockHeaderSource {
 
 func createChainsService(s serviceSetup) Chains {
 	return NewChainsService(ChainServiceDependencies{
-		Repositories: s.Repositories,
-		Params:       s.Params(),
-		Logger:       testlog.InitializeMockLogger(),
-		BlockHasher:  DefaultBlockHasher(),
+		Repositories:  s.Repositories,
+		Params:        s.Params(),
+		LoggerFactory: testlog.NewTestLoggerFactory(),
+		BlockHasher:   DefaultBlockHasher(),
 	})
 }
 
