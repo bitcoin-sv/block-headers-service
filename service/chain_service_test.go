@@ -8,6 +8,7 @@ import (
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/tests/assert"
+	"github.com/libsv/bitcoin-hc/internal/tests/fixtures"
 	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
 	"github.com/libsv/bitcoin-hc/internal/tests/testrepository"
 	"github.com/libsv/bitcoin-hc/repository"
@@ -117,8 +118,8 @@ func TestAddHeaderToOrphanChain(t *testing.T) {
 }
 
 func TestAddConcurrentChainBlock(t *testing.T) {
-	var blockFromLongestChain = testrepository.FirstHash
-	var blockFromStaleChain = testrepository.SecondStaleHash
+	var blockFromLongestChain = fixtures.HashHeight1
+	var blockFromStaleChain = fixtures.StaleHashHeight2
 	const bitsExceedingCumulatedChainWork uint32 = 0x180f0dc7
 
 	testCases := map[string]struct {
@@ -129,48 +130,48 @@ func TestAddConcurrentChainBlock(t *testing.T) {
 	}{
 		"header with less chain work then concurrent block should be stale": {
 			previous:             blockFromLongestChain,
-			bits:                 testrepository.DefaultBits - 1,
+			bits:                 fixtures.DefaultBits - 1,
 			newBlockChainState:   domains.Stale,
 			oldLongestChainState: domains.LongestChain,
 		},
 		"header with the same chain work as concurrent block should be stale": {
 			previous:             blockFromLongestChain,
-			bits:                 testrepository.DefaultBits,
+			bits:                 fixtures.DefaultBits,
 			newBlockChainState:   domains.Stale,
 			oldLongestChainState: domains.LongestChain,
 		},
 		"header with more chain work then concurrent block, but less then tip cumulated work should be stale": {
 			previous:             blockFromLongestChain,
-			bits:                 testrepository.DefaultBits + 1,
+			bits:                 fixtures.DefaultBits + 1,
 			newBlockChainState:   domains.Stale,
 			oldLongestChainState: domains.LongestChain,
 		},
 		"header next to other stale block with less chain work then concurrent block should be stale": {
 			previous:             blockFromStaleChain,
-			bits:                 testrepository.DefaultBits - 1,
+			bits:                 fixtures.DefaultBits - 1,
 			newBlockChainState:   domains.Stale,
 			oldLongestChainState: domains.LongestChain,
 		},
 		"header next to other stale block with the same chain work as concurrent block should be stale": {
 			previous:             blockFromStaleChain,
-			bits:                 testrepository.DefaultBits,
+			bits:                 fixtures.DefaultBits,
 			newBlockChainState:   domains.Stale,
 			oldLongestChainState: domains.LongestChain,
 		},
 		"header next to other stale block with more chain work then concurrent block, but less then tip cumulated work should be stale": {
 			previous:             blockFromStaleChain,
-			bits:                 testrepository.DefaultBits + 1,
+			bits:                 fixtures.DefaultBits + 1,
 			newBlockChainState:   domains.Stale,
 			oldLongestChainState: domains.LongestChain,
 		},
 		"header with the greatest chainwork next to the middle of stale chain should become longest chain tip": {
-			previous:             testrepository.SecondStaleHash,
+			previous:             fixtures.StaleHashHeight2,
 			bits:                 bitsExceedingCumulatedChainWork,
 			newBlockChainState:   domains.LongestChain,
 			oldLongestChainState: domains.Stale,
 		},
 		"header with the greatest chainwork next to the tip of stale chain become longest chain tip": {
-			previous:             testrepository.FourthStaleHash,
+			previous:             fixtures.StaleHashHeight4,
 			bits:                 bitsExceedingCumulatedChainWork,
 			newBlockChainState:   domains.LongestChain,
 			oldLongestChainState: domains.Stale,
@@ -217,7 +218,7 @@ func TestAddConcurrentChainBlock(t *testing.T) {
 }
 
 func givenStaleChainInRepository(r *repository.Repositories) {
-	sc, _ := testrepository.StaleChain()
+	sc, _ := fixtures.StaleChain()
 	for _, h := range sc {
 		if h.Hash != chaincfg.GenesisHash {
 			r.Headers.AddHeaderToDatabase(h)
@@ -230,8 +231,14 @@ func assertHeaderInDb(t *testing.T, r repository.Repositories, header *domains.B
 	assert.NoError(t, err)
 }
 
+func assertOnlyOneHeaderOnHeight(t *testing.T, r repository.Repositories, header *domains.BlockHeader) {
+	headers, err := r.Headers.GetLongestChainHeadersFromHeight(header.Height)
+	assert.NoError(t, err)
+	assert.Equal(t, len(headers), 1)
+}
+
 func getHeadersFromThisChainUpTo(t *testing.T, r repository.Repositories, height int32) []*domains.BlockHeader {
-	c, _ := testrepository.StaleChain()
+	c, _ := fixtures.StaleChain()
 	hs := make([]*domains.BlockHeader, 0)
 	for _, h := range c {
 		if h.Hash != chaincfg.GenesisHash && h.Height <= height {
@@ -246,19 +253,19 @@ func getHeadersFromThisChainUpTo(t *testing.T, r repository.Repositories, height
 func getHeadersFromConcurrentChain(t *testing.T, r repository.Repositories) []domains.BlockHeader {
 	o := make([]domains.BlockHeader, 0)
 
-	h, err := r.Headers.GetHeaderByHash(testrepository.FirstHash.String())
+	h, err := r.Headers.GetHeaderByHash(fixtures.HashHeight1.String())
 	assert.NoError(t, err)
 	o = append(o, *h)
 
-	h, err = r.Headers.GetHeaderByHash(testrepository.SecondHash.String())
+	h, err = r.Headers.GetHeaderByHash(fixtures.HashHeight2.String())
 	assert.NoError(t, err)
 	o = append(o, *h)
 
-	h, err = r.Headers.GetHeaderByHash(testrepository.ThirdHash.String())
+	h, err = r.Headers.GetHeaderByHash(fixtures.HashHeight3.String())
 	assert.NoError(t, err)
 	o = append(o, *h)
 
-	h, err = r.Headers.GetHeaderByHash(testrepository.FourthHash.String())
+	h, err = r.Headers.GetHeaderByHash(fixtures.HashHeight4.String())
 	assert.NoError(t, err)
 	o = append(o, *h)
 
@@ -280,19 +287,19 @@ func assertHeaderInState(t *testing.T, h *domains.BlockHeader, s domains.HeaderS
 }
 
 func givenChainWithOnlyGenesisBlockInRepository() (repository.Repositories, *domains.BlockHeader) {
-	db, tip := testrepository.StartingChain()
+	db, tip := fixtures.StartingChain()
 	return testrepository.NewTestRepositories(&db), tip
 }
 
 func givenLongestChainInRepository() (repository.Repositories, *domains.BlockHeader) {
-	db, tip := testrepository.LongestChain()
+	db, tip := fixtures.LongestChain()
 
 	var array []domains.BlockHeader = db
 	return testrepository.NewTestRepositories(&array), tip
 }
 
 func givenOrphanChainInRepository(r *repository.Repositories) *domains.BlockHeader {
-	_, orphanTip := testrepository.OrphanChain()
+	_, orphanTip := fixtures.OrphanChain()
 	r.Headers.AddHeaderToDatabase(*orphanTip)
 	return orphanTip
 }
@@ -306,7 +313,7 @@ func createHeaderSource(ph chainhash.Hash) domains.BlockHeaderSource {
 	return domains.BlockHeaderSource{
 		Version:    1,
 		PrevBlock:  ph,
-		MerkleRoot: *testrepository.HashOf("63522845d294ee9b0188ae5cac91bf389a0c3723f084ca1025e7d9cdfe481ce1"),
+		MerkleRoot: *fixtures.HashOf("63522845d294ee9b0188ae5cac91bf389a0c3723f084ca1025e7d9cdfe481ce1"),
 		Timestamp:  t,
 		Bits:       486604799,
 		Nonce:      2011431709,
@@ -319,7 +326,7 @@ func givenIgnoredHeaderToAddNextTo(prev *domains.BlockHeader) (domains.BlockHead
 }
 
 func givenOrphanedHeaderToAdd() domains.BlockHeaderSource {
-	return createHeaderSource(*testrepository.HashOf("0000000000000000000000000000000000000000000000000000000000001ce1"))
+	return createHeaderSource(*fixtures.HashOf("0000000000000000000000000000000000000000000000000000000000001ce1"))
 }
 
 func createChainsService(s serviceSetup) Chains {

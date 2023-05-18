@@ -8,6 +8,7 @@ import (
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/tests/assert"
+	"github.com/libsv/bitcoin-hc/internal/tests/fixtures"
 	"github.com/libsv/bitcoin-hc/internal/tests/testrepository"
 	"github.com/libsv/bitcoin-hc/repository"
 )
@@ -100,7 +101,7 @@ func TestCountHeaders(t *testing.T) {
 	count := tData.hs.Headers.CountHeaders()
 	assert.Equal(t, count, 5)
 
-	fifthHeader := createHeader(5, *testrepository.FifthHash, *testrepository.FourthHash)
+	fifthHeader := createHeader(5, *fixtures.HashHeight5, *fixtures.HashHeight4)
 	*tData.db = append(*tData.db, fifthHeader)
 
 	count = tData.hs.Headers.CountHeaders()
@@ -116,7 +117,7 @@ func TestGetTipAndGetTipHeight(t *testing.T) {
 	assert.Equal(t, tip.Height, 4)
 	assert.Equal(t, tip.Height, tipHeight)
 
-	fifthHeader := createHeader(5, *testrepository.FifthHash, *testrepository.FourthHash)
+	fifthHeader := createHeader(5, *fixtures.HashHeight5, *fixtures.HashHeight4)
 	*tData.db = append(*tData.db, fifthHeader)
 
 	tip = tData.hs.Headers.GetTip()
@@ -242,14 +243,14 @@ func TestGetAllTips(t *testing.T) {
 	assert.Equal(t, len(tips), 1)
 
 	//Check tip with fork
-	forkHeader := createHeader(4, *testrepository.SixthHash, *testrepository.FifthHash)
+	forkHeader := createHeader(4, *fixtures.HashHeight6, *fixtures.HashHeight5)
 	*tData.db = append(*tData.db, forkHeader)
 	tips, _ = tData.hs.Headers.GetTips()
 	assert.Equal(t, len(tips), 2)
 }
 
 func setUpServices() *testData {
-	db, _ := testrepository.LongestChain()
+	db, _ := fixtures.LongestChain()
 	var array []domains.BlockHeader = db
 	repo := &repository.Repositories{
 		Headers: testrepository.NewHeadersTestRepository(&array),
