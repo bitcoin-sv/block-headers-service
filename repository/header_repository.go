@@ -15,6 +15,7 @@ type HeaderRepository struct {
 }
 
 // AddHeaderToDatabase adds new header to db.
+// If header with given hash already exists, it will be omitted.
 func (r *HeaderRepository) AddHeaderToDatabase(header domains.BlockHeader) error {
 	dbHeader := dto.ToDbBlockHeader(header)
 	err := r.db.Create(context.Background(), dbHeader)

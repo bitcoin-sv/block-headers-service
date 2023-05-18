@@ -84,7 +84,7 @@ func (cs *chainService) hasConcurrentHeaderFromLongestChain(h *domains.BlockHead
 	}
 	if h.IsLongestChain() {
 		oh, _ := cs.Headers.GetHeaderByHeight(h.Height)
-		return oh != nil && oh.IsLongestChain()
+		return oh != nil && oh.IsLongestChain() && !oh.Hash.IsEqual(&h.Hash)
 	}
 	return true
 }
