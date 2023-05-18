@@ -13,7 +13,13 @@ type HeaderTestRepository struct {
 }
 
 // AddHeaderToDatabase adds new header to db.
+// If header with this same hash already exists, it will not be added.
 func (r *HeaderTestRepository) AddHeaderToDatabase(header domains.BlockHeader) error {
+	for _, hdb := range *r.db {
+		if header.Hash == hdb.Hash {
+			return nil
+		}
+	}
 	*r.db = append(*r.db, header)
 	return nil
 }

@@ -28,7 +28,7 @@ func BlockTimestampOf(s string) *time.Time {
 	return &t
 }
 
-// BlockHeaderOf creates BlockHeaderSource from BlockHeader for testing purposes.
+// BlockHeaderSourceOf creates BlockHeaderSource from BlockHeader for testing purposes.
 func BlockHeaderSourceOf(header *domains.BlockHeader) *domains.BlockHeaderSource {
 	return &domains.BlockHeaderSource{
 		Version:    header.Version,

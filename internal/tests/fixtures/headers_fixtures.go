@@ -5,12 +5,13 @@ import (
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 )
 
+// Default settings for tests.
 const (
 	DefaultBlockVersion int32  = 0x00000001
 	DefaultBits         uint32 = 0x1d00ffff
 )
 
-// LONGEST CHAIN
+// LONGEST CHAIN.
 var (
 	// HashHeight1 is a hash of first block in the LongestChain() fixture result.
 	HashHeight1 = HashOf("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048")
@@ -25,7 +26,7 @@ var (
 	// HashHeight6 is a hash of Sixth block in the LongestChain() fixture result.
 	HashHeight6 = HashOf("000000003031a0e73735690c5a1ff2a4be82553b2a12b776fbd3a215dc8f778d")
 
-	// HeaderSourceHeight1 is an exact representation of longest chain header source on that height
+	// HeaderSourceHeight1 is an exact representation of longest chain header source on that height.
 	HeaderSourceHeight1 = &domains.BlockHeaderSource{
 		Version:    DefaultBlockVersion,
 		PrevBlock:  chaincfg.GenesisHash,
@@ -34,7 +35,7 @@ var (
 		Nonce:      2573394689,
 		Bits:       DefaultBits,
 	}
-	// HeaderSourceHeight2 is an exact representation of longest chain header source on that height
+	// HeaderSourceHeight2 is an exact representation of longest chain header source on that height.
 	HeaderSourceHeight2 = &domains.BlockHeaderSource{
 		Version:    DefaultBlockVersion,
 		PrevBlock:  *HashHeight1,
@@ -43,7 +44,7 @@ var (
 		Nonce:      1639830024,
 		Bits:       DefaultBits,
 	}
-	// HeaderSourceHeight3 is an exact representation of longest chain header source on that height
+	// HeaderSourceHeight3 is an exact representation of longest chain header source on that height.
 	HeaderSourceHeight3 = &domains.BlockHeaderSource{
 		Version:    DefaultBlockVersion,
 		PrevBlock:  *HashHeight2,
@@ -52,7 +53,7 @@ var (
 		Nonce:      1844305925,
 		Bits:       DefaultBits,
 	}
-	// HeaderSourceHeight4 is an exact representation of longest chain header source on that height
+	// HeaderSourceHeight4 is an exact representation of longest chain header source on that height.
 	HeaderSourceHeight4 = &domains.BlockHeaderSource{
 		Version:    DefaultBlockVersion,
 		PrevBlock:  *HashHeight3,
@@ -61,7 +62,7 @@ var (
 		Nonce:      2850094635,
 		Bits:       DefaultBits,
 	}
-	// HeaderSourceHeight5 is an exact representation of longest chain header source on that height
+	// HeaderSourceHeight5 is an exact representation of longest chain header source on that height.
 	HeaderSourceHeight5 = &domains.BlockHeaderSource{
 		Version:    DefaultBlockVersion,
 		PrevBlock:  *HashHeight4,
@@ -70,7 +71,7 @@ var (
 		Nonce:      2011431709,
 		Bits:       DefaultBits,
 	}
-	// HeaderSourceHeight6 is an exact representation of longest chain header source on that height
+	// HeaderSourceHeight6 is an exact representation of longest chain header source on that height.
 	HeaderSourceHeight6 = &domains.BlockHeaderSource{
 		Version:    DefaultBlockVersion,
 		PrevBlock:  *HashHeight5,
@@ -81,7 +82,7 @@ var (
 	}
 )
 
-// STALE CHAIN
+// STALE CHAIN.
 var (
 	//StaleHashHeight1 is a hash of first block in the StaleChain() fixture result.
 	StaleHashHeight1 = HashOf("3930673fe039a7bfe4e506900c940b40e956114601ba4f59f7e21db78110e1a3")
@@ -92,7 +93,7 @@ var (
 	//StaleHashHeight4 is a hash of Fourth block in the StaleChain() fixture result.
 	StaleHashHeight4 = HashOf("34d61c9b10f013990716cc63a308e16e802e00f560c6e4ab0b7c9eb416c50e01")
 
-	// StaleHeaderSourceHeight1 is example representation of stale chain header source on that height
+	// StaleHeaderSourceHeight1 is example representation of stale chain header source on that height.
 	StaleHeaderSourceHeight1 = &domains.BlockHeaderSource{
 		Version:    DefaultBlockVersion,
 		PrevBlock:  chaincfg.GenesisHash,
@@ -101,7 +102,7 @@ var (
 		Nonce:      4136106517,
 		Bits:       DefaultBits,
 	}
-	// StaleHeaderSourceHeight2 is example representation of stale chain header source on that height
+	// StaleHeaderSourceHeight2 is example representation of stale chain header source on that height.
 	StaleHeaderSourceHeight2 = &domains.BlockHeaderSource{
 		Version:    DefaultBlockVersion,
 		PrevBlock:  *StaleHashHeight1,
@@ -110,7 +111,7 @@ var (
 		Nonce:      1906126361,
 		Bits:       DefaultBits,
 	}
-	// StaleHeaderSourceHeight3 is example representation of stale chain header source on that height
+	// StaleHeaderSourceHeight3 is example representation of stale chain header source on that height.
 	StaleHeaderSourceHeight3 = &domains.BlockHeaderSource{
 		Version:    DefaultBlockVersion,
 		PrevBlock:  *StaleHashHeight2,
@@ -119,7 +120,7 @@ var (
 		Nonce:      1334001941,
 		Bits:       DefaultBits,
 	}
-	// StaleHeaderSourceHeight4 is example representation of stale chain header source on that height
+	// StaleHeaderSourceHeight4 is example representation of stale chain header source on that height.
 	StaleHeaderSourceHeight4 = &domains.BlockHeaderSource{
 		Version:    DefaultBlockVersion,
 		PrevBlock:  *StaleHashHeight3,
@@ -130,12 +131,12 @@ var (
 	}
 )
 
-// ORPHAN CHAIN
+// ORPHAN CHAIN.
 var (
 	// OrphanHash is a hash of example orphan block.
 	OrphanHash = HashOf("094697ce290d08e0c8b033754b4368026d5e64a0723951dafacf78fc342c7993")
 
-	// OrphanHeaderSource is example representation of orphan chain header source on that height
+	// OrphanHeaderSource is example representation of orphan chain header source on that height.
 	OrphanHeaderSource = &domains.BlockHeaderSource{
 		Version:    DefaultBlockVersion,
 		PrevBlock:  *HashOf("0000000000000000000000000000000000000000000000000000000000000000"),
