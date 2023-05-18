@@ -61,9 +61,7 @@ func (cs *chainService) Add(bs domains.BlockHeaderSource) (*domains.BlockHeader,
 			return nil, HeaderCreationFail.causedBy(&err)
 		}
 
-		if tip.Hash.IsEqual(&h.Hash) {
-			isConcurrentChain = false
-		} else if tip.CumulatedWork.Cmp(h.CumulatedWork) < 0 {
+		if tip.CumulatedWork.Cmp(h.CumulatedWork) < 0 {
 			h.State = domains.LongestChain
 		} else {
 			h.State = domains.Stale
@@ -86,7 +84,7 @@ func (cs *chainService) hasConcurrentHeaderFromLongestChain(h *domains.BlockHead
 	}
 	if h.IsLongestChain() {
 		oh, _ := cs.Headers.GetHeaderByHeight(h.Height)
-		return oh != nil && oh.IsLongestChain()
+		return oh != nil && oh.IsLongestChain() && !oh.Hash.IsEqual(&h.Hash)
 	}
 	return true
 }
