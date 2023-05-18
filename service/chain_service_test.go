@@ -117,6 +117,32 @@ func TestAddHeaderToOrphanChain(t *testing.T) {
 	}
 }
 
+func TestAddHeaderThatAlreadyExist(t *testing.T) {
+	//given
+	r, tip := givenLongestChainInRepository()
+	h := fixtures.BlockHeaderSourceOf(tip)
+
+	cs := createChainsService(serviceSetup{Repositories: &r})
+
+	//when
+	header, addErr := cs.Add(*h)
+
+	//then
+	assert.NoError(t, addErr)
+	assertHeaderExist(t, header)
+	assertHeaderInDb(t, r, header)
+
+	if header.State != "LONGEST_CHAIN" {
+		t.Errorf("Header should belong to the longest chain but is %s", header.State)
+	}
+
+	if !header.IsLongestChain() {
+		t.Error("Header should be marked as longest chain but is not")
+	}
+
+	assertOnlyOneHeaderOnHeight(t, r, header)
+}
+
 func TestAddConcurrentChainBlock(t *testing.T) {
 	var blockFromLongestChain = fixtures.HashHeight1
 	var blockFromStaleChain = fixtures.StaleHashHeight2
