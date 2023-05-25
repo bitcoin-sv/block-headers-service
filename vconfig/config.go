@@ -40,6 +40,15 @@ const (
 // EnvWebhookMaxTries max tries for webhook.
 const EnvWebhookMaxTries = "webhook.maxTries"
 
+const (
+	// EnvWebsocketHistoryMax max number of published events that should be hold
+	// and send to client in case of restored lost connection.
+	EnvWebsocketHistoryMax = "websocket.history.max"
+	// EnvWebsocketHistoryTtl max minutes for which published events should be hold
+	// and send to client in case of restored lost connection.
+	EnvWebsocketHistoryTtl = "websocket.history.ttl"
+)
+
 // DbType database type.
 type DbType string
 

@@ -12,6 +12,7 @@ func NewViperConfig(appname string) *Config {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	setHttpServerDefaults()
 	setWebhookDefaults()
+	setWebsocketDefaults()
 	return &Config{}
 }
 
@@ -58,4 +59,10 @@ func setHttpServerDefaults() {
 // setWebhookDefaults sets default values for webhook.
 func setWebhookDefaults() {
 	viper.SetDefault(EnvWebhookMaxTries, 10)
+}
+
+// setWebhookDefaults sets default values for websocket.
+func setWebsocketDefaults() {
+	viper.SetDefault(EnvWebsocketHistoryMax, 300)
+	viper.SetDefault(EnvWebsocketHistoryTtl, 10)
 }
