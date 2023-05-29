@@ -94,7 +94,7 @@ func (c *WebsocketClient) Connect() error {
 // If no error then returned <-chan can be used to listen for messages on websocket channel.
 func (c *WebsocketClient) Subscribe(channel string) (<-chan string, error) {
 	if err := c.Connect(); err != nil {
-		return nil, err
+		c.log.Errorf("Error when trying to connect %v", err)
 	}
 
 	sub, subscribed, err := c.subscription(channel)
