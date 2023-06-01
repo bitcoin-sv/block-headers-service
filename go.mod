@@ -11,7 +11,7 @@ require (
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/kr/pretty v0.3.1
 	github.com/magiconair/properties v1.8.7
-	github.com/mattn/go-sqlite3 v1.14.16
+	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.7.0
 	github.com/swaggo/files v1.0.1
@@ -19,13 +19,16 @@ require (
 	github.com/swaggo/swag v1.16.1
 )
 
-require github.com/dchest/uniuri v1.2.0
+require (
+	github.com/centrifugal/centrifuge v0.29.1
+	github.com/centrifugal/centrifuge-go v0.9.6
+	github.com/dchest/uniuri v1.2.0
+	github.com/kinbiko/jsonassert v1.1.1
+)
 
 require (
 	github.com/FZambia/eagle v0.0.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/centrifugal/centrifuge v0.29.1 // indirect
-	github.com/centrifugal/centrifuge-go v0.9.6 // indirect
 	github.com/centrifugal/protocol v0.10.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
@@ -33,7 +36,6 @@ require (
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/igm/sockjs-go/v3 v3.0.2 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
-	github.com/kinbiko/jsonassert v1.1.1 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
