@@ -3,6 +3,7 @@ package sql
 import (
 	"context"
 	"database/sql"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/libsv/bitcoin-hc/configs"
@@ -153,6 +154,16 @@ const (
 	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, cumulatedWork
 	FROM headers
 	WHERE hash = ?
+	`
+
+	sqlMerkleRootsConfirmationsStartQuery = `
+	WITH merkles(merkleroot) AS (VALUES 
+	`
+	sqlMerkleRootsConfirmationsEndQuery = `
+	) SELECT m.merkleroot AS merkleroot, h.hash AS hash, h.hash is not null AS confirmed
+	FROM merkles m 
+	LEFT JOIN (SELECT hash, header_state, merkleroot FROM headers WHERE header_state = 'LONGEST_CHAIN') h 
+	ON m.merkleroot = h.merkleroot
 	`
 )
 
@@ -350,6 +361,37 @@ func (h *HeadersDb) GetChainBetweenTwoHashes(low string, high string) ([]*dto.Db
 			return nil, errors.New("could not find headers in given range")
 		}
 		return nil, errors.Wrapf(err, "failed to get headers using given range from: %s to: %s", low, high)
+	}
+	return bh, nil
+}
+
+// GetMerkleRootsConfirmations returns a confirmation of whether the given merkle roots are included in the longest chain.
+func (h *HeadersDb) GetMerkleRootsConfirmations(
+	merkleroots []string,
+) ([]*dto.DbMerkleRootConfirmation, error) {
+	var bh []*dto.DbMerkleRootConfirmation
+
+	var query strings.Builder
+
+	query.WriteString(sqlMerkleRootsConfirmationsStartQuery)
+
+	for i, merkle := range merkleroots {
+		query.WriteString("('")
+		query.WriteString(merkle)
+		if i == len(merkleroots) - 1 {
+			query.WriteString("')")
+		} else {
+			query.WriteString("'),")
+		}
+	}
+
+	query.WriteString(sqlMerkleRootsConfirmationsEndQuery)
+
+	if err := h.db.Select(&bh, query.String()); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return []*dto.DbMerkleRootConfirmation{}, nil
+		}
+		return nil, errors.Wrapf(err, "failed to get headers by given merkleroots")
 	}
 	return bh, nil
 }

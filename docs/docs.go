@@ -324,6 +324,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/chain/merkleroots/verify": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "merkleroots"
+                ],
+                "summary": "Verifies merkle roots in the longest chain",
+                "parameters": [
+                    {
+                        "description": "JSON",
+                        "name": "merkleroots",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/merkleroots.merkleRootConfirmationRespose"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/chain/tip": {
             "get": {
                 "security": [
@@ -501,7 +545,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domains.Webhook"
+                            "$ref": "#/definitions/notification.Webhook"
                         }
                     }
                 }
@@ -537,7 +581,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domains.Webhook"
+                            "$ref": "#/definitions/notification.Webhook"
                         }
                     }
                 }
@@ -625,29 +669,6 @@ const docTemplate = `{
                 }
             }
         },
-        "domains.Webhook": {
-            "type": "object",
-            "properties": {
-                "active": {
-                    "type": "boolean"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "errorsCount": {
-                    "type": "integer"
-                },
-                "lastEmitStatus": {
-                    "type": "string"
-                },
-                "lastEmitTimestamp": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
         "headers.blockHeaderResponse": {
             "type": "object",
             "properties": {
@@ -690,6 +711,43 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "merkleroots.merkleRootConfirmationRespose": {
+            "type": "object",
+            "properties": {
+                "blockhash": {
+                    "type": "string"
+                },
+                "confirmed": {
+                    "type": "boolean"
+                },
+                "merkleRoot": {
+                    "type": "string"
+                }
+            }
+        },
+        "notification.Webhook": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "errorsCount": {
+                    "type": "integer"
+                },
+                "lastEmitStatus": {
+                    "type": "string"
+                },
+                "lastEmitTimestamp": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }

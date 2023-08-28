@@ -97,6 +97,15 @@ func (r *HeaderRepository) GetHeaderByHash(hash string) (*domains.BlockHeader, e
 	return nil, err
 }
 
+// GetMerkleRootsConfirmations returns confirmation of merkle roots inclusion in the longest chain.
+func (r *HeaderRepository) GetMerkleRootsConfirmations(merkleroots []string) ([]*domains.MerkleRootConfirmation, error) {
+	mrcs, err := r.db.GetMerkleRootsConfirmations(merkleroots)
+	if err != nil {
+		return nil, err
+	}
+	return dto.ConvertToMerkleRootsConfirmations(mrcs), nil
+}
+
 // GenesisExists check if genesis header is in db.
 func (r *HeaderRepository) GenesisExists() bool {
 	return r.db.GenesisExists(context.Background())

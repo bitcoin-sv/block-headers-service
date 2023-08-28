@@ -31,6 +31,7 @@ type Headers interface {
 	InsertGenesisHeaderInDatabase() error
 	GetHeaderByHash(hash string) (*domains.BlockHeader, error)
 	GetHeadersByHeight(height int, count int) ([]*domains.BlockHeader, error)
+	GetMerkleRootsConfirmations(merkleroots []string) ([]*domains.MerkleRootConfirmation, error)
 	GetHeaderAncestorsByHash(hash string, ancestorHash string) ([]*domains.BlockHeader, error)
 	GetCommonAncestors(hashes []string) (*domains.BlockHeader, error)
 	GetHeadersState(hash string) (*domains.BlockHeaderState, error)
@@ -94,7 +95,11 @@ func newChainService(d Dept, notifier *notification.Notifier) Chains {
 }
 
 func newWebhooks(d Dept) *notification.WebhooksService {
-	return notification.NewWebhooksService(d.Repositories.Webhooks, client.NewWebhookTargetClient(), d.LoggerFactory)
+	return notification.NewWebhooksService(
+		d.Repositories.Webhooks,
+		client.NewWebhookTargetClient(),
+		d.LoggerFactory,
+	)
 }
 
 func newNotifier() *notification.Notifier {

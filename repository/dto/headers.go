@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"database/sql"
 	"math/big"
 	"time"
 
@@ -88,4 +89,37 @@ func ToDbBlockHeader(bh domains.BlockHeader) DbBlockHeader {
 		CumulatedWork: bh.CumulatedWork.String(),
 		PreviousBlock: bh.PreviousBlock.String(),
 	}
+}
+
+// DbMerkleRootConfirmation is a database representation of a Confirmation
+// of Merkle Root inclusion in the longest chain.
+type DbMerkleRootConfirmation struct {
+	Hash       sql.NullString `db:"hash"`
+	MerkleRoot string         `db:"merkleroot"`
+	Confirmed  bool           `db:"confirmed"`
+}
+
+// ToMerkleRootConfirmation converts DbMerkleRootConfirmation to domain's 
+// MerkleRootConfirmation used after getting records from db.
+func (dbMerkleConfm *DbMerkleRootConfirmation) ToMerkleRootConfirmation() *domains.MerkleRootConfirmation {
+	return &domains.MerkleRootConfirmation{
+		MerkleRoot: dbMerkleConfm.MerkleRoot,
+		Hash:       dbMerkleConfm.Hash.String,
+		Confirmed:  dbMerkleConfm.Confirmed,
+	}
+}
+
+// ConvertToMerkleRootsConfirmations converts DbMerkleRootConfirmation slice 
+// to domain's MerkleRootConfirmation slice used after getting records from db.
+func ConvertToMerkleRootsConfirmations(
+	dbMerkleConfms []*DbMerkleRootConfirmation,
+) []*domains.MerkleRootConfirmation {
+	var merklesConfms []*domains.MerkleRootConfirmation
+
+	for _, merkleConfm := range dbMerkleConfms {
+		m := merkleConfm.ToMerkleRootConfirmation()
+		merklesConfms = append(merklesConfms, m)
+	}
+
+	return merklesConfms
 }
