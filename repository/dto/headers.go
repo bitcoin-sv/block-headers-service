@@ -99,7 +99,7 @@ type DbMerkleRootConfirmation struct {
 	Confirmed  bool           `db:"confirmed"`
 }
 
-// ToMerkleRootConfirmation converts DbMerkleRootConfirmation to domain's 
+// ToMerkleRootConfirmation converts DbMerkleRootConfirmation to domain's
 // MerkleRootConfirmation used after getting records from db.
 func (dbMerkleConfm *DbMerkleRootConfirmation) ToMerkleRootConfirmation() *domains.MerkleRootConfirmation {
 	return &domains.MerkleRootConfirmation{
@@ -109,12 +109,12 @@ func (dbMerkleConfm *DbMerkleRootConfirmation) ToMerkleRootConfirmation() *domai
 	}
 }
 
-// ConvertToMerkleRootsConfirmations converts DbMerkleRootConfirmation slice 
+// ConvertToMerkleRootsConfirmations converts DbMerkleRootConfirmation slice
 // to domain's MerkleRootConfirmation slice used after getting records from db.
 func ConvertToMerkleRootsConfirmations(
 	dbMerkleConfms []*DbMerkleRootConfirmation,
 ) []*domains.MerkleRootConfirmation {
-	var merklesConfms []*domains.MerkleRootConfirmation
+	merklesConfms := make([]*domains.MerkleRootConfirmation, 0)
 
 	for _, merkleConfm := range dbMerkleConfms {
 		m := merkleConfm.ToMerkleRootConfirmation()
