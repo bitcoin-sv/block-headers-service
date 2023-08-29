@@ -77,13 +77,18 @@ func TorLookupIP(host, proxy string) ([]net.IP, error) {
 	}
 
 	buf = make([]byte, 7+len(host))
-	buf[0] = 5      // protocol version
-	buf[1] = '\xF0' // Tor Resolve
-	buf[2] = 0      // reserved
-	buf[3] = 3      // Tor Resolve
-	buf[4] = byte(len(host))
-	copy(buf[5:], host)
-	buf[5+len(host)] = 0 // Port 0
+	// protocol version
+	buf[0] = 5
+	// Tor Resolve
+	buf[1] = '\xF0'
+	// reserved
+	buf[2] = 0 //nolint:gosec //false positive
+	// Tor Resolve
+	buf[3] = 3               //nolint:gosec //false positive
+	buf[4] = byte(len(host)) //nolint:gosec //false positive
+	copy(buf[5:], host)      //nolint:gosec //false positive
+	// Port 0
+	buf[5+len(host)] = 0
 
 	_, err = conn.Write(buf)
 	if err != nil {
