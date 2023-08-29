@@ -1,7 +1,6 @@
 package service
 
 import (
-	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
 	"math/big"
 	"testing"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/tests/assert"
 	"github.com/libsv/bitcoin-hc/internal/tests/fixtures"
+	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
 	"github.com/libsv/bitcoin-hc/internal/tests/testrepository"
 	"github.com/libsv/bitcoin-hc/repository"
 )
@@ -138,25 +138,25 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 	}{
 		{
 			hash:          "0000000082b5015589a3fdf2d4baff403e6f0be035a5d9742c1cae6295464449", // Height = 3
-			ancestorHash:  "00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048", //Height = 1
+			ancestorHash:  "00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048", // Height = 1
 			expectedCount: 3,
 			expectedError: false,
 		},
 		{
 			hash:          "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f", // Height = 0
-			ancestorHash:  "000000004ebadb55ee9096c9a2f8880e09da59c0d68b1c228da88e48844a1485", //Height = 4
+			ancestorHash:  "000000004ebadb55ee9096c9a2f8880e09da59c0d68b1c228da88e48844a1485", // Height = 4
 			expectedCount: 0,
 			expectedError: true,
 		},
 		{
 			hash:          "000000007bc154e0fa7ea32218a72fe2c1bb9f86cf8c9ebf9a715ed27fdb229a", // Height = 100
-			ancestorHash:  "000000006a625f06636b8bb6ac7b960a8d03705d1ace08b1a19da3fdcc99ddbd", //Height = 2
+			ancestorHash:  "000000006a625f06636b8bb6ac7b960a8d03705d1ace08b1a19da3fdcc99ddbd", // Height = 2
 			expectedCount: 0,
 			expectedError: true,
 		},
 		{
 			hash:          "000000006a625f06636b8bb6ac7b960a8d03705d1ace08b1a19da3fdcc99ddbd", // Height = 2
-			ancestorHash:  "000000006a625f06636b8bb6ac7b960a8d03705d1ace08b1a19da3fdcc99ddbd", //Height = 2
+			ancestorHash:  "000000006a625f06636b8bb6ac7b960a8d03705d1ace08b1a19da3fdcc99ddbd", // Height = 2
 			expectedCount: 0,
 			expectedError: false,
 		},
@@ -238,15 +238,75 @@ func TestLatestHeaderLocator(t *testing.T) {
 func TestGetAllTips(t *testing.T) {
 	tData := setUpServices()
 
-	//Check tips without fork
+	// Check tips without fork
 	tips, _ := tData.hs.Headers.GetTips()
 	assert.Equal(t, len(tips), 1)
 
-	//Check tip with fork
+	// Check tip with fork
 	forkHeader := createHeader(4, *fixtures.HashHeight6, *fixtures.HashHeight5)
 	*tData.db = append(*tData.db, forkHeader)
 	tips, _ = tData.hs.Headers.GetTips()
 	assert.Equal(t, len(tips), 2)
+}
+
+func TestMerkleRootConfirmations(t *testing.T) {
+	tData := setUpServices()
+
+	testCases := []struct {
+		merkles  []string
+		expected []*domains.MerkleRootConfirmation
+	}{
+		{
+			merkles: []string{
+				"0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098",
+				"9b0fc92260312ce44e74ef369f5c66bbb85848f2eddd5a7a1cde251e54ccfdd5",
+			},
+			expected: []*domains.MerkleRootConfirmation{
+				{
+					MerkleRoot: "0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098",
+					Hash:       "00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048",
+					Confirmed:  true,
+				},
+				{
+					MerkleRoot: "9b0fc92260312ce44e74ef369f5c66bbb85848f2eddd5a7a1cde251e54ccfdd5",
+					Hash:       "000000006a625f06636b8bb6ac7b960a8d03705d1ace08b1a19da3fdcc99ddbd",
+					Confirmed:  true,
+				},
+			},
+		},
+		{
+			merkles:  []string{},
+			expected: []*domains.MerkleRootConfirmation{},
+		},
+		{
+			merkles: []string{
+				"0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098",
+				"unconfirmed_merkle_root_abc123123",
+			},
+			expected: []*domains.MerkleRootConfirmation{
+				{
+					MerkleRoot: "0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098",
+					Hash:       "00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048",
+					Confirmed:  true,
+				},
+				{
+					MerkleRoot: "unconfirmed_merkle_root_abc123123",
+					Hash:       "",
+					Confirmed:  false,
+				},
+			},
+		},
+	}
+
+	for _, tt := range testCases {
+		mrcfs, _ := tData.hs.Headers.GetMerkleRootsConfirmations(tt.merkles)
+
+		for i, mrcf := range mrcfs {
+			assert.Equal(t, mrcf.Hash, tt.expected[i].Hash)
+			assert.Equal(t, mrcf.Confirmed, tt.expected[i].Confirmed)
+			assert.Equal(t, mrcf.MerkleRoot, tt.expected[i].MerkleRoot)
+		}
+	}
 }
 
 func setUpServices() *testData {

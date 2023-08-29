@@ -186,6 +186,38 @@ func (r *HeaderTestRepository) GetChainBetweenTwoHashes(low string, high string)
 	return headers, nil
 }
 
+// GetMerkleRootsConfirmations returns a confirmation of merkle roots inclusion
+// in the longest chain with hash of the block in which the merkle root is included.
+func (r *HeaderTestRepository) GetMerkleRootsConfirmations(
+	merkleroots []string,
+) ([]*domains.MerkleRootConfirmation, error) {
+	mrcfs := make([]*domains.MerkleRootConfirmation, 0)
+
+	for _, mr := range merkleroots {
+		found := false
+		for _, h := range *r.db {
+			if h.MerkleRoot.String() == mr {
+				mrcfs = append(mrcfs, &domains.MerkleRootConfirmation{
+					MerkleRoot: h.MerkleRoot.String(),
+					Hash:       h.Hash.String(),
+					Confirmed:  true,
+				})
+				found = true
+				break
+			}
+		}
+		if !found {
+			mrcfs = append(mrcfs, &domains.MerkleRootConfirmation{
+				MerkleRoot: mr,
+				Hash: "",
+				Confirmed: false,
+			})
+		}
+	}
+
+	return mrcfs, nil
+}
+
 func contains(hashes []string, hash string) bool {
 	for _, h := range hashes {
 		if h == hash {
