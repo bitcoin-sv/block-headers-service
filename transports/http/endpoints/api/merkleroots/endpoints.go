@@ -1,6 +1,7 @@
 package merkleroots
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -26,14 +27,13 @@ func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup) {
 	}
 }
 
-
 // Verify godoc.
 //
-//	@Summary Verifies merkle roots in the longest chain
+//	@Summary Verifies Merkle roots inclusion in the longest chain
 //	@Tags merkleroots
 //	@Accept */*
 //	@Produce json
-//	@Success 200 {array} merkleroots.merkleRootConfirmationRespose 
+//	@Success 200 {array} merkleroots.merkleRootConfirmationRespose
 //	@Router /chain/merkleroots/verify [post]
 //	@Param merkleroots body []string true "JSON"
 //	@Security Bearer
@@ -45,7 +45,7 @@ func (h *handler) verify(c *gin.Context) {
 	}
 
 	if len(body) == 0 {
-		c.JSON(http.StatusOK, []merkleRootConfirmationRespose{})
+		c.JSON(http.StatusBadRequest, errors.New("At least one merkleroot is required"))
 		return
 	}
 

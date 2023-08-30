@@ -194,25 +194,18 @@ func (r *HeaderTestRepository) GetMerkleRootsConfirmations(
 	mrcfs := make([]*domains.MerkleRootConfirmation, 0)
 
 	for _, mr := range merkleroots {
-		found := false
+		hash := ""
 		for _, h := range *r.db {
 			if h.MerkleRoot.String() == mr {
-				mrcfs = append(mrcfs, &domains.MerkleRootConfirmation{
-					MerkleRoot: h.MerkleRoot.String(),
-					Hash:       h.Hash.String(),
-					Confirmed:  true,
-				})
-				found = true
+				hash = h.Hash.String()
 				break
 			}
 		}
-		if !found {
-			mrcfs = append(mrcfs, &domains.MerkleRootConfirmation{
-				MerkleRoot: mr,
-				Hash: "",
-				Confirmed: false,
-			})
-		}
+		mrcfs = append(mrcfs, &domains.MerkleRootConfirmation{
+			MerkleRoot: mr,
+			Hash:       hash,
+			Confirmed:  hash != "",
+		})
 	}
 
 	return mrcfs, nil

@@ -375,19 +375,22 @@ func (h *HeadersDb) GetMerkleRootsConfirmations(
 
 	query.WriteString(sqlMerkleRootsConfirmationsStartQuery)
 
-	for i, merkle := range merkleroots {
-		query.WriteString("('")
-		query.WriteString(merkle)
+	for i := range merkleroots {
 		if i == len(merkleroots) - 1 {
-			query.WriteString("')")
+			query.WriteString("(?)")
 		} else {
-			query.WriteString("'),")
+			query.WriteString("(?),")
 		}
 	}
 
 	query.WriteString(sqlMerkleRootsConfirmationsEndQuery)
 
-	if err := h.db.Select(&bh, query.String()); err != nil {
+	queryParams := make([]interface{}, 0)
+	for _, m := range merkleroots {
+		queryParams = append(queryParams, m)
+	}
+
+	if err := h.db.Select(&bh, h.db.Rebind(query.String()), queryParams...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return []*dto.DbMerkleRootConfirmation{}, nil
 		}
