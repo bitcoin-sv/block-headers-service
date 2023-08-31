@@ -21,7 +21,7 @@ func NewHandler(s *service.Services) router.ApiEndpoints {
 
 // RegisterApiEndpoints registers routes that are part of service API.
 func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup) {
-	merkle := router.Group("/chain/merkleroots")
+	merkle := router.Group("/chain/merkleroot")
 	{
 		merkle.POST("/verify", h.verify)
 	}
@@ -33,7 +33,7 @@ func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup) {
 //	@Tags merkleroots
 //	@Accept */*
 //	@Produce json
-//	@Success 200 {array} merkleroots.merkleRootConfirmationRespose
+//	@Success 200 {array} merkleroots.merkleRootsConfirmationsResponse
 //	@Router /chain/merkleroots/verify [post]
 //	@Param merkleroots body []string true "JSON"
 //	@Security Bearer

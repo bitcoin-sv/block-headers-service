@@ -340,7 +340,7 @@ const docTemplate = `{
                 "tags": [
                     "merkleroots"
                 ],
-                "summary": "Verifies merkle roots in the longest chain",
+                "summary": "Verifies Merkle roots inclusion in the longest chain",
                 "parameters": [
                     {
                         "description": "JSON",
@@ -361,7 +361,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/merkleroots.merkleRootConfirmationRespose"
+                                "$ref": "#/definitions/merkleroots.merkleRootsConfirmationsResponse"
                             }
                         }
                     }
@@ -715,7 +715,7 @@ const docTemplate = `{
                 }
             }
         },
-        "merkleroots.merkleRootConfirmationRespose": {
+        "merkleroots.merkleRootConfirmation": {
             "type": "object",
             "properties": {
                 "blockhash": {
@@ -726,6 +726,20 @@ const docTemplate = `{
                 },
                 "merkleRoot": {
                     "type": "string"
+                }
+            }
+        },
+        "merkleroots.merkleRootsConfirmationsResponse": {
+            "type": "object",
+            "properties": {
+                "allConfirmed": {
+                    "type": "boolean"
+                },
+                "confirmations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/merkleroots.merkleRootConfirmation"
+                    }
                 }
             }
         },

@@ -61,7 +61,7 @@ definitions:
       state:
         type: string
     type: object
-  merkleroots.merkleRootConfirmationRespose:
+  merkleroots.merkleRootConfirmation:
     properties:
       blockhash:
         type: string
@@ -69,6 +69,15 @@ definitions:
         type: boolean
       merkleRoot:
         type: string
+    type: object
+  merkleroots.merkleRootsConfirmationsResponse:
+    properties:
+      allConfirmed:
+        type: boolean
+      confirmations:
+        items:
+          $ref: '#/definitions/merkleroots.merkleRootConfirmation'
+        type: array
     type: object
   notification.Webhook:
     properties:
@@ -343,11 +352,11 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/merkleroots.merkleRootConfirmationRespose'
+              $ref: '#/definitions/merkleroots.merkleRootsConfirmationsResponse'
             type: array
       security:
       - Bearer: []
-      summary: Verifies merkle roots in the longest chain
+      summary: Verifies Merkle roots inclusion in the longest chain
       tags:
       - merkleroots
   /chain/tip:
