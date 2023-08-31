@@ -156,11 +156,9 @@ const (
 	WHERE hash = ?
 	`
 
-	sqlMerkleRootsConfirmationsStartQuery = `
-	WITH merkles(merkleroot) AS (VALUES 
-	`
-	sqlMerkleRootsConfirmationsEndQuery = `
-	) SELECT m.merkleroot AS merkleroot, h.hash AS hash, h.hash is not null AS confirmed
+	sqlMerkleRootsConfirmationsQuery = `
+	WITH merkles(merkleroot) AS (VALUES :merkles:) 
+	SELECT m.merkleroot AS merkleroot, h.hash AS hash, h.hash is not null AS confirmed
 	FROM merkles m 
 	LEFT JOIN headers h
 	ON m.merkleroot = h.merkleroot and h.header_state = 'LONGEST_CHAIN'
@@ -371,26 +369,18 @@ func (h *HeadersDb) GetMerkleRootsConfirmations(
 ) ([]*dto.DbMerkleRootConfirmation, error) {
 	var bh []*dto.DbMerkleRootConfirmation
 
-	var query strings.Builder
 
-	query.WriteString(sqlMerkleRootsConfirmationsStartQuery)
+	params := strings.Repeat("(?),", len(merkleroots))
+	params = params[:len(params)-1]
 
-	for i := range merkleroots {
-		if i == len(merkleroots) - 1 {
-			query.WriteString("(?)")
-		} else {
-			query.WriteString("(?),")
-		}
-	}
-
-	query.WriteString(sqlMerkleRootsConfirmationsEndQuery)
+	query := strings.Replace(sqlMerkleRootsConfirmationsQuery, ":merkles:", params, 1)
 
 	queryParams := make([]interface{}, 0)
 	for _, m := range merkleroots {
 		queryParams = append(queryParams, m)
 	}
 
-	if err := h.db.Select(&bh, h.db.Rebind(query.String()), queryParams...); err != nil {
+	if err := h.db.Select(&bh, h.db.Rebind(query), queryParams...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return []*dto.DbMerkleRootConfirmation{}, nil
 		}
