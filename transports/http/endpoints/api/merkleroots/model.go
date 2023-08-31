@@ -15,7 +15,7 @@ type merkleRootConfirmation struct {
 // merkleRootsConfirmationsResponse is an API reponse for confirming
 // merkle roots inclusion in the longest chain.
 type merkleRootsConfirmationsResponse struct {
-	AllIncluded   bool                     `json:"allIncluded"`
+	AllConfirmed  bool                     `json:"allConfirmed"`
 	Confirmations []merkleRootConfirmation `json:"confirmations"`
 }
 
@@ -38,17 +38,17 @@ func mapToMerkleRootsConfirmationsResponses(
 ) merkleRootsConfirmationsResponse {
 	mrcfs := make([]merkleRootConfirmation, 0)
 
-	allIncluded := true
+	allConfirmed := true
 
 	for _, merkleConfm := range merkleConfms {
 		mrcfs = append(mrcfs, newMerkleRootConfirmation(merkleConfm))
 		if !merkleConfm.Confirmed {
-			allIncluded = false
+			allConfirmed = false
 		}
 	}
 
 	return merkleRootsConfirmationsResponse{
-		AllIncluded:   allIncluded,
+		AllConfirmed:  allConfirmed,
 		Confirmations: mrcfs,
 	}
 }

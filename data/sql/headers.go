@@ -162,8 +162,8 @@ const (
 	sqlMerkleRootsConfirmationsEndQuery = `
 	) SELECT m.merkleroot AS merkleroot, h.hash AS hash, h.hash is not null AS confirmed
 	FROM merkles m 
-	LEFT JOIN (SELECT hash, header_state, merkleroot FROM headers WHERE header_state = 'LONGEST_CHAIN') h 
-	ON m.merkleroot = h.merkleroot
+	LEFT JOIN headers h
+	ON m.merkleroot = h.merkleroot and h.header_state = 'LONGEST_CHAIN'
 	`
 )
 
