@@ -45,7 +45,7 @@ func (h *handler) verify(c *gin.Context) {
 	}
 
 	if len(body) == 0 {
-		c.JSON(http.StatusBadRequest, errors.New("At least one merkleroot is required"))
+		c.JSON(http.StatusBadRequest, errors.New("At least one merkleroot is required").Error())
 		return
 	}
 

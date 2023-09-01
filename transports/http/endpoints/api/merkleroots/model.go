@@ -6,25 +6,25 @@ import (
 
 // merkleRootConfirmationResponse is a confirmation
 // of merkle roots inclusion in the longest chain.
-type merkleRootConfirmation struct {
+type MerkleRootConfirmation struct {
 	Hash       string `json:"blockhash"`
 	MerkleRoot string `json:"merkleRoot"`
 	Confirmed  bool   `json:"confirmed"`
 }
 
-// merkleRootsConfirmationsResponse is an API reponse for confirming
+// merkleRootsConfirmationsResponse is an API response for confirming
 // merkle roots inclusion in the longest chain.
-type merkleRootsConfirmationsResponse struct {
+type MerkleRootsConfirmationsResponse struct {
 	AllConfirmed  bool                     `json:"allConfirmed"`
-	Confirmations []merkleRootConfirmation `json:"confirmations"`
+	Confirmations []MerkleRootConfirmation `json:"confirmations"`
 }
 
 // newMerkleRootConfirmationcreates a new merkleRootConfirmation
 // object from domain's MerkleRootConfirmation object.
 func newMerkleRootConfirmation(
 	merkleConfms *domains.MerkleRootConfirmation,
-) merkleRootConfirmation {
-	return merkleRootConfirmation{
+) MerkleRootConfirmation {
+	return MerkleRootConfirmation{
 		Hash:       merkleConfms.Hash,
 		MerkleRoot: merkleConfms.MerkleRoot,
 		Confirmed:  merkleConfms.Confirmed,
@@ -35,8 +35,8 @@ func newMerkleRootConfirmation(
 // MerkleRootConfirmation objects to merkleRootConfirmationRespose.
 func mapToMerkleRootsConfirmationsResponses(
 	merkleConfms []*domains.MerkleRootConfirmation,
-) merkleRootsConfirmationsResponse {
-	mrcfs := make([]merkleRootConfirmation, 0)
+) MerkleRootsConfirmationsResponse {
+	mrcfs := make([]MerkleRootConfirmation, 0)
 
 	allConfirmed := true
 
@@ -47,7 +47,7 @@ func mapToMerkleRootsConfirmationsResponses(
 		}
 	}
 
-	return merkleRootsConfirmationsResponse{
+	return MerkleRootsConfirmationsResponse{
 		AllConfirmed:  allConfirmed,
 		Confirmations: mrcfs,
 	}
