@@ -16,7 +16,7 @@ import (
 
 func TestReturnSuccessFromVerify(t *testing.T) {
 	// setup
-	pulse, cleanup := testpulse.NewTestPulse(t)
+	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain())
 	defer cleanup()
 	query := []string{chaincfg.GenesisMerkleRoot.String()}
 	expected_result := struct {
@@ -83,7 +83,7 @@ func TestReturnFailureFromVerifyWhenAuthorizationIsTurnedOnAndCalledWithoutToken
 
 func TestReturnPartialSuccessFromVerify(t *testing.T) {
 	// setup
-	pulse, cleanup := testpulse.NewTestPulse(t)
+	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain())
 	defer cleanup()
 	query := []string{chaincfg.GenesisMerkleRoot.String(), "not_found_merkle_root"}
 	expected_result := struct {
@@ -128,7 +128,7 @@ func TestReturnPartialSuccessFromVerify(t *testing.T) {
 
 func TestReturnBadRequestErrorFromVerifyWhenGivenEmtpyArray(t *testing.T) {
 	// setup
-	pulse, cleanup := testpulse.NewTestPulse(t)
+	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain())
 	defer cleanup()
 	query := []string{}
 	expected_result := struct {

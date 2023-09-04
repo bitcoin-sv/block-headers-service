@@ -29,6 +29,15 @@ func LongestChain() (db headerChainFixture, tip *domains.BlockHeader) {
 	return db, db.tip()
 }
 
+// AddLongestChain adds mocked longest chain to already initialized (for example with GenesisBlock) db
+func AddLongestChain(initializedDb headerChainFixture) (db headerChainFixture, tip *domains.BlockHeader) {
+	initializedDb.addToLongestChain(HashHeight1, HeaderSourceHeight1).
+		addToLongestChain(HashHeight2, HeaderSourceHeight2).
+		addToLongestChain(HashHeight3, HeaderSourceHeight3).
+		addToLongestChain(HashHeight4, HeaderSourceHeight4)
+	return initializedDb, initializedDb.tip()
+}
+
 // StaleChain creates mocked the stale chain entries starting and containing Genesis Block.
 func StaleChain() (db headerChainFixture, tip *domains.BlockHeader) {
 	db = startingChain().
