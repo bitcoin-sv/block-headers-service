@@ -4,7 +4,7 @@ import (
 	"github.com/libsv/bitcoin-hc/domains"
 )
 
-// merkleRootConfirmationResponse is a confirmation
+// MerkleRootConfirmation is a confirmation
 // of merkle roots inclusion in the longest chain.
 type MerkleRootConfirmation struct {
 	Hash       string `json:"blockhash"`
@@ -12,7 +12,7 @@ type MerkleRootConfirmation struct {
 	Confirmed  bool   `json:"confirmed"`
 }
 
-// merkleRootsConfirmationsResponse is an API response for confirming
+// MerkleRootsConfirmationsResponse is an API response for confirming
 // merkle roots inclusion in the longest chain.
 type MerkleRootsConfirmationsResponse struct {
 	AllConfirmed  bool                     `json:"allConfirmed"`

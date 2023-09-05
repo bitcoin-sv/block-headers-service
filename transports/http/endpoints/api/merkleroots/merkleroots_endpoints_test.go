@@ -152,7 +152,10 @@ func TestReturnBadRequestErrorFromVerifyWhenGivenEmtpyArray(t *testing.T) {
 }
 
 func verify(merkleroots []string) (req *http.Request, err error) {
-	array, _ := json.Marshal(merkleroots)
+	array, err := json.Marshal(merkleroots)
+	if err != nil {
+		return nil, err
+	}
 	body := bytes.NewReader(array)
 	return http.NewRequestWithContext(
 		context.Background(),
