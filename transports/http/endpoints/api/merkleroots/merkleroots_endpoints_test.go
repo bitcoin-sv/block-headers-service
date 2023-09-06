@@ -136,7 +136,7 @@ func TestReturnBadRequestErrorFromVerifyWhenGivenEmtpyArray(t *testing.T) {
 		body []byte
 	}{
 		code: http.StatusBadRequest,
-		body: []byte("\"At least one merkleroot is required\""),
+		body: []byte("\"at least one merkleroot is required\""),
 	}
 
 	// when
