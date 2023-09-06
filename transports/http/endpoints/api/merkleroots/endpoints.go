@@ -33,8 +33,8 @@ func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup) {
 //	@Tags merkleroots
 //	@Accept */*
 //	@Produce json
-//	@Success 200 {array} merkleroots.merkleRootsConfirmationsResponse
-//	@Router /chain/merkleroots/verify [post]
+//	@Success 200 {array} merkleroots.MerkleRootsConfirmationsResponse
+//	@Router /chain/merkleroot/verify [post]
 //	@Param merkleroots body []string true "JSON"
 //	@Security Bearer
 func (h *handler) verify(c *gin.Context) {

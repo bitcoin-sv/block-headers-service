@@ -312,7 +312,7 @@
                 }
             }
         },
-        "/chain/merkleroots/verify": {
+        "/chain/merkleroot/verify": {
             "post": {
                 "security": [
                     {
@@ -349,7 +349,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/merkleroots.merkleRootsConfirmationsResponse"
+                                "$ref": "#/definitions/merkleroots.MerkleRootsConfirmationsResponse"
                             }
                         }
                     }
@@ -703,7 +703,7 @@
                 }
             }
         },
-        "merkleroots.merkleRootConfirmation": {
+        "merkleroots.MerkleRootConfirmation": {
             "type": "object",
             "properties": {
                 "blockhash": {
@@ -717,7 +717,7 @@
                 }
             }
         },
-        "merkleroots.merkleRootsConfirmationsResponse": {
+        "merkleroots.MerkleRootsConfirmationsResponse": {
             "type": "object",
             "properties": {
                 "allConfirmed": {
@@ -726,7 +726,7 @@
                 "confirmations": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/merkleroots.merkleRootConfirmation"
+                        "$ref": "#/definitions/merkleroots.MerkleRootConfirmation"
                     }
                 }
             }

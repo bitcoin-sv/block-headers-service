@@ -61,7 +61,7 @@ definitions:
       state:
         type: string
     type: object
-  merkleroots.merkleRootConfirmation:
+  merkleroots.MerkleRootConfirmation:
     properties:
       blockhash:
         type: string
@@ -70,13 +70,13 @@ definitions:
       merkleRoot:
         type: string
     type: object
-  merkleroots.merkleRootsConfirmationsResponse:
+  merkleroots.MerkleRootsConfirmationsResponse:
     properties:
       allConfirmed:
         type: boolean
       confirmations:
         items:
-          $ref: '#/definitions/merkleroots.merkleRootConfirmation'
+          $ref: '#/definitions/merkleroots.MerkleRootConfirmation'
         type: array
     type: object
   notification.Webhook:
@@ -332,7 +332,7 @@ paths:
       summary: Gets header state
       tags:
       - headers
-  /chain/merkleroots/verify:
+  /chain/merkleroot/verify:
     post:
       consumes:
       - '*/*'
@@ -352,7 +352,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/merkleroots.merkleRootsConfirmationsResponse'
+              $ref: '#/definitions/merkleroots.MerkleRootsConfirmationsResponse'
             type: array
       security:
       - Bearer: []
