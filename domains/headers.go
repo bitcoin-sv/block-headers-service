@@ -36,12 +36,20 @@ type BlockHeader struct {
 	Bits          uint32         `json:"-"`
 	Nonce         uint32         `json:"nonce"`
 	State         HeaderState    `json:"-"`
-	Chainwork     *big.Int       `json:"-" swaggertype:"string"`
-	CumulatedWork *big.Int       `json:"work" swaggertype:"string"`
+	Chainwork     *big.Int       `json:"-"                 swaggertype:"string"`
+	CumulatedWork *big.Int       `json:"work"              swaggertype:"string"`
 	PreviousBlock chainhash.Hash `json:"prevBlockHash"`
 }
 
-// HeaderArgs are sued to retrieve a single block header.
+// MerkleRootConfirmation is used to confirm the inclusion of 
+// merkle roots in the longest chain.
+type MerkleRootConfirmation struct {
+	MerkleRoot string `json:"merkleRoot"`
+	Hash       string `json:"hash"`
+	Confirmed  bool   `json:"confirmed"`
+}
+
+// HeaderArgs are used to retrieve a single block header.
 type HeaderArgs struct {
 	Blockhash string `param:"blockhash" db:"blockHash"`
 }
@@ -183,7 +191,7 @@ func CreateGenesisHeaderBlock() BlockHeader {
 // unsigned integer using a bitwise algorithm that masks off decreasingly lower-order bits
 // of the integer until it reaches the highest order bit, and returns the resulting integer value.
 func FastLog2Floor(n uint32) uint8 {
-	var log2FloorMasks = []uint32{0xffff0000, 0xff00, 0xf0, 0xc, 0x2}
+	log2FloorMasks := []uint32{0xffff0000, 0xff00, 0xf0, 0xc, 0x2}
 	rv := uint8(0)
 	exponent := uint8(16)
 	for i := 0; i < 5; i++ {

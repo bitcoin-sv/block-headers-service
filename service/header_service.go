@@ -273,6 +273,12 @@ func (hs *HeaderService) GetHeightByHash(hash *chainhash.Hash) (int32, error) {
 	return bh.Height, nil
 }
 
+// GetMerkleRootsConfirmations returns a confirmation of merkle roots inclusion in the longest chain
+// with hash of the block in which the merkle root is included.
+func (hs *HeaderService) GetMerkleRootsConfirmations(merkleroots []string) ([]*domains.MerkleRootConfirmation, error) {
+	return hs.repo.Headers.GetMerkleRootsConfirmations(merkleroots)
+}
+
 // LocateHeaders fetches headers for a number of blocks after the most recent known block
 // in the best chain, based on the provided block locator and stop hash, and defaults to the
 // genesis block if the locator is unknown.

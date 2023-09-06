@@ -31,21 +31,6 @@ definitions:
       token:
         type: string
     type: object
-  domains.Webhook:
-    properties:
-      active:
-        type: boolean
-      createdAt:
-        type: string
-      errorsCount:
-        type: integer
-      lastEmitStatus:
-        type: string
-      lastEmitTimestamp:
-        type: string
-      url:
-        type: string
-    type: object
   headers.blockHeaderResponse:
     properties:
       creationTimestamp:
@@ -74,6 +59,39 @@ definitions:
       height:
         type: integer
       state:
+        type: string
+    type: object
+  merkleroots.MerkleRootConfirmation:
+    properties:
+      blockhash:
+        type: string
+      confirmed:
+        type: boolean
+      merkleRoot:
+        type: string
+    type: object
+  merkleroots.MerkleRootsConfirmationsResponse:
+    properties:
+      allConfirmed:
+        type: boolean
+      confirmations:
+        items:
+          $ref: '#/definitions/merkleroots.MerkleRootConfirmation'
+        type: array
+    type: object
+  notification.Webhook:
+    properties:
+      active:
+        type: boolean
+      createdAt:
+        type: string
+      errorsCount:
+        type: integer
+      lastEmitStatus:
+        type: string
+      lastEmitTimestamp:
+        type: string
+      url:
         type: string
     type: object
   tips.tipResponse:
@@ -314,6 +332,33 @@ paths:
       summary: Gets header state
       tags:
       - headers
+  /chain/merkleroot/verify:
+    post:
+      consumes:
+      - '*/*'
+      parameters:
+      - description: JSON
+        in: body
+        name: merkleroots
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/merkleroots.MerkleRootsConfirmationsResponse'
+            type: array
+      security:
+      - Bearer: []
+      summary: Verifies Merkle roots inclusion in the longest chain
+      tags:
+      - merkleroots
   /chain/tip:
     get:
       consumes:
@@ -437,7 +482,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/domains.Webhook'
+            $ref: '#/definitions/notification.Webhook'
       security:
       - Bearer: []
       summary: Get webhook
@@ -459,7 +504,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/domains.Webhook'
+            $ref: '#/definitions/notification.Webhook'
       security:
       - Bearer: []
       summary: Register new webhook

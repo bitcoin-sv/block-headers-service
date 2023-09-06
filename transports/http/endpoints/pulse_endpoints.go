@@ -8,6 +8,7 @@ import (
 	"github.com/libsv/bitcoin-hc/transports/http/auth"
 	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/access"
 	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/headers"
+	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/merkleroots"
 	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/network"
 	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/tips"
 	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/webhook"
@@ -31,6 +32,7 @@ func SetupPulseRoutes(s *service.Services) httpserver.GinEngineOpt {
 		network.NewHandler(s),
 		tips.NewHandler(s),
 		webhook.NewHandler(s),
+		merkleroots.NewHandler(s),
 	}
 
 	apiMiddlewares := toHandlers(auth.NewMiddleware(s))

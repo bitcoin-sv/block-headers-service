@@ -42,7 +42,7 @@ func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup) {
 //	@Tags webhooks
 //	@Accept json
 //	@Produce json
-//	@Success 200 {object} domains.Webhook
+//	@Success 200 {object} notification.Webhook
 //	@Router /webhook [post]
 //	@Param data body webhook.WebhookRequest true "Webhook to register"
 //
@@ -75,7 +75,7 @@ func (h *handler) registerWebhook(c *gin.Context) {
 //	@Tags webhooks
 //	@Accept */*
 //	@Produce json
-//	@Success 200 {object} domains.Webhook
+//	@Success 200 {object} notification.Webhook
 //	@Router /webhook [get]
 //	@Param url query string true "Url of webhook to check"
 //

@@ -31,7 +31,7 @@ type ServicesOpt func(*service.Services)
 type ConfigOpt func(*vconfig.Config)
 
 // RepoOpt represents functions to configure test repositories.
-type RepoOpt func(*repository.Repositories)
+type RepoOpt func(*testrepository.TestRepositories)
 
 // Cleanup represents function that is used to clean up TestPulse app.
 type Cleanup func()
@@ -97,7 +97,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	}
 
 	hs := service.NewServices(service.Dept{
-		Repositories:  &repo,
+		Repositories:  repo.ToDomainRepo(),
 		Peers:         nil,
 		Params:        configs.ActiveNetParams.Params,
 		AdminToken:    viper.GetString(vconfig.EnvHttpServerAuthToken),
@@ -143,7 +143,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 		lf:           lf,
 		config:       conf,
 		services:     hs,
-		repositories: &repo,
+		repositories: repo.ToDomainRepo(),
 		ws:           ws,
 		engine:       engine,
 		port:         port,

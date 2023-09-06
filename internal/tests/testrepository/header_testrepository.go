@@ -5,6 +5,7 @@ import (
 
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
+	"github.com/libsv/bitcoin-hc/internal/tests/fixtures"
 )
 
 // HeaderTestRepository in memory HeadersRepository representation for unit testing.
@@ -184,6 +185,39 @@ func (r *HeaderTestRepository) GetChainBetweenTwoHashes(low string, high string)
 		return nil, err
 	}
 	return headers, nil
+}
+
+// GetMerkleRootsConfirmations returns a confirmation of merkle roots inclusion
+// in the longest chain with hash of the block in which the merkle root is included.
+func (r *HeaderTestRepository) GetMerkleRootsConfirmations(
+	merkleroots []string,
+) ([]*domains.MerkleRootConfirmation, error) {
+	mrcfs := make([]*domains.MerkleRootConfirmation, 0)
+
+	for _, mr := range merkleroots {
+		hash := ""
+		for _, h := range *r.db {
+			if h.MerkleRoot.String() == mr {
+				hash = h.Hash.String()
+				break
+			}
+		}
+		mrcfs = append(mrcfs, &domains.MerkleRootConfirmation{
+			MerkleRoot: mr,
+			Hash:       hash,
+			Confirmed:  hash != "",
+		})
+	}
+
+	return mrcfs, nil
+}
+
+// FillWithLongestChain fills the test header repository 
+// with 4 additional blocks to create a longest chain.
+func (r *HeaderTestRepository) FillWithLongestChain() {
+	db, _ := fixtures.AddLongestChain(*r.db)
+	var filledDb []domains.BlockHeader = db
+	r.db = &filledDb
 }
 
 func contains(hashes []string, hash string) bool {
