@@ -2,13 +2,15 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package configs
+package p2pconfig
 
 import (
 	"math"
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
 )
 
 const (
@@ -78,6 +80,7 @@ type medianTime struct {
 	offsets            []int64
 	offsetSecs         int64
 	invalidTimeChecked bool
+	logger             p2plog.Logger
 }
 
 // Ensure the medianTime type implements the MedianTimeSource interface.
@@ -132,7 +135,7 @@ func (m *medianTime) AddTimeSample(sourceID string, timeVal time.Time) {
 	sort.Sort(int64Sorter(sortedOffsets))
 
 	offsetDuration := time.Duration(offsetSecs) * time.Second
-	Cfg.Logger.Infof("Added time sample of %v (total: %v)", offsetDuration,
+	m.logger.Infof("Added time sample of %v (total: %v)", offsetDuration,
 		numOffsets)
 
 	// NOTE: The following code intentionally has a bug to mirror the
@@ -180,15 +183,12 @@ func (m *medianTime) AddTimeSample(sourceID string, timeVal time.Time) {
 
 			// Warn if none of the time samples are close.
 			if !remoteHasCloseTime {
-				Cfg.Logger.Warnf("Please check your date and time " +
+				m.logger.Warnf("Please check your date and time " +
 					"are correct!  bsvd will not work " +
 					"properly with an invalid time")
 			}
 		}
 	}
-
-	medianDuration := time.Duration(m.offsetSecs) * time.Second
-	Cfg.Logger.Debugf("New time offset: %v", medianDuration)
 }
 
 // Offset returns the number of seconds to adjust the local clock based upon the
@@ -208,9 +208,10 @@ func (m *medianTime) Offset() time.Duration {
 // rules necessary for proper time handling in the chain consensus rules and
 // expects the time samples to be added from the timestamp field of the version
 // message received from remote peers that successfully connect and negotiate.
-func NewMedianTime() MedianTimeSource {
+func NewMedianTime(logger p2plog.Logger) MedianTimeSource {
 	return &medianTime{
 		knownIDs: make(map[string]struct{}),
 		offsets:  make([]int64, 0, maxMedianTimeEntries),
+		logger:   logger,
 	}
 }

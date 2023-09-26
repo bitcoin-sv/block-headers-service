@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path"
+	"runtime"
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/libsv/bitcoin-hc/configs"
 	"github.com/libsv/bitcoin-hc/domains/logging"
 	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
 	"github.com/libsv/bitcoin-hc/internal/tests/testrepository"
@@ -19,6 +20,7 @@ import (
 	httpserver "github.com/libsv/bitcoin-hc/transports/http/server"
 	"github.com/libsv/bitcoin-hc/transports/websocket"
 	"github.com/libsv/bitcoin-hc/vconfig"
+	"github.com/libsv/bitcoin-hc/vconfig/p2pconfig"
 	"github.com/spf13/viper"
 )
 
@@ -66,19 +68,18 @@ func (p *TestPulse) When() *When {
 
 // NewTestPulse Start pulse for testing reason.
 func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
-	viper.Reset()
-	conf := vconfig.NewViperConfig("test-pulse")
-	lf := testlog.NewTestLoggerFactory()
-
 	//override arguments otherwise all flags provided to go test command will be parsed by LoadConfig
 	os.Args = []string{""}
 
-	// Load configuration and parse command line.  This function also
-	// initializes logging and configures it accordingly.
-	err := configs.LoadConfig()
+	os.Args = []string{"test-pulse", "--configfile", getConfigPath(t)}
+	flagCfg, err := p2pconfig.ParseFlags("")
 	if err != nil {
-		t.Fatalf("failed to load config: %v\n", err)
+		t.Fatalf("failed to parse flag config: %v\n", err)
 	}
+
+	viper.Reset()
+	conf := vconfig.NewViperConfig("test-pulse", flagCfg)
+	lf := testlog.NewTestLoggerFactory()
 
 	for _, opt := range ops {
 		switch opt := opt.(type) {
@@ -99,9 +100,10 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	hs := service.NewServices(service.Dept{
 		Repositories:  repo.ToDomainRepo(),
 		Peers:         nil,
-		Params:        configs.ActiveNetParams.Params,
+		Params:        p2pconfig.ActiveNetParams.Params,
 		AdminToken:    viper.GetString(vconfig.EnvHttpServerAuthToken),
 		LoggerFactory: lf,
+		P2PConfig:     conf.P2PConfig,
 	})
 
 	for _, opt := range ops {
@@ -114,7 +116,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	port := viper.GetInt(vconfig.EnvHttpServerPort)
 	urlPrefix := viper.GetString(vconfig.EnvHttpServerUrlPrefix)
 	gin.SetMode(gin.TestMode)
-	server := httpserver.NewHttpServer(port)
+	server := httpserver.NewHttpServer(port, lf)
 	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs))
 	engine := hijackEngine(server)
 
@@ -169,4 +171,22 @@ func hijackEngine(server *httpserver.HttpServer) *gin.Engine {
 		engine = e
 	})
 	return engine
+}
+
+func getConfigPath(t *testing.T) string {
+	_, filename, _, _ := runtime.Caller(0) //nolint:dogsled
+	callerDir := path.Dir(filename)
+
+	// Go up one package
+	pathPrefix := "../../../"
+
+	if runtime.GOOS == "windows" { 
+		pathPrefix = "../../../../"
+	}
+
+	dir, err := os.Open(path.Join(callerDir, pathPrefix)) //nolint:gosec
+	if err != nil {
+		t.Fatalf("config file is not found: %v\n", err)
+	}
+	return path.Join(dir.Name(), p2pconfig.Defaultp2pConfigPath)
 }

@@ -11,6 +11,7 @@ import (
 	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
 	"github.com/libsv/bitcoin-hc/internal/tests/testrepository"
 	"github.com/libsv/bitcoin-hc/repository"
+	"github.com/libsv/bitcoin-hc/vconfig/p2pconfig"
 )
 
 type testData struct {
@@ -315,11 +316,13 @@ func setUpServices() *testData {
 	repo := &repository.Repositories{
 		Headers: testrepository.NewHeadersTestRepository(&array),
 	}
+	p2pCfg := p2pconfig.DefaultP2PConfig("")
 
 	hs := NewServices(Dept{
 		Repositories:  repo,
 		Peers:         nil,
 		LoggerFactory: testlog.NewTestLoggerFactory(),
+		P2PConfig:     &p2pCfg,
 	})
 
 	return &testData{

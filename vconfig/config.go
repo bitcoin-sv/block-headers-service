@@ -1,5 +1,9 @@
 package vconfig
 
+import (
+	"github.com/libsv/bitcoin-hc/vconfig/p2pconfig"
+)
+
 // Define basic db config.
 const (
 	// EnvDb db type e.g. sqlite.
@@ -49,6 +53,27 @@ const (
 	EnvWebsocketHistoryTtl = "websocket.history.ttl"
 )
 
+const (
+	// EnvP2PLogLevel p2p Logging level.
+	EnvP2PLogLevel = "p2p_loglevel"
+	// EnvP2PMaxPeers Max number of inbound and outbound peers.
+	EnvP2PMaxPeers = "p2p_maxPeers"
+	// EnvP2PMaxPeersPerIP Max number of inbound and outbound peers per IP.
+	EnvP2PMaxPeersPerIP = "p2p_maxPeersPerIP"
+	// EnvP2PMinSyncPeerNetworkSpeed Min Sync Speed.
+	EnvP2PMinSyncPeerNetworkSpeed = "p2p_minSyncPeerNetworkSpeed"
+	// EnvP2PBanDuration How long misbehaving peers should be banned for.
+	EnvP2PBanDuration = "p2p_banduration"
+	// EnvP2PLogDir Directory to log output.
+	EnvP2PLogDir = "p2p_logdir"
+	// EnvP2PExcessiveBlockSize The maximum size block (in bytes) this node will accept. Cannot be less than 32000000.
+	EnvP2PExcessiveBlockSize = "p2p_excessiveBlockSize"
+	// EnvP2PTrickleInterval Minimum time between attempts to send new inventory to a connected peer.
+	EnvP2PTrickleInterval = "p2p_trickleInterval"
+	// EnvP2PBlocksForForkConfirmation Minimum number of blocks to consider a block confirmed.
+	EnvP2PBlocksForForkConfirmation = "p2p_blocksforconfirmation"
+)
+
 // DbType database type.
 type DbType string
 
@@ -57,7 +82,8 @@ const DBSqlite DbType = "sqlite"
 
 // Config returns strongly typed config values.
 type Config struct {
-	Db *Db
+	Db        *Db
+	P2PConfig *p2pconfig.Config
 }
 
 // Db represents a database connection.
