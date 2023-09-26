@@ -1,0 +1,32 @@
+p2p_logdir:
+p2p_addpeer:
+p2p_connect:
+p2p_nolisten: true
+p2p_listen:
+p2p_maxpeers: 125
+p2p_maxpeersperip: 5
+p2p_banduration:
+p2p_minsyncpeernetworkspeed: 51200
+p2p_nodnsseed:
+p2p_externalip:
+p2p_proxy:
+p2p_proxyuser:
+p2p_proxypass:
+p2p_onion:
+p2p_onionuser:
+p2p_onionpass:
+p2p_noonion:
+p2p_torisolation:
+p2p_testnet:
+p2p_regtest:
+p2p_simnet:
+p2p_addcheckpoint:
+p2p_nocheckpoints:
+p2p_loglevel:
+p2p_upnp:
+p2p_excessiveblocksize: 128000000
+p2p_trickleinterval:
+p2p_uacomment:
+p2p_nocfilters:
+p2p_targetoutboundpeers:
+p2p_blocksforconfirmation: 10

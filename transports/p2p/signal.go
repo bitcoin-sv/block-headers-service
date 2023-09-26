@@ -8,7 +8,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/libsv/bitcoin-hc/configs"
+	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
 )
 
 // shutdownRequestChannel is used to initiate shutdown from one of the
@@ -22,7 +22,7 @@ var interruptSignals = []os.Signal{os.Interrupt}
 // interruptListener listens for OS Signals such as SIGINT (Ctrl+C) and shutdown
 // requests from shutdownRequestChannel.  It returns a channel that is closed
 // when either signal is received.
-func interruptListener() <-chan struct{} {
+func interruptListener(log p2plog.Logger) <-chan struct{} {
 	c := make(chan struct{})
 	go func() {
 		interruptChannel := make(chan os.Signal, 1)
@@ -32,11 +32,11 @@ func interruptListener() <-chan struct{} {
 		// channel to notify the caller.
 		select {
 		case sig := <-interruptChannel:
-			configs.Log.Infof("Received signal (%s).  Shutting down...",
+			log.Infof("Received signal (%s).  Shutting down...",
 				sig)
 
 		case <-shutdownRequestChannel:
-			configs.Log.Info("Shutdown requested.  Shutting down...")
+			log.Info("Shutdown requested.  Shutting down...")
 		}
 		close(c)
 
@@ -46,11 +46,11 @@ func interruptListener() <-chan struct{} {
 		for {
 			select {
 			case sig := <-interruptChannel:
-				configs.Log.Infof("Received signal (%s).  Already "+
+				log.Infof("Received signal (%s).  Already "+
 					"shutting down...", sig)
 
 			case <-shutdownRequestChannel:
-				configs.Log.Info("Shutdown requested.  Already " +
+				log.Info("Shutdown requested.  Already " +
 					"shutting down...")
 			}
 		}

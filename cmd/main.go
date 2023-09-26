@@ -25,8 +25,6 @@ import (
 	"github.com/ulikunitz/xz"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/libsv/bitcoin-hc/configs"
-	"github.com/libsv/bitcoin-hc/configs/limits"
 	"github.com/libsv/bitcoin-hc/data/sql"
 	"github.com/libsv/bitcoin-hc/internal/wire"
 	"github.com/libsv/bitcoin-hc/repository"
@@ -36,6 +34,8 @@ import (
 	peerpkg "github.com/libsv/bitcoin-hc/transports/p2p/peer"
 	"github.com/libsv/bitcoin-hc/vconfig"
 	"github.com/libsv/bitcoin-hc/vconfig/databases"
+	"github.com/libsv/bitcoin-hc/vconfig/p2pconfig"
+	"github.com/libsv/bitcoin-hc/vconfig/p2pconfig/limits"
 	"github.com/libsv/bitcoin-hc/version"
 	"github.com/spf13/viper"
 )
@@ -49,7 +49,14 @@ const appname = "headers"
 func main() {
 	lf := logger.DefaultLoggerFactory()
 	log := lf.NewLogger("main")
-	c := vconfig.NewViperConfig(appname).
+
+	flagCfg, err := p2pconfig.ParseFlags("")
+	if err != nil {
+		log.Criticalf("failed to parse config from flags: %v\n", err)
+		os.Exit(1)
+	}
+
+	c := vconfig.NewViperConfig(appname, flagCfg).
 		WithDb().
 		WithAuthorization()
 
@@ -83,40 +90,33 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Load configuration and parse command line.  This function also
-	// initializes logger and configures it accordingly.
-	err := configs.LoadConfig()
-	if err != nil {
-		log.Criticalf("failed to load config: %v\n", err)
-		os.Exit(1)
-	}
-
-	logger.SetLevelFromString(lf, configs.Cfg.DebugLevel)
-	logger.SetLevelFromString(log, configs.Cfg.DebugLevel)
+	logger.SetLevelFromString(lf, c.P2PConfig.LogLevel)
+	logger.SetLevelFromString(log, c.P2PConfig.LogLevel)
 
 	// Do required one-time initialization on wire
-	wire.SetLimits(configs.Cfg.ExcessiveBlockSize)
+	wire.SetLimits(c.P2PConfig.ExcessiveBlockSize)
 
 	// Show version at startup.
 	log.Infof("Version %s", version.String())
 
 	peers := make(map[*peerpkg.Peer]*peerpkg.PeerSyncState)
-	headersStore := sql.NewHeadersDb(db, c.Db.Type)
+	headersStore := sql.NewHeadersDb(db, c.Db.Type, lf)
 	repo := repository.NewRepositories(headersStore)
 	hs := service.NewServices(service.Dept{
 		Repositories:  repo,
 		Peers:         peers,
-		Params:        configs.ActiveNetParams.Params,
+		Params:        p2pconfig.ActiveNetParams.Params,
 		AdminToken:    viper.GetString(vconfig.EnvHttpServerAuthToken),
 		LoggerFactory: lf,
+		P2PConfig:     c.P2PConfig,
 	})
-	p2pServer, err := p2p.NewServer(hs, peers)
+	p2pServer, err := p2p.NewServer(hs, peers, c.P2PConfig)
 	if err != nil {
 		log.Errorf("failed to init a new p2p server: %v\n", err)
 		os.Exit(1)
 	}
 
-	server := httpserver.NewHttpServer(viper.GetInt(vconfig.EnvHttpServerPort))
+	server := httpserver.NewHttpServer(viper.GetInt(vconfig.EnvHttpServerPort), lf)
 	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs))
 
 	ws, err := websocket.NewServer(lf, hs, viper.GetBool(vconfig.EnvHttpServerUseAuth))
@@ -131,19 +131,19 @@ func main() {
 
 	go func() {
 		if err := server.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			configs.Log.Errorf("cannot start server because of an error: %v", err)
+			log.Errorf("cannot start server because of an error: %v", err)
 			os.Exit(1)
 		}
 	}()
 
 	if err := ws.Start(); err != nil {
-		configs.Log.Errorf("cannot start websocket server because of an error: %v", err)
+		log.Errorf("cannot start websocket server because of an error: %v", err)
 		os.Exit(1)
 	}
 
 	go func() {
 		if err := p2pServer.Start(); err != nil {
-			configs.Log.Errorf("cannot start p2p server because of an error: %v", err)
+			log.Errorf("cannot start p2p server because of an error: %v", err)
 			os.Exit(1)
 		}
 	}()
@@ -154,15 +154,15 @@ func main() {
 	<-quit
 
 	if err := p2pServer.Shutdown(); err != nil {
-		configs.Log.Errorf("failed to stop p2p server: %v", err)
+		log.Errorf("failed to stop p2p server: %v", err)
 	}
 
 	if err := ws.Shutdown(); err != nil {
-		configs.Log.Errorf("failed to stop websocket server: %v", err)
+		log.Errorf("failed to stop websocket server: %v", err)
 	}
 
 	if err := server.Shutdown(); err != nil {
-		configs.Log.Errorf("failed to stop http server: %v", err)
+		log.Errorf("failed to stop http server: %v", err)
 	}
 }
 

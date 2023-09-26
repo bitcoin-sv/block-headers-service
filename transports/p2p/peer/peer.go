@@ -21,12 +21,12 @@ import (
 
 	"github.com/btcsuite/go-socks/socks"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/libsv/bitcoin-hc/configs"
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/wire"
 	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
+	"github.com/libsv/bitcoin-hc/vconfig/p2pconfig"
 )
 
 const (
@@ -2113,7 +2113,7 @@ func newPeerBase(origCfg *Config, inbound bool) *Peer {
 
 	// Set the trickle interval if a non-positive value is specified.
 	if cfg.TrickleInterval <= 0 {
-		cfg.TrickleInterval = configs.DefaultTrickleInterval
+		cfg.TrickleInterval = p2pconfig.DefaultTrickleInterval
 	}
 
 	p := Peer{

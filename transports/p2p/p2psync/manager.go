@@ -14,7 +14,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/libsv/bitcoin-hc/configs"
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
@@ -154,6 +153,7 @@ type SyncManager struct {
 	headersFirstMode bool
 	startHeader      *domains.BlockHeader
 	nextCheckpoint   *chaincfg.Checkpoint
+	checkpoints 	 []chaincfg.Checkpoint
 
 	// minSyncPeerNetworkSpeed is the minimum speed allowed for
 	// a sync peer.
@@ -169,7 +169,7 @@ type SyncManager struct {
 // checkpoints.
 // TODO: set next headers checkpoint.
 func (sm *SyncManager) findNextHeaderCheckpoint(height int32) *chaincfg.Checkpoint {
-	checkpoints := configs.Cfg.Checkpoints
+	checkpoints := sm.checkpoints
 
 	sm.log.Infof("[Headers] findNextHeaderCheckpoint count: %d, height: %d", len(checkpoints), height)
 
@@ -887,6 +887,7 @@ func New(config *Config, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState) (*SyncM
 		minSyncPeerNetworkSpeed: config.MinSyncPeerNetworkSpeed,
 		blocksToConfirmFork:     config.BlocksForForkConfirmation,
 		Services:                config.Services,
+		checkpoints: 			 config.Checkpoints,
 	}
 
 	if !config.DisableCheckpoints {
