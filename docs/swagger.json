@@ -146,7 +146,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/domains.BlockHeader"
+                                "$ref": "#/definitions/headers.BlockHeaderResponse"
                             }
                         }
                     }
@@ -188,7 +188,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domains.BlockHeader"
+                            "$ref": "#/definitions/headers.BlockHeaderResponse"
                         }
                     }
                 }
@@ -224,7 +224,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/headers.blockHeaderStateResponse"
+                            "$ref": "#/definitions/headers.BlockHeaderStateResponse"
                         }
                     }
                 }
@@ -260,13 +260,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domains.BlockHeader"
+                            "$ref": "#/definitions/headers.BlockHeaderResponse"
                         }
                     }
                 }
             }
         },
-        "/chain/header/{hash}/{ancestorHash}/ancestors": {
+        "/chain/header/{hash}/{ancestorHash}/ancestor": {
             "get": {
                 "security": [
                     {
@@ -305,7 +305,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/domains.BlockHeader"
+                                "$ref": "#/definitions/headers.BlockHeaderResponse"
                             }
                         }
                     }
@@ -372,18 +372,24 @@
                 "tags": [
                     "tip"
                 ],
-                "summary": "Gets tip of longest chain",
+                "summary": "Gets all tips",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/tips.tipStateResponse"
+                            "type": "array",
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/tips.TipStateResponse"
+                                }
+                            }
                         }
                     }
                 }
             }
         },
-        "/chain/tips": {
+        "/chain/tip/longest": {
             "get": {
                 "security": [
                     {
@@ -399,24 +405,18 @@
                 "tags": [
                     "tip"
                 ],
-                "summary": "Gets all tips",
+                "summary": "Gets tip of longest chain",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "#/definitions/tips.tipStateResponse"
-                                }
-                            }
+                            "$ref": "#/definitions/tips.TipStateResponse"
                         }
                     }
                 }
             }
         },
-        "/chain/tips/prune/{hash}": {
+        "/chain/tip/prune/{hash}": {
             "get": {
                 "security": [
                     {
@@ -452,7 +452,7 @@
                 }
             }
         },
-        "/network/peers": {
+        "/network/peer": {
             "get": {
                 "security": [
                     {
@@ -476,7 +476,7 @@
                 }
             }
         },
-        "/network/peers/count": {
+        "/network/peer/count": {
             "get": {
                 "security": [
                     {
@@ -608,41 +608,6 @@
         }
     },
     "definitions": {
-        "domains.BlockHeader": {
-            "type": "object",
-            "properties": {
-                "creationTimestamp": {
-                    "type": "string"
-                },
-                "hash": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "merkleRoot": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "nonce": {
-                    "type": "integer"
-                },
-                "prevBlockHash": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "version": {
-                    "type": "integer"
-                },
-                "work": {
-                    "type": "string"
-                }
-            }
-        },
         "domains.Token": {
             "type": "object",
             "properties": {
@@ -657,7 +622,7 @@
                 }
             }
         },
-        "headers.blockHeaderResponse": {
+        "headers.BlockHeaderResponse": {
             "type": "object",
             "properties": {
                 "creationTimestamp": {
@@ -686,14 +651,14 @@
                 }
             }
         },
-        "headers.blockHeaderStateResponse": {
+        "headers.BlockHeaderStateResponse": {
             "type": "object",
             "properties": {
                 "chainWork": {
                     "type": "string"
                 },
                 "header": {
-                    "$ref": "#/definitions/headers.blockHeaderResponse"
+                    "$ref": "#/definitions/headers.BlockHeaderResponse"
                 },
                 "height": {
                     "type": "integer"
@@ -754,7 +719,7 @@
                 }
             }
         },
-        "tips.tipResponse": {
+        "tips.TipResponse": {
             "type": "object",
             "properties": {
                 "creationTimestamp": {
@@ -783,14 +748,14 @@
                 }
             }
         },
-        "tips.tipStateResponse": {
+        "tips.TipStateResponse": {
             "type": "object",
             "properties": {
                 "chainWork": {
                     "type": "string"
                 },
                 "header": {
-                    "$ref": "#/definitions/tips.tipResponse"
+                    "$ref": "#/definitions/tips.TipResponse"
                 },
                 "height": {
                     "type": "integer"

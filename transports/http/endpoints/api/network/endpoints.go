@@ -3,10 +3,10 @@ package network
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/libsv/bitcoin-hc/service"
 	router "github.com/libsv/bitcoin-hc/transports/http/endpoints/routes"
-
-	"github.com/gin-gonic/gin"
 )
 
 type handler struct {
@@ -22,8 +22,8 @@ func NewHandler(s *service.Services) router.ApiEndpoints {
 func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup) {
 	network := router.Group("/network")
 	{
-		network.GET("/peers", h.getPeers)
-		network.GET("/peers/count", h.getPeersCount)
+		network.GET("/peer", h.getPeers)
+		network.GET("/peer/count", h.getPeersCount)
 	}
 }
 
@@ -34,7 +34,7 @@ func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup) {
 //	@Accept */*
 //	@Produce json
 //	@Success 200
-//	@Router /network/peers [get]
+//	@Router /network/peer [get]
 //	@Security Bearer
 func (h *handler) getPeers(c *gin.Context) {
 	peers := h.service.GetPeers()
@@ -48,7 +48,7 @@ func (h *handler) getPeers(c *gin.Context) {
 //	@Accept */*
 //	@Produce json
 //	@Success 200 {object} int
-//	@Router /network/peers/count [get]
+//	@Router /network/peer/count [get]
 //	@Security Bearer
 func (h *handler) getPeersCount(c *gin.Context) {
 	count := h.service.GetPeersCount()

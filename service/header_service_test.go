@@ -209,7 +209,7 @@ func TestGetCommonAncestor(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		header, err := tData.hs.Headers.GetCommonAncestors(tt.hashes)
+		header, err := tData.hs.Headers.GetCommonAncestor(tt.hashes)
 
 		assert.Equal(t, err != nil, tt.expectedError)
 		if header != nil {

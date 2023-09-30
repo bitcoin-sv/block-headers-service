@@ -1,27 +1,4 @@
 definitions:
-  domains.BlockHeader:
-    properties:
-      creationTimestamp:
-        type: string
-      hash:
-        items:
-          type: integer
-        type: array
-      merkleRoot:
-        items:
-          type: integer
-        type: array
-      nonce:
-        type: integer
-      prevBlockHash:
-        items:
-          type: integer
-        type: array
-      version:
-        type: integer
-      work:
-        type: string
-    type: object
   domains.Token:
     properties:
       createdAt:
@@ -31,7 +8,7 @@ definitions:
       token:
         type: string
     type: object
-  headers.blockHeaderResponse:
+  headers.BlockHeaderResponse:
     properties:
       creationTimestamp:
         type: integer
@@ -50,12 +27,12 @@ definitions:
       work:
         type: string
     type: object
-  headers.blockHeaderStateResponse:
+  headers.BlockHeaderStateResponse:
     properties:
       chainWork:
         type: string
       header:
-        $ref: '#/definitions/headers.blockHeaderResponse'
+        $ref: '#/definitions/headers.BlockHeaderResponse'
       height:
         type: integer
       state:
@@ -94,7 +71,7 @@ definitions:
       url:
         type: string
     type: object
-  tips.tipResponse:
+  tips.TipResponse:
     properties:
       creationTimestamp:
         type: integer
@@ -113,12 +90,12 @@ definitions:
       work:
         type: string
     type: object
-  tips.tipStateResponse:
+  tips.TipStateResponse:
     properties:
       chainWork:
         type: string
       header:
-        $ref: '#/definitions/tips.tipResponse'
+        $ref: '#/definitions/tips.TipResponse'
       height:
         type: integer
       state:
@@ -222,13 +199,13 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/domains.BlockHeader'
+            $ref: '#/definitions/headers.BlockHeaderResponse'
       security:
       - Bearer: []
       summary: Gets header by hash
       tags:
       - headers
-  /chain/header/{hash}/{ancestorHash}/ancestors:
+  /chain/header/{hash}/{ancestorHash}/ancestor:
     get:
       consumes:
       - '*/*'
@@ -250,7 +227,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/domains.BlockHeader'
+              $ref: '#/definitions/headers.BlockHeaderResponse'
             type: array
       security:
       - Bearer: []
@@ -278,7 +255,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/domains.BlockHeader'
+              $ref: '#/definitions/headers.BlockHeaderResponse'
             type: array
       security:
       - Bearer: []
@@ -304,7 +281,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/domains.BlockHeader'
+            $ref: '#/definitions/headers.BlockHeaderResponse'
       security:
       - Bearer: []
       summary: Gets common ancestors
@@ -326,7 +303,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/headers.blockHeaderStateResponse'
+            $ref: '#/definitions/headers.BlockHeaderStateResponse'
       security:
       - Bearer: []
       summary: Gets header state
@@ -369,13 +346,17 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/tips.tipStateResponse'
+            items:
+              items:
+                $ref: '#/definitions/tips.TipStateResponse'
+              type: array
+            type: array
       security:
       - Bearer: []
-      summary: Gets tip of longest chain
+      summary: Gets all tips
       tags:
       - tip
-  /chain/tips:
+  /chain/tip/longest:
     get:
       consumes:
       - '*/*'
@@ -385,17 +366,13 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              items:
-                $ref: '#/definitions/tips.tipStateResponse'
-              type: array
-            type: array
+            $ref: '#/definitions/tips.TipStateResponse'
       security:
       - Bearer: []
-      summary: Gets all tips
+      summary: Gets tip of longest chain
       tags:
       - tip
-  /chain/tips/prune/{hash}:
+  /chain/tip/prune/{hash}:
     get:
       consumes:
       - '*/*'
@@ -417,7 +394,7 @@ paths:
       summary: Prune tip
       tags:
       - tip
-  /network/peers:
+  /network/peer:
     get:
       consumes:
       - '*/*'
@@ -431,7 +408,7 @@ paths:
       summary: Gets all peers
       tags:
       - network
-  /network/peers/count:
+  /network/peer/count:
     get:
       consumes:
       - '*/*'

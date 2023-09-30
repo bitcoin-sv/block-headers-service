@@ -6,8 +6,8 @@ import (
 	"github.com/libsv/bitcoin-hc/domains"
 )
 
-// blockHeaderResponse defines a single block header.
-type blockHeaderResponse struct {
+// BlockHeaderResponse defines a single block header.
+type BlockHeaderResponse struct {
 	Hash             string   `json:"hash"`
 	Version          int32    `json:"version"`
 	PreviousBlock    string   `json:"prevBlockHash"`
@@ -18,18 +18,18 @@ type blockHeaderResponse struct {
 	Work             *big.Int `json:"work" swaggertype:"string"`
 }
 
-// blockHeaderStateResponse is an extended version of the blockHeaderResponse
+// BlockHeaderStateResponse is an extended version of the BlockHeaderResponse
 // that has more important information.
-type blockHeaderStateResponse struct {
-	Header    blockHeaderResponse `json:"header"`
+type BlockHeaderStateResponse struct {
+	Header    BlockHeaderResponse `json:"header"`
 	State     string              `json:"state"`
 	ChainWork *big.Int            `json:"chainWork"  swaggertype:"string"`
 	Height    int32               `json:"height"`
 }
 
-// newBlockHeaderResponse maps a domain BlockHeader to a transport blockHeaderResponse.
-func newBlockHeaderResponse(header *domains.BlockHeader) blockHeaderResponse {
-	return blockHeaderResponse{
+// newBlockHeaderResponse maps a domain BlockHeader to a transport BlockHeaderResponse.
+func newBlockHeaderResponse(header *domains.BlockHeader) BlockHeaderResponse {
+	return BlockHeaderResponse{
 		Hash:             header.Hash.String(),
 		Version:          header.Version,
 		PreviousBlock:    header.PreviousBlock.String(),
@@ -41,9 +41,9 @@ func newBlockHeaderResponse(header *domains.BlockHeader) blockHeaderResponse {
 	}
 }
 
-// mapToBlockHeadersResponses maps a slice of domain BlockHeader to a slice of transport blockHeaderResponse.
-func mapToBlockHeadersResponses(headers []*domains.BlockHeader) []blockHeaderResponse {
-	blockHeadersResponse := make([]blockHeaderResponse, 0)
+// mapToBlockHeadersResponses maps a slice of domain BlockHeader to a slice of transport BlockHeaderResponse.
+func mapToBlockHeadersResponses(headers []*domains.BlockHeader) []BlockHeaderResponse {
+	blockHeadersResponse := make([]BlockHeaderResponse, 0)
 
 	for _, header := range headers {
 		blockHeadersResponse = append(blockHeadersResponse, newBlockHeaderResponse(header))
@@ -52,9 +52,9 @@ func mapToBlockHeadersResponses(headers []*domains.BlockHeader) []blockHeaderRes
 	return blockHeadersResponse
 }
 
-// newBlockHeaderStateResponse maps a domain BlockHeader to a transport blockHeaderStateResponse.
-func newBlockHeaderStateResponse(header *domains.BlockHeader) blockHeaderStateResponse {
-	return blockHeaderStateResponse{
+// newBlockHeaderStateResponse maps a domain BlockHeader to a transport BlockHeaderStateResponse.
+func newBlockHeaderStateResponse(header *domains.BlockHeader) BlockHeaderStateResponse {
+	return BlockHeaderStateResponse{
 		Header:    newBlockHeaderResponse(header),
 		State:     header.State.String(),
 		ChainWork: header.CumulatedWork,

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/libsv/bitcoin-hc/service"
 	router "github.com/libsv/bitcoin-hc/transports/http/endpoints/routes"
-
-	"github.com/gin-gonic/gin"
 )
 
 type handler struct {
@@ -23,9 +23,9 @@ func NewHandler(s *service.Services) router.ApiEndpoints {
 func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup) {
 	tip := router.Group("/chain")
 	{
-		tip.GET("/tip", h.getTip)
-		tip.GET("/tips", h.getTips)
-		tip.GET("/tips/prune/:hash", h.pruneTip)
+		tip.GET("/tip", h.getTips)
+		tip.GET("/tip/longest", h.getTipLongestChain)
+		tip.GET("/tip/prune/:hash", h.pruneTip)
 	}
 }
 
@@ -35,8 +35,8 @@ func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup) {
 //	@Tags tip
 //	@Accept */*
 //	@Produce json
-//	@Success 200 {array} []tips.tipStateResponse
-//	@Router /chain/tips [get]
+//	@Success 200 {array} []TipStateResponse
+//	@Router /chain/tip [get]
 //	@Security Bearer
 func (h *handler) getTips(c *gin.Context) {
 	tips, err := h.service.GetTips()
@@ -54,10 +54,10 @@ func (h *handler) getTips(c *gin.Context) {
 //	@Tags tip
 //	@Accept */*
 //	@Produce json
-//	@Success 200 {object} tips.tipStateResponse
-//	@Router /chain/tip [get]
+//	@Success 200 {object} TipStateResponse
+//	@Router /chain/tip/longest [get]
 //	@Security Bearer
-func (h *handler) getTip(c *gin.Context) {
+func (h *handler) getTipLongestChain(c *gin.Context) {
 	tip := h.service.GetTip()
 	c.JSON(http.StatusOK, newTipStateResponse(tip))
 }
@@ -69,7 +69,7 @@ func (h *handler) getTip(c *gin.Context) {
 //	@Accept */*
 //	@Produce json
 //	@Success 200 {object} string
-//	@Router /chain/tips/prune/{hash} [get]
+//	@Router /chain/tip/prune/{hash} [get]
 //	@Param hash path string true "Requested Header Hash"
 //	@Security Bearer
 func (h *handler) pruneTip(c *gin.Context) {

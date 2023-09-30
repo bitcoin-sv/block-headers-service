@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/libsv/bitcoin-hc/service"
 	router "github.com/libsv/bitcoin-hc/transports/http/endpoints/routes"
-
-	"github.com/gin-gonic/gin"
 )
 
 type handler struct {
@@ -25,8 +25,8 @@ func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup) {
 	{
 		headers.GET("/:hash", h.getHeaderByHash)
 		headers.GET("/byHeight", h.getHeaderByHeight)
-		headers.GET("/:hash/:ancestorHash/ancestors", h.getHeaderAncestorsByHash)
-		headers.POST("/commonAncestor", h.getCommonAncestors)
+		headers.GET("/:hash/:ancestorHash/ancestor", h.getHeaderAncestorsByHash)
+		headers.POST("/commonAncestor", h.getCommonAncestor)
 		headers.GET("/state/:hash", h.getHeadersState)
 	}
 }
@@ -36,7 +36,7 @@ func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup) {
 //		@Summary Gets header by hash
 //		@Tags headers
 //		@Accept */*
-//		@Success 200 {object} domains.BlockHeader
+//		@Success 200 {object} BlockHeaderResponse
 //		@Produce json
 //		@Router /chain/header/{hash} [get]
 //		@Param hash path string true "Requested Header Hash"
@@ -58,7 +58,7 @@ func (h *handler) getHeaderByHash(c *gin.Context) {
 //		@Tags headers
 //		@Accept */*
 //		@Produce json
-//		@Success 200 {object} []domains.BlockHeader
+//		@Success 200 {object} []BlockHeaderResponse
 //		@Router /chain/header/byHeight [get]
 //		@Param height query int true "Height to start from"
 //		@Param count query int false "Headers count (optional)"
@@ -90,8 +90,8 @@ func (h *handler) getHeaderByHeight(c *gin.Context) {
 //		@Tags headers
 //		@Accept */*
 //		@Produce json
-//		@Success 200 {object} []domains.BlockHeader
-//		@Router /chain/header/{hash}/{ancestorHash}/ancestors [get]
+//		@Success 200 {object} []BlockHeaderResponse
+//		@Router /chain/header/{hash}/{ancestorHash}/ancestor [get]
 //		@Param hash path string true "Requested Header Hash"
 //		@Param ancestorHash path string true "Ancestor Header Hash"
 //	 @Security Bearer
@@ -113,16 +113,16 @@ func (h *handler) getHeaderAncestorsByHash(c *gin.Context) {
 //		@Tags headers
 //		@Accept */*
 //		@Produce json
-//		@Success 200 {object} domains.BlockHeader
+//		@Success 200 {object} BlockHeaderResponse
 //		@Router /chain/header/commonAncestor [post]
 //		@Param ancesstors body []string true "JSON"
 //	 @Security Bearer
-func (h *handler) getCommonAncestors(c *gin.Context) {
+func (h *handler) getCommonAncestor(c *gin.Context) {
 	var body []string
 	if err := c.BindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, err.Error())
 	} else {
-		ancestor, err := h.service.GetCommonAncestors(body)
+		ancestor, err := h.service.GetCommonAncestor(body)
 
 		if err == nil {
 			c.JSON(http.StatusOK, newBlockHeaderResponse(ancestor))
@@ -138,7 +138,7 @@ func (h *handler) getCommonAncestors(c *gin.Context) {
 //		@Tags headers
 //		@Accept */*
 //		@Produce json
-//		@Success 200 {object} blockHeaderStateResponse
+//		@Success 200 {object} BlockHeaderStateResponse
 //		@Router /chain/header/state/{hash} [get]
 //		@Param hash path string true "Requested Header Hash"
 //	 @Security Bearer
