@@ -259,7 +259,7 @@ func TestGetCommonAncestor(t *testing.T) {
 		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain())
 		defer cleanup()
 		genesis := domains.CreateGenesisHeaderBlock()
-		expected_obj := headers.BlockHeaderResponse{
+		expected_response := headers.BlockHeaderResponse{
 			Hash:             genesis.Hash.String(),
 			Version:          genesis.Version,
 			PreviousBlock:    genesis.PreviousBlock.String(),
@@ -274,7 +274,7 @@ func TestGetCommonAncestor(t *testing.T) {
 			body headers.BlockHeaderResponse
 		}{
 			code: http.StatusOK,
-			body: expected_obj,
+			body: expected_response,
 		}
 
 		// when
@@ -337,7 +337,7 @@ func TestGetHeadersState(t *testing.T) {
 		// given
 		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain())
 		defer cleanup()
-		expected_obj := headers.BlockHeaderStateResponse{
+		expected_response := headers.BlockHeaderStateResponse{
 			Header:    expected_obj,
 			State:     string(domains.LongestChain),
 			ChainWork: big.NewInt(fixtures.DefaultChainWork),
@@ -348,7 +348,7 @@ func TestGetHeadersState(t *testing.T) {
 			body headers.BlockHeaderStateResponse
 		}{
 			code: http.StatusOK,
-			body: expected_obj,
+			body: expected_response,
 		}
 
 		// when
