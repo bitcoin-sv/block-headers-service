@@ -6,8 +6,8 @@ import (
 	"github.com/libsv/bitcoin-hc/domains"
 )
 
-// tipResponse defines a single block header.
-type tipResponse struct {
+// TipResponse defines a single block header.
+type TipResponse struct {
 	Hash             string   `json:"hash"`
 	Version          int32    `json:"version"`
 	PreviousBlock    string   `json:"prevBlockHash"`
@@ -18,18 +18,18 @@ type tipResponse struct {
 	Work             *big.Int `json:"work" swaggertype:"string"`
 }
 
-// tipStateResponse is an extended version of the tipResponse
+// TipStateResponse is an extended version of the TipResponse
 // that has more important information.
-type tipStateResponse struct {
-	Header    tipResponse `json:"header"`
+type TipStateResponse struct {
+	Header    TipResponse `json:"header"`
 	State     string      `json:"state"`
 	ChainWork *big.Int    `json:"chainWork"  swaggertype:"string"`
 	Height    int32       `json:"height"`
 }
 
-// newTipResponse maps a domain BlockHeader to a transport tipResponse.
-func newTipResponse(header *domains.BlockHeader) tipResponse {
-	return tipResponse{
+// newTipResponse maps a domain BlockHeader to a transport TipResponse.
+func newTipResponse(header *domains.BlockHeader) TipResponse {
+	return TipResponse{
 		Hash:             header.Hash.String(),
 		Version:          header.Version,
 		PreviousBlock:    header.PreviousBlock.String(),
@@ -41,9 +41,9 @@ func newTipResponse(header *domains.BlockHeader) tipResponse {
 	}
 }
 
-// newTipStateResponse maps a domain BlockHeader to a transport tipStateResponse.
-func newTipStateResponse(header *domains.BlockHeader) tipStateResponse {
-	return tipStateResponse{
+// newTipStateResponse maps a domain BlockHeader to a transport TipStateResponse.
+func newTipStateResponse(header *domains.BlockHeader) TipStateResponse {
+	return TipStateResponse{
 		Header:    newTipResponse(header),
 		State:     header.State.String(),
 		ChainWork: header.CumulatedWork,
@@ -51,9 +51,9 @@ func newTipStateResponse(header *domains.BlockHeader) tipStateResponse {
 	}
 }
 
-// mapToTipStateResponse maps a slice of domain BlockHeader to a slice of transport tipStateResponse.
-func mapToTipStateResponse(headers []*domains.BlockHeader) []tipStateResponse {
-	blockHeaderStatesResponse := make([]tipStateResponse, 0)
+// mapToTipStateResponse maps a slice of domain BlockHeader to a slice of transport TipStateResponse.
+func mapToTipStateResponse(headers []*domains.BlockHeader) []TipStateResponse {
+	blockHeaderStatesResponse := make([]TipStateResponse, 0)
 
 	for _, header := range headers {
 		blockHeaderStatesResponse = append(blockHeaderStatesResponse, newTipStateResponse(header))

@@ -1,6 +1,8 @@
 package assert
 
 import (
+	"bytes"
+	"reflect"
 	"testing"
 
 	"github.com/magiconair/properties/assert"
@@ -10,8 +12,16 @@ import (
 // Used mainly in tests.
 func Equal[T comparable](t *testing.T, actual, expected T) {
 	t.Helper()
-	if actual != expected {
+	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("got: %v; want: %v", actual, expected)
+	}
+}
+
+// EqualBytes return error if two given byte arrays are not equal.
+// Used mainly in tests.
+func EqualBytes(t *testing.T, actual []byte, expected []byte) {
+	if !bytes.Equal(actual, expected) {
+		t.Errorf("got: %s; want: %s", actual, expected)
 	}
 }
 
