@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/libsv/bitcoin-hc/config/p2pconfig"
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/domains/logging"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
@@ -10,7 +11,6 @@ import (
 	"github.com/libsv/bitcoin-hc/repository"
 	"github.com/libsv/bitcoin-hc/transports/http/client"
 	peerpkg "github.com/libsv/bitcoin-hc/transports/p2p/peer"
-	"github.com/libsv/bitcoin-hc/vconfig/p2pconfig"
 )
 
 // Network is an interface which represents methods required for Network service.

@@ -15,6 +15,7 @@ import (
 	"runtime/debug"
 	"syscall"
 
+	"github.com/libsv/bitcoin-hc/config"
 	"github.com/libsv/bitcoin-hc/notification"
 	"github.com/libsv/bitcoin-hc/transports/http/endpoints"
 	"github.com/libsv/bitcoin-hc/transports/websocket"
@@ -25,6 +26,9 @@ import (
 	"github.com/ulikunitz/xz"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/libsv/bitcoin-hc/config/databases"
+	"github.com/libsv/bitcoin-hc/config/p2pconfig"
+	"github.com/libsv/bitcoin-hc/config/p2pconfig/limits"
 	"github.com/libsv/bitcoin-hc/data/sql"
 	"github.com/libsv/bitcoin-hc/internal/wire"
 	"github.com/libsv/bitcoin-hc/repository"
@@ -32,10 +36,6 @@ import (
 	httpserver "github.com/libsv/bitcoin-hc/transports/http/server"
 	"github.com/libsv/bitcoin-hc/transports/p2p"
 	peerpkg "github.com/libsv/bitcoin-hc/transports/p2p/peer"
-	"github.com/libsv/bitcoin-hc/vconfig"
-	"github.com/libsv/bitcoin-hc/vconfig/databases"
-	"github.com/libsv/bitcoin-hc/vconfig/p2pconfig"
-	"github.com/libsv/bitcoin-hc/vconfig/p2pconfig/limits"
 	"github.com/libsv/bitcoin-hc/version"
 	"github.com/spf13/viper"
 )
@@ -50,23 +50,23 @@ func main() {
 	lf := logger.DefaultLoggerFactory()
 	log := lf.NewLogger("main")
 
-	flagCfg, err := p2pconfig.ParseFlags("")
-	if err != nil {
-		log.Criticalf("failed to parse config from flags: %v\n", err)
-		os.Exit(1)
-	}
+	// flagCfg, err := p2pconfig.ParseFlags("")
+	// if err != nil {
+	// 	log.Criticalf("failed to parse config from flags: %v\n", err)
+	// 	os.Exit(1)
+	// }
 
-	c := vconfig.NewViperConfig(appname, flagCfg).
+	c := config.Load(appname).
 		WithDb().
 		WithAuthorization()
 
 	// Unzip prepared db file if configured.
-	if viper.GetBool(vconfig.EnvPreparedDb) {
-		err := os.Remove(viper.GetString(vconfig.EnvDbFilePath))
+	if viper.GetBool(config.EnvPreparedDb) {
+		err := os.Remove(viper.GetString(config.EnvDbFilePath))
 		if err != nil {
 			log.Error("Failed to remove old db file")
 		}
-		err = unzip(viper.GetString(vconfig.EnvPreparedDbFilePath), viper.GetString(vconfig.EnvDbFilePath))
+		err = unzip(viper.GetString(config.EnvPreparedDbFilePath), viper.GetString(config.EnvDbFilePath))
 		if err != nil {
 			log.Error("Failed to unzip prepared db file - ", err)
 		}
@@ -90,11 +90,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger.SetLevelFromString(lf, c.P2PConfig.LogLevel)
-	logger.SetLevelFromString(log, c.P2PConfig.LogLevel)
+	logger.SetLevelFromString(lf, c.P2P.LogLevel)
+	logger.SetLevelFromString(log, c.P2P.LogLevel)
 
 	// Do required one-time initialization on wire
-	wire.SetLimits(c.P2PConfig.ExcessiveBlockSize)
+	wire.SetLimits(c.P2P.ExcessiveBlockSize)
 
 	// Show version at startup.
 	log.Infof("Version %s", version.String())
@@ -106,20 +106,20 @@ func main() {
 		Repositories:  repo,
 		Peers:         peers,
 		Params:        p2pconfig.ActiveNetParams.Params,
-		AdminToken:    viper.GetString(vconfig.EnvHttpServerAuthToken),
+		AdminToken:    viper.GetString(config.EnvHttpServerAuthToken),
 		LoggerFactory: lf,
-		P2PConfig:     c.P2PConfig,
+		P2PConfig:     c.P2P,
 	})
-	p2pServer, err := p2p.NewServer(hs, peers, c.P2PConfig)
+	p2pServer, err := p2p.NewServer(hs, peers, c.P2P)
 	if err != nil {
 		log.Errorf("failed to init a new p2p server: %v\n", err)
 		os.Exit(1)
 	}
 
-	server := httpserver.NewHttpServer(viper.GetInt(vconfig.EnvHttpServerPort), lf)
+	server := httpserver.NewHttpServer(viper.GetInt(config.EnvHttpServerPort), lf)
 	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs))
 
-	ws, err := websocket.NewServer(lf, hs, viper.GetBool(vconfig.EnvHttpServerUseAuth))
+	ws, err := websocket.NewServer(lf, hs, viper.GetBool(config.EnvHttpServerUseAuth))
 	if err != nil {
 		log.Errorf("failed to init a new websocket server: %v\n", err)
 		os.Exit(1)
@@ -167,18 +167,18 @@ func main() {
 }
 
 func freshDbIfConfigured(log logging.Logger) {
-	if viper.GetBool(vconfig.EnvResetDbOnStartup) {
-		err := os.Remove(viper.GetString(vconfig.EnvDbFilePath))
-		if err != nil && fileExists(viper.GetString(vconfig.EnvDbFilePath)) {
+	if viper.GetBool(config.EnvResetDbOnStartup) {
+		err := os.Remove(viper.GetString(config.EnvDbFilePath))
+		if err != nil && fileExists(viper.GetString(config.EnvDbFilePath)) {
 			log.Errorf("%s", err.Error())
 			os.Exit(1)
 		}
 	}
 }
 
-func runDatabase(vconfig *vconfig.Config, log logging.Logger) *sqlx.DB {
+func runDatabase(c *config.Config, log logging.Logger) *sqlx.DB {
 	db, err := databases.NewDbSetup().
-		SetupDb(vconfig.Db)
+		SetupDb(c.Db)
 	if err != nil {
 		log.Errorf("cannot setup database, because of error %v", err)
 		os.Exit(1)

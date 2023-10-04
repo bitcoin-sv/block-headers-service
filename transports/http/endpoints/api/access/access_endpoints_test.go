@@ -7,9 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/libsv/bitcoin-hc/config"
 	"github.com/libsv/bitcoin-hc/internal/tests/assert"
 	"github.com/libsv/bitcoin-hc/internal/tests/testpulse"
-	"github.com/libsv/bitcoin-hc/vconfig"
 
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/spf13/viper"
@@ -53,7 +53,7 @@ func TestAccessEndpointWithGlobalAuthHeader(t *testing.T) {
 	defer cleanup()
 
 	//given
-	authToken := viper.GetString(vconfig.EnvHttpServerAuthToken)
+	authToken := viper.GetString(config.EnvHttpServerAuthToken)
 
 	//when
 	res := pulse.Api().Call(getTokenInfo(authToken))
@@ -75,7 +75,7 @@ func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 	defer cleanup()
 
 	//given
-	authToken := viper.GetString(vconfig.EnvHttpServerAuthToken)
+	authToken := viper.GetString(config.EnvHttpServerAuthToken)
 
 	//when
 	res := pulse.Api().Call(createToken(authToken))
@@ -117,7 +117,7 @@ func TestDeleteTokenEndpoint(t *testing.T) {
 	defer cleanup()
 
 	//given
-	authToken := viper.GetString(vconfig.EnvHttpServerAuthToken)
+	authToken := viper.GetString(config.EnvHttpServerAuthToken)
 
 	//when
 	res := pulse.Api().Call(createToken(authToken))

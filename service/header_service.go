@@ -6,13 +6,13 @@ import (
 	"math"
 	"time"
 
+	"github.com/libsv/bitcoin-hc/config/p2pconfig"
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/domains/logging"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/wire"
 	"github.com/libsv/bitcoin-hc/repository"
-	"github.com/libsv/bitcoin-hc/vconfig/p2pconfig"
 )
 
 // HeaderService represents Header service and provide access to repositories.
@@ -20,7 +20,7 @@ type HeaderService struct {
 	repo        *repository.Repositories
 	checkpoints []chaincfg.Checkpoint
 	timeSource  p2pconfig.MedianTimeSource
-	logger      logging.Logger
+	log      logging.Logger
 }
 
 // NewHeaderService creates and returns HeaderService instance.
@@ -29,7 +29,7 @@ func NewHeaderService(repo *repository.Repositories, p2pCfg *p2pconfig.Config, l
 		repo:        repo,
 		checkpoints: p2pCfg.Checkpoints,
 		timeSource:  p2pCfg.TimeSource,
-		logger:      lf.NewLogger("header-service"),
+		log:      lf.NewLogger("header-service"),
 	}
 }
 
@@ -42,7 +42,7 @@ func (hs *HeaderService) AddHeader(h domains.BlockHeader, blocksToConfirmFork in
 func (hs *HeaderService) FindPreviousHeader(headerHash string) *domains.BlockHeader {
 	h, err := hs.repo.Headers.GetPreviousHeader(headerHash)
 	if err != nil {
-		hs.logger.Error(err)
+		hs.log.Error(err)
 		return nil
 	}
 	return h
@@ -155,7 +155,7 @@ func (hs *HeaderService) GetHeaderAncestorsByHash(hash string, ancestorHash stri
 
 // GetCommonAncestors returns first ancestor for given slice of hashes.
 func (hs *HeaderService) GetCommonAncestors(hashes []string) (*domains.BlockHeader, error) {
-	headers := make([]*domains.BlockHeader, 0, len(hashes) + 1)
+	headers := make([]*domains.BlockHeader, 0, len(hashes)+1)
 	height := int32(math.MaxInt32)
 
 	for _, hash := range hashes {

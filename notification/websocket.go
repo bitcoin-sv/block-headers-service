@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/centrifugal/centrifuge"
+	"github.com/libsv/bitcoin-hc/config"
 	"github.com/libsv/bitcoin-hc/domains/logging"
-	"github.com/libsv/bitcoin-hc/vconfig"
 	"github.com/spf13/viper"
 )
 
@@ -27,8 +27,8 @@ func NewWebsocketChannel(lf logging.LoggerFactory, publisher WebsocketPublisher)
 	return &wsChan{
 		publisher:      publisher,
 		log:            lf.NewLogger("ws-channel"),
-		historySize:    viper.GetInt(vconfig.EnvWebsocketHistoryMax),
-		historySeconds: viper.GetInt(vconfig.EnvWebsocketHistoryTtl),
+		historySize:    viper.GetInt(config.EnvWebsocketHistoryMax),
+		historySeconds: viper.GetInt(config.EnvWebsocketHistoryTtl),
 	}
 }
 

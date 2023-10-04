@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/libsv/bitcoin-hc/config"
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/service"
-	"github.com/libsv/bitcoin-hc/vconfig"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -31,7 +31,7 @@ func NewMiddleware(s *service.Services) *TokenMiddleware {
 
 // ApplyToApi is a middleware which checks if the request has a valid token.
 func (h *TokenMiddleware) ApplyToApi(c *gin.Context) {
-	if viper.GetBool(vconfig.EnvHttpServerUseAuth) {
+	if viper.GetBool(config.EnvHttpServerUseAuth) {
 		rawToken, err := h.parseAuthHeader(c)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, err.Error())

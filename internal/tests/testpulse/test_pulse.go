@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/libsv/bitcoin-hc/config"
+	"github.com/libsv/bitcoin-hc/config/p2pconfig"
 	"github.com/libsv/bitcoin-hc/domains/logging"
 	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
 	"github.com/libsv/bitcoin-hc/internal/tests/testrepository"
@@ -19,8 +21,6 @@ import (
 	"github.com/libsv/bitcoin-hc/transports/http/endpoints"
 	httpserver "github.com/libsv/bitcoin-hc/transports/http/server"
 	"github.com/libsv/bitcoin-hc/transports/websocket"
-	"github.com/libsv/bitcoin-hc/vconfig"
-	"github.com/libsv/bitcoin-hc/vconfig/p2pconfig"
 	"github.com/spf13/viper"
 )
 
@@ -30,7 +30,7 @@ type pulseOpt interface{}
 type ServicesOpt func(*service.Services)
 
 // ConfigOpt represents functions to configure test config.
-type ConfigOpt func(*vconfig.Config)
+type ConfigOpt func(*config.Config)
 
 // RepoOpt represents functions to configure test repositories.
 type RepoOpt func(*testrepository.TestRepositories)
@@ -42,7 +42,7 @@ type Cleanup func()
 type TestPulse struct {
 	t            *testing.T
 	lf           logging.LoggerFactory
-	config       *vconfig.Config
+	config       *config.Config
 	services     *service.Services
 	repositories *repository.Repositories
 	ws           websocket.Server
@@ -71,14 +71,8 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	//override arguments otherwise all flags provided to go test command will be parsed by LoadConfig
 	os.Args = []string{""}
 
-	os.Args = []string{"test-pulse", "--configfile", getConfigPath(t)}
-	flagCfg, err := p2pconfig.ParseFlags("")
-	if err != nil {
-		t.Fatalf("failed to parse flag config: %v\n", err)
-	}
-
 	viper.Reset()
-	conf := vconfig.NewViperConfig("test-pulse", flagCfg)
+	conf := config.Load("test-pulse")
 	lf := testlog.NewTestLoggerFactory()
 
 	for _, opt := range ops {
@@ -101,9 +95,9 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 		Repositories:  repo.ToDomainRepo(),
 		Peers:         nil,
 		Params:        p2pconfig.ActiveNetParams.Params,
-		AdminToken:    viper.GetString(vconfig.EnvHttpServerAuthToken),
+		AdminToken:    viper.GetString(config.EnvHttpServerAuthToken),
 		LoggerFactory: lf,
-		P2PConfig:     conf.P2PConfig,
+		P2PConfig:     conf.P2P,
 	})
 
 	for _, opt := range ops {
@@ -113,14 +107,14 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 		}
 	}
 
-	port := viper.GetInt(vconfig.EnvHttpServerPort)
-	urlPrefix := viper.GetString(vconfig.EnvHttpServerUrlPrefix)
+	port := viper.GetInt(config.EnvHttpServerPort)
+	urlPrefix := viper.GetString(config.EnvHttpServerUrlPrefix)
 	gin.SetMode(gin.TestMode)
 	server := httpserver.NewHttpServer(port, lf)
 	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs))
 	engine := hijackEngine(server)
 
-	ws, err := websocket.NewServer(lf, hs, viper.GetBool(vconfig.EnvHttpServerUseAuth))
+	ws, err := websocket.NewServer(lf, hs, viper.GetBool(config.EnvHttpServerUseAuth))
 	if err != nil {
 		t.Fatalf("failed to init a new websocket server: %v\n", err)
 	}
@@ -180,7 +174,7 @@ func getConfigPath(t *testing.T) string {
 	// Go up one package
 	pathPrefix := "../../../"
 
-	if runtime.GOOS == "windows" { 
+	if runtime.GOOS == "windows" {
 		pathPrefix = "../../../../"
 	}
 

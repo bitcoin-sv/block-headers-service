@@ -8,8 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/libsv/bitcoin-hc/config"
 	"github.com/libsv/bitcoin-hc/domains/logging"
-	"github.com/libsv/bitcoin-hc/vconfig"
 	"github.com/spf13/viper"
 )
 
@@ -20,7 +20,7 @@ type GinEngineOpt func(*gin.Engine)
 type HttpServer struct {
 	httpServer *http.Server
 	handler    *gin.Engine
-	logger 	   logging.Logger
+	log        logging.Logger
 }
 
 // NewHttpServer creates and returns HttpServer instance.
@@ -31,11 +31,11 @@ func NewHttpServer(port int, lf logging.LoggerFactory) *HttpServer {
 		httpServer: &http.Server{
 			Addr:         ":" + fmt.Sprint(port),
 			Handler:      handler,
-			ReadTimeout:  time.Duration(viper.GetInt(vconfig.EnvHttpServerReadTimeout)) * time.Second,
-			WriteTimeout: time.Duration(viper.GetInt(vconfig.EnvHttpServerWriteTimeout)) * time.Second,
+			ReadTimeout:  time.Duration(viper.GetInt(config.EnvHttpServerReadTimeout)) * time.Second,
+			WriteTimeout: time.Duration(viper.GetInt(config.EnvHttpServerWriteTimeout)) * time.Second,
 		},
 		handler: handler,
-		logger: lf.NewLogger("http"),
+		log:     lf.NewLogger("http"),
 	}
 }
 
@@ -53,7 +53,7 @@ func (s *HttpServer) Start() error {
 
 // ShutdownWithContext is used to stop http server using provided context.
 func (s *HttpServer) ShutdownWithContext(ctx context.Context) error {
-	s.logger.Infof("HTTP Server Shutdown")
+	s.log.Infof("HTTP Server Shutdown")
 	return s.httpServer.Shutdown(ctx)
 }
 

@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/libsv/bitcoin-hc/config/p2pconfig"
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/tests/assert"
@@ -11,7 +12,6 @@ import (
 	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
 	"github.com/libsv/bitcoin-hc/internal/tests/testrepository"
 	"github.com/libsv/bitcoin-hc/repository"
-	"github.com/libsv/bitcoin-hc/vconfig/p2pconfig"
 )
 
 type testData struct {

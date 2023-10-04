@@ -1,8 +1,6 @@
-package vconfig
+package config
 
-import (
-	"github.com/libsv/bitcoin-hc/vconfig/p2pconfig"
-)
+import "github.com/libsv/bitcoin-hc/config/p2pconfig"
 
 // Define basic db config.
 const (
@@ -82,8 +80,8 @@ const DBSqlite DbType = "sqlite"
 
 // Config returns strongly typed config values.
 type Config struct {
-	Db        *Db
-	P2PConfig *p2pconfig.Config
+	Db  *Db
+	P2P *p2pconfig.Config
 }
 
 // Db represents a database connection.

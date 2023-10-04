@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/libsv/bitcoin-hc/config"
 	"github.com/libsv/bitcoin-hc/domains/logging"
 	"github.com/libsv/bitcoin-hc/repository/dto"
-	"github.com/libsv/bitcoin-hc/vconfig"
 	"github.com/pkg/errors"
 )
 
@@ -167,23 +167,23 @@ const (
 
 // HeadersDb represents a database connection and map of related sql queries.
 type HeadersDb struct {
-	dbType vconfig.DbType
+	dbType config.DbType
 	db     *sqlx.DB
-	sqls   map[vconfig.DbType]map[string]string
-	logger logging.Logger
+	sqls   map[config.DbType]map[string]string
+	log logging.Logger
 }
 
 // NewHeadersDb will setup and return a new headers store.
-func NewHeadersDb(db *sqlx.DB, dbType vconfig.DbType, lf logging.LoggerFactory) *HeadersDb {
+func NewHeadersDb(db *sqlx.DB, dbType config.DbType, lf logging.LoggerFactory) *HeadersDb {
 	return &HeadersDb{
 		dbType: dbType,
 		db:     db,
-		sqls: map[vconfig.DbType]map[string]string{
-			vconfig.DBSqlite: {
+		sqls: map[config.DbType]map[string]string{
+			config.DBSqlite: {
 				insertBH: sqliteInsertHeader,
 			},
 		},
-		logger: lf.NewLogger("headers-db"),
+		log: lf.NewLogger("headers-db"),
 	}
 }
 
@@ -323,7 +323,7 @@ func (h *HeadersDb) GetPreviousHeader(ctx context.Context, hash string) (*dto.Db
 func (h *HeadersDb) GetTip(ctx context.Context) (*dto.DbBlockHeader, error) {
 	var tip []dto.DbBlockHeader
 	if err := h.db.Select(&tip, sqlSelectTip); err != nil {
-		h.logger.Error("sql error", err)
+		h.log.Error("sql error", err)
 		return nil, errors.Wrap(err, "failed to get tip")
 	}
 	return &tip[0], nil
@@ -370,7 +370,6 @@ func (h *HeadersDb) GetMerkleRootsConfirmations(
 	merkleroots []string,
 ) ([]*dto.DbMerkleRootConfirmation, error) {
 	var bh []*dto.DbMerkleRootConfirmation
-
 
 	params := strings.Repeat("(?),", len(merkleroots))
 	params = params[:len(params)-1]

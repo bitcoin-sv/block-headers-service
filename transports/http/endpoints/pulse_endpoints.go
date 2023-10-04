@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/gin-gonic/gin"
+	"github.com/libsv/bitcoin-hc/config"
 	"github.com/libsv/bitcoin-hc/service"
 	"github.com/libsv/bitcoin-hc/transports/http/auth"
 	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/access"
@@ -16,7 +17,6 @@ import (
 	"github.com/libsv/bitcoin-hc/transports/http/endpoints/status"
 	"github.com/libsv/bitcoin-hc/transports/http/endpoints/swagger"
 	httpserver "github.com/libsv/bitcoin-hc/transports/http/server"
-	"github.com/libsv/bitcoin-hc/vconfig"
 	"github.com/spf13/viper"
 )
 
@@ -39,7 +39,7 @@ func SetupPulseRoutes(s *service.Services) httpserver.GinEngineOpt {
 
 	return func(engine *gin.Engine) {
 		rootRouter := engine.Group("")
-		prefix := viper.GetString(vconfig.EnvHttpServerUrlPrefix)
+		prefix := viper.GetString(config.EnvHttpServerUrlPrefix)
 		apiRouter := engine.Group(prefix, apiMiddlewares...)
 		for _, r := range routes {
 			switch r := r.(type) {

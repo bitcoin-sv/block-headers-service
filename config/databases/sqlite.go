@@ -6,17 +6,18 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
+	"github.com/libsv/bitcoin-hc/config"
 
 	// use blank import to use file source driver with the migrate package.
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
-	"github.com/libsv/bitcoin-hc/vconfig"
+
 	// use blank import to register sqlite driver.
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
 )
 
-func setupSqliteDB(c *vconfig.Db) (*sqlx.DB, error) {
+func setupSqliteDB(c *config.Db) (*sqlx.DB, error) {
 	db, err := sqlx.Open("sqlite3", c.Dsn)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to setup database")
