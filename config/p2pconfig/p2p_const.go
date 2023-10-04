@@ -27,7 +27,9 @@ var (
 	// DefaultHomeDir default app data dir for p2p.
 	DefaultHomeDir = p2putil.AppDataDir("p2p", false)
 	// Defaultp2pConfigPath default config path.
-	Defaultp2pConfigPath = "vconfig/p2pconfig/p2p_default.yaml"
+	Defaultp2pConfigPath = "config/config.json"
 	// DefaultLogDir default directory for logs.
 	DefaultLogDir = filepath.Join(DefaultHomeDir, DefaultLogDirname)
+	// DefaultConfigDir default directory for config.
+	DefaultConfigDir = filepath.Join(getWorkingDirectory(), Defaultp2pConfigPath)
 )

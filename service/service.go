@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/libsv/bitcoin-hc/config"
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/domains/logging"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
@@ -10,7 +11,6 @@ import (
 	"github.com/libsv/bitcoin-hc/repository"
 	"github.com/libsv/bitcoin-hc/transports/http/client"
 	peerpkg "github.com/libsv/bitcoin-hc/transports/p2p/peer"
-	"github.com/libsv/bitcoin-hc/vconfig/p2pconfig"
 )
 
 // Network is an interface which represents methods required for Network service.
@@ -69,7 +69,7 @@ type Dept struct {
 	Params        *chaincfg.Params
 	AdminToken    string
 	LoggerFactory logging.LoggerFactory
-	P2PConfig     *p2pconfig.Config
+	Config        *config.Config
 }
 
 // NewServices creates and returns Services instance.
@@ -78,7 +78,7 @@ func NewServices(d Dept) *Services {
 
 	return &Services{
 		Network:  NewNetworkService(d.Peers),
-		Headers:  NewHeaderService(d.Repositories, d.P2PConfig, d.LoggerFactory),
+		Headers:  NewHeaderService(d.Repositories, d.Config.P2P, d.LoggerFactory),
 		Notifier: notifier,
 		Chains:   newChainService(d, notifier),
 		Tokens:   NewTokenService(d.Repositories, d.AdminToken),
@@ -101,6 +101,7 @@ func newWebhooks(d Dept) *notification.WebhooksService {
 		d.Repositories.Webhooks,
 		client.NewWebhookTargetClient(),
 		d.LoggerFactory,
+		d.Config.Webhook,
 	)
 }
 

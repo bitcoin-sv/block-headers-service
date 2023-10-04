@@ -16,7 +16,7 @@ import (
 
 func TestReturnSuccessFromVerify(t *testing.T) {
 	// setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain())
+	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
 	defer cleanup()
 	query := []string{chaincfg.GenesisMerkleRoot.String()}
 	expected_result := struct {
@@ -56,7 +56,7 @@ func TestReturnSuccessFromVerify(t *testing.T) {
 
 func TestReturnFailureFromVerifyWhenAuthorizationIsTurnedOnAndCalledWithoutToken(t *testing.T) {
 	// setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithApiAuthorization())
+	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 	query := []string{}
 	expected_result := struct {
@@ -83,7 +83,7 @@ func TestReturnFailureFromVerifyWhenAuthorizationIsTurnedOnAndCalledWithoutToken
 
 func TestReturnPartialSuccessFromVerify(t *testing.T) {
 	// setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain())
+	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
 	defer cleanup()
 	query := []string{chaincfg.GenesisMerkleRoot.String(), "not_found_merkle_root"}
 	expected_result := struct {
@@ -128,7 +128,7 @@ func TestReturnPartialSuccessFromVerify(t *testing.T) {
 
 func TestReturnBadRequestErrorFromVerifyWhenGivenEmtpyArray(t *testing.T) {
 	// setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain())
+	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
 	defer cleanup()
 	query := []string{}
 	expected_result := struct {

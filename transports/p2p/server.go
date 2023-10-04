@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/kr/pretty"
+	"github.com/libsv/bitcoin-hc/config/p2pconfig"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/wire"
@@ -28,7 +29,6 @@ import (
 	"github.com/libsv/bitcoin-hc/transports/p2p/p2putil"
 	"github.com/libsv/bitcoin-hc/transports/p2p/peer"
 	peerpkg "github.com/libsv/bitcoin-hc/transports/p2p/peer"
-	"github.com/libsv/bitcoin-hc/vconfig/p2pconfig"
 )
 
 const (
@@ -1389,7 +1389,7 @@ func newServer(listenAddrs []string, chainParams *chaincfg.Params, services *ser
 		p2pConfig:            p2pCfg,
 	}
 
-	// Create a new block chain instance with the appropriate configuration.
+	// Create a new block chain instance with the appropriate config.
 	var err error
 
 	if err != nil {

@@ -21,7 +21,7 @@ import (
 const maxFailedAttempts = 25
 
 var (
-	//ErrDialNil is used to indicate that Dial cannot be nil in the configuration.
+	//ErrDialNil is used to indicate that Dial cannot be nil in the config.
 	ErrDialNil = errors.New("Config: Dial cannot be nil")
 
 	// maxRetryDuration is the max duration of time retrying of a persistent

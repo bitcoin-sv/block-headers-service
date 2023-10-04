@@ -5,8 +5,6 @@ import (
 	"io"
 	"net/http"
 	"time"
-
-	"github.com/spf13/viper"
 )
 
 // Webhook represents webhook.
@@ -19,10 +17,8 @@ type Webhook struct {
 	LastEmitTimestamp time.Time `json:"lastEmitTimestamp"`
 	ErrorsCount       int       `json:"errorsCount"`
 	Active            bool      `json:"active"`
+	MaxTries          int       `json:"-"`
 }
-
-// WebhookMaxTries is the maximum number of times a webhook will be retried.
-const WebhookMaxTries = "webhook.maxTries"
 
 // WebhookTargetClient is the interface for the webhooks http calls.
 type WebhookTargetClient interface {
@@ -74,7 +70,7 @@ func (w *Webhook) updateWebhookAfterNotification(sCode int, body string, err err
 	if sCode != http.StatusOK {
 		w.ErrorsCount = w.ErrorsCount + 1
 
-		if w.ErrorsCount >= viper.GetInt(WebhookMaxTries) {
+		if w.ErrorsCount >= w.MaxTries {
 			w.Active = false
 		}
 	} else {
@@ -85,7 +81,7 @@ func (w *Webhook) updateWebhookAfterNotification(sCode int, body string, err err
 }
 
 // CreateWebhook creates new webhook.
-func CreateWebhook(url, tokenHeader, token string) *Webhook {
+func CreateWebhook(url, tokenHeader, token string, maxTries int) *Webhook {
 	return &Webhook{
 		Url:         url,
 		TokenHeader: tokenHeader,
@@ -93,5 +89,6 @@ func CreateWebhook(url, tokenHeader, token string) *Webhook {
 		CreatedAt:   time.Now(),
 		ErrorsCount: 0,
 		Active:      true,
+		MaxTries:    maxTries,
 	}
 }

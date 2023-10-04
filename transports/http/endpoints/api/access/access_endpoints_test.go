@@ -7,9 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/libsv/bitcoin-hc/config"
 	"github.com/libsv/bitcoin-hc/internal/tests/assert"
 	"github.com/libsv/bitcoin-hc/internal/tests/testpulse"
-	"github.com/libsv/bitcoin-hc/vconfig"
 
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/spf13/viper"
@@ -20,7 +20,7 @@ const EmptyToken = ""
 // Tests the GET /access endpoint without authorization header.
 func TestAccessEndpointWithoutAuthHeader(t *testing.T) {
 	//setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithApiAuthorization())
+	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
 	//when
@@ -35,7 +35,7 @@ func TestAccessEndpointWithoutAuthHeader(t *testing.T) {
 // Tests the GET /access endpoint with wrong header.
 func TestAccessEndpointWithWrongAuthHeader(t *testing.T) {
 	//setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithApiAuthorization())
+	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
 	//when
@@ -49,11 +49,11 @@ func TestAccessEndpointWithWrongAuthHeader(t *testing.T) {
 // Tests the GET /access endpoint with global auth token.
 func TestAccessEndpointWithGlobalAuthHeader(t *testing.T) {
 	//setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithApiAuthorization())
+	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
 	//given
-	authToken := viper.GetString(vconfig.EnvHttpServerAuthToken)
+	authToken := viper.GetString(config.EnvHttpServerAuthToken)
 
 	//when
 	res := pulse.Api().Call(getTokenInfo(authToken))
@@ -71,11 +71,11 @@ func TestAccessEndpointWithGlobalAuthHeader(t *testing.T) {
 // Tests the POST /access endpoint with created auth token.
 func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 	//setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithApiAuthorization())
+	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
 	//given
-	authToken := viper.GetString(vconfig.EnvHttpServerAuthToken)
+	authToken := viper.GetString(config.EnvHttpServerAuthToken)
 
 	//when
 	res := pulse.Api().Call(createToken(authToken))
@@ -113,11 +113,11 @@ func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 // Tests the DELETE method for the /access endpoint for created auth token.
 func TestDeleteTokenEndpoint(t *testing.T) {
 	//setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithApiAuthorization())
+	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
 	//given
-	authToken := viper.GetString(vconfig.EnvHttpServerAuthToken)
+	authToken := viper.GetString(config.EnvHttpServerAuthToken)
 
 	//when
 	res := pulse.Api().Call(createToken(authToken))
