@@ -155,7 +155,7 @@ func (hs *HeaderService) GetHeaderAncestorsByHash(hash string, ancestorHash stri
 
 // GetCommonAncestors returns first ancestor for given slice of hashes.
 func (hs *HeaderService) GetCommonAncestors(hashes []string) (*domains.BlockHeader, error) {
-	headers := make([]*domains.BlockHeader, 0, len(hashes)+1)
+	headers := make([]*domains.BlockHeader, 0, len(hashes) + 1)
 	height := int32(math.MaxInt32)
 
 	for _, hash := range hashes {
