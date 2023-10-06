@@ -25,7 +25,7 @@ func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup) {
 	{
 		headers.GET("/:hash", h.getHeaderByHash)
 		headers.GET("/byHeight", h.getHeaderByHeight)
-		headers.GET("/:hash/:ancestorHash/ancestors", h.getHeaderAncestorsByHash)
+		headers.GET("/:hash/:ancestorHash/ancestor", h.getHeaderAncestorsByHash)
 		headers.POST("/commonAncestor", h.getCommonAncestor)
 		headers.GET("/state/:hash", h.getHeadersState)
 	}
