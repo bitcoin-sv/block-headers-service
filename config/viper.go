@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// NewViperConfig creates and returns new viper config.
+// Init creates and returns new viper config.
 func Init() *Config {
 	// Use env vars
 	viper.AutomaticEnv()
@@ -91,7 +91,7 @@ func (c *Config) WithoutAuthorization() *Config {
 	return c
 }
 
-// ParseP2PConfig init p2p viper config based on flags, env variables and json config.
+// ParseConfig init viper config based on flags, env variables and json config.
 func ParseConfig() *Config {
 	f := initFlags()
 

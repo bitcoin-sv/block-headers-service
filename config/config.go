@@ -101,16 +101,18 @@ type Db struct {
 	PreparedDbFilePath string `mapstructure:"preparedDbFilePath"`
 }
 
-// Db represents a database connection.
+// Webhook represents a webhook config.
 type Webhook struct {
 	MaxTries int `mapstructure:"maxTries"`
 }
 
+// Websocket represents a websocket config.
 type Websocket struct {
 	HistoryMax int `mapstructure:"historyMax"`
 	HistoryTTL int `mapstructure:"historyTTL"`
 }
 
+// HTTP represents a HTTP config.
 type HTTP struct {
 	ReadTimeout  int    `mapstructure:"readTimeout"`
 	WriteTimeout int    `mapstructure:"writeTimeout"`
@@ -120,6 +122,7 @@ type HTTP struct {
 	AuthToken    string `mapstructure:"authToken"`
 }
 
+// CLI represents a CLI struct.
 type CLI struct {
 	ShowVersion      bool
 	ShowHelp         bool

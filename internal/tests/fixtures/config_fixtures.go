@@ -2,6 +2,7 @@ package fixtures
 
 import "github.com/libsv/bitcoin-hc/config/p2pconfig"
 
+// DefaultP2PConfig default p2p config for test purposes.
 func DefaultP2PConfig() p2pconfig.Config {
 	return p2pconfig.Config{
 		LogLevel:                  p2pconfig.DefaultLogLevel,

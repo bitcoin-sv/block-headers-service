@@ -30,6 +30,6 @@ var (
 	Defaultp2pConfigPath = "config/config.json"
 	// DefaultLogDir default directory for logs.
 	DefaultLogDir = filepath.Join(DefaultHomeDir, DefaultLogDirname)
-	// DefaultLogDir default directory for logs.
+	// DefaultConfigDir default directory for config.
 	DefaultConfigDir = filepath.Join(getWorkingDirectory(), Defaultp2pConfigPath)
 )

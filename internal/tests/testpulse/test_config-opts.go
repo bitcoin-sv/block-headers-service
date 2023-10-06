@@ -5,7 +5,7 @@ import (
 	"github.com/libsv/bitcoin-hc/internal/tests/testrepository"
 )
 
-// WithApiAuthorization enable authorization with default config on API.
+// WithoutApiAuthorization disables authorization.
 func WithoutApiAuthorization() ConfigOpt {
 	return func(c *config.Config) {
 		c.WithoutAuthorization()
