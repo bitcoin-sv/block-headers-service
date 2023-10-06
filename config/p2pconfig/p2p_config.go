@@ -18,41 +18,38 @@ import (
 
 // Config struct for p2pconfig.
 type Config struct {
-	ShowVersion               bool          `description:"Display version information and exit"`
-	ShowHelp                  bool          `description:"Display version information and exit"`
-	ConfigFile                string        `long:"configfile" description:"Path to configuration file"`
-	LogDir                    string        `mapstructure:"p2p_logdir" description:"Directory to log output."`
-	AddPeers                  []string      `mapstructure:"p2p_addpeer" description:"Add a peer to connect with at startup"`
-	ConnectPeers              []string      `mapstructure:"p2p_connect" description:"Connect only to the specified peers at startup"`
-	DisableListen             bool          `mapstructure:"p2p_nolisten" description:"Disable listening for incoming connections -- NOTE: Listening is automatically disabled if the --connect or --proxy options are used without also specifying listen interfaces via --listen"`
-	Listeners                 []string      `mapstructure:"p2p_listen" description:"Add an interface/port to listen for connections (default all interfaces port: 8333, testnet: 18333)"`
-	MaxPeers                  int           `mapstructure:"p2p_maxpeers" description:"Max number of inbound and outbound peers"`
-	MaxPeersPerIP             int           `mapstructure:"p2p_maxpeersperip" description:"Max number of inbound and outbound peers per IP"`
-	BanDuration               time.Duration `mapstructure:"p2p_banduration" description:"How long to ban misbehaving peers.  Valid time units are {s, m, h}.  Minimum 1 second"`
-	MinSyncPeerNetworkSpeed   uint64        `mapstructure:"p2p_minsyncpeernetworkspeed" description:"Disconnect sync peers slower than this threshold in bytes/sec"`
-	DisableDNSSeed            bool          `mapstructure:"p2p_nodnsseed" description:"Disable DNS seeding for peers"`
-	ExternalIPs               []string      `mapstructure:"p2p_externalip" description:"Add an ip to the list of local addresses we claim to listen on to peers"`
-	Proxy                     string        `mapstructure:"p2p_proxy" description:"Connect via SOCKS5 proxy (eg. 127.0.0.1:9050)"`
-	ProxyUser                 string        `mapstructure:"p2p_proxyuser" description:"Username for proxy server"`
-	ProxyPass                 string        `mapstructure:"p2p_proxypass" default-mask:"-" description:"Password for proxy server"`
-	OnionProxy                string        `mapstructure:"p2p_onion" description:"Connect to tor hidden services via SOCKS5 proxy (eg. 127.0.0.1:9050)"`
-	OnionProxyUser            string        `mapstructure:"p2p_onionuser" description:"Username for onion proxy server"`
-	OnionProxyPass            string        `mapstructure:"p2p_onionpass" default-mask:"-" description:"Password for onion proxy server"`
-	NoOnion                   bool          `mapstructure:"p2p_noonion" description:"Disable connecting to tor hidden services"`
-	TorIsolation              bool          `mapstructure:"p2p_torisolation" description:"Enable Tor stream isolation by randomizing user credentials for each connection."`
-	TestNet3                  bool          `mapstructure:"p2p_testnet" description:"Use the test network"`
-	RegressionTest            bool          `mapstructure:"p2p_regtest" description:"Use the regression test network"`
-	SimNet                    bool          `mapstructure:"p2p_simnet" description:"Use the simulation test network"`
-	AddCheckpoints            []string      `mapstructure:"p2p_addcheckpoint" description:"Add a custom checkpoint.  Format: '<height>:<hash>'"`
-	DisableCheckpoints        bool          `mapstructure:"p2p_nocheckpoints" description:"Disable built-in checkpoints.  Don't do this unless you know what you're doing."`
-	LogLevel                  string        `mapstructure:"p2p_loglevel" description:"Logging level for all subsystems {trace, debug, info, warn, error, critical} -- You may also specify <subsystem>=<level>,<subsystem2>=<level>,... to set the log level for individual subsystems -- Use show to list available subsystems"`
-	Upnp                      bool          `mapstructure:"p2p_upnp" description:"Use UPnP to map our listening port outside of NAT"`
-	ExcessiveBlockSize        uint32        `mapstructure:"p2p_excessiveblocksize" description:"The maximum size block (in bytes) this node will accept. Cannot be less than 32000000."`
-	TrickleInterval           time.Duration `mapstructure:"p2p_trickleinterval" description:"Minimum time between attempts to send new inventory to a connected peer"`
-	UserAgentComments         []string      `mapstructure:"p2p_uacomment" description:"Comment to add to the user agent -- See BIP 14 for more information."`
-	NoCFilters                bool          `mapstructure:"p2p_nocfilters" description:"Disable committed filtering (CF) support"`
-	TargetOutboundPeers       uint32        `mapstructure:"p2p_targetoutboundpeers" description:"number of outbound connections to maintain"`
-	BlocksForForkConfirmation int           `mapstructure:"p2p_blocksforconfirmation" description:"Minimum number of blocks to consider a block confirmed"`
+	LogDir                    string        `mapstructure:"logdir" description:"Directory to log output."`
+	AddPeers                  []string      `mapstructure:"addpeer" description:"Add a peer to connect with at startup"`
+	ConnectPeers              []string      `mapstructure:"connect" description:"Connect only to the specified peers at startup"`
+	DisableListen             bool          `mapstructure:"nolisten" description:"Disable listening for incoming connections -- NOTE: Listening is automatically disabled if the --connect or --proxy options are used without also specifying listen interfaces via --listen"`
+	Listeners                 []string      `mapstructure:"listen" description:"Add an interface/port to listen for connections (default all interfaces port: 8333, testnet: 18333)"`
+	MaxPeers                  int           `mapstructure:"maxpeers" description:"Max number of inbound and outbound peers"`
+	MaxPeersPerIP             int           `mapstructure:"maxpeersperip" description:"Max number of inbound and outbound peers per IP"`
+	BanDuration               time.Duration `mapstructure:"banduration" description:"How long to ban misbehaving peers.  Valid time units are {s, m, h}.  Minimum 1 second"`
+	MinSyncPeerNetworkSpeed   uint64        `mapstructure:"minsyncpeernetworkspeed" description:"Disconnect sync peers slower than this threshold in bytes/sec"`
+	DisableDNSSeed            bool          `mapstructure:"nodnsseed" description:"Disable DNS seeding for peers"`
+	ExternalIPs               []string      `mapstructure:"externalip" description:"Add an ip to the list of local addresses we claim to listen on to peers"`
+	Proxy                     string        `mapstructure:"proxy" description:"Connect via SOCKS5 proxy (eg. 127.0.0.1:9050)"`
+	ProxyUser                 string        `mapstructure:"proxyuser" description:"Username for proxy server"`
+	ProxyPass                 string        `mapstructure:"proxypass" default-mask:"-" description:"Password for proxy server"`
+	OnionProxy                string        `mapstructure:"onion" description:"Connect to tor hidden services via SOCKS5 proxy (eg. 127.0.0.1:9050)"`
+	OnionProxyUser            string        `mapstructure:"onionuser" description:"Username for onion proxy server"`
+	OnionProxyPass            string        `mapstructure:"onionpass" default-mask:"-" description:"Password for onion proxy server"`
+	NoOnion                   bool          `mapstructure:"noonion" description:"Disable connecting to tor hidden services"`
+	TorIsolation              bool          `mapstructure:"torisolation" description:"Enable Tor stream isolation by randomizing user credentials for each connection."`
+	TestNet3                  bool          `mapstructure:"testnet" description:"Use the test network"`
+	RegressionTest            bool          `mapstructure:"regtest" description:"Use the regression test network"`
+	SimNet                    bool          `mapstructure:"simnet" description:"Use the simulation test network"`
+	AddCheckpoints            []string      `mapstructure:"addcheckpoint" description:"Add a custom checkpoint.  Format: '<height>:<hash>'"`
+	DisableCheckpoints        bool          `mapstructure:"nocheckpoints" description:"Disable built-in checkpoints.  Don't do this unless you know what you're doing."`
+	LogLevel                  string        `mapstructure:"loglevel" description:"Logging level for all subsystems {trace, debug, info, warn, error, critical} -- You may also specify <subsystem>=<level>,<subsystem2>=<level>,... to set the log level for individual subsystems -- Use show to list available subsystems"`
+	Upnp                      bool          `mapstructure:"upnp" description:"Use UPnP to map our listening port outside of NAT"`
+	ExcessiveBlockSize        uint32        `mapstructure:"excessiveblocksize" description:"The maximum size block (in bytes) this node will accept. Cannot be less than 32000000."`
+	TrickleInterval           time.Duration `mapstructure:"trickleinterval" description:"Minimum time between attempts to send new inventory to a connected peer"`
+	UserAgentComments         []string      `mapstructure:"uacomment" description:"Comment to add to the user agent -- See BIP 14 for more information."`
+	NoCFilters                bool          `mapstructure:"nocfilters" description:"Disable committed filtering (CF) support"`
+	TargetOutboundPeers       uint32        `mapstructure:"targetoutboundpeers" description:"number of outbound connections to maintain"`
+	BlocksForForkConfirmation int           `mapstructure:"blocksforconfirmation" description:"Minimum number of blocks to consider a block confirmed"`
 	lookup                    func(string) ([]net.IP, error)
 	oniondial                 func(string, string, time.Duration) (net.Conn, error)
 	dial                      func(string, string, time.Duration) (net.Conn, error)

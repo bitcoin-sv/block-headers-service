@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/libsv/bitcoin-hc/config/p2pconfig"
+	"github.com/libsv/bitcoin-hc/config"
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/tests/assert"
@@ -316,13 +316,16 @@ func setUpServices() *testData {
 	repo := &repository.Repositories{
 		Headers: testrepository.NewHeadersTestRepository(&array),
 	}
-	p2pCfg := p2pconfig.DefaultP2PConfig("")
 
+	p2pcfg := fixtures.DefaultP2PConfig()
+	cfg := config.Config{
+		P2P: &p2pcfg,
+	}
 	hs := NewServices(Dept{
 		Repositories:  repo,
 		Peers:         nil,
 		LoggerFactory: testlog.NewTestLoggerFactory(),
-		P2PConfig:     &p2pCfg,
+		Config:        &cfg,
 	})
 
 	return &testData{

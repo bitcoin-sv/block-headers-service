@@ -13,7 +13,7 @@ import (
 
 func TestShouldNotifyWebsocketAboutNewHeader(t *testing.T) {
 	//setup
-	p, cleanup := testpulse.NewTestPulse(t)
+	p, cleanup := testpulse.NewTestPulse(t, testpulse.WithoutApiAuthorization())
 	defer cleanup()
 
 	//given

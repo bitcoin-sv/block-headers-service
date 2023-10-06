@@ -6,9 +6,9 @@ import (
 )
 
 // WithApiAuthorization enable authorization with default config on API.
-func WithApiAuthorization() ConfigOpt {
+func WithoutApiAuthorization() ConfigOpt {
 	return func(c *config.Config) {
-		c.WithAuthorization()
+		c.WithoutAuthorization()
 	}
 }
 

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path"
-	"runtime"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -69,16 +67,16 @@ func (p *TestPulse) When() *When {
 // NewTestPulse Start pulse for testing reason.
 func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	//override arguments otherwise all flags provided to go test command will be parsed by LoadConfig
-	os.Args = []string{""}
+	os.Args = []string{"--ignoreconfig"}
 
 	viper.Reset()
-	conf := config.Load("test-pulse")
+	cfg := config.Init()
 	lf := testlog.NewTestLoggerFactory()
 
 	for _, opt := range ops {
 		switch opt := opt.(type) {
 		case ConfigOpt:
-			opt(conf)
+			opt(cfg)
 		}
 	}
 
@@ -95,9 +93,9 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 		Repositories:  repo.ToDomainRepo(),
 		Peers:         nil,
 		Params:        p2pconfig.ActiveNetParams.Params,
-		AdminToken:    viper.GetString(config.EnvHttpServerAuthToken),
+		AdminToken:    cfg.HTTP.AuthToken,
 		LoggerFactory: lf,
-		P2PConfig:     conf.P2P,
+		Config:        cfg,
 	})
 
 	for _, opt := range ops {
@@ -107,21 +105,21 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 		}
 	}
 
-	port := viper.GetInt(config.EnvHttpServerPort)
-	urlPrefix := viper.GetString(config.EnvHttpServerUrlPrefix)
+	port := cfg.HTTP.Port
+	urlPrefix := cfg.HTTP.UrlRefix
 	gin.SetMode(gin.TestMode)
-	server := httpserver.NewHttpServer(port, lf)
-	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs))
+	server := httpserver.NewHttpServer(cfg.HTTP, lf)
+	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs, cfg.HTTP))
 	engine := hijackEngine(server)
 
-	ws, err := websocket.NewServer(lf, hs, viper.GetBool(config.EnvHttpServerUseAuth))
+	ws, err := websocket.NewServer(lf, hs, cfg.HTTP.UseAuth)
 	if err != nil {
 		t.Fatalf("failed to init a new websocket server: %v\n", err)
 	}
 	server.ApplyConfiguration(ws.SetupEntrypoint)
 
 	hs.Notifier.AddChannel(hs.Webhooks)
-	hs.Notifier.AddChannel(notification.NewWebsocketChannel(lf, ws.Publisher()))
+	hs.Notifier.AddChannel(notification.NewWebsocketChannel(lf, ws.Publisher(), cfg.Websocket))
 
 	if err := ws.Start(); err != nil {
 		panic(fmt.Sprintf("cannot start websocket server because of an error: %v", err))
@@ -137,7 +135,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	pulse := &TestPulse{
 		t:            t,
 		lf:           lf,
-		config:       conf,
+		config:       cfg,
 		services:     hs,
 		repositories: repo.ToDomainRepo(),
 		ws:           ws,
@@ -165,22 +163,4 @@ func hijackEngine(server *httpserver.HttpServer) *gin.Engine {
 		engine = e
 	})
 	return engine
-}
-
-func getConfigPath(t *testing.T) string {
-	_, filename, _, _ := runtime.Caller(0) //nolint:dogsled
-	callerDir := path.Dir(filename)
-
-	// Go up one package
-	pathPrefix := "../../../"
-
-	if runtime.GOOS == "windows" {
-		pathPrefix = "../../../../"
-	}
-
-	dir, err := os.Open(path.Join(callerDir, pathPrefix)) //nolint:gosec
-	if err != nil {
-		t.Fatalf("config file is not found: %v\n", err)
-	}
-	return path.Join(dir.Name(), p2pconfig.Defaultp2pConfigPath)
 }

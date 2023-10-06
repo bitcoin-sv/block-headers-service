@@ -25,7 +25,7 @@ func (logWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func useDefaultLogger() p2plog.Logger {
+func UseDefaultP2PLogger() p2plog.Logger {
 	backendLog := p2plog.NewBackend(logWriter{})
 	logger := backendLog.Logger("HEADERS")
 	return logger

@@ -7,7 +7,6 @@ import (
 	"github.com/centrifugal/centrifuge"
 	"github.com/libsv/bitcoin-hc/config"
 	"github.com/libsv/bitcoin-hc/domains/logging"
-	"github.com/spf13/viper"
 )
 
 // WebsocketPublisher represents websocket server entrypoint used to publish messages via websocket communication.
@@ -23,12 +22,12 @@ type wsChan struct {
 }
 
 // NewWebsocketChannel create Channel implementation communicating via websocket.
-func NewWebsocketChannel(lf logging.LoggerFactory, publisher WebsocketPublisher) Channel {
+func NewWebsocketChannel(lf logging.LoggerFactory, publisher WebsocketPublisher, cfg *config.Websocket) Channel {
 	return &wsChan{
 		publisher:      publisher,
 		log:            lf.NewLogger("ws-channel"),
-		historySize:    viper.GetInt(config.EnvWebsocketHistoryMax),
-		historySeconds: viper.GetInt(config.EnvWebsocketHistoryTtl),
+		historySize:    cfg.HistoryMax,
+		historySeconds: cfg.HistoryTTL,
 	}
 }
 

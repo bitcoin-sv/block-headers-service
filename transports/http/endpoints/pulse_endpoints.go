@@ -17,13 +17,12 @@ import (
 	"github.com/libsv/bitcoin-hc/transports/http/endpoints/status"
 	"github.com/libsv/bitcoin-hc/transports/http/endpoints/swagger"
 	httpserver "github.com/libsv/bitcoin-hc/transports/http/server"
-	"github.com/spf13/viper"
 )
 
 // SetupPulseRoutes main point where we're registering endpoints registrars (handlers that will register endpoints in gin engine)
 //
 //	and middlewares. It's returning function that can be used to setup engine of httpserver.HttpServer
-func SetupPulseRoutes(s *service.Services) httpserver.GinEngineOpt {
+func SetupPulseRoutes(s *service.Services, cfg *config.HTTP) httpserver.GinEngineOpt {
 	routes := []interface{}{
 		status.NewHandler(s),
 		swagger.NewHandler(s),
@@ -35,11 +34,11 @@ func SetupPulseRoutes(s *service.Services) httpserver.GinEngineOpt {
 		merkleroots.NewHandler(s),
 	}
 
-	apiMiddlewares := toHandlers(auth.NewMiddleware(s))
+	apiMiddlewares := toHandlers(auth.NewMiddleware(s, cfg))
 
 	return func(engine *gin.Engine) {
 		rootRouter := engine.Group("")
-		prefix := viper.GetString(config.EnvHttpServerUrlPrefix)
+		prefix := cfg.UrlRefix
 		apiRouter := engine.Group(prefix, apiMiddlewares...)
 		for _, r := range routes {
 			switch r := r.(type) {
