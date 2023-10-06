@@ -1,4 +1,3 @@
-//nolint:,revive
 package config
 
 import (
@@ -90,6 +89,7 @@ func httpFlagsMapping() {
 	pflag.String("authToken", "", "http server admin auth token")
 }
 
+//nolint:errcheck
 func bindP2PFlags() {
 	viper.BindPFlag("p2p.logdir", pflag.Lookup("logdir"))
 	viper.BindPFlag("p2p.addpeer", pflag.Lookup("addpeer"))
@@ -130,6 +130,7 @@ func bindP2PFlags() {
 	viper.BindPFlag("p2p.blocksforconfirmation", pflag.Lookup("blocksforconfirmation"))
 }
 
+//nolint:errcheck
 func bindDBFlags() {
 	viper.BindPFlag(EnvDbSchema, pflag.Lookup("schemaPath"))
 	viper.BindPFlag(EnvDbDsn, pflag.Lookup("dsn"))
@@ -140,6 +141,7 @@ func bindDBFlags() {
 	viper.BindPFlag(EnvPreparedDbFilePath, pflag.Lookup("preparedDbFilePath"))
 }
 
+//nolint:errcheck
 func bindHTTPFlags() {
 	viper.BindPFlag(EnvHttpServerReadTimeout, pflag.Lookup("readTimeout"))
 	viper.BindPFlag(EnvHttpServerWriteTimeout, pflag.Lookup("writeTimeout"))
@@ -149,11 +151,13 @@ func bindHTTPFlags() {
 	viper.BindPFlag(EnvHttpServerAuthToken, pflag.Lookup("authToken"))
 }
 
+//nolint:errcheck
 func bindWebsocketFlags() {
 	viper.BindPFlag(EnvWebsocketHistoryMax, pflag.Lookup("historyMax"))
 	viper.BindPFlag(EnvWebsocketHistoryTtl, pflag.Lookup("historyTTL"))
 }
 
+//nolint:errcheck
 func bindWebhookFlags() {
 	viper.BindPFlag(EnvWebhookMaxTries, pflag.Lookup("maxTries"))
 }
