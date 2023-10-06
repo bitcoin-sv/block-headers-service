@@ -22,7 +22,8 @@ func Load() *Config {
 	cfg := ParseConfig()
 	err := cfg.P2P.Validate()
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("p2p config is invalid: %v", err)
+		os.Exit(1)
 	}
 	return cfg
 }
@@ -96,15 +97,16 @@ func ParseConfig() *Config {
 	if f.IgnoreFileConfig {
 		viper.SetConfigFile(f.ConfigFile)
 		if err := viper.ReadInConfig(); err != nil {
-			log.Fatal(err)
+			log.Printf("config cannot be read: %v", err)
+			os.Exit(1)
 		}
 	}
 
 	c := new(Config)
 
 	if err := viper.Unmarshal(&c); err != nil {
-		err = fmt.Errorf("config can't be unmarshaled %s", err.Error())
-		log.Fatal(err)
+		log.Printf("config can't be unmarshaled %v", err)
+		os.Exit(1)
 	}
 
 	c.P2P.Logger = p2pconfig.UseDefaultP2PLogger()
@@ -126,7 +128,8 @@ func initFlags() CLI {
 
 	err := fs.Parse(os.Args[1:])
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Flags can't be parsed: %v", err)
+		os.Exit(1)
 	}
 
 	return cli
