@@ -26,7 +26,7 @@ func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup) {
 		headers.GET("/:hash", h.getHeaderByHash)
 		headers.GET("/byHeight", h.getHeaderByHeight)
 		headers.GET("/:hash/:ancestorHash/ancestors", h.getHeaderAncestorsByHash)
-		headers.POST("/commonAncestor", h.getCommonAncestors)
+		headers.POST("/commonAncestor", h.getCommonAncestor)
 		headers.GET("/state/:hash", h.getHeadersState)
 	}
 }
@@ -117,12 +117,12 @@ func (h *handler) getHeaderAncestorsByHash(c *gin.Context) {
 //		@Router /chain/header/commonAncestor [post]
 //		@Param ancesstors body []string true "JSON"
 //	 @Security Bearer
-func (h *handler) getCommonAncestors(c *gin.Context) {
+func (h *handler) getCommonAncestor(c *gin.Context) {
 	var body []string
 	if err := c.BindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, err.Error())
 	} else {
-		ancestor, err := h.service.GetCommonAncestors(body)
+		ancestor, err := h.service.GetCommonAncestor(body)
 
 		if err == nil {
 			c.JSON(http.StatusOK, newBlockHeaderResponse(ancestor))

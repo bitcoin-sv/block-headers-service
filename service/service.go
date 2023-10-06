@@ -34,7 +34,7 @@ type Headers interface {
 	GetHeadersByHeight(height int, count int) ([]*domains.BlockHeader, error)
 	GetMerkleRootsConfirmations(merkleroots []string) ([]*domains.MerkleRootConfirmation, error)
 	GetHeaderAncestorsByHash(hash string, ancestorHash string) ([]*domains.BlockHeader, error)
-	GetCommonAncestors(hashes []string) (*domains.BlockHeader, error)
+	GetCommonAncestor(hashes []string) (*domains.BlockHeader, error)
 	GetHeadersState(hash string) (*domains.BlockHeaderState, error)
 	GetTips() ([]*domains.BlockHeader, error)
 	GetPruneTip() (string, error)
