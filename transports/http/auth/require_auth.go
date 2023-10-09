@@ -2,18 +2,19 @@ package auth
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
-	"github.com/libsv/bitcoin-hc/domains"
-	"github.com/libsv/bitcoin-hc/vconfig"
-	"github.com/spf13/viper"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/libsv/bitcoin-hc/config"
+	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/spf13/viper"
 )
 
 // RequireAdmin adds wrapper to endpoint handler
 // that will check if the endpoint was called with admin token.
 // This verification will be skipped if authentication isn't enabled.
 func RequireAdmin(handler gin.HandlerFunc) gin.HandlerFunc {
-	if viper.GetBool(vconfig.EnvHttpServerUseAuth) {
+	if viper.GetBool(config.EnvHttpServerUseAuth) {
 		return func(c *gin.Context) {
 			token, exist := c.Get("token")
 			if !exist {

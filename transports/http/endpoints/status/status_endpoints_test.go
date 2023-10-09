@@ -24,7 +24,7 @@ func TestReturnSuccessFromStatus(t *testing.T) {
 
 func TestReturnSuccessFromStatusWhenAuthorizationIsTurnedOnAndCalledWithoutToken(t *testing.T) {
 	//setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithApiAuthorization())
+	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
 	//when

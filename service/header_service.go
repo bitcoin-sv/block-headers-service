@@ -6,8 +6,10 @@ import (
 	"math"
 	"time"
 
-	"github.com/libsv/bitcoin-hc/configs"
+	"github.com/libsv/bitcoin-hc/config/p2pconfig"
 	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/libsv/bitcoin-hc/domains/logging"
+	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/wire"
 	"github.com/libsv/bitcoin-hc/repository"
@@ -15,13 +17,19 @@ import (
 
 // HeaderService represents Header service and provide access to repositories.
 type HeaderService struct {
-	repo *repository.Repositories
+	repo        *repository.Repositories
+	checkpoints []chaincfg.Checkpoint
+	timeSource  p2pconfig.MedianTimeSource
+	log      logging.Logger
 }
 
 // NewHeaderService creates and returns HeaderService instance.
-func NewHeaderService(repo *repository.Repositories) *HeaderService {
+func NewHeaderService(repo *repository.Repositories, p2pCfg *p2pconfig.Config, lf logging.LoggerFactory) *HeaderService {
 	return &HeaderService{
-		repo: repo,
+		repo:        repo,
+		checkpoints: p2pCfg.Checkpoints,
+		timeSource:  p2pCfg.TimeSource,
+		log:      lf.NewLogger("header-service"),
 	}
 }
 
@@ -34,7 +42,7 @@ func (hs *HeaderService) AddHeader(h domains.BlockHeader, blocksToConfirmFork in
 func (hs *HeaderService) FindPreviousHeader(headerHash string) *domains.BlockHeader {
 	h, err := hs.repo.Headers.GetPreviousHeader(headerHash)
 	if err != nil {
-		configs.Log.Error(err)
+		hs.log.Error(err)
 		return nil
 	}
 	return h
@@ -53,7 +61,7 @@ func (hs *HeaderService) BackElement() (domains.BlockHeader, error) {
 func (hs *HeaderService) IsCurrent() bool {
 	// Not current if the latest main (best) chain height is before the
 	// latest known good checkpoint (when checkpoints are enabled).
-	checkpoints := configs.Cfg.Checkpoints
+	checkpoints := hs.checkpoints
 	checkpoint := &checkpoints[len(checkpoints)-1]
 	tip := hs.GetTip()
 	if tip == nil {
@@ -68,7 +76,7 @@ func (hs *HeaderService) IsCurrent() bool {
 	//
 	// The chain appears to be current if none of the checks reported
 	// otherwise.
-	minus24Hours := configs.Cfg.TimeSource.AdjustedTime().Add(-24 * time.Hour).Unix()
+	minus24Hours := hs.timeSource.AdjustedTime().Add(-24 * time.Hour).Unix()
 	return tip.Timestamp.Unix() >= minus24Hours
 }
 

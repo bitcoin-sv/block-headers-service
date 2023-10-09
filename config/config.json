@@ -1,0 +1,48 @@
+{
+    "p2p": {
+        "logdir": "",
+        "addpeer": "",
+        "connect": "",
+        "nolisten": true,
+        "listen": "",
+        "maxpeers": 125,
+        "maxpeersperip": 5,
+        "banduration": "10h",
+        "minsyncpeernetworkspeed": 51200,
+        "nodnsseed": "",
+        "externalip": "",
+        "proxy": "",
+        "proxyuser": "",
+        "proxypass": "",
+        "onion": "",
+        "onionuser": "",
+        "onionpass": "",
+        "noonion": true,
+        "torisolation": "",
+        "testnet": "",
+        "regtest": "",
+        "simnet": "",
+        "addcheckpoint": "",
+        "nocheckpoints": "",
+        "loglevel": "",
+        "upnp": "",
+        "excessiveblocksize": 128000000,
+        "trickleinterval": "50ms",
+        "uacomment": "",
+        "nocfilters": "",
+        "targetoutboundpeers": 8,
+        "blocksforconfirmation": 10
+    },
+    "http": {
+
+    },
+    "db": {
+
+    },
+    "webhook": {
+
+    },
+    "websocket": {
+        
+    }
+}

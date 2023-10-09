@@ -36,5 +36,6 @@ type Config struct {
 	MinSyncPeerNetworkSpeed   uint64
 	BlocksForForkConfirmation int
 
-	Services *service.Services
+	Services    *service.Services
+	Checkpoints []chaincfg.Checkpoint
 }

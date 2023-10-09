@@ -1,6 +1,7 @@
 debug
 .history
 .idea/*
+.vscode/*
 .DS_Store
 build/
 artifacts/

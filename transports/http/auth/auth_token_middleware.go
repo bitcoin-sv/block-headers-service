@@ -5,12 +5,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/libsv/bitcoin-hc/config"
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/service"
-	"github.com/libsv/bitcoin-hc/vconfig"
 
 	"github.com/gin-gonic/gin"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -20,18 +19,20 @@ const (
 // TokenMiddleware middleware that is retrieving token from Authorization header.
 type TokenMiddleware struct {
 	tokens service.Tokens
+	cfg    *config.HTTP
 }
 
 // NewMiddleware create Token middleware that is retrieving token from Authorization header.
-func NewMiddleware(s *service.Services) *TokenMiddleware {
+func NewMiddleware(s *service.Services, cfg *config.HTTP) *TokenMiddleware {
 	return &TokenMiddleware{
 		tokens: s.Tokens,
+		cfg:    cfg,
 	}
 }
 
 // ApplyToApi is a middleware which checks if the request has a valid token.
 func (h *TokenMiddleware) ApplyToApi(c *gin.Context) {
-	if viper.GetBool(vconfig.EnvHttpServerUseAuth) {
+	if h.cfg.UseAuth {
 		rawToken, err := h.parseAuthHeader(c)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, err.Error())

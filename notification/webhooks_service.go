@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/libsv/bitcoin-hc/config"
 	"github.com/libsv/bitcoin-hc/domains/logging"
 )
 
@@ -12,14 +13,16 @@ type WebhooksService struct {
 	webhooks Webhooks
 	client   WebhookTargetClient
 	log      logging.Logger
+	cfg      *config.Webhook
 }
 
 // NewWebhooksService creates and returns WebhooksService instance.
-func NewWebhooksService(repo Webhooks, client WebhookTargetClient, lf logging.LoggerFactory) *WebhooksService {
+func NewWebhooksService(repo Webhooks, client WebhookTargetClient, lf logging.LoggerFactory, cfg *config.Webhook) *WebhooksService {
 	return &WebhooksService{
 		webhooks: repo,
 		client:   client,
 		log:      lf.NewLogger("webhook"),
+		cfg:      cfg,
 	}
 }
 
@@ -31,7 +34,7 @@ func (s *WebhooksService) CreateWebhook(authType, header, token, url string) (*W
 		token = "Bearer " + token
 	}
 
-	webhook := CreateWebhook(url, header, token)
+	webhook := CreateWebhook(url, header, token, s.cfg.MaxTries)
 
 	err := s.webhooks.AddWebhookToDatabase(webhook)
 	if err != nil {

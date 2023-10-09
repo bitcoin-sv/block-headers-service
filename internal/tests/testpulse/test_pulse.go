@@ -8,7 +8,8 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/libsv/bitcoin-hc/configs"
+	"github.com/libsv/bitcoin-hc/config"
+	"github.com/libsv/bitcoin-hc/config/p2pconfig"
 	"github.com/libsv/bitcoin-hc/domains/logging"
 	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
 	"github.com/libsv/bitcoin-hc/internal/tests/testrepository"
@@ -18,7 +19,6 @@ import (
 	"github.com/libsv/bitcoin-hc/transports/http/endpoints"
 	httpserver "github.com/libsv/bitcoin-hc/transports/http/server"
 	"github.com/libsv/bitcoin-hc/transports/websocket"
-	"github.com/libsv/bitcoin-hc/vconfig"
 	"github.com/spf13/viper"
 )
 
@@ -28,7 +28,7 @@ type pulseOpt interface{}
 type ServicesOpt func(*service.Services)
 
 // ConfigOpt represents functions to configure test config.
-type ConfigOpt func(*vconfig.Config)
+type ConfigOpt func(*config.Config)
 
 // RepoOpt represents functions to configure test repositories.
 type RepoOpt func(*testrepository.TestRepositories)
@@ -40,7 +40,7 @@ type Cleanup func()
 type TestPulse struct {
 	t            *testing.T
 	lf           logging.LoggerFactory
-	config       *vconfig.Config
+	config       *config.Config
 	services     *service.Services
 	repositories *repository.Repositories
 	ws           websocket.Server
@@ -66,24 +66,17 @@ func (p *TestPulse) When() *When {
 
 // NewTestPulse Start pulse for testing reason.
 func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
-	viper.Reset()
-	conf := vconfig.NewViperConfig("test-pulse")
-	lf := testlog.NewTestLoggerFactory()
-
 	//override arguments otherwise all flags provided to go test command will be parsed by LoadConfig
 	os.Args = []string{""}
 
-	// Load configuration and parse command line.  This function also
-	// initializes logging and configures it accordingly.
-	err := configs.LoadConfig()
-	if err != nil {
-		t.Fatalf("failed to load config: %v\n", err)
-	}
+	viper.Reset()
+	cfg := config.Load()
+	lf := testlog.NewTestLoggerFactory()
 
 	for _, opt := range ops {
 		switch opt := opt.(type) {
 		case ConfigOpt:
-			opt(conf)
+			opt(cfg)
 		}
 	}
 
@@ -99,9 +92,10 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	hs := service.NewServices(service.Dept{
 		Repositories:  repo.ToDomainRepo(),
 		Peers:         nil,
-		Params:        configs.ActiveNetParams.Params,
-		AdminToken:    viper.GetString(vconfig.EnvHttpServerAuthToken),
+		Params:        p2pconfig.ActiveNetParams.Params,
+		AdminToken:    cfg.HTTP.AuthToken,
 		LoggerFactory: lf,
+		Config:        cfg,
 	})
 
 	for _, opt := range ops {
@@ -111,21 +105,21 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 		}
 	}
 
-	port := viper.GetInt(vconfig.EnvHttpServerPort)
-	urlPrefix := viper.GetString(vconfig.EnvHttpServerUrlPrefix)
+	port := cfg.HTTP.Port
+	urlPrefix := cfg.HTTP.UrlRefix
 	gin.SetMode(gin.TestMode)
-	server := httpserver.NewHttpServer(port)
-	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs))
+	server := httpserver.NewHttpServer(cfg.HTTP, lf)
+	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs, cfg.HTTP))
 	engine := hijackEngine(server)
 
-	ws, err := websocket.NewServer(lf, hs, viper.GetBool(vconfig.EnvHttpServerUseAuth))
+	ws, err := websocket.NewServer(lf, hs, cfg.HTTP.UseAuth)
 	if err != nil {
 		t.Fatalf("failed to init a new websocket server: %v\n", err)
 	}
 	server.ApplyConfiguration(ws.SetupEntrypoint)
 
 	hs.Notifier.AddChannel(hs.Webhooks)
-	hs.Notifier.AddChannel(notification.NewWebsocketChannel(lf, ws.Publisher()))
+	hs.Notifier.AddChannel(notification.NewWebsocketChannel(lf, ws.Publisher(), cfg.Websocket))
 
 	if err := ws.Start(); err != nil {
 		panic(fmt.Sprintf("cannot start websocket server because of an error: %v", err))
@@ -141,7 +135,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	pulse := &TestPulse{
 		t:            t,
 		lf:           lf,
-		config:       conf,
+		config:       cfg,
 		services:     hs,
 		repositories: repo.ToDomainRepo(),
 		ws:           ws,

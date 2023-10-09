@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/libsv/bitcoin-hc/config"
 	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/libsv/bitcoin-hc/domains/logging"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
@@ -68,6 +69,7 @@ type Dept struct {
 	Params        *chaincfg.Params
 	AdminToken    string
 	LoggerFactory logging.LoggerFactory
+	Config        *config.Config
 }
 
 // NewServices creates and returns Services instance.
@@ -76,7 +78,7 @@ func NewServices(d Dept) *Services {
 
 	return &Services{
 		Network:  NewNetworkService(d.Peers),
-		Headers:  NewHeaderService(d.Repositories),
+		Headers:  NewHeaderService(d.Repositories, d.Config.P2P, d.LoggerFactory),
 		Notifier: notifier,
 		Chains:   newChainService(d, notifier),
 		Tokens:   NewTokenService(d.Repositories, d.AdminToken),
@@ -99,6 +101,7 @@ func newWebhooks(d Dept) *notification.WebhooksService {
 		d.Repositories.Webhooks,
 		client.NewWebhookTargetClient(),
 		d.LoggerFactory,
+		d.Config.Webhook,
 	)
 }
 
