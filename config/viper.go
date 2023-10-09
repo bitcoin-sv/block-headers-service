@@ -94,10 +94,11 @@ func ParseConfig() *Config {
 	f := initFlags()
 	parseFlags(f)
 
-	if f.IgnoreFileConfig {
-		viper.SetConfigFile(f.ConfigFile)
+	configFile := viper.GetString(p2pConfigFilePath)
+	if configFile != "" {
+		viper.SetConfigFile(configFile)
 		if err := viper.ReadInConfig(); err != nil {
-			log.Printf("config cannot be read: %v", err)
+			log.Printf("config cannot be read from path[%s]: %v", configFile, err)
 			os.Exit(1)
 		}
 	}
@@ -120,8 +121,6 @@ func initFlags() CLI {
 	fs := PulseFlagSet{}
 	fs.BoolVarP(&cli.ShowHelp, "help", "H", false, "show help")
 	fs.BoolVarP(&cli.ShowVersion, "version", "V", false, "print the version")
-	fs.BoolVar(&cli.IgnoreFileConfig, "ignoreconfig", false, "ignore file config")
-	fs.StringVarP(&cli.ConfigFile, "config", "C", p2pconfig.DefaultConfigDir, "path to configuration file")
 
 	fs.pflagsMapping()
 	fs.bindFlags()

@@ -126,6 +126,4 @@ type HTTP struct {
 type CLI struct {
 	ShowVersion      bool
 	ShowHelp         bool
-	IgnoreFileConfig bool
-	ConfigFile       string
 }

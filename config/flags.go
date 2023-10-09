@@ -27,6 +27,7 @@ func (fs *PulseFlagSet) bindFlags() {
 }
 
 func (fs *PulseFlagSet) p2pFlagsMapping() {
+	fs.StringP(p2pConfigFilePath, "C", "", "path to configuration file")
 	fs.String(logdirFlag, "", "directory to log output")
 	fs.StringP(addpeerFlag, "a", "", "add a peer to connect with at startup")
 	fs.String(connectFlag, "", "connect only to the specified peers at startup")
@@ -96,6 +97,7 @@ func (fs *PulseFlagSet) httpFlagsMapping() {
 
 //nolint:all
 func (fs *PulseFlagSet) bindP2PFlags() {
+	viper.BindPFlag(p2pConfigFilePath, fs.Lookup(p2pConfigFilePath))
 	viper.BindPFlag("p2p.logdir", fs.Lookup(logdirFlag))
 	viper.BindPFlag("p2p.addpeer", fs.Lookup(addpeerFlag))
 	viper.BindPFlag("p2p.connect", fs.Lookup(connectFlag))

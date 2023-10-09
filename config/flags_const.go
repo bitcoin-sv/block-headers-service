@@ -1,6 +1,7 @@
 package config
 
 const (
+	p2pConfigFilePath           = "p2pconfig"
 	logdirFlag                  = "logdir"
 	addpeerFlag                 = "addpeer"
 	connectFlag                 = "connect"

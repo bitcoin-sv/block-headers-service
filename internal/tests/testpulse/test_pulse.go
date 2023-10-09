@@ -2,7 +2,6 @@ package testpulse
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -68,8 +67,7 @@ func (p *TestPulse) When() *When {
 // NewTestPulse Start pulse for testing reason.
 func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	//override arguments otherwise all flags provided to go test command will be parsed by LoadConfig
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	os.Args = []string{"--ignoreconfig"}
+	os.Args = []string{""}
 
 	viper.Reset()
 	cfg := config.Load()
