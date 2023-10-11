@@ -80,7 +80,6 @@ const DBSqlite DbType = "sqlite"
 
 // Config returns strongly typed config values.
 type Config struct {
-	// ConfigFile  string            `mapstructure:"configFile"`
 	ConfigFile string            `mapstructure:"configFile"`
 	Db         *Db               `mapstructure:"db"`
 	P2P        *p2pconfig.Config `mapstructure:"p2p"`

@@ -91,8 +91,7 @@ func (c *Config) WithoutAuthorization() *Config {
 
 // ParseConfig init viper config based on flags, env variables and json config.
 func ParseConfig() *Config {
-	f := initFlags()
-	parseFlags(f)
+	initFlags()
 
 	configFile := viper.GetString(p2pConfigFilePath)
 	if configFile != "" {
@@ -115,26 +114,16 @@ func ParseConfig() *Config {
 	return c
 }
 
-func initFlags() CLI {
+func initFlags() {
 	cli := CLI{}
 
-	fs := PulseFlagSet{}
-	fs.BoolVarP(&cli.ShowHelp, "help", "H", false, "show help")
-	fs.BoolVarP(&cli.ShowVersion, "version", "V", false, "print the version")
+	pflag.BoolVarP(&cli.ShowHelp, "help", "H", false, "show help")
+	pflag.BoolVarP(&cli.ShowVersion, "version", "V", false, "print the version")
 
-	fs.pflagsMapping()
-	fs.bindFlags()
+	pflagsMapping()
+	bindFlags()
 
-	err := fs.Parse(os.Args[1:])
-	if err != nil {
-		log.Printf("Flags can't be parsed: %v", err)
-		os.Exit(1)
-	}
-
-	return cli
-}
-
-func parseFlags(cli CLI) {
+	pflag.Parse()
 	if cli.ShowHelp {
 		pflag.Usage()
 		os.Exit(0)
