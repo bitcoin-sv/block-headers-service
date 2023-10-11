@@ -92,30 +92,37 @@ Database schema below:
    ```
     
 ### Configuration
-In the ```config.go``` is the configuration of the application. By changing variables you can adjust the work of our server
+Configuration processing is carried out by the viper.
+There are 3 ways how default configuration can be overridden:
+1. Flags
+2. Env variables
+3. Сonfig file
+* Note that the rewrite methods are listed from highest to lowest priority. This means that if a parameter is passed as a flag and as an environment variable and is present in the configuration file, then the value of the flag will be used by the viper since the flag has the highest priority.
+* By default pulse is not reading any file config. The file will be read only in case if -C or --p2pconfig flag with config path is passed.
 
-```
-defaultConfigFilename          = "p2p.conf"
-defaultLogLevel                = "info"
-defaultLogDirname              = "logs"
-defaultLogFilename             = "p2p.log"
-defaultMaxPeers                = 125
-defaultMaxPeersPerIP           = 5
-defaultBanDuration             = time.Hour * 24
-defaultConnectTimeout          = time.Second * 30
-defaultTrickleInterval         = peer.DefaultTrickleInterval
-defaultExcessiveBlockSize      = 128000000
-defaultMinSyncPeerNetworkSpeed = 51200
-defaultTargetOutboundPeers     = uint32(8)
-defaultBlocksToConfirmFork     = 10
+
+Default P2P config:
+```go
+DefaultLogLevel                = "info"     // Options: trace, debug, info, warn, error, critical
+DefaultLogDirname              = "logs"     // Directory to log output
+DefaultLogFilename             = "p2p.log"  // File to log output
+DefaultMaxPeers                = 125        // Max number of inbound and outbound peers
+DefaultMaxPeersPerIP           = 5          // Max number of inbound and outbound peers per IP
+DefaultBanDuration             = time.Hour * 24 // How long to ban misbehaving peers. Minimum 1 second
+DefaultConnectTimeout          = time.Second * 30   // How long to wait for peer connection
+DefaultTrickleInterval         = peer.DefaultTrickleInterval // Minimum time between attempts to send new inventory to a connected peer
+DefaultExcessiveBlockSize      = 128000000  // The maximum size block (in bytes) this node will accept. Cannot be less than 32000000.
+DefaultMinSyncPeerNetworkSpeed = 51200      // Disconnect sync peers slower than this threshold in bytes/sec
+DefaultTargetOutboundPeers     = uint32(8)  // Number of outbound connections to maintain
+DefaultBlocksToConfirmFork     = 10         // Number of blocks that confirm the right chain fork
 ```
 
 Settings related to database:
 
       - DB_DSN=file:/data/blockheaders.db?_foreign_keys=true&pooled=true
-      - DB_SCHEMA_PATH=/migrations
+      - DB_SCHEMAPATH=/migrations
       - DB_PREPAREDDB=true
-      - DB_PREPAREDDBFILE_PATH="./data/blockheaders.xz"
+      - DB_PREPAREDDBFILEPATH="./data/blockheaders.xz"
 
 DSN can be used to change the local database location - this should be a volume mount into the container while SQLite is the only db option, we will support more in future.
 
@@ -123,11 +130,11 @@ DB_SCHEMA_PATH should always be set to /migrations, that's the location within t
 
 DB_PREPAREDDB is used to define if application should use prepared db.
 
-DB_PREPAREDDBFILE_PATH define path to prepared db.
+DB_PREPAREDDBFILEPATH define path to prepared db.
 
 
 Settings related to admin auth:
-      - HTTP_SERVER_AUTHTOKEN=admin_only_afUMlv5iiDgQtj22O9n5fADeSb
+      - HTTP_AUTHTOKEN=admin_only_afUMlv5iiDgQtj22O9n5fADeSb
 
 This admin token should be used as a Bearer token in the Authorization header when dynamically creating secure tokens for applications to then use at the POST /api/v1/access endpoint.  
 
@@ -156,7 +163,7 @@ http://localhost:8080/swagger/index.html
 
 The default assumes you want to use Authentication. This requires a single environment variable.  
 
-`HTTP_SERVER_AUTHTOKEN=replace_me_with_token_you_want_to_use_as_admin_token`  
+`HTTP_AUTHTOKEN=replace_me_with_token_you_want_to_use_as_admin_token`  
 
 #### Disabling Auth Requirement  
 
@@ -165,7 +172,7 @@ This is available if you prefer to use your own authentication in a separate pro
 We do not recommend you expose the server to the internet without authentication, 
 as it would then be possible for anyone to prune your headers at will.  
 
-`HTTP_SERVER_USEAUTH=false`  
+`HTTP_USEAUTH=false`  
 
 #### Authenticate with admin token
 
