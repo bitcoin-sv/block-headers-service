@@ -7,10 +7,10 @@ package peer_test
 
 import (
 	"fmt"
-	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
 	"net"
 	"time"
 
+	"github.com/libsv/bitcoin-hc/domains/logging"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
 	"github.com/libsv/bitcoin-hc/internal/wire"
@@ -20,17 +20,15 @@ import (
 // mockRemotePeer creates a basic inbound peer listening on the simnet port for
 // use with Example_peerConnection.  It does not return until the listner is
 // active.
-func mockRemotePeer() error {
+func mockRemotePeer(lf logging.LoggerFactory) error {
 	// Configure peer to act as a simnet node that offers no services.
-	log := testlog.InitializeMockLogger()
-	log.SetLevel(p2plog.LevelInfo)
 	peerCfg := &peer.Config{
 		UserAgentName:          "peer",  // User agent name to advertise.
 		UserAgentVersion:       "1.0.0", // User agent version to advertise.
 		ChainParams:            &chaincfg.SimNetParams,
 		TrickleInterval:        time.Second * 10,
 		TstAllowSelfConnection: true,
-		Log:                    log,
+		Log:                    lf.NewLogger("remote-peer"),
 	}
 
 	// Accept connections on the simnet port.
@@ -62,7 +60,10 @@ func Example_newOutboundPeer() {
 	// connecting to a remote peer, however, since this example is executed
 	// and tested, a mock remote peer is needed to listen for the outbound
 	// peer.
-	if err := mockRemotePeer(); err != nil {
+	lf := testlog.NewTestLoggerFactory()
+	// prevents "race detected during execution of test"
+	lf.SetLevel(logging.Off)
+	if err := mockRemotePeer(lf); err != nil {
 		fmt.Printf("mockRemotePeer: unexpected error %v\n", err)
 		return
 	}
@@ -72,8 +73,6 @@ func Example_newOutboundPeer() {
 	// messages.  The verack listener is used here to signal the code below
 	// when the handshake has been finished by signaling a channel.
 	verack := make(chan struct{})
-	log := testlog.InitializeMockLogger()
-	log.SetLevel(p2plog.LevelInfo)
 	peerCfg := &peer.Config{
 		UserAgentName:    "peer",  // User agent name to advertise.
 		UserAgentVersion: "1.0.0", // User agent version to advertise.
@@ -90,7 +89,7 @@ func Example_newOutboundPeer() {
 			},
 		},
 		TstAllowSelfConnection: true,
-		Log:                    log,
+		Log:                    lf.NewLogger("test"),
 	}
 	p, err := peer.NewOutboundPeer(peerCfg, "127.0.0.1:18555")
 	if err != nil {

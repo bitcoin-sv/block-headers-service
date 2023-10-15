@@ -8,7 +8,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
+	"github.com/libsv/bitcoin-hc/domains/logging"
 )
 
 // shutdownRequestChannel is used to initiate shutdown from one of the
@@ -22,7 +22,8 @@ var interruptSignals = []os.Signal{os.Interrupt}
 // interruptListener listens for OS Signals such as SIGINT (Ctrl+C) and shutdown
 // requests from shutdownRequestChannel.  It returns a channel that is closed
 // when either signal is received.
-func interruptListener(log p2plog.Logger) <-chan struct{} {
+func interruptListener(lf logging.LoggerFactory) <-chan struct{} {
+	log := lf.NewLogger("interrupt-listener")
 	c := make(chan struct{})
 	go func() {
 		interruptChannel := make(chan os.Signal, 1)

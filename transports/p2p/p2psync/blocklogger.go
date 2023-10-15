@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
+	"github.com/libsv/bitcoin-hc/domains/logging"
 	"github.com/libsv/bitcoin-hc/transports/p2p/p2putil"
 )
 
@@ -22,7 +22,7 @@ type blockProgressLogger struct {
 	receivedLogTx     int64
 	lastBlockLogTime  time.Time
 
-	subsystemLogger p2plog.Logger
+	subsystemLogger logging.Logger
 	progressAction  string
 	sync.Mutex
 }
@@ -32,11 +32,11 @@ type blockProgressLogger struct {
 //
 //	{progressAction} {numProcessed} {blocks|block} in the last {timePeriod}
 //	({numTxs}, height {lastBlockHeight}, {lastBlockTimeStamp})
-func newBlockProgressLogger(progressMessage string, logger p2plog.Logger) *blockProgressLogger {
+func newBlockProgressLogger(progressMessage string, lf logging.LoggerFactory) *blockProgressLogger {
 	return &blockProgressLogger{
 		lastBlockLogTime: time.Now(),
 		progressAction:   progressMessage,
-		subsystemLogger:  logger,
+		subsystemLogger:  lf.NewLogger("block-processor"),
 	}
 }
 

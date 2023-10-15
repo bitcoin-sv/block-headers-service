@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/btcsuite/go-socks/socks"
+	"github.com/libsv/bitcoin-hc/domains/logging"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
@@ -169,7 +170,10 @@ func testPeer(t *testing.T, p *peer.Peer, s peerStats) {
 
 // TestPeerConnection tests connection between inbound and outbound peers.
 func TestPeerConnection(t *testing.T) {
-	log := testlog.InitializeMockLogger()
+	lf := testlog.NewTestLoggerFactory()
+	// prevents "race detected during execution of test"
+	lf.SetLevel(logging.Off)
+	log := lf.NewLogger("test")
 	verack := make(chan struct{})
 	peer1Cfg := &peer.Config{
 		Listeners: peer.MessageListeners{
@@ -310,7 +314,10 @@ func TestPeerConnection(t *testing.T) {
 
 // TestPeerListeners tests that the peer listeners are called as expected.
 func TestPeerListeners(t *testing.T) {
-	log := testlog.InitializeMockLogger()
+	lf := testlog.NewTestLoggerFactory()
+	// prevents "race detected during execution of test"
+	lf.SetLevel(logging.Off)
+	log := lf.NewLogger("test")
 	verack := make(chan struct{}, 1)
 	ok := make(chan wire.Message, 20)
 	peerCfg := &peer.Config{
@@ -558,8 +565,10 @@ func TestPeerListeners(t *testing.T) {
 
 // TestOutboundPeer tests that the outbound peer works as expected.
 func TestOutboundPeer(t *testing.T) {
-
-	log := testlog.InitializeMockLogger()
+	lf := testlog.NewTestLoggerFactory()
+	// prevents "race detected during execution of test"
+	lf.SetLevel(logging.Off)
+	log := lf.NewLogger("test")
 	peerCfg := &peer.Config{
 		NewestBlock: func() (*chainhash.Hash, int32, error) {
 			return nil, 0, errors.New("newest block not found")
@@ -706,7 +715,10 @@ func TestOutboundPeer(t *testing.T) {
 // Tests that the node disconnects from peers with an unsupported protocol
 // version.
 func TestUnsupportedVersionPeer(t *testing.T) {
-	log := testlog.InitializeMockLogger()
+	lf := testlog.NewTestLoggerFactory()
+	// prevents "race detected during execution of test"
+	lf.SetLevel(logging.Off)
+	log := lf.NewLogger("test")
 	peerCfg := &peer.Config{
 		UserAgentName:          "peer",
 		UserAgentVersion:       "1.0",
@@ -815,7 +827,10 @@ func TestUnsupportedVersionPeer(t *testing.T) {
 func TestDuplicateVersionMsg(t *testing.T) {
 	// Create a pair of peers that are connected to each other using a fake
 	// connection.
-	log := testlog.InitializeMockLogger()
+	lf := testlog.NewTestLoggerFactory()
+	// prevents "race detected during execution of test"
+	lf.SetLevel(logging.Off)
+	log := lf.NewLogger("test")
 	verack := make(chan struct{})
 	peerCfg := &peer.Config{
 		Listeners: peer.MessageListeners{

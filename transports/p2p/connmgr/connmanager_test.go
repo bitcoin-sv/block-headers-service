@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/libsv/bitcoin-hc/domains/logging"
 	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
 )
 
@@ -73,12 +74,15 @@ func mockDialer(addr net.Addr) (net.Conn, error) {
 
 // TestNewConfig tests that new ConnManager config is validated as expected.
 func TestNewConfig(t *testing.T) {
+	lf := testlog.NewTestLoggerFactory()
+	lf.SetLevel(logging.Off)
 	_, err := New(&Config{})
 	if err == nil {
 		t.Fatalf("New expected error: 'Dial can't be nil', got nil")
 	}
 	_, err = New(&Config{
 		Dial: mockDialer,
+		LoggerFactory: lf,
 	})
 	if err != nil {
 		t.Fatalf("New unexpected error: %v", err)
@@ -90,6 +94,8 @@ func TestNewConfig(t *testing.T) {
 func TestStartStop(t *testing.T) {
 	connected := make(chan *ConnReq)
 	disconnected := make(chan *ConnReq)
+	lf := testlog.NewTestLoggerFactory()
+	lf.SetLevel(logging.Off)
 	cmgr, err := New(&Config{
 		TargetOutbound: 1,
 		GetNewAddress: func() (net.Addr, error) {
@@ -99,13 +105,13 @@ func TestStartStop(t *testing.T) {
 			}, nil
 		},
 		Dial: mockDialer,
-		OnConnection: func(c *ConnReq, conn net.Conn) {
+		OnConnection: func(c *ConnReq, conn net.Conn, lf logging.LoggerFactory) {
 			connected <- c
 		},
 		OnDisconnection: func(c *ConnReq) {
 			disconnected <- c
 		},
-		Log: testlog.InitializeMockLogger(),
+		LoggerFactory: lf,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -143,13 +149,15 @@ func TestStartStop(t *testing.T) {
 // requests using Connect are handled and that no other connections are made.
 func TestConnectMode(t *testing.T) {
 	connected := make(chan *ConnReq)
+	lf := testlog.NewTestLoggerFactory()
+	lf.SetLevel(logging.Off)
 	cmgr, err := New(&Config{
 		TargetOutbound: 2,
 		Dial:           mockDialer,
-		OnConnection: func(c *ConnReq, conn net.Conn) {
+		OnConnection: func(c *ConnReq, conn net.Conn, lf logging.LoggerFactory) {
 			connected <- c
 		},
-		Log: testlog.InitializeMockLogger(),
+		LoggerFactory: lf,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -190,6 +198,8 @@ func TestConnectMode(t *testing.T) {
 func TestTargetOutbound(t *testing.T) {
 	targetOutbound := uint32(10)
 	connected := make(chan *ConnReq)
+	lf := testlog.NewTestLoggerFactory()
+	lf.SetLevel(logging.Off)
 	cmgr, err := New(&Config{
 		TargetOutbound: targetOutbound,
 		Dial:           mockDialer,
@@ -199,10 +209,10 @@ func TestTargetOutbound(t *testing.T) {
 				Port: 18555,
 			}, nil
 		},
-		OnConnection: func(c *ConnReq, conn net.Conn) {
+		OnConnection: func(c *ConnReq, conn net.Conn, lf logging.LoggerFactory) {
 			connected <- c
 		},
-		Log: testlog.InitializeMockLogger(),
+		LoggerFactory: lf,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -228,17 +238,19 @@ func TestTargetOutbound(t *testing.T) {
 func TestRetryPermanent(t *testing.T) {
 	connected := make(chan *ConnReq)
 	disconnected := make(chan *ConnReq)
+	lf := testlog.NewTestLoggerFactory()
+	lf.SetLevel(logging.Off)
 	cmgr, err := New(&Config{
 		RetryDuration:  time.Millisecond,
 		TargetOutbound: 1,
 		Dial:           mockDialer,
-		OnConnection: func(c *ConnReq, conn net.Conn) {
+		OnConnection: func(c *ConnReq, conn net.Conn, lf logging.LoggerFactory) {
 			connected <- c
 		},
 		OnDisconnection: func(c *ConnReq) {
 			disconnected <- c
 		},
-		Log: testlog.InitializeMockLogger(),
+		LoggerFactory: lf,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -324,14 +336,16 @@ func TestMaxRetryDuration(t *testing.T) {
 	}
 
 	connected := make(chan *ConnReq)
+	lf := testlog.NewTestLoggerFactory()
+	lf.SetLevel(logging.Off)
 	cmgr, err := New(&Config{
 		RetryDuration:  time.Millisecond,
 		TargetOutbound: 1,
 		Dial:           timedDialer,
-		OnConnection: func(c *ConnReq, conn net.Conn) {
+		OnConnection: func(c *ConnReq, conn net.Conn, lf logging.LoggerFactory) {
 			connected <- c
 		},
-		Log: testlog.InitializeMockLogger(),
+		LoggerFactory: lf,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -364,6 +378,8 @@ func TestNetworkFailure(t *testing.T) {
 		atomic.AddUint32(&dials, 1)
 		return nil, errors.New("network down")
 	}
+	lf := testlog.NewTestLoggerFactory()
+	lf.SetLevel(logging.Off)
 	cmgr, err := New(&Config{
 		TargetOutbound: 5,
 		RetryDuration:  5 * time.Millisecond,
@@ -374,10 +390,10 @@ func TestNetworkFailure(t *testing.T) {
 				Port: 18555,
 			}, nil
 		},
-		OnConnection: func(c *ConnReq, conn net.Conn) {
+		OnConnection: func(c *ConnReq, conn net.Conn, lf logging.LoggerFactory) {
 			t.Fatalf("network failure: got unexpected connection - %v", c.Addr)
 		},
-		Log: testlog.InitializeMockLogger(),
+		LoggerFactory: lf,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -400,14 +416,16 @@ func TestNetworkFailure(t *testing.T) {
 // the failure.
 func TestStopFailed(t *testing.T) {
 	done := make(chan struct{}, 1)
+	lf := testlog.NewTestLoggerFactory()
+	lf.SetLevel(logging.Off)
 	waitDialer := func(addr net.Addr) (net.Conn, error) {
 		done <- struct{}{}
 		time.Sleep(time.Millisecond)
 		return nil, errors.New("network down")
 	}
 	cmgr, err := New(&Config{
-		Dial: waitDialer,
-		Log:  testlog.InitializeMockLogger(),
+		Dial:          waitDialer,
+		LoggerFactory: lf,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -441,9 +459,11 @@ func TestRemovePendingConnection(t *testing.T) {
 		<-wait
 		return nil, fmt.Errorf("error")
 	}
+	lf := testlog.NewTestLoggerFactory()
+	lf.SetLevel(logging.Off)
 	cmgr, err := New(&Config{
-		Dial: indefiniteDialer,
-		Log:  testlog.InitializeMockLogger(),
+		Dial:          indefiniteDialer,
+		LoggerFactory: lf,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -504,13 +524,15 @@ func TestCancelIgnoreDelayedConnection(t *testing.T) {
 	}
 
 	connected := make(chan *ConnReq)
+	lf := testlog.NewTestLoggerFactory()
+	lf.SetLevel(logging.Off)
 	cmgr, err := New(&Config{
 		Dial:          failingDialer,
 		RetryDuration: retryTimeout,
-		OnConnection: func(c *ConnReq, conn net.Conn) {
+		OnConnection: func(c *ConnReq, conn net.Conn, lf logging.LoggerFactory) {
 			connected <- c
 		},
-		Log: testlog.InitializeMockLogger(),
+		LoggerFactory: lf,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -631,13 +653,15 @@ func TestListeners(t *testing.T) {
 	listener1 := newMockListener("127.0.0.1:8333")
 	listener2 := newMockListener("127.0.0.1:9333")
 	listeners := []net.Listener{listener1, listener2}
+	lf := testlog.NewTestLoggerFactory()
+	lf.SetLevel(logging.Off)
 	cmgr, err := New(&Config{
 		Listeners: listeners,
-		OnAccept: func(conn net.Conn) {
+		OnAccept: func(conn net.Conn, lf logging.LoggerFactory) {
 			receivedConns <- conn
 		},
-		Dial: mockDialer,
-		Log:  testlog.InitializeMockLogger(),
+		Dial:          mockDialer,
+		LoggerFactory: lf,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)

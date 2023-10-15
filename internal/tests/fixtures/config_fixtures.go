@@ -14,6 +14,5 @@ func DefaultP2PConfig() p2pconfig.Config {
 		ExcessiveBlockSize:        p2pconfig.DefaultExcessiveBlockSize,
 		TrickleInterval:           p2pconfig.DefaultTrickleInterval,
 		BlocksForForkConfirmation: p2pconfig.DefaultBlocksToConfirmFork,
-		Logger:                    p2pconfig.UseDefaultP2PLogger(),
 	}
 }

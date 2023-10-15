@@ -10,21 +10,7 @@ import (
 
 // DefaultLoggerFactory creates default factory with default system tag, level and writing to std out.
 func DefaultLoggerFactory() logging.LoggerFactory {
-	return NewLoggerFactory("HEADERS", logging.Info, os.Stdout.Write)
-}
-
-// UnwrapP2plog returns p2plog.Logger if it is wrapped inside logging.Logger.
-func UnwrapP2plog(logger logging.Logger) (p2plog.Logger, bool) {
-	l, ok := logger.(p2plog.Logger)
-	if ok {
-		return l, ok
-	}
-	a, ok := logger.(*adapter)
-	if !ok {
-		return nil, ok
-	}
-	l = a.Logger.(p2plog.Logger)
-	return l, ok
+	return NewLoggerFactory("HEADERS", logging.Info, os.Stdout)
 }
 
 // SetLevelFromString sets logger level based on string.
@@ -72,4 +58,27 @@ func ParseLevel(s string) (l logging.Level, ok bool) {
 	default:
 		return logging.Info, false
 	}
+}
+
+// DirectionString returns string direction.
+func DirectionString(inbound bool) string {
+	if inbound {
+		return "inbound"
+	}
+	return "outbound"
+}
+
+// LogClosure is a closure that can be printed with %v to be used to
+// generate expensive-to-create data for a detailed log level and avoid doing
+// the work if the data isn't printed.
+type logClosure func() string
+
+// String String() realization.
+func (c logClosure) String() string {
+	return c()
+}
+
+// NewLogClosure returns logClosure.
+func NewLogClosure(c func() string) logClosure {
+	return logClosure(c)
 }
