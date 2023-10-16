@@ -28,7 +28,6 @@ import (
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/wire"
-	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
 )
 
 const (
@@ -932,7 +931,7 @@ func (p *Peer) readMessage(encoding wire.MessageEncoding) (wire.Message, []byte,
 	// the logging level requires it.
 	p.cfg.Log.Debugf("%v", logger.NewLogClosure(func() string {
 		// Debug summary of message.
-		summary := p2plog.MessageSummary(msg)
+		summary := logger.MessageSummary(msg)
 		if len(summary) > 0 {
 			summary = " (" + summary + ")"
 		}
@@ -960,7 +959,7 @@ func (p *Peer) writeMessage(msg wire.Message, enc wire.MessageEncoding) error {
 	// the logging level requires it.
 	p.cfg.Log.Debugf("%v", logger.NewLogClosure(func() string {
 		// Debug summary of message.
-		summary := p2plog.MessageSummary(msg)
+		summary := logger.MessageSummary(msg)
 		if len(summary) > 0 {
 			summary = " (" + summary + ")"
 		}

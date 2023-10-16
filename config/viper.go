@@ -43,12 +43,12 @@ func setDefaults() {
 func setDefaultDb() {
 	viper.SetDefault(EnvDb, "sqlite")
 	viper.SetDefault(EnvResetDbOnStartup, false)
-	viper.SetDefault(EnvDbFilePath, "../data/blockheaders.db")
-	viper.SetDefault(EnvDbDsn, "file:../data/blockheaders.db?_foreign_keys=true&pooling=true")
-	viper.SetDefault(EnvDbSchema, "../data/sql/migrations")
+	viper.SetDefault(EnvDbFilePath, "./data/blockheaders.db")
+	viper.SetDefault(EnvDbDsn, "file:./data/blockheaders.db?_foreign_keys=true&pooling=true")
+	viper.SetDefault(EnvDbSchema, "./data/sql/migrations")
 	viper.SetDefault(EnvDbMigrate, true)
 	viper.SetDefault(EnvPreparedDb, false)
-	viper.SetDefault(EnvPreparedDbFilePath, "../data/blockheaders.xz")
+	viper.SetDefault(EnvPreparedDbFilePath, "./data/blockheaders.xz")
 }
 
 func setDefaultAuthorization() {
