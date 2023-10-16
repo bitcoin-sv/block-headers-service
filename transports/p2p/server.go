@@ -402,7 +402,8 @@ func (sp *serverPeer) OnHeaders(_ *peer.Peer, msg *wire.MsgHeaders) {
 // OnGetHeaders is invoked when a peer receives a getheaders bitcoin
 // message.
 func (sp *serverPeer) OnGetHeaders(_ *peer.Peer, msg *wire.MsgGetHeaders) {
-	fmt.Println("[Server] OnGetHeaders")
+
+	sp.log.Info("[Server] OnGetHeaders")
 	// Ignore getheaders requests if not in sync.
 	if !sp.server.syncManager.IsCurrent() {
 		return
@@ -1024,7 +1025,7 @@ out:
 		select {
 		// New peers connected to the server.
 		case p := <-s.newPeers:
-			s.log.Info("[Server] newPeers", "asda")
+			s.log.Info("[Server] newPeers")
 			s.handleAddPeerMsg(state, p)
 
 		// Disconnected peers.
