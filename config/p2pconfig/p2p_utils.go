@@ -13,17 +13,6 @@ import (
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 )
 
-type logWriter struct{}
-
-func (logWriter) Write(p []byte) (n int, err error) {
-	_, err = os.Stdout.Write(p)
-
-	if err != nil {
-		return len(p), err
-	}
-	return len(p), nil
-}
-
 // normalizeAddress returns addr with the passed default port appended if
 // there is not already a port specified.
 func normalizeAddress(addr, defaultPort string) string {
