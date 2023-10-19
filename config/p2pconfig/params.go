@@ -33,6 +33,7 @@ var mainNetParams = params{
 
 var mainNetDNSSeeds = []chaincfg.DNSSeed{
 	{Host: "seed.bitcoinsv.io", HasFiltering: true},
+	{Host: "seed.gorillapool.io", HasFiltering: true},
 	{Host: "seed.cascharia.com", HasFiltering: true},
 	{Host: "seed.satoshisvision.network", HasFiltering: true},
 }
