@@ -34,11 +34,11 @@ import (
 const (
 	// defaultServices describes the default services that are supported by
 	// the server.
-	defaultServices = 0
+	defaultServices = wire.SFspv
 
 	// defaultRequiredServices describes the default services that are
 	// required to be supported by outbound peers.
-	defaultRequiredServices = 0 // This 0 allows Pulse instances to connect to each other.
+	defaultRequiredServices = wire.SFspv
 
 	// connectionRetryInterval is the base amount of time to wait in between
 	// retries when connecting to persistent peers.  It is adjusted by the

@@ -59,6 +59,9 @@ const (
 // ServiceFlag identifies services supported by a bitcoin peer.
 type ServiceFlag uint64
 
+// SFspv is for Simplified Payment Verification nodes which only download headers.
+const SFspv ServiceFlag = 0
+
 const (
 	// SFNodeNetwork is a flag used to indicate a peer is a full node.
 	SFNodeNetwork ServiceFlag = 1 << iota
