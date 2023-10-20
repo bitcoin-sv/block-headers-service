@@ -34,11 +34,11 @@ import (
 const (
 	// defaultServices describes the default services that are supported by
 	// the server.
-	defaultServices = wire.SFNodeNetwork | wire.SFNodeCF | wire.SFNodeBitcoinCash
+	defaultServices = 0
 
 	// defaultRequiredServices describes the default services that are
 	// required to be supported by outbound peers.
-	defaultRequiredServices = wire.SFNodeNetwork
+	defaultRequiredServices = 0 // This 0 allows Pulse instances to connect to each other.
 
 	// connectionRetryInterval is the base amount of time to wait in between
 	// retries when connecting to persistent peers.  It is adjusted by the
@@ -47,12 +47,12 @@ const (
 
 	// userAgentName is the user agent name and is used to help identify
 	// ourselves to other bitcoin peers.
-	userAgentName = "/bsv"
+	userAgentName = "/Pulse"
 
 	// userAgentVersion is the user agent version and is used to help
 	// identify ourselves to other bitcoin peers.
 	// userAgentVersion = fmt.Sprintf("%d.%d.%d", version.AppMajor, version.AppMinor, version.AppPatch).
-	userAgentVersion = "1.0.11"
+	userAgentVersion = "0.3.0"
 )
 
 var (
