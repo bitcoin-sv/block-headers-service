@@ -17,7 +17,6 @@ func NewLoggerFactory(systemTag string, level logging.Level, writer io.Writer) l
 	logLevel := ecszerolog.Level(toZerologLevel(level))
 
 	logger := ecszerolog.New(writer, logLevel).
-		Level(zerolog.TraceLevel).
 		With().
 		Str("application", systemTag).
 		Logger()
