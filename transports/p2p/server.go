@@ -287,12 +287,6 @@ func (sp *serverPeer) pushAddrMsg(addresses []*wire.NetAddress) {
 	sp.addKnownAddresses(known)
 }
 
-// hasServices returns whether or not the provided advertised service flags have
-// all of the provided desired service flags set.
-// func hasServices(advertised, desired wire.ServiceFlag) bool {
-// 	return advertised&desired == desired
-// }
-
 // OnVersion is invoked when a peer receives a version bitcoin message
 // and is used to negotiate the protocol version details as well as kick start
 // the communications.
@@ -328,18 +322,6 @@ func (sp *serverPeer) OnVersion(_ *peer.Peer, msg *wire.MsgVersion) *wire.MsgRej
 		reason := "Sorry, you are not running Bitcoin"
 		return wire.NewMsgReject(msg.Command(), wire.RejectNonstandard, reason)
 	}
-
-	// This would allow rejection of non full node peers, but we don't want any of the services so no reason to reject outbound peers.
-	// wantServices := wire.SFNodeNetwork
-	// if !isInbound && !hasServices(msg.Services, wantServices) {
-	// 	missingServices := wantServices & ^msg.Services
-	// 	sp.server.p2pConfig.Logger.Debugf("Rejecting peer %s with services %v due to not "+
-	// 		"providing desired services %v", sp.Peer, msg.Services,
-	// 		missingServices)
-	// 	reason := fmt.Sprintf("required services %#x not offered",
-	// 		uint64(missingServices))
-	// 	return wire.NewMsgReject(msg.Command(), wire.RejectNonstandard, reason)
-	// }
 
 	// Update the address manager and request known addresses from the
 	// remote peer for outbound connections.  This is skipped when running
