@@ -289,9 +289,9 @@ func (sp *serverPeer) pushAddrMsg(addresses []*wire.NetAddress) {
 
 // hasServices returns whether or not the provided advertised service flags have
 // all of the provided desired service flags set.
-func hasServices(advertised, desired wire.ServiceFlag) bool {
-	return advertised&desired == desired
-}
+// func hasServices(advertised, desired wire.ServiceFlag) bool {
+// 	return advertised&desired == desired
+// }
 
 // OnVersion is invoked when a peer receives a version bitcoin message
 // and is used to negotiate the protocol version details as well as kick start
