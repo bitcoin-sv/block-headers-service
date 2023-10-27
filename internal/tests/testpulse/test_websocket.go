@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bitcoin-sv/pulse/domains/logging"
+	"github.com/bitcoin-sv/pulse/internal/tests/wait"
+	"github.com/bitcoin-sv/pulse/transports/websocket"
 	"github.com/centrifugal/centrifuge-go"
-	"github.com/libsv/bitcoin-hc/domains/logging"
-	"github.com/libsv/bitcoin-hc/internal/tests/wait"
-	"github.com/libsv/bitcoin-hc/transports/websocket"
 )
 
 // Websocket exposes functions to easy testing of pulse websocket communication.

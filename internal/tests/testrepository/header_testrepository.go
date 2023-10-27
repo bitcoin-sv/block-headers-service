@@ -3,9 +3,9 @@ package testrepository
 import (
 	"errors"
 
-	"github.com/libsv/bitcoin-hc/domains"
-	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
-	"github.com/libsv/bitcoin-hc/internal/tests/fixtures"
+	"github.com/bitcoin-sv/pulse/domains"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/pulse/internal/tests/fixtures"
 )
 
 // HeaderTestRepository in memory HeadersRepository representation for unit testing.
@@ -212,7 +212,7 @@ func (r *HeaderTestRepository) GetMerkleRootsConfirmations(
 	return mrcfs, nil
 }
 
-// FillWithLongestChain fills the test header repository 
+// FillWithLongestChain fills the test header repository
 // with 4 additional blocks to create a longest chain.
 func (r *HeaderTestRepository) FillWithLongestChain() {
 	db, _ := fixtures.AddLongestChain(*r.db)

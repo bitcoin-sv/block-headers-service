@@ -12,7 +12,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 )
 
 const (

@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/libsv/bitcoin-hc/repository/dto"
+	"github.com/bitcoin-sv/pulse/repository/dto"
 	"github.com/pkg/errors"
 )
 

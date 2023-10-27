@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/bitcoin-sv/pulse/config"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
-	"github.com/libsv/bitcoin-hc/config"
 
 	// use blank import to use file source driver with the migrate package.
 	_ "github.com/golang-migrate/migrate/v4/source/file"

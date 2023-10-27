@@ -5,8 +5,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/libsv/bitcoin-hc/app/logger"
-	"github.com/libsv/bitcoin-hc/domains/logging"
+	"github.com/bitcoin-sv/pulse/app/logger"
+	"github.com/bitcoin-sv/pulse/domains/logging"
 )
 
 // NewTestLoggerFactory creates new logger factory for tests.

@@ -1,11 +1,11 @@
 package service
 
 import (
-	"github.com/libsv/bitcoin-hc/domains"
-	"github.com/libsv/bitcoin-hc/domains/logging"
-	"github.com/libsv/bitcoin-hc/internal/chaincfg"
-	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
-	"github.com/libsv/bitcoin-hc/repository"
+	"github.com/bitcoin-sv/pulse/domains"
+	"github.com/bitcoin-sv/pulse/domains/logging"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/pulse/repository"
 	"github.com/pkg/errors"
 )
 

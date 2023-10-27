@@ -1,6 +1,6 @@
 package testpulse
 
-import "github.com/libsv/bitcoin-hc/domains"
+import "github.com/bitcoin-sv/pulse/domains"
 
 // When exposes functions to easy testing operations that can happen in pulse.
 type When struct {

@@ -3,7 +3,7 @@ package testrepository
 import (
 	"errors"
 
-	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/bitcoin-sv/pulse/domains"
 )
 
 // TokensTestRepository in memory TokensRepository representation for unit testing.

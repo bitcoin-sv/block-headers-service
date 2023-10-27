@@ -10,8 +10,8 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
-	"github.com/libsv/bitcoin-hc/internal/wire"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/pulse/internal/wire"
 )
 
 // These variables are the chain proof-of-work limit parameters for each default

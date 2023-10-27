@@ -12,7 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/libsv/bitcoin-hc/domains/logging"
+	"github.com/bitcoin-sv/pulse/domains/logging"
 )
 
 // maxFailedAttempts is the maximum number of successive failed connection

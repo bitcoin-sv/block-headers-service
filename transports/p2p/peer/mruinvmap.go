@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/libsv/bitcoin-hc/internal/wire"
+	"github.com/bitcoin-sv/pulse/internal/wire"
 )
 
 // mruInventoryMap provides a concurrency safe map that is limited to a maximum

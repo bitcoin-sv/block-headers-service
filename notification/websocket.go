@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/centrifugal/centrifuge"
-	"github.com/libsv/bitcoin-hc/config"
-	"github.com/libsv/bitcoin-hc/domains/logging"
 )
 
 // WebsocketPublisher represents websocket server entrypoint used to publish messages via websocket communication.

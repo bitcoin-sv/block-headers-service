@@ -4,8 +4,8 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/libsv/bitcoin-hc/internal/chaincfg"
-	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 )
 
 // HeaderState enum representing header state.
@@ -41,7 +41,7 @@ type BlockHeader struct {
 	PreviousBlock chainhash.Hash `json:"prevBlockHash"`
 }
 
-// MerkleRootConfirmation is used to confirm the inclusion of 
+// MerkleRootConfirmation is used to confirm the inclusion of
 // merkle roots in the longest chain.
 type MerkleRootConfirmation struct {
 	MerkleRoot string `json:"merkleRoot"`

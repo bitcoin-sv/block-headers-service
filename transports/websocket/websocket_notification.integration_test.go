@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bitcoin-sv/pulse/internal/tests/assert"
+	"github.com/bitcoin-sv/pulse/internal/tests/fixtures"
+	"github.com/bitcoin-sv/pulse/internal/tests/testpulse"
+	"github.com/bitcoin-sv/pulse/internal/tests/wait"
 	"github.com/kinbiko/jsonassert"
-	"github.com/libsv/bitcoin-hc/internal/tests/assert"
-	"github.com/libsv/bitcoin-hc/internal/tests/fixtures"
-	"github.com/libsv/bitcoin-hc/internal/tests/testpulse"
-	"github.com/libsv/bitcoin-hc/internal/tests/wait"
 )
 
 func TestShouldNotifyWebsocketAboutNewHeader(t *testing.T) {

@@ -1,10 +1,10 @@
 package testrepository
 
 import (
-	"github.com/libsv/bitcoin-hc/domains"
-	"github.com/libsv/bitcoin-hc/internal/tests/fixtures"
-	"github.com/libsv/bitcoin-hc/notification"
-	"github.com/libsv/bitcoin-hc/repository"
+	"github.com/bitcoin-sv/pulse/domains"
+	"github.com/bitcoin-sv/pulse/internal/tests/fixtures"
+	"github.com/bitcoin-sv/pulse/notification"
+	"github.com/bitcoin-sv/pulse/repository"
 )
 
 // TestRepositories is a struct used for testing pulse repositories.
@@ -36,8 +36,8 @@ func NewCleanTestRepositories() TestRepositories {
 // ToDomainRepo creates a domain repository.Repositories struct to comply with pulse structs.
 func (t *TestRepositories) ToDomainRepo() *repository.Repositories {
 	return &repository.Repositories{
-		Headers: t.Headers,
-		Tokens: t.Tokens,
+		Headers:  t.Headers,
+		Tokens:   t.Tokens,
 		Webhooks: t.Webhooks,
 	}
 }

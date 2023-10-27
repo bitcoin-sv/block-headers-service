@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/bitcoin-sv/pulse/domains/logging"
+	"github.com/bitcoin-sv/pulse/service"
 	"github.com/centrifugal/centrifuge"
 	"github.com/gin-gonic/gin"
-	"github.com/libsv/bitcoin-hc/domains/logging"
-	"github.com/libsv/bitcoin-hc/service"
 )
 
 // Publisher component exposed by server that is providing a way to send messages via websocket.

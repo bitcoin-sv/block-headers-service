@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 )
 
 // MsgGetHeaders implements the Message interface and represents a bitcoin

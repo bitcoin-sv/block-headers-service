@@ -10,7 +10,7 @@ import (
 	"io"
 	"unicode/utf8"
 
-	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 )
 
 // MessageHeaderSize is the number of bytes in a bitcoin message header.

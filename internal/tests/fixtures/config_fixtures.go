@@ -1,6 +1,6 @@
 package fixtures
 
-import "github.com/libsv/bitcoin-hc/config/p2pconfig"
+import "github.com/bitcoin-sv/pulse/config/p2pconfig"
 
 // DefaultP2PConfig default p2p config for test purposes.
 func DefaultP2PConfig() p2pconfig.Config {

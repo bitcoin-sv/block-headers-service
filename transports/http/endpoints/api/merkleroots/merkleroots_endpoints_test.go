@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/libsv/bitcoin-hc/internal/chaincfg"
-	"github.com/libsv/bitcoin-hc/internal/tests/assert"
-	"github.com/libsv/bitcoin-hc/internal/tests/testpulse"
-	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/merkleroots"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg"
+	"github.com/bitcoin-sv/pulse/internal/tests/assert"
+	"github.com/bitcoin-sv/pulse/internal/tests/testpulse"
+	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/merkleroots"
 )
 
 func TestReturnSuccessFromVerify(t *testing.T) {

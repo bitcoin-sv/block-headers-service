@@ -11,14 +11,14 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 )
 
 const (
 	// MVCTxVersion1 reperesents message version 1.
-	MVCTxVersion1  = 1
+	MVCTxVersion1 = 1
 	// MVCTxVersion2 reperesents message version 2.
-	MVCTxVersion2  = 2
+	MVCTxVersion2 = 2
 	// MVCTxVersion10 reperesents message version 10.
 	MVCTxVersion10 = 10
 

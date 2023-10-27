@@ -5,8 +5,8 @@
 package p2pconfig
 
 import (
-	"github.com/libsv/bitcoin-hc/internal/chaincfg"
-	"github.com/libsv/bitcoin-hc/internal/wire"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg"
+	"github.com/bitcoin-sv/pulse/internal/wire"
 )
 
 // ActiveNetParams is a pointer to the parameters specific to the

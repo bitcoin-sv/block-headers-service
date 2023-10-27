@@ -7,7 +7,7 @@ package addrmgr
 import (
 	"time"
 
-	"github.com/libsv/bitcoin-hc/internal/wire"
+	"github.com/bitcoin-sv/pulse/internal/wire"
 )
 
 func TstKnownAddressIsBad(ka *KnownAddress) bool {

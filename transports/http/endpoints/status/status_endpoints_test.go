@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/libsv/bitcoin-hc/internal/tests/testpulse"
+	"github.com/bitcoin-sv/pulse/internal/tests/testpulse"
 )
 
 func TestReturnSuccessFromStatus(t *testing.T) {

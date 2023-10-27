@@ -3,10 +3,10 @@ package websocket
 import (
 	"testing"
 
+	"github.com/bitcoin-sv/pulse/domains/logging"
+	"github.com/bitcoin-sv/pulse/internal/tests/assert"
+	testlog "github.com/bitcoin-sv/pulse/internal/tests/log"
 	"github.com/centrifugal/centrifuge"
-	"github.com/libsv/bitcoin-hc/domains/logging"
-	"github.com/libsv/bitcoin-hc/internal/tests/assert"
-	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
 	"github.com/rs/zerolog"
 )
 
@@ -71,55 +71,55 @@ func TestLoggerHandler(t *testing.T) {
 		expected testlog.LogMessage
 	}{
 		"trace": {
-			level:    centrifuge.LogLevelTrace,
+			level: centrifuge.LogLevelTrace,
 			expected: testlog.LogMessage{
-				Level: zerolog.LevelTraceValue,
-				Message: "Example message Context: map[client:123456].",
+				Level:       zerolog.LevelTraceValue,
+				Message:     "Example message Context: map[client:123456].",
 				Application: "PULSE_TEST",
-				Module: "centrifuge",
+				Module:      "centrifuge",
 			},
 		},
 		"debug": {
-			level:    centrifuge.LogLevelDebug,
+			level: centrifuge.LogLevelDebug,
 			expected: testlog.LogMessage{
-				Level: zerolog.LevelDebugValue,
-				Message: "Example message Context: map[client:123456].",
+				Level:       zerolog.LevelDebugValue,
+				Message:     "Example message Context: map[client:123456].",
 				Application: "PULSE_TEST",
-				Module: "centrifuge",
+				Module:      "centrifuge",
 			},
 		},
 		"info": {
-			level:    centrifuge.LogLevelInfo,
+			level: centrifuge.LogLevelInfo,
 			expected: testlog.LogMessage{
-				Level: zerolog.LevelInfoValue,
-				Message: "Example message Context: map[client:123456].",
+				Level:       zerolog.LevelInfoValue,
+				Message:     "Example message Context: map[client:123456].",
 				Application: "PULSE_TEST",
-				Module: "centrifuge",
+				Module:      "centrifuge",
 			},
 		},
 		"warn": {
-			level:    centrifuge.LogLevelWarn,
+			level: centrifuge.LogLevelWarn,
 			expected: testlog.LogMessage{
-				Level: zerolog.LevelWarnValue,
-				Message: "Example message Context: map[client:123456].",
+				Level:       zerolog.LevelWarnValue,
+				Message:     "Example message Context: map[client:123456].",
 				Application: "PULSE_TEST",
-				Module: "centrifuge",
+				Module:      "centrifuge",
 			},
 		},
 		"error": {
-			level:    centrifuge.LogLevelError,
+			level: centrifuge.LogLevelError,
 			expected: testlog.LogMessage{
-				Level: zerolog.LevelErrorValue,
-				Message: "Example message Context: map[client:123456].",
+				Level:       zerolog.LevelErrorValue,
+				Message:     "Example message Context: map[client:123456].",
 				Application: "PULSE_TEST",
-				Module: "centrifuge",
+				Module:      "centrifuge",
 			},
 		},
 	} {
 		title := "handle log of " + name + " level"
 		t.Run(title, func(t *testing.T) {
 			//given
-			
+
 			handler := newLogHandler(lf)
 
 			//when

@@ -7,11 +7,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/libsv/bitcoin-hc/config"
-	"github.com/libsv/bitcoin-hc/internal/tests/assert"
-	"github.com/libsv/bitcoin-hc/internal/tests/testpulse"
+	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/pulse/internal/tests/assert"
+	"github.com/bitcoin-sv/pulse/internal/tests/testpulse"
 
-	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/spf13/viper"
 )
 

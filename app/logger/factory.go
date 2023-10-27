@@ -3,7 +3,7 @@ package logger
 import (
 	"io"
 
-	"github.com/libsv/bitcoin-hc/domains/logging"
+	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/rs/zerolog"
 	"go.elastic.co/ecszerolog"
 )
@@ -71,7 +71,7 @@ func toLoggingLevel(level zerolog.Level) logging.Level {
 		return logging.Trace
 	case zerolog.DebugLevel:
 		return logging.Debug
-	case zerolog.InfoLevel :
+	case zerolog.InfoLevel:
 		return logging.Info
 	case zerolog.WarnLevel:
 		return logging.Warn

@@ -9,11 +9,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/libsv/bitcoin-hc/domains"
-	"github.com/libsv/bitcoin-hc/internal/tests/assert"
-	"github.com/libsv/bitcoin-hc/internal/tests/fixtures"
-	"github.com/libsv/bitcoin-hc/internal/tests/testpulse"
-	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/tips"
+	"github.com/bitcoin-sv/pulse/domains"
+	"github.com/bitcoin-sv/pulse/internal/tests/assert"
+	"github.com/bitcoin-sv/pulse/internal/tests/fixtures"
+	"github.com/bitcoin-sv/pulse/internal/tests/testpulse"
+	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/tips"
 )
 
 var expected_tip = tips.TipStateResponse{

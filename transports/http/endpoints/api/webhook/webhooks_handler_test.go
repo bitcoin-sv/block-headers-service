@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/libsv/bitcoin-hc/internal/tests/testpulse"
-	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/webhook"
+	"github.com/bitcoin-sv/pulse/internal/tests/testpulse"
+	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/webhook"
 )
 
 var webhookUrl = "http://localhost:8080/api/v1/webhook/notify"

@@ -1,8 +1,8 @@
 package fixtures
 
 import (
-	"github.com/libsv/bitcoin-hc/domains"
-	"github.com/libsv/bitcoin-hc/internal/chaincfg"
+	"github.com/bitcoin-sv/pulse/domains"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg"
 )
 
 // Default settings for tests.

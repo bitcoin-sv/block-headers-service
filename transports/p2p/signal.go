@@ -8,7 +8,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/libsv/bitcoin-hc/domains/logging"
+	"github.com/bitcoin-sv/pulse/domains/logging"
 )
 
 // shutdownRequestChannel is used to initiate shutdown from one of the

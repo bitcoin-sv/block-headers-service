@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/libsv/bitcoin-hc/domains/logging"
-	"github.com/libsv/bitcoin-hc/transports/p2p/p2putil"
+	"github.com/bitcoin-sv/pulse/domains/logging"
+	"github.com/bitcoin-sv/pulse/transports/p2p/p2putil"
 )
 
 // blockProgressLogger provides periodic logging for other services in order

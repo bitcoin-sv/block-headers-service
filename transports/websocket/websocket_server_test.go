@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bitcoin-sv/pulse/internal/tests/assert"
+	"github.com/bitcoin-sv/pulse/internal/tests/testpulse"
+	"github.com/bitcoin-sv/pulse/internal/tests/wait"
 	"github.com/centrifugal/centrifuge-go"
-	"github.com/libsv/bitcoin-hc/internal/tests/assert"
-	"github.com/libsv/bitcoin-hc/internal/tests/testpulse"
-	"github.com/libsv/bitcoin-hc/internal/tests/wait"
 )
 
 func TestWebsocketCommunicationWithoutAuthentication(t *testing.T) {

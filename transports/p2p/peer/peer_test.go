@@ -13,13 +13,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bitcoin-sv/pulse/domains/logging"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
+	testlog "github.com/bitcoin-sv/pulse/internal/tests/log"
+	"github.com/bitcoin-sv/pulse/internal/wire"
+	"github.com/bitcoin-sv/pulse/transports/p2p/peer"
 	"github.com/btcsuite/go-socks/socks"
-	"github.com/libsv/bitcoin-hc/domains/logging"
-	"github.com/libsv/bitcoin-hc/internal/chaincfg"
-	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
-	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
-	"github.com/libsv/bitcoin-hc/internal/wire"
-	"github.com/libsv/bitcoin-hc/transports/p2p/peer"
 )
 
 // fixedExcessiveBlockSize should not be the default -we want to ensure it will work in all cases.

@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/libsv/bitcoin-hc/internal/wire"
+	"github.com/bitcoin-sv/pulse/internal/wire"
 )
 
 var (

@@ -2,7 +2,7 @@ package domains
 
 import (
 	"fmt"
-	"github.com/libsv/bitcoin-hc/internal/tests/assert"
+	"github.com/bitcoin-sv/pulse/internal/tests/assert"
 	"math/big"
 	"testing"
 )

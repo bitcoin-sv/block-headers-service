@@ -8,7 +8,7 @@ import (
 	"math"
 	"testing"
 
-	. "github.com/libsv/bitcoin-hc/transports/p2p/p2putil"
+	. "github.com/bitcoin-sv/pulse/transports/p2p/p2putil"
 )
 
 func TestAmountCreation(t *testing.T) {

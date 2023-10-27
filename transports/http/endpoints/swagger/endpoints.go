@@ -1,11 +1,11 @@
 package swagger
 
 import (
+	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/pulse/docs"
+	"github.com/bitcoin-sv/pulse/service"
+	router "github.com/bitcoin-sv/pulse/transports/http/endpoints/routes"
 	"github.com/gin-gonic/gin"
-	"github.com/libsv/bitcoin-hc/config"
-	"github.com/libsv/bitcoin-hc/docs"
-	"github.com/libsv/bitcoin-hc/service"
-	router "github.com/libsv/bitcoin-hc/transports/http/endpoints/routes"
 	"github.com/spf13/viper"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"

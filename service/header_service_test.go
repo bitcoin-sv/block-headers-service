@@ -4,14 +4,14 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/libsv/bitcoin-hc/config"
-	"github.com/libsv/bitcoin-hc/domains"
-	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
-	"github.com/libsv/bitcoin-hc/internal/tests/assert"
-	"github.com/libsv/bitcoin-hc/internal/tests/fixtures"
-	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
-	"github.com/libsv/bitcoin-hc/internal/tests/testrepository"
-	"github.com/libsv/bitcoin-hc/repository"
+	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/pulse/domains"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/pulse/internal/tests/assert"
+	"github.com/bitcoin-sv/pulse/internal/tests/fixtures"
+	testlog "github.com/bitcoin-sv/pulse/internal/tests/log"
+	"github.com/bitcoin-sv/pulse/internal/tests/testrepository"
+	"github.com/bitcoin-sv/pulse/repository"
 )
 
 type testData struct {

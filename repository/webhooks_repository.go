@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 
-	"github.com/libsv/bitcoin-hc/data/sql"
-	"github.com/libsv/bitcoin-hc/notification"
-	"github.com/libsv/bitcoin-hc/repository/dto"
+	"github.com/bitcoin-sv/pulse/data/sql"
+	"github.com/bitcoin-sv/pulse/notification"
+	"github.com/bitcoin-sv/pulse/repository/dto"
 )
 
 // WebhooksRepository provide access to repositories and implements methods for webhooks.

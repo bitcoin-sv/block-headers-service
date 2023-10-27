@@ -1,9 +1,9 @@
 package status
 
 import (
+	"github.com/bitcoin-sv/pulse/service"
+	router "github.com/bitcoin-sv/pulse/transports/http/endpoints/routes"
 	"github.com/gin-gonic/gin"
-	"github.com/libsv/bitcoin-hc/service"
-	router "github.com/libsv/bitcoin-hc/transports/http/endpoints/routes"
 )
 
 // NewHandler creates new endpoint handler.

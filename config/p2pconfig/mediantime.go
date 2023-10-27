@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/libsv/bitcoin-hc/domains/logging"
+	"github.com/bitcoin-sv/pulse/domains/logging"
 )
 
 const (

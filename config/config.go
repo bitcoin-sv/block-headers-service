@@ -1,8 +1,8 @@
 package config
 
 import (
-	"github.com/libsv/bitcoin-hc/config/p2pconfig"
-	"github.com/libsv/bitcoin-hc/domains/logging"
+	"github.com/bitcoin-sv/pulse/config/p2pconfig"
+	"github.com/bitcoin-sv/pulse/domains/logging"
 )
 
 // Define basic db config.

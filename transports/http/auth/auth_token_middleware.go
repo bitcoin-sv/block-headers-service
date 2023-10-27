@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/libsv/bitcoin-hc/config"
-	"github.com/libsv/bitcoin-hc/domains"
-	"github.com/libsv/bitcoin-hc/service"
+	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/pulse/domains"
+	"github.com/bitcoin-sv/pulse/service"
 
 	"github.com/gin-gonic/gin"
 )

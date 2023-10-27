@@ -7,9 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/libsv/bitcoin-hc/config/p2pconfig"
-	"github.com/libsv/bitcoin-hc/domains/logging"
-	"github.com/libsv/bitcoin-hc/version"
+	"github.com/bitcoin-sv/pulse/config/p2pconfig"
+	"github.com/bitcoin-sv/pulse/domains/logging"
+	"github.com/bitcoin-sv/pulse/version"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
