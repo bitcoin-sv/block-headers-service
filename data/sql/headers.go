@@ -17,7 +17,7 @@ const (
 
 	sqliteInsertHeader = `
 	INSERT INTO headers(hash, height, version, merkleroot, nonce, bits, header_state, chainwork, previousblock, timestamp , cumulatedWork)
-	VALUES(:hash, :height, :version, :merkleroot, :nonce, :bits, :header_state, :chainwork, :previousblock, :timestamp, :cumulatedWork)
+	VALUES(:hash, :height, :version, :merkleroot, :nonce, :bits, :header_state, :chainwork, :previousblock, :timestamp, :cumulatedwork)
 	ON CONFLICT DO NOTHING
 	`
 
@@ -170,7 +170,7 @@ type HeadersDb struct {
 	dbType config.DbType
 	db     *sqlx.DB
 	sqls   map[config.DbType]map[string]string
-	log logging.Logger
+	log    logging.Logger
 }
 
 // NewHeadersDb will setup and return a new headers store.
@@ -180,6 +180,9 @@ func NewHeadersDb(db *sqlx.DB, dbType config.DbType, lf logging.LoggerFactory) *
 		db:     db,
 		sqls: map[config.DbType]map[string]string{
 			config.DBSqlite: {
+				insertBH: sqliteInsertHeader,
+			},
+			config.DBPostgres: {
 				insertBH: sqliteInsertHeader,
 			},
 		},

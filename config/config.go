@@ -78,8 +78,12 @@ const (
 // DbType database type.
 type DbType string
 
-// DBSqlite creating config for sqlite db.
-const DBSqlite DbType = "sqlite"
+const (
+	// DBSqlite creating config for sqlite db.
+	DBSqlite DbType = "sqlite"
+	// DBPostgres creating config for postgres db.
+	DBPostgres DbType = "postgres"
+)
 
 // Config returns strongly typed config values.
 type Config struct {

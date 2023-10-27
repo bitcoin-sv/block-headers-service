@@ -20,7 +20,7 @@ type DbBlockHeader struct {
 	Nonce         uint32    `db:"nonce"`
 	State         string    `db:"header_state"`
 	Chainwork     string    `db:"chainwork"`
-	CumulatedWork string    `db:"cumulatedWork"`
+	CumulatedWork string    `db:"cumulatedwork"`
 	PreviousBlock string    `db:"previousblock"`
 }
 

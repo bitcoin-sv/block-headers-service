@@ -15,6 +15,7 @@ type dbSetups map[config.DbType]dbSetupFunc
 func NewDbSetup() dbSetups {
 	s := make(map[config.DbType]dbSetupFunc, 3)
 	s[config.DBSqlite] = setupSqliteDB
+	s[config.DBPostgres] = setupPostgresDB
 	return s
 }
 
