@@ -13,7 +13,6 @@ import (
 	"github.com/btcsuite/go-socks/socks"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/transports/p2p/connmgr"
-	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
 )
 
 // Config struct for p2pconfig.
@@ -55,7 +54,6 @@ type Config struct {
 	dial                      func(string, string, time.Duration) (net.Conn, error)
 	AddCheckpointsSlice       []chaincfg.Checkpoint
 	Checkpoints               []chaincfg.Checkpoint
-	Logger                    p2plog.Logger
 	TimeSource                MedianTimeSource
 }
 
@@ -316,8 +314,6 @@ func (c *Config) Validate() (err error) {
 			return nil, errors.New("tor has been disabled")
 		}
 	}
-
-	c.TimeSource = NewMedianTime(c.Logger)
 
 	return nil
 }

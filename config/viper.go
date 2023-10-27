@@ -8,13 +8,14 @@ import (
 	"strings"
 
 	"github.com/libsv/bitcoin-hc/config/p2pconfig"
+	"github.com/libsv/bitcoin-hc/domains/logging"
 	"github.com/libsv/bitcoin-hc/version"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
-// Load creates and returns a new viper config.
-func Load() *Config {
+// Init creates and returns a new viper config.
+func Init(lf logging.LoggerFactory) *Config {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	setDefaults()
@@ -25,6 +26,7 @@ func Load() *Config {
 		log.Printf("p2p config is invalid: %v", err)
 		os.Exit(1)
 	}
+	cfg.P2P.TimeSource = p2pconfig.NewMedianTime(lf)
 	return cfg
 }
 
@@ -109,8 +111,6 @@ func ParseConfig() *Config {
 		log.Printf("config can't be unmarshaled %v", err)
 		os.Exit(1)
 	}
-
-	c.P2P.Logger = p2pconfig.UseDefaultP2PLogger()
 
 	return c
 }

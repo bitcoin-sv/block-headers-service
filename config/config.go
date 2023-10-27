@@ -1,6 +1,9 @@
 package config
 
-import "github.com/libsv/bitcoin-hc/config/p2pconfig"
+import (
+	"github.com/libsv/bitcoin-hc/config/p2pconfig"
+	"github.com/libsv/bitcoin-hc/domains/logging"
+)
 
 // Define basic db config.
 const (
@@ -80,13 +83,13 @@ const DBSqlite DbType = "sqlite"
 
 // Config returns strongly typed config values.
 type Config struct {
-	// ConfigFile  string            `mapstructure:"configFile"`
-	ConfigFile string            `mapstructure:"configFile"`
-	Db         *Db               `mapstructure:"db"`
-	P2P        *p2pconfig.Config `mapstructure:"p2p"`
-	Webhook    *Webhook          `mapstructure:"webhook"`
-	Websocket  *Websocket        `mapstructure:"websocket"`
-	HTTP       *HTTP             `mapstructure:"http"`
+	ConfigFile    string            `mapstructure:"configFile"`
+	Db            *Db               `mapstructure:"db"`
+	P2P           *p2pconfig.Config `mapstructure:"p2p"`
+	Webhook       *Webhook          `mapstructure:"webhook"`
+	Websocket     *Websocket        `mapstructure:"websocket"`
+	HTTP          *HTTP             `mapstructure:"http"`
+	LoggerFactory logging.LoggerFactory
 }
 
 // Db represents a database connection.
@@ -124,6 +127,6 @@ type HTTP struct {
 
 // CLI represents a CLI struct.
 type CLI struct {
-	ShowVersion      bool
-	ShowHelp         bool
+	ShowVersion bool
+	ShowHelp    bool
 }

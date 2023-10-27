@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/libsv/bitcoin-hc/domains/logging"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/wire"
-	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
 )
 
 const (
@@ -32,7 +32,7 @@ type LookupFunc func(string) ([]net.IP, error)
 
 // SeedFromDNS uses DNS seeding to populate the address manager with peers.
 func SeedFromDNS(chainParams *chaincfg.Params, reqServices wire.ServiceFlag,
-	lookupFn LookupFunc, seedFn OnSeed, log p2plog.Logger) {
+	lookupFn LookupFunc, seedFn OnSeed, log logging.Logger) {
 
 	for _, dnsseed := range chainParams.DNSSeeds {
 		var host string

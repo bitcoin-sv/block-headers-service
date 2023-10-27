@@ -47,7 +47,7 @@ func main() {
 	lf := logger.DefaultLoggerFactory()
 	log := lf.NewLogger("main")
 
-	cfg := config.Load()
+	cfg := config.Init(lf)
 
 	// Unzip prepared db file if configured.
 	if cfg.Db.PreparedDb {
@@ -99,7 +99,7 @@ func main() {
 		LoggerFactory: lf,
 		Config:        cfg,
 	})
-	p2pServer, err := p2p.NewServer(hs, peers, cfg.P2P)
+	p2pServer, err := p2p.NewServer(hs, peers, cfg.P2P, lf)
 	if err != nil {
 		log.Errorf("failed to init a new p2p server: %v\n", err)
 		os.Exit(1)

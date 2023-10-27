@@ -21,12 +21,13 @@ import (
 
 	"github.com/btcsuite/go-socks/socks"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/libsv/bitcoin-hc/app/logger"
 	"github.com/libsv/bitcoin-hc/config/p2pconfig"
 	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/libsv/bitcoin-hc/domains/logging"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/wire"
-	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
 )
 
 const (
@@ -284,7 +285,7 @@ type Config struct {
 	// do so for testing purposes.
 	TstAllowSelfConnection bool
 
-	Log p2plog.Logger
+	Log logging.Logger
 }
 
 // minUint32 is a helper function to return the minimum of two uint32s.
@@ -503,7 +504,7 @@ type PeerState struct {
 //
 // This function is safe for concurrent access.
 func (p *Peer) String() string {
-	return fmt.Sprintf("%s (%s)", p.addr, p.cfg.Log.DirectionString(p.inbound))
+	return fmt.Sprintf("%s (%s)", p.addr, logger.DirectionString(p.inbound))
 }
 
 // UpdateLastBlockHeight updates the last known block for the peer.
@@ -928,19 +929,19 @@ func (p *Peer) readMessage(encoding wire.MessageEncoding) (wire.Message, []byte,
 
 	// Use closures to log expensive operations so they are only run when
 	// the logging level requires it.
-	p.cfg.Log.Debugf("%v", p.cfg.Log.NewLogClosure(func() string {
+	p.cfg.Log.Debugf("%v", logger.NewLogClosure(func() string {
 		// Debug summary of message.
-		summary := p2plog.MessageSummary(msg)
+		summary := logger.MessageSummary(msg)
 		if len(summary) > 0 {
 			summary = " (" + summary + ")"
 		}
 		return fmt.Sprintf("Received %v%s from %s",
 			msg.Command(), summary, p)
 	}))
-	p.cfg.Log.Tracef("%v", p.cfg.Log.NewLogClosure(func() string {
+	p.cfg.Log.Tracef("%v", logger.NewLogClosure(func() string {
 		return spew.Sdump(msg)
 	}))
-	p.cfg.Log.Tracef("%v", p.cfg.Log.NewLogClosure(func() string {
+	p.cfg.Log.Tracef("%v", logger.NewLogClosure(func() string {
 		return spew.Sdump(buf)
 	}))
 
@@ -956,19 +957,19 @@ func (p *Peer) writeMessage(msg wire.Message, enc wire.MessageEncoding) error {
 
 	// Use closures to log expensive operations so they are only run when
 	// the logging level requires it.
-	p.cfg.Log.Debugf("%v", p.cfg.Log.NewLogClosure(func() string {
+	p.cfg.Log.Debugf("%v", logger.NewLogClosure(func() string {
 		// Debug summary of message.
-		summary := p2plog.MessageSummary(msg)
+		summary := logger.MessageSummary(msg)
 		if len(summary) > 0 {
 			summary = " (" + summary + ")"
 		}
 		return fmt.Sprintf("Sending %v%s to %s", msg.Command(),
 			summary, p)
 	}))
-	p.cfg.Log.Tracef("%v", p.cfg.Log.NewLogClosure(func() string {
+	p.cfg.Log.Tracef("%v", logger.NewLogClosure(func() string {
 		return spew.Sdump(msg)
 	}))
-	p.cfg.Log.Tracef("%v", p.cfg.Log.NewLogClosure(func() string {
+	p.cfg.Log.Tracef("%v", logger.NewLogClosure(func() string {
 		var buf bytes.Buffer
 		_, err := wire.WriteMessageWithEncodingN(&buf, msg, p.ProtocolVersion(),
 			p.cfg.ChainParams.Net, enc)

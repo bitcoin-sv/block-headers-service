@@ -15,11 +15,11 @@ import (
 	"time"
 
 	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/libsv/bitcoin-hc/domains/logging"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/wire"
 	"github.com/libsv/bitcoin-hc/service"
-	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
 	peerpkg "github.com/libsv/bitcoin-hc/transports/p2p/peer"
 )
 
@@ -136,7 +136,7 @@ func (sps *syncPeerState) updateNetwork(syncPeer *peerpkg.Peer) {
 // chain is in sync, the SyncManager handles incoming block and header
 // notifications and relays announcements of new blocks to peers.
 type SyncManager struct {
-	log            p2plog.Logger
+	log            logging.Logger
 	peerNotifier   PeerNotifier
 	started        int32
 	shutdown       int32
@@ -877,11 +877,11 @@ func (sm *SyncManager) IsCurrent() bool {
 // block, tx, and inv updates.
 func New(config *Config, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState) (*SyncManager, error) {
 	sm := SyncManager{
-		log:                     config.Logger,
+		log:                     config.LoggerFactory.NewLogger("sync-manager"),
 		peerNotifier:            config.PeerNotifier,
 		chainParams:             config.ChainParams,
 		peerStates:              peers,
-		progressLogger:          newBlockProgressLogger("Processed", config.Logger),
+		progressLogger:          newBlockProgressLogger("Processed", config.LoggerFactory),
 		msgChan:                 make(chan interface{}, config.MaxPeers*3),
 		quit:                    make(chan struct{}),
 		minSyncPeerNetworkSpeed: config.MinSyncPeerNetworkSpeed,

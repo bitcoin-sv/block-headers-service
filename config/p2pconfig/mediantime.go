@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
+	"github.com/libsv/bitcoin-hc/domains/logging"
 )
 
 const (
@@ -80,7 +80,7 @@ type medianTime struct {
 	offsets            []int64
 	offsetSecs         int64
 	invalidTimeChecked bool
-	log                p2plog.Logger
+	log                logging.Logger
 }
 
 // Ensure the medianTime type implements the MedianTimeSource interface.
@@ -208,10 +208,10 @@ func (m *medianTime) Offset() time.Duration {
 // rules necessary for proper time handling in the chain consensus rules and
 // expects the time samples to be added from the timestamp field of the version
 // message received from remote peers that successfully connect and negotiate.
-func NewMedianTime(log p2plog.Logger) MedianTimeSource {
+func NewMedianTime(lf logging.LoggerFactory) MedianTimeSource {
 	return &medianTime{
 		knownIDs: make(map[string]struct{}),
 		offsets:  make([]int64, 0, maxMedianTimeEntries),
-		log:      log,
+		log:      lf.NewLogger("mediation-time"),
 	}
 }

@@ -11,25 +11,7 @@ import (
 
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
-	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
 )
-
-type logWriter struct{}
-
-func (logWriter) Write(p []byte) (n int, err error) {
-	_, err = os.Stdout.Write(p)
-
-	if err != nil {
-		return len(p), err
-	}
-	return len(p), nil
-}
-// UseDefaultP2PLogger returns default p2p logger.
-func UseDefaultP2PLogger() p2plog.Logger {
-	backendLog := p2plog.NewBackend(logWriter{})
-	logger := backendLog.Logger("HEADERS")
-	return logger
-}
 
 // normalizeAddress returns addr with the passed default port appended if
 // there is not already a port specified.

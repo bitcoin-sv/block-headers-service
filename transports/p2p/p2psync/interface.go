@@ -5,11 +5,11 @@
 package p2psync
 
 import (
+	"github.com/libsv/bitcoin-hc/domains/logging"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg"
 	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
 	"github.com/libsv/bitcoin-hc/internal/wire"
 	"github.com/libsv/bitcoin-hc/service"
-	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
 	"github.com/libsv/bitcoin-hc/transports/p2p/peer"
 )
 
@@ -26,9 +26,9 @@ type PeerNotifier interface {
 
 // Config is a configuration struct used to initialize a new SyncManager.
 type Config struct {
-	Logger       p2plog.Logger
-	PeerNotifier PeerNotifier
-	ChainParams  *chaincfg.Params
+	LoggerFactory logging.LoggerFactory
+	PeerNotifier  PeerNotifier
+	ChainParams   *chaincfg.Params
 
 	DisableCheckpoints bool
 	MaxPeers           int

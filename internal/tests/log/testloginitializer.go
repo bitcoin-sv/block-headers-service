@@ -1,67 +1,74 @@
 package testlog
 
 import (
+	"encoding/json"
+	"io"
 	"os"
 
 	"github.com/libsv/bitcoin-hc/app/logger"
 	"github.com/libsv/bitcoin-hc/domains/logging"
-	"github.com/libsv/bitcoin-hc/transports/p2p/p2plog"
 )
-
-// InitializeMockLogger initialize logger for tests.
-func InitializeMockLogger() p2plog.Logger {
-	l := NewTestLoggerFactory().NewLogger("")
-	log, ok := logger.UnwrapP2plog(l)
-	if !ok {
-		panic("expect to unwrap P2plog from logger")
-	}
-	return log
-}
 
 // NewTestLoggerFactory creates new logger factory for tests.
 func NewTestLoggerFactory() logging.LoggerFactory {
-	return logger.NewLoggerFactory("PULSE_TEST", logging.Debug, os.Stdout.Write)
+	return logger.NewLoggerFactory("PULSE_TEST", logging.Debug, os.Stdout)
 }
 
 // NewTestLoggerFactoryWithRecorder creates new logger factory for tests and log recorder to check logged messages.
 func NewTestLoggerFactoryWithRecorder() (logging.LoggerFactory, *LogRecorder) {
 	recorder := newLogRecorder()
-	return logger.NewLoggerFactory("PULSE_TEST", logging.Debug, func(p []byte) (n int, err error) {
-		recorder.record(p)
-		return os.Stdout.Write(p)
-	}), recorder
+	return logger.NewLoggerFactory("PULSE_TEST", logging.Debug, recorder), recorder
 }
 
 // LogRecorder helper that is recording log messages send to logger created with NewTestLoggerFactoryWithRecorder.
 type LogRecorder struct {
-	Logs []string
+	Logs []LogMessage
+	io.Writer
 }
 
 func newLogRecorder() *LogRecorder {
 	return &LogRecorder{
-		Logs: make([]string, 0),
+		Logs: make([]LogMessage, 0),
 	}
 }
 
-func (r *LogRecorder) record(p []byte) {
-	r.Logs = append(r.Logs, string(p))
+func (r *LogRecorder) record(p []byte) error {
+	lm := LogMessage{}
+	err := json.Unmarshal(p, &lm)
+	if err != nil {
+		return err
+	}
+	r.Logs = append(r.Logs, lm)
+	return nil
 }
 
 // Clear clears recorded logs.
 func (r *LogRecorder) Clear() {
-	r.Logs = make([]string, 0)
+	r.Logs = make([]LogMessage, 0)
 }
 
 // Last recorded raw log entry.
-func (r *LogRecorder) Last() string {
+func (r *LogRecorder) Last() LogMessage {
 	return r.Logs[len(r.Logs)-1]
 }
 
-// LastNormalized last recorded log normalized: with stripped date time at the start and new line character at the end.
-func (r *LogRecorder) LastNormalized() string {
-	return normalize(r.Last())
+// LastUnmarshaled last recorded log unmarshaled.
+func (r *LogRecorder) LastUnmarshaled() LogMessage {
+	return r.Last()
 }
 
-func normalize(msg string) string {
-	return msg[24 : len(msg)-1]
+func (r *LogRecorder) Write(p []byte) (int, error) {
+	err := r.record(p)
+	if err != nil {
+		return 0, err
+	}
+	return os.Stdout.Write(p)
+}
+
+// LogMessage represents log message.
+type LogMessage struct {
+	Level       string `json:"log.level"`
+	Message     string `json:"message"`
+	Application string `json:"application"`
+	Module      string `json:"module"`
 }
