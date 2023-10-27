@@ -37,3 +37,6 @@ and don't want to recreate a volume you can run the image providing both `--clea
 
 `docker run -v pulse-data:/app/data ${DOCKERHUB_OWNER}/${DOCKERHUB_REPO}:latest --clean --preloaded`
 
+### run pulse which should work with postgres 
+
+`docker run -e DB_TYPE='postgres' -e DB_DSN='${POSTGRESS_CONNECTION_STRING}' ${DOCKERHUB_OWNER}/${DOCKERHUB_REPO}:latest`

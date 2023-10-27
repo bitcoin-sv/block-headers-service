@@ -9,12 +9,12 @@ import (
 // DbWebhook represent webhook saved in db.
 type DbWebhook struct {
 	Url               string    `db:"url"`
-	TokenHeader       string    `db:"tokenHeader"`
+	TokenHeader       string    `db:"tokenheader"`
 	Token             string    `db:"token"`
-	CreatedAt         time.Time `db:"createdAt"`
-	LastEmitStatus    string    `db:"lastEmitStatus"`
-	LastEmitTimestamp time.Time `db:"lastEmitTimestamp"`
-	ErrorsCount       int       `db:"errorsCount"`
+	CreatedAt         time.Time `db:"createdat"`
+	LastEmitStatus    string    `db:"lastemitstatus"`
+	LastEmitTimestamp time.Time `db:"lastemittimestamp"`
+	ErrorsCount       int       `db:"errorscount"`
 	Active            bool      `db:"active"`
 }
 

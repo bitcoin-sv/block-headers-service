@@ -12,8 +12,8 @@ import (
 
 const (
 	sqlInsertWebhook = `
-	INSERT INTO webhooks(url, tokenHeader, token, createdAt)
-	VALUES(:url, :tokenHeader, :token, :createdAt)
+	INSERT INTO webhooks(url, tokenheader, token, createdat)
+	VALUES(:url, :tokenheader, :token, :createdat)
 	`
 
 	sqlGetWebhookByUrl = ` 
