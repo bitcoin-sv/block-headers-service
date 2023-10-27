@@ -20,7 +20,7 @@ require (
 
 require (
 	github.com/centrifugal/centrifuge v0.29.1
-	github.com/centrifugal/centrifuge-go v0.9.6
+	github.com/centrifugal/centrifuge-go v0.10.2
 	github.com/dchest/uniuri v1.2.0
 	github.com/kinbiko/jsonassert v1.1.1
 	github.com/lib/pq v1.10.0
