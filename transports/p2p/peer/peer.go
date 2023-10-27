@@ -1977,9 +1977,6 @@ func (p *Peer) localVersionMsg() (*wire.MsgVersion, error) {
 	// Advertise our max supported protocol version.
 	msg.ProtocolVersion = int32(p.cfg.ProtocolVersion)
 
-	// Advertise if inv messages for transactions are desired, keep the "always disable for Pulse"
-	// msg.DisableRelayTx = p.cfg.DisableRelayTx
-
 	return msg, nil
 }
 
