@@ -121,11 +121,6 @@ linters-settings:
   nestif:
     # minimal complexity of if statements to report, 5 by default
     min-complexity: 4
-  goconst:
-    # minimal length of string constant, 3 by default
-    min-len: 3
-    # minimal occurrences count to trigger, 3 by default
-    min-occurrences: 3
   gocritic:
     # Which checks should be enabled; can't be combined with 'disabled-checks';
     # See https://go-critic.github.io/overview#checks-overview
@@ -197,9 +192,6 @@ linters-settings:
     # put imports beginning with prefix after 3rd-party packages;
     # it's a comma-separated list of prefixes
     local-prefixes: github.com/org/project
-  golint:
-    # minimal confidence for issues, default is 0.8
-    min-confidence: 1.0
   gomnd:
     settings:
       mnd:
@@ -334,7 +326,6 @@ linters:
     - govet
     - gosec
     - bodyclose
-    - golint
     - unconvert
     - dupl
     - misspell
@@ -343,7 +334,6 @@ linters:
     - exportloopref
     - exhaustive
     - sqlclosecheck
-    - goconst
     - godot
   disable:
     - gocritic # use this for very opinionated linting
@@ -388,7 +378,6 @@ issues:
         - errcheck
         - dupl
         - gosec
-        - goconst
         - lll
 
     # Exclude known linters from partially hard-vendored code,
@@ -419,8 +408,6 @@ issues:
   exclude-case-sensitive: false
 
   # The list of ids of default excludes to include or disable. By default it's empty.
-  include:
-    - EXC0002 # disable excluding of issues about comments from golint
 
   # Maximum issues count per one linter. Set to 0 to disable. Default is 50.
   max-issues-per-linter: 0

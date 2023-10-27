@@ -6,7 +6,7 @@ debug
 build/
 artifacts/
 dist/
-data/blockheaders.db
+data/blockheaders.bck.db
 data/blockheaders.db-journal
 
 

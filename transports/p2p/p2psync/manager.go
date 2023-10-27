@@ -153,7 +153,7 @@ type SyncManager struct {
 	headersFirstMode bool
 	startHeader      *domains.BlockHeader
 	nextCheckpoint   *chaincfg.Checkpoint
-	checkpoints 	 []chaincfg.Checkpoint
+	checkpoints      []chaincfg.Checkpoint
 
 	// minSyncPeerNetworkSpeed is the minimum speed allowed for
 	// a sync peer.
@@ -662,7 +662,13 @@ func (sm *SyncManager) sendGetHeadersWithPassedParams(chainHash []*chainhash.Has
 // handleInvMsg handles inv messages from all peers.
 // We examine the inventory advertised by the remote peer and act accordingly.
 func (sm *SyncManager) handleInvMsg(imsg *invMsg) {
-	sm.log.Infof("[Headers] handleInvMsg, peer.ID: %d", imsg.peer.ID())
+	// Log the type of data we're receiving for debugging purposes.
+	typeMap := map[wire.InvType]string{
+		wire.InvTypeBlock: "Block",
+		wire.InvTypeTx:    "Tx",
+		wire.InvTypeError: "Error",
+	}
+	sm.log.Infof("[Headers] handleInvMsg, peer.ID: %d, invType: %s", imsg.peer.ID(), typeMap[imsg.inv.InvList[0].Type])
 
 	lastHeader := sm.Services.Headers.GetTip()
 	sm.log.Infof("[Manager] handleInvMsg lastHeaderNode.height : %d", lastHeader.Height)
@@ -887,7 +893,7 @@ func New(config *Config, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState) (*SyncM
 		minSyncPeerNetworkSpeed: config.MinSyncPeerNetworkSpeed,
 		blocksToConfirmFork:     config.BlocksForForkConfirmation,
 		Services:                config.Services,
-		checkpoints: 			 config.Checkpoints,
+		checkpoints:             config.Checkpoints,
 	}
 
 	if !config.DisableCheckpoints {
