@@ -5,12 +5,12 @@
 package p2psync
 
 import (
-	"github.com/libsv/bitcoin-hc/domains/logging"
-	"github.com/libsv/bitcoin-hc/internal/chaincfg"
-	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
-	"github.com/libsv/bitcoin-hc/internal/wire"
-	"github.com/libsv/bitcoin-hc/service"
-	"github.com/libsv/bitcoin-hc/transports/p2p/peer"
+	"github.com/bitcoin-sv/pulse/domains/logging"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/pulse/internal/wire"
+	"github.com/bitcoin-sv/pulse/service"
+	"github.com/bitcoin-sv/pulse/transports/p2p/peer"
 )
 
 // PeerNotifier exposes methods to notify peers of status changes to

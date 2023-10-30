@@ -3,8 +3,8 @@ package databases
 import (
 	"fmt"
 
+	"github.com/bitcoin-sv/pulse/config"
 	"github.com/jmoiron/sqlx"
-	"github.com/libsv/bitcoin-hc/config"
 )
 
 type dbSetupFunc func(c *config.Db) (*sqlx.DB, error)

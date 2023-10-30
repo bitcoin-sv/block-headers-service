@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/bitcoin-sv/pulse/domains"
 )
 
 // DbToken represent authorization token saved in db.

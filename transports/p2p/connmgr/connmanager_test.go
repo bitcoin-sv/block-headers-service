@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/libsv/bitcoin-hc/domains/logging"
-	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
+	"github.com/bitcoin-sv/pulse/domains/logging"
+	testlog "github.com/bitcoin-sv/pulse/internal/tests/log"
 )
 
 func init() {
@@ -81,7 +81,7 @@ func TestNewConfig(t *testing.T) {
 		t.Fatalf("New expected error: 'Dial can't be nil', got nil")
 	}
 	_, err = New(&Config{
-		Dial: mockDialer,
+		Dial:          mockDialer,
 		LoggerFactory: lf,
 	})
 	if err != nil {

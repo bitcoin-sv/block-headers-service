@@ -1,9 +1,9 @@
 package service
 
 import (
+	"github.com/bitcoin-sv/pulse/domains"
+	"github.com/bitcoin-sv/pulse/repository"
 	"github.com/dchest/uniuri"
-	"github.com/libsv/bitcoin-hc/domains"
-	"github.com/libsv/bitcoin-hc/repository"
 )
 
 // TokenService represents Token service and provide access to repositories.

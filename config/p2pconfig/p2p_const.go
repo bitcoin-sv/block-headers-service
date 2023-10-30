@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/libsv/bitcoin-hc/transports/p2p/p2putil"
+	"github.com/bitcoin-sv/pulse/transports/p2p/p2putil"
 )
 
 // Default config for p2p app.

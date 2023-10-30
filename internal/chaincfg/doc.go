@@ -25,8 +25,8 @@
 //	        "fmt"
 //	        "log"
 //
-//	        "github.com/libsv/bitcoin-hc/p2putil"
-//	        "github.com/libsv/bitcoin-hc/chaincfg"
+//	        "github.com/bitcoin-sv/pulse/p2putil"
+//	        "github.com/bitcoin-sv/pulse/chaincfg"
 //	)
 //
 //	var testnet = flag.Bool("testnet", false, "operate on the testnet Bitcoin network")

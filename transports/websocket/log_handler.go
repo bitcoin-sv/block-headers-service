@@ -1,8 +1,8 @@
 package websocket
 
 import (
+	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/centrifugal/centrifuge"
-	"github.com/libsv/bitcoin-hc/domains/logging"
 )
 
 type logHandler struct {

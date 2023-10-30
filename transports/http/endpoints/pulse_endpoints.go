@@ -3,20 +3,20 @@ package endpoints
 import (
 	"errors"
 
+	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/pulse/service"
+	"github.com/bitcoin-sv/pulse/transports/http/auth"
+	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/access"
+	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/headers"
+	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/merkleroots"
+	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/network"
+	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/tips"
+	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/webhook"
+	router "github.com/bitcoin-sv/pulse/transports/http/endpoints/routes"
+	"github.com/bitcoin-sv/pulse/transports/http/endpoints/status"
+	"github.com/bitcoin-sv/pulse/transports/http/endpoints/swagger"
+	httpserver "github.com/bitcoin-sv/pulse/transports/http/server"
 	"github.com/gin-gonic/gin"
-	"github.com/libsv/bitcoin-hc/config"
-	"github.com/libsv/bitcoin-hc/service"
-	"github.com/libsv/bitcoin-hc/transports/http/auth"
-	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/access"
-	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/headers"
-	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/merkleroots"
-	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/network"
-	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/tips"
-	"github.com/libsv/bitcoin-hc/transports/http/endpoints/api/webhook"
-	router "github.com/libsv/bitcoin-hc/transports/http/endpoints/routes"
-	"github.com/libsv/bitcoin-hc/transports/http/endpoints/status"
-	"github.com/libsv/bitcoin-hc/transports/http/endpoints/swagger"
-	httpserver "github.com/libsv/bitcoin-hc/transports/http/server"
 )
 
 // SetupPulseRoutes main point where we're registering endpoints registrars (handlers that will register endpoints in gin engine)

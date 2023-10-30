@@ -3,9 +3,9 @@ package access
 import (
 	"net/http"
 
-	"github.com/libsv/bitcoin-hc/service"
-	"github.com/libsv/bitcoin-hc/transports/http/auth"
-	router "github.com/libsv/bitcoin-hc/transports/http/endpoints/routes"
+	"github.com/bitcoin-sv/pulse/service"
+	"github.com/bitcoin-sv/pulse/transports/http/auth"
+	router "github.com/bitcoin-sv/pulse/transports/http/endpoints/routes"
 
 	"github.com/gin-gonic/gin"
 )

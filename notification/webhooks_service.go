@@ -4,8 +4,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/libsv/bitcoin-hc/config"
-	"github.com/libsv/bitcoin-hc/domains/logging"
+	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/pulse/domains/logging"
 )
 
 // WebhooksService represents Webhooks service and provide access to repositories.

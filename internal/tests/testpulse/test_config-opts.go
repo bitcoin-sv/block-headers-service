@@ -1,8 +1,8 @@
 package testpulse
 
 import (
-	"github.com/libsv/bitcoin-hc/config"
-	"github.com/libsv/bitcoin-hc/internal/tests/testrepository"
+	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/pulse/internal/tests/testrepository"
 )
 
 // WithoutApiAuthorization disables authorization.

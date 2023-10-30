@@ -1,4 +1,4 @@
-module github.com/libsv/bitcoin-hc
+module github.com/bitcoin-sv/pulse
 
 go 1.19
 

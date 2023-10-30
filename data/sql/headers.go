@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"strings"
 
+	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/pulse/domains/logging"
+	"github.com/bitcoin-sv/pulse/repository/dto"
 	"github.com/jmoiron/sqlx"
-	"github.com/libsv/bitcoin-hc/config"
-	"github.com/libsv/bitcoin-hc/domains/logging"
-	"github.com/libsv/bitcoin-hc/repository/dto"
 	"github.com/pkg/errors"
 )
 
@@ -170,7 +170,7 @@ type HeadersDb struct {
 	dbType config.DbType
 	db     *sqlx.DB
 	sqls   map[config.DbType]map[string]string
-	log logging.Logger
+	log    logging.Logger
 }
 
 // NewHeadersDb will setup and return a new headers store.

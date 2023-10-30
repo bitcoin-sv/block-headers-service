@@ -3,7 +3,7 @@ package headers
 import (
 	"math/big"
 
-	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/bitcoin-sv/pulse/domains"
 )
 
 // BlockHeaderResponse defines a single block header.

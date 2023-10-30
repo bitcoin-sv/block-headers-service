@@ -2,11 +2,11 @@ package repository
 
 import (
 	"context"
-	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 
-	"github.com/libsv/bitcoin-hc/data/sql"
-	"github.com/libsv/bitcoin-hc/domains"
-	dto "github.com/libsv/bitcoin-hc/repository/dto"
+	"github.com/bitcoin-sv/pulse/data/sql"
+	"github.com/bitcoin-sv/pulse/domains"
+	dto "github.com/bitcoin-sv/pulse/repository/dto"
 )
 
 // HeaderRepository provide access to repositories and implements methods for headers.

@@ -4,9 +4,9 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/gin-gonic/gin"
-	"github.com/libsv/bitcoin-hc/config"
-	"github.com/libsv/bitcoin-hc/domains"
 	"github.com/spf13/viper"
 )
 

@@ -10,11 +10,11 @@ import (
 	"net"
 	"time"
 
-	"github.com/libsv/bitcoin-hc/domains/logging"
-	"github.com/libsv/bitcoin-hc/internal/chaincfg"
-	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
-	"github.com/libsv/bitcoin-hc/internal/wire"
-	"github.com/libsv/bitcoin-hc/transports/p2p/peer"
+	"github.com/bitcoin-sv/pulse/domains/logging"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg"
+	testlog "github.com/bitcoin-sv/pulse/internal/tests/log"
+	"github.com/bitcoin-sv/pulse/internal/wire"
+	"github.com/bitcoin-sv/pulse/transports/p2p/peer"
 )
 
 // mockRemotePeer creates a basic inbound peer listening on the simnet port for

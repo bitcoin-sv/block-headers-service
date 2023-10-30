@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/libsv/bitcoin-hc/internal/chaincfg"
-	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 )
 
 // normalizeAddress returns addr with the passed default port appended if
@@ -46,7 +46,6 @@ func removeDuplicateAddresses(addrs []string) []string {
 	}
 	return result
 }
-
 
 // cleanAndExpandPath expands environment variables and leading ~ in the
 // passed path, cleans the result, and returns it.

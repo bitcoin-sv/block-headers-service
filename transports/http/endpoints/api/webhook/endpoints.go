@@ -3,10 +3,10 @@ package webhook
 import (
 	"net/http"
 
+	"github.com/bitcoin-sv/pulse/notification"
+	"github.com/bitcoin-sv/pulse/service"
+	router "github.com/bitcoin-sv/pulse/transports/http/endpoints/routes"
 	"github.com/gin-gonic/gin"
-	"github.com/libsv/bitcoin-hc/notification"
-	"github.com/libsv/bitcoin-hc/service"
-	router "github.com/libsv/bitcoin-hc/transports/http/endpoints/routes"
 )
 
 // Webhooks is an interface which represents methods required for Webhooks service.

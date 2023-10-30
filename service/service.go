@@ -1,16 +1,16 @@
 package service
 
 import (
-	"github.com/libsv/bitcoin-hc/config"
-	"github.com/libsv/bitcoin-hc/domains"
-	"github.com/libsv/bitcoin-hc/domains/logging"
-	"github.com/libsv/bitcoin-hc/internal/chaincfg"
-	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
-	"github.com/libsv/bitcoin-hc/internal/wire"
-	"github.com/libsv/bitcoin-hc/notification"
-	"github.com/libsv/bitcoin-hc/repository"
-	"github.com/libsv/bitcoin-hc/transports/http/client"
-	peerpkg "github.com/libsv/bitcoin-hc/transports/p2p/peer"
+	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/pulse/domains"
+	"github.com/bitcoin-sv/pulse/domains/logging"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/pulse/internal/wire"
+	"github.com/bitcoin-sv/pulse/notification"
+	"github.com/bitcoin-sv/pulse/repository"
+	"github.com/bitcoin-sv/pulse/transports/http/client"
+	peerpkg "github.com/bitcoin-sv/pulse/transports/p2p/peer"
 )
 
 // Network is an interface which represents methods required for Network service.

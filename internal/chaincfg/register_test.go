@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	. "github.com/libsv/bitcoin-hc/internal/chaincfg"
+	. "github.com/bitcoin-sv/pulse/internal/chaincfg"
 )
 
 // Define some of the required parameters for a user-registered

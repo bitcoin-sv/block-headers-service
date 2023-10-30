@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/libsv/bitcoin-hc/notification"
+	"github.com/bitcoin-sv/pulse/notification"
 )
 
 type webhookTargetClientFunc func(headers map[string]string, method string, url string, body any) (*http.Response, error)

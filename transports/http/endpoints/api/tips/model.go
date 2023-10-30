@@ -3,7 +3,7 @@ package tips
 import (
 	"math/big"
 
-	"github.com/libsv/bitcoin-hc/domains"
+	"github.com/bitcoin-sv/pulse/domains"
 )
 
 // TipResponse defines a single block header.

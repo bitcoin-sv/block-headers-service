@@ -19,15 +19,15 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/bitcoin-sv/pulse/app/logger"
+	"github.com/bitcoin-sv/pulse/config/p2pconfig"
+	"github.com/bitcoin-sv/pulse/domains"
+	"github.com/bitcoin-sv/pulse/domains/logging"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/pulse/internal/wire"
 	"github.com/btcsuite/go-socks/socks"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/libsv/bitcoin-hc/app/logger"
-	"github.com/libsv/bitcoin-hc/config/p2pconfig"
-	"github.com/libsv/bitcoin-hc/domains"
-	"github.com/libsv/bitcoin-hc/domains/logging"
-	"github.com/libsv/bitcoin-hc/internal/chaincfg"
-	"github.com/libsv/bitcoin-hc/internal/chaincfg/chainhash"
-	"github.com/libsv/bitcoin-hc/internal/wire"
 )
 
 const (

@@ -10,9 +10,9 @@ import (
 
 	"testing"
 
-	testlog "github.com/libsv/bitcoin-hc/internal/tests/log"
-	"github.com/libsv/bitcoin-hc/internal/wire"
-	"github.com/libsv/bitcoin-hc/transports/p2p/addrmgr"
+	testlog "github.com/bitcoin-sv/pulse/internal/tests/log"
+	"github.com/bitcoin-sv/pulse/internal/wire"
+	"github.com/bitcoin-sv/pulse/transports/p2p/addrmgr"
 )
 
 // naTest is used to describe a test to be performed against the NetAddressKey
