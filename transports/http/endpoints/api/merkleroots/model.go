@@ -7,27 +7,29 @@ import (
 // MerkleRootConfirmation is a confirmation
 // of merkle roots inclusion in the longest chain.
 type MerkleRootConfirmation struct {
-	Hash       string `json:"blockhash"`
-	MerkleRoot string `json:"merkleRoot"`
-	Confirmed  bool   `json:"confirmed"`
+	Hash         string                              `json:"blockHash"`
+	BlockHeight  int32                               `json:"blockHeight"`
+	MerkleRoot   string                              `json:"merkleRoot"`
+	Confirmation domains.MerkleRootConfirmationState `json:"confirmation"`
 }
 
 // MerkleRootsConfirmationsResponse is an API response for confirming
 // merkle roots inclusion in the longest chain.
 type MerkleRootsConfirmationsResponse struct {
-	AllConfirmed  bool                     `json:"allConfirmed"`
-	Confirmations []MerkleRootConfirmation `json:"confirmations"`
+	ConfirmationState domains.MerkleRootConfirmationState `json:"confirmationState"`
+	Confirmations     []MerkleRootConfirmation            `json:"confirmations"`
 }
 
 // newMerkleRootConfirmationcreates a new merkleRootConfirmation
 // object from domain's MerkleRootConfirmation object.
 func newMerkleRootConfirmation(
-	merkleConfms *domains.MerkleRootConfirmation,
+	merkleConfm *domains.MerkleRootConfirmation,
 ) MerkleRootConfirmation {
 	return MerkleRootConfirmation{
-		Hash:       merkleConfms.Hash,
-		MerkleRoot: merkleConfms.MerkleRoot,
-		Confirmed:  merkleConfms.Confirmed,
+		Hash:         merkleConfm.Hash,
+		BlockHeight:  merkleConfm.BlockHeight,
+		MerkleRoot:   merkleConfm.MerkleRoot,
+		Confirmation: merkleConfm.Confirmation,
 	}
 }
 
@@ -38,17 +40,17 @@ func mapToMerkleRootsConfirmationsResponses(
 ) MerkleRootsConfirmationsResponse {
 	mrcfs := make([]MerkleRootConfirmation, 0)
 
-	allConfirmed := true
+	confirmationState := domains.Confirmed
 
 	for _, merkleConfm := range merkleConfms {
 		mrcfs = append(mrcfs, newMerkleRootConfirmation(merkleConfm))
-		if !merkleConfm.Confirmed {
-			allConfirmed = false
+		if confirmationState < merkleConfm.Confirmation {
+			confirmationState = merkleConfm.Confirmation
 		}
 	}
 
 	return MerkleRootsConfirmationsResponse{
-		AllConfirmed:  allConfirmed,
-		Confirmations: mrcfs,
+		ConfirmationState: confirmationState,
+		Confirmations:     mrcfs,
 	}
 }

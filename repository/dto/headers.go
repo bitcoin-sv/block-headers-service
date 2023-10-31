@@ -94,30 +94,48 @@ func ToDbBlockHeader(bh domains.BlockHeader) DbBlockHeader {
 // DbMerkleRootConfirmation is a database representation of a Confirmation
 // of Merkle Root inclusion in the longest chain.
 type DbMerkleRootConfirmation struct {
-	Hash       sql.NullString `db:"hash"`
-	MerkleRoot string         `db:"merkleroot"`
-	Confirmed  bool           `db:"confirmed"`
+	MerkleRoot  string         `db:"merkleroot"`
+	BlockHeight int32          `db:"blockheight"`
+	Hash        sql.NullString `db:"hash"`
+	TipHeight   int32          `db:"tipheight"`
 }
 
 // ToMerkleRootConfirmation converts DbMerkleRootConfirmation to domain's
 // MerkleRootConfirmation used after getting records from db.
-func (dbMerkleConfm *DbMerkleRootConfirmation) ToMerkleRootConfirmation() *domains.MerkleRootConfirmation {
-	return &domains.MerkleRootConfirmation{
-		MerkleRoot: dbMerkleConfm.MerkleRoot,
-		Hash:       dbMerkleConfm.Hash.String,
-		Confirmed:  dbMerkleConfm.Confirmed,
+func (dbMerkleConfm *DbMerkleRootConfirmation) ToMerkleRootConfirmation(
+	maxBlockHeightExcess int,
+) *domains.MerkleRootConfirmation {
+	var confmState domains.MerkleRootConfirmationState
+
+	if dbMerkleConfm.Hash.Valid {
+		confmState = domains.Confirmed
+	} else if dbMerkleConfm.BlockHeight > dbMerkleConfm.TipHeight &&
+		dbMerkleConfm.BlockHeight-dbMerkleConfm.TipHeight < int32(maxBlockHeightExcess+1) {
+		confmState = domains.UnableToVerify
+	} else {
+		confmState = domains.Invalid
 	}
+
+	c := &domains.MerkleRootConfirmation{
+		MerkleRoot:   dbMerkleConfm.MerkleRoot,
+		BlockHeight:  dbMerkleConfm.BlockHeight,
+		Hash:         dbMerkleConfm.Hash.String,
+		Confirmation: confmState,
+	}
+
+	return c
 }
 
 // ConvertToMerkleRootsConfirmations converts DbMerkleRootConfirmation slice
 // to domain's MerkleRootConfirmation slice used after getting records from db.
 func ConvertToMerkleRootsConfirmations(
 	dbMerkleConfms []*DbMerkleRootConfirmation,
+	maxBlockHeightExcess int,
 ) []*domains.MerkleRootConfirmation {
 	merklesConfms := make([]*domains.MerkleRootConfirmation, 0)
 
 	for _, merkleConfm := range dbMerkleConfms {
-		m := merkleConfm.ToMerkleRootConfirmation()
+		m := merkleConfm.ToMerkleRootConfirmation(maxBlockHeightExcess)
 		merklesConfms = append(merklesConfms, m)
 	}
 

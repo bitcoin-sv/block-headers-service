@@ -42,6 +42,12 @@ const (
 	EnvHttpServerAuthToken = "http.authToken" // nolint:gosec
 )
 
+// EnvMerklerootMaxBlockHeightExcess is a maximum number of blocks over the current Pulse
+// top height that allows the given merkleroot to be UNABLE_TO_VERIFY instead of INVALID.
+//
+// Merkleroots with block height above that value are considered INVALID.
+const EnvMerklerootMaxBlockHeightExcess = "merkleroot.maxBlockHeightExcess"
+
 // EnvWebhookMaxTries max tries for webhook.
 const EnvWebhookMaxTries = "webhook.maxTries"
 
@@ -86,6 +92,7 @@ type Config struct {
 	ConfigFile    string            `mapstructure:"configFile"`
 	Db            *Db               `mapstructure:"db"`
 	P2P           *p2pconfig.Config `mapstructure:"p2p"`
+	Merkleroot    *Merkleroot       `mapstructure:"merkleroot"`
 	Webhook       *Webhook          `mapstructure:"webhook"`
 	Websocket     *Websocket        `mapstructure:"websocket"`
 	HTTP          *HTTP             `mapstructure:"http"`
@@ -102,6 +109,11 @@ type Db struct {
 	FilePath           string `mapstructure:"dbFilePath"`
 	PreparedDb         bool   `mapstructure:"preparedDb"`
 	PreparedDbFilePath string `mapstructure:"preparedDbFilePath"`
+}
+
+// Merkleroot represents merkleroots verification config.
+type Merkleroot struct {
+	MaxBlockHeightExcess int `mapstructure:"maxBlockHeightExcess"`
 }
 
 // Webhook represents a webhook config.

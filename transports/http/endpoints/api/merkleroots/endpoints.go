@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/bitcoin-sv/pulse/service"
 	router "github.com/bitcoin-sv/pulse/transports/http/endpoints/routes"
 )
@@ -35,10 +36,10 @@ func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup) {
 //	@Produce json
 //	@Success 200 {array} merkleroots.MerkleRootsConfirmationsResponse
 //	@Router /chain/merkleroot/verify [post]
-//	@Param merkleroots body []string true "JSON"
+//	@Param request body []domains.MerkleRootConfirmationRequestItem true "JSON"
 //	@Security Bearer
 func (h *handler) verify(c *gin.Context) {
-	var body []string
+	var body []domains.MerkleRootConfirmationRequestItem
 	if err := c.BindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, err.Error())
 		return

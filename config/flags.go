@@ -82,6 +82,10 @@ func (fs *PulseFlagSet) websocketFlagsMapping() {
 	fs.Int(historyTTLFlag, 0, "max minutes for which published events should be hold and send to client in case of restored lost connection")
 }
 
+func (fs *PulseFlagSet) merklerootFlagsMapping() {
+	fs.Int(maxBlockHeightExcess, 0, "max block height excess over the current top height for merkleroot verification")
+}
+
 func (fs *PulseFlagSet) webhookFlagsMapping() {
 	fs.Int(maxTriesFlag, 0, "max tries for webhook")
 }

@@ -32,7 +32,7 @@ type Headers interface {
 	InsertGenesisHeaderInDatabase() error
 	GetHeaderByHash(hash string) (*domains.BlockHeader, error)
 	GetHeadersByHeight(height int, count int) ([]*domains.BlockHeader, error)
-	GetMerkleRootsConfirmations(merkleroots []string) ([]*domains.MerkleRootConfirmation, error)
+	GetMerkleRootsConfirmations(request []domains.MerkleRootConfirmationRequestItem) ([]*domains.MerkleRootConfirmation, error)
 	GetHeaderAncestorsByHash(hash string, ancestorHash string) ([]*domains.BlockHeader, error)
 	GetCommonAncestor(hashes []string) (*domains.BlockHeader, error)
 	GetHeadersState(hash string) (*domains.BlockHeaderState, error)
@@ -78,7 +78,7 @@ func NewServices(d Dept) *Services {
 
 	return &Services{
 		Network:  NewNetworkService(d.Peers),
-		Headers:  NewHeaderService(d.Repositories, d.Config.P2P, d.LoggerFactory),
+		Headers:  NewHeaderService(d.Repositories, d.Config.P2P, d.Config.Merkleroot, d.LoggerFactory),
 		Notifier: notifier,
 		Chains:   newChainService(d, notifier),
 		Tokens:   NewTokenService(d.Repositories, d.AdminToken),

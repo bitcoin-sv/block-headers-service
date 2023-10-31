@@ -32,6 +32,7 @@ func Init(lf logging.LoggerFactory) *Config {
 
 func setDefaults() {
 	setHttpServerDefaults()
+	setMerkleRootDefaults()
 	setWebhookDefaults()
 	setWebsocketDefaults()
 	setP2PDefaults()
@@ -61,6 +62,10 @@ func setHttpServerDefaults() {
 	viper.SetDefault(EnvHttpServerWriteTimeout, 10)
 	viper.SetDefault(EnvHttpServerPort, 8080)
 	viper.SetDefault(EnvHttpServerUrlPrefix, "/api/v1")
+}
+
+func setMerkleRootDefaults() {
+	viper.SetDefault(EnvMerklerootMaxBlockHeightExcess, 6)
 }
 
 func setWebhookDefaults() {

@@ -41,12 +41,33 @@ type BlockHeader struct {
 	PreviousBlock chainhash.Hash `json:"prevBlockHash"`
 }
 
+// MerkleRootConfirmationRequestItem is a request type for verification
+// of Merkle Roots inclusion in the longest chain.
+type MerkleRootConfirmationRequestItem struct {
+	MerkleRoot  string `json:"merkleRoot"`
+	BlockHeight int32  `json:"blockHeight"`
+}
+
+// MerkleRootConfirmationState represents the state of each Merkle Root verification
+// process and can be one of three values: Confirmed, Invalid and UnableToVerify.
+type MerkleRootConfirmationState string
+
+const (
+	// Confirmed state occurs when Merkle Root is found in the longest chain.
+	Confirmed MerkleRootConfirmationState = "CONFIRMED"
+	// Invalid state occurs when Merkle Root is not found in the longest chain.
+	Invalid = "INVALID"
+	// UnableToVerify state occurs when Pulse is behind in synchronization with the longest chain.
+	UnableToVerify = "UNABLE_TO_VERIFY"
+)
+
 // MerkleRootConfirmation is used to confirm the inclusion of
-// merkle roots in the longest chain.
+// Merkle Roots in the longest chain.
 type MerkleRootConfirmation struct {
-	MerkleRoot string `json:"merkleRoot"`
-	Hash       string `json:"hash"`
-	Confirmed  bool   `json:"confirmed"`
+	MerkleRoot   string                      `json:"merkleRoot"`
+	BlockHeight  int32                       `json:"blockHeight"`
+	Hash         string                      `json:"hash,omitempty"`
+	Confirmation MerkleRootConfirmationState `json:"confirmation"`
 }
 
 // HeaderArgs are used to retrieve a single block header.
