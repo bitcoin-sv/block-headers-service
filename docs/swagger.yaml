@@ -1,4 +1,21 @@
 definitions:
+  domains.MerkleRootConfirmationRequestItem:
+    properties:
+      blockHeight:
+        type: integer
+      merkleRoot:
+        type: string
+    type: object
+  domains.MerkleRootConfirmationState:
+    enum:
+    - CONFIRMED
+    - UNABLE_TO_VERIFY
+    - INVALID
+    type: string
+    x-enum-varnames:
+    - Confirmed
+    - UnableToVerify
+    - Invalid
   domains.Token:
     properties:
       createdAt:
@@ -40,17 +57,19 @@ definitions:
     type: object
   merkleroots.MerkleRootConfirmation:
     properties:
-      blockhash:
+      blockHash:
         type: string
-      confirmed:
-        type: boolean
+      blockHeight:
+        type: integer
+      confirmation:
+        $ref: '#/definitions/domains.MerkleRootConfirmationState'
       merkleRoot:
         type: string
     type: object
   merkleroots.MerkleRootsConfirmationsResponse:
     properties:
-      allConfirmed:
-        type: boolean
+      confirmationState:
+        $ref: '#/definitions/domains.MerkleRootConfirmationState'
       confirmations:
         items:
           $ref: '#/definitions/merkleroots.MerkleRootConfirmation'
@@ -316,11 +335,11 @@ paths:
       parameters:
       - description: JSON
         in: body
-        name: merkleroots
+        name: request
         required: true
         schema:
           items:
-            type: string
+            $ref: '#/definitions/domains.MerkleRootConfirmationRequestItem'
           type: array
       produces:
       - application/json
