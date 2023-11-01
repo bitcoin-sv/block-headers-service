@@ -1,6 +1,6 @@
 package config
 
-// p2p consts
+// P2P consts.
 const (
 	p2pConfigFilePath           = "p2pconfig"
 	logdirFlag                  = "logdir"
@@ -37,7 +37,7 @@ const (
 	blocksforconfirmationFlag   = "blocksforconfirmation"
 )
 
-// db consts
+// DB consts.
 const (
 	schemaPathFlag         = "schemaPath"
 	dsnFlag                = "dsn"
@@ -48,10 +48,10 @@ const (
 	preparedDbFilePathFlag = "preparedDbFilePath"
 )
 
-// merkleroots consts
+// Merkleroots consts.
 const maxBlockHeightExcess = "maxblockheightexcess"
 
-// http consts
+// HTTP consts.
 const (
 	readTimeoutFlag  = "readTimeout"
 	writeTimeoutFlag = "writeTimeout"
@@ -61,7 +61,7 @@ const (
 	authTokenFlag    = "authToken"
 )
 
-// websockets and webhooks consts
+// Websockets and Webhooks consts.
 const (
 	historyMaxFlag = "historyMax"
 	historyTTLFlag = "historyTTL"

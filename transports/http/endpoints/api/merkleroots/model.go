@@ -61,6 +61,8 @@ func convertState(s domains.MerkleRootConfirmationState) int {
 		return 0
 	case domains.UnableToVerify:
 		return 1
+	case domains.Invalid:
+		return 2
 	default:
 		return 2
 	}
