@@ -16,6 +16,7 @@ func (fs *PulseFlagSet) pflagsMapping() {
 	fs.httpFlagsMapping()
 	fs.websocketFlagsMapping()
 	fs.webhookFlagsMapping()
+	fs.merklerootFlagsMapping()
 }
 
 func (fs *PulseFlagSet) bindFlags() {
@@ -24,6 +25,7 @@ func (fs *PulseFlagSet) bindFlags() {
 	fs.bindHTTPFlags()
 	fs.bindWebsocketFlags()
 	fs.bindWebhookFlags()
+	fs.bindMerklerootFlags()
 }
 
 func (fs *PulseFlagSet) p2pFlagsMapping() {
@@ -83,7 +85,7 @@ func (fs *PulseFlagSet) websocketFlagsMapping() {
 }
 
 func (fs *PulseFlagSet) merklerootFlagsMapping() {
-	fs.Int(maxBlockHeightExcess, 0, "max block height excess over the current top height for merkleroot verification")
+	fs.Int32(maxBlockHeightExcess, 0, "max block height excess over the current top height for merkleroot verification")
 }
 
 func (fs *PulseFlagSet) webhookFlagsMapping() {
@@ -166,6 +168,11 @@ func (fs *PulseFlagSet) bindHTTPFlags() {
 func (fs *PulseFlagSet) bindWebsocketFlags() {
 	viper.BindPFlag(EnvWebsocketHistoryMax, fs.Lookup(historyMaxFlag))
 	viper.BindPFlag(EnvWebsocketHistoryTtl, fs.Lookup(historyTTLFlag))
+}
+
+//nolint:all
+func (fs *PulseFlagSet) bindMerklerootFlags() {
+	viper.BindPFlag(EnvMerklerootMaxBlockHeightExcess, fs.Lookup(maxBlockHeightExcess))
 }
 
 //nolint:all
