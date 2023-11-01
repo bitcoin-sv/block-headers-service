@@ -44,7 +44,7 @@ func mapToMerkleRootsConfirmationsResponses(
 
 	for _, merkleConfm := range merkleConfms {
 		mrcfs = append(mrcfs, newMerkleRootConfirmation(merkleConfm))
-		if confirmationState < merkleConfm.Confirmation {
+		if convertState(confirmationState) < convertState(merkleConfm.Confirmation) {
 			confirmationState = merkleConfm.Confirmation
 		}
 	}
@@ -52,5 +52,16 @@ func mapToMerkleRootsConfirmationsResponses(
 	return MerkleRootsConfirmationsResponse{
 		ConfirmationState: confirmationState,
 		Confirmations:     mrcfs,
+	}
+}
+
+func convertState(s domains.MerkleRootConfirmationState) int {
+	switch s {
+	case domains.Confirmed:
+		return 0
+	case domains.UnableToVerify:
+		return 1
+	default:
+		return 2
 	}
 }
