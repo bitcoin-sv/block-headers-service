@@ -110,7 +110,7 @@ func (dbMerkleConfm *DbMerkleRootConfirmation) ToMerkleRootConfirmation(
 	if dbMerkleConfm.Hash.Valid {
 		confmState = domains.Confirmed
 	} else if dbMerkleConfm.BlockHeight > dbMerkleConfm.TipHeight &&
-		dbMerkleConfm.BlockHeight-dbMerkleConfm.TipHeight < int32(maxBlockHeightExcess+1) {
+		dbMerkleConfm.BlockHeight-dbMerkleConfm.TipHeight <= int32(maxBlockHeightExcess) {
 		confmState = domains.UnableToVerify
 	} else {
 		confmState = domains.Invalid

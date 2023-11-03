@@ -195,7 +195,7 @@ func (r *HeaderTestRepository) GetMerkleRootsConfirmations(
 ) ([]*domains.MerkleRootConfirmation, error) {
 	mrcfs := make([]*domains.MerkleRootConfirmation, 0)
 
-	var topHeight int32 = 0
+	topHeight := int32(0)
 	for _, h := range *r.db {
 		if h.Height > topHeight {
 			topHeight = h.Height
