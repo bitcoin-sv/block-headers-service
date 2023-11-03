@@ -101,6 +101,7 @@ func (fs *PulseFlagSet) httpFlagsMapping() {
 	fs.String(authTokenFlag, "", "http server admin auth token")
 }
 
+//nolint:all
 func (fs *PulseFlagSet) bindP2PFlags() {
 	viper.BindPFlag(p2pConfigFilePath, fs.Lookup(p2pConfigFilePath))
 	viper.BindPFlag("p2p.logdir", fs.Lookup(logdirFlag))
@@ -142,6 +143,7 @@ func (fs *PulseFlagSet) bindP2PFlags() {
 	viper.BindPFlag("p2p.blocksforconfirmation", fs.Lookup(blocksforconfirmationFlag))
 }
 
+//nolint:all
 func (fs *PulseFlagSet) bindDBFlags() {
 	viper.BindPFlag(EnvDbSchema, fs.Lookup(schemaPathFlag))
 	viper.BindPFlag(EnvDbDsn, fs.Lookup(dsnFlag))
@@ -152,6 +154,7 @@ func (fs *PulseFlagSet) bindDBFlags() {
 	viper.BindPFlag(EnvPreparedDbFilePath, fs.Lookup(preparedDbFilePathFlag))
 }
 
+//nolint:all
 func (fs *PulseFlagSet) bindHTTPFlags() {
 	viper.BindPFlag(EnvHttpServerReadTimeout, fs.Lookup(readTimeoutFlag))
 	viper.BindPFlag(EnvHttpServerWriteTimeout, fs.Lookup(writeTimeoutFlag))
@@ -161,15 +164,18 @@ func (fs *PulseFlagSet) bindHTTPFlags() {
 	viper.BindPFlag(EnvHttpServerAuthToken, fs.Lookup(authTokenFlag))
 }
 
+//nolint:all
 func (fs *PulseFlagSet) bindWebsocketFlags() {
 	viper.BindPFlag(EnvWebsocketHistoryMax, fs.Lookup(historyMaxFlag))
 	viper.BindPFlag(EnvWebsocketHistoryTtl, fs.Lookup(historyTTLFlag))
 }
 
+//nolint:all
 func (fs *PulseFlagSet) bindMerklerootFlags() {
 	viper.BindPFlag(EnvMerklerootMaxBlockHeightExcess, fs.Lookup(maxBlockHeightExcess))
 }
 
+//nolint:all
 func (fs *PulseFlagSet) bindWebhookFlags() {
 	viper.BindPFlag(EnvWebhookMaxTries, fs.Lookup(maxTriesFlag))
 }
