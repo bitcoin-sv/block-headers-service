@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg"
 	"github.com/bitcoin-sv/pulse/internal/tests/assert"
 	"github.com/bitcoin-sv/pulse/internal/tests/testpulse"
@@ -18,19 +19,25 @@ func TestReturnSuccessFromVerify(t *testing.T) {
 	// setup
 	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
 	defer cleanup()
-	query := []string{chaincfg.GenesisMerkleRoot.String()}
+	query := []domains.MerkleRootConfirmationRequestItem{
+		{
+			MerkleRoot:  chaincfg.GenesisMerkleRoot.String(),
+			BlockHeight: 0,
+		},
+	}
 	expected_result := struct {
 		code int
 		body merkleroots.MerkleRootsConfirmationsResponse
 	}{
 		code: http.StatusOK,
 		body: merkleroots.MerkleRootsConfirmationsResponse{
-			AllConfirmed: true,
+			ConfirmationState: domains.Confirmed,
 			Confirmations: []merkleroots.MerkleRootConfirmation{
 				{
-					Hash:       chaincfg.GenesisHash.String(),
-					MerkleRoot: chaincfg.GenesisMerkleRoot.String(),
-					Confirmed:  true,
+					Hash:         chaincfg.GenesisHash.String(),
+					BlockHeight:  0,
+					MerkleRoot:   chaincfg.GenesisMerkleRoot.String(),
+					Confirmation: domains.Confirmed,
 				},
 			},
 		},
@@ -45,12 +52,13 @@ func TestReturnSuccessFromVerify(t *testing.T) {
 	var mrcf merkleroots.MerkleRootsConfirmationsResponse
 	json.NewDecoder(res.Body).Decode(&mrcf)
 
-	assert.Equal(t, mrcf.AllConfirmed, expected_result.body.AllConfirmed)
+	assert.Equal(t, mrcf.ConfirmationState, expected_result.body.ConfirmationState)
 	for i, conf := range mrcf.Confirmations {
 		expected := expected_result.body.Confirmations[i]
 		assert.Equal(t, conf.Hash, expected.Hash)
+		assert.Equal(t, conf.BlockHeight, expected.BlockHeight)
 		assert.Equal(t, conf.MerkleRoot, expected.MerkleRoot)
-		assert.Equal(t, conf.Confirmed, expected.Confirmed)
+		assert.Equal(t, conf.Confirmation, expected.Confirmation)
 	}
 }
 
@@ -58,7 +66,7 @@ func TestReturnFailureFromVerifyWhenAuthorizationIsTurnedOnAndCalledWithoutToken
 	// setup
 	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
-	query := []string{}
+	query := []domains.MerkleRootConfirmationRequestItem{}
 	expected_result := struct {
 		code int
 		body []byte
@@ -81,28 +89,49 @@ func TestReturnFailureFromVerifyWhenAuthorizationIsTurnedOnAndCalledWithoutToken
 	}
 }
 
-func TestReturnPartialSuccessFromVerify(t *testing.T) {
+func TestReturnInvalidFromVerify(t *testing.T) {
 	// setup
 	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
 	defer cleanup()
-	query := []string{chaincfg.GenesisMerkleRoot.String(), "not_found_merkle_root"}
+	query := []domains.MerkleRootConfirmationRequestItem{
+		{
+			MerkleRoot:  chaincfg.GenesisMerkleRoot.String(),
+			BlockHeight: 0,
+		},
+		{
+			MerkleRoot:  "invalid_merkle_root",
+			BlockHeight: 1,
+		},
+		{
+			MerkleRoot:  "unable_to_verify_merkle_root",
+			BlockHeight: 8, // Bigger than top height
+		},
+	}
 	expected_result := struct {
 		code int
 		body merkleroots.MerkleRootsConfirmationsResponse
 	}{
 		code: http.StatusOK,
 		body: merkleroots.MerkleRootsConfirmationsResponse{
-			AllConfirmed: false,
+			ConfirmationState: domains.Invalid,
 			Confirmations: []merkleroots.MerkleRootConfirmation{
 				{
-					Hash:       chaincfg.GenesisHash.String(),
-					MerkleRoot: chaincfg.GenesisMerkleRoot.String(),
-					Confirmed:  true,
+					Hash:         chaincfg.GenesisHash.String(),
+					BlockHeight:  0,
+					MerkleRoot:   chaincfg.GenesisMerkleRoot.String(),
+					Confirmation: domains.Confirmed,
 				},
 				{
-					Hash:       "",
-					MerkleRoot: "not_found_merkle_root",
-					Confirmed:  false,
+					Hash:         "",
+					BlockHeight:  1,
+					MerkleRoot:   "invalid_merkle_root",
+					Confirmation: domains.Invalid,
+				},
+				{
+					Hash:         "",
+					BlockHeight:  8,
+					MerkleRoot:   "unable_to_verify_merkle_root",
+					Confirmation: domains.UnableToVerify,
 				},
 			},
 		},
@@ -117,12 +146,70 @@ func TestReturnPartialSuccessFromVerify(t *testing.T) {
 	var mrcf merkleroots.MerkleRootsConfirmationsResponse
 	json.NewDecoder(res.Body).Decode(&mrcf)
 
-	assert.Equal(t, mrcf.AllConfirmed, expected_result.body.AllConfirmed)
+	assert.Equal(t, mrcf.ConfirmationState, expected_result.body.ConfirmationState)
 	for i, conf := range mrcf.Confirmations {
 		expected := expected_result.body.Confirmations[i]
 		assert.Equal(t, conf.Hash, expected.Hash)
+		assert.Equal(t, conf.BlockHeight, expected.BlockHeight)
 		assert.Equal(t, conf.MerkleRoot, expected.MerkleRoot)
-		assert.Equal(t, conf.Confirmed, expected.Confirmed)
+		assert.Equal(t, conf.Confirmation, expected.Confirmation)
+	}
+}
+
+func TestReturnPartialSuccessFromVerify(t *testing.T) {
+	// setup
+	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
+	defer cleanup()
+	query := []domains.MerkleRootConfirmationRequestItem{
+		{
+			MerkleRoot:  chaincfg.GenesisMerkleRoot.String(),
+			BlockHeight: 0,
+		},
+		{
+			MerkleRoot:  "unable_to_verify_merkle_root",
+			BlockHeight: 8, // Bigger than top height
+		},
+	}
+	expected_result := struct {
+		code int
+		body merkleroots.MerkleRootsConfirmationsResponse
+	}{
+		code: http.StatusOK,
+		body: merkleroots.MerkleRootsConfirmationsResponse{
+			ConfirmationState: domains.UnableToVerify,
+			Confirmations: []merkleroots.MerkleRootConfirmation{
+				{
+					Hash:         chaincfg.GenesisHash.String(),
+					BlockHeight:  0,
+					MerkleRoot:   chaincfg.GenesisMerkleRoot.String(),
+					Confirmation: domains.Confirmed,
+				},
+				{
+					Hash:         "",
+					BlockHeight:  8,
+					MerkleRoot:   "unable_to_verify_merkle_root",
+					Confirmation: domains.UnableToVerify,
+				},
+			},
+		},
+	}
+
+	// when
+	res := pulse.Api().Call(verify(query))
+
+	// then
+	assert.Equal(t, res.Code, expected_result.code)
+
+	var mrcf merkleroots.MerkleRootsConfirmationsResponse
+	json.NewDecoder(res.Body).Decode(&mrcf)
+
+	assert.Equal(t, mrcf.ConfirmationState, expected_result.body.ConfirmationState)
+	for i, conf := range mrcf.Confirmations {
+		expected := expected_result.body.Confirmations[i]
+		assert.Equal(t, conf.Hash, expected.Hash)
+		assert.Equal(t, conf.BlockHeight, expected.BlockHeight)
+		assert.Equal(t, conf.MerkleRoot, expected.MerkleRoot)
+		assert.Equal(t, conf.Confirmation, expected.Confirmation)
 	}
 }
 
@@ -130,7 +217,7 @@ func TestReturnBadRequestErrorFromVerifyWhenGivenEmtpyArray(t *testing.T) {
 	// setup
 	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
 	defer cleanup()
-	query := []string{}
+	query := []domains.MerkleRootConfirmationRequestItem{}
 	expected_result := struct {
 		code int
 		body []byte
@@ -151,12 +238,12 @@ func TestReturnBadRequestErrorFromVerifyWhenGivenEmtpyArray(t *testing.T) {
 	}
 }
 
-func verify(merkleroots []string) (req *http.Request, err error) {
-	array, err := json.Marshal(merkleroots)
+func verify(request []domains.MerkleRootConfirmationRequestItem) (req *http.Request, err error) {
+	query, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
 	}
-	body := bytes.NewReader(array)
+	body := bytes.NewReader(query)
 	return http.NewRequestWithContext(
 		context.Background(),
 		http.MethodPost,

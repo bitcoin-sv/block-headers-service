@@ -18,7 +18,7 @@ type Headers interface {
 	GetCurrentHeight() (int, error)
 	GetHeadersCount() (int, error)
 	GetHeaderByHash(hash string) (*domains.BlockHeader, error)
-	GetMerkleRootsConfirmations(merkleroots []string) ([]*domains.MerkleRootConfirmation, error)
+	GetMerkleRootsConfirmations(request []domains.MerkleRootConfirmationRequestItem, maxBlockHeightExcess int) ([]*domains.MerkleRootConfirmation, error)
 	GenesisExists() bool
 	GetPreviousHeader(hash string) (*domains.BlockHeader, error)
 	GetTip() (*domains.BlockHeader, error)

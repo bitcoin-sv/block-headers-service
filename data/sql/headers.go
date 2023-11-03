@@ -5,11 +5,13 @@ import (
 	"database/sql"
 	"strings"
 
-	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/domains/logging"
-	"github.com/bitcoin-sv/pulse/repository/dto"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+
+	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/pulse/domains"
+	"github.com/bitcoin-sv/pulse/domains/logging"
+	"github.com/bitcoin-sv/pulse/repository/dto"
 )
 
 const (
@@ -157,11 +159,17 @@ const (
 	`
 
 	sqlMerkleRootsConfirmationsQuery = `
-	WITH merkles(merkleroot) AS (VALUES :merkles:) 
-	SELECT m.merkleroot AS merkleroot, h.hash AS hash, h.hash is not null AS confirmed
+	WITH merkles(merkleroot, blockheight) AS (VALUES :merkles:),
+		 tip(height) AS (SELECT MAX(height) FROM headers WHERE headers.header_state = 'LONGEST_CHAIN')
+	SELECT
+		m.merkleroot AS merkleroot, 
+		m.blockheight AS blockheight,
+		h.hash AS hash, 
+		t.height AS tipheight
 	FROM merkles m 
+	LEFT JOIN tip t
 	LEFT JOIN headers h
-	ON m.merkleroot = h.merkleroot and h.header_state = 'LONGEST_CHAIN'
+	ON m.merkleroot = h.merkleroot AND m.blockheight = h.height AND h.header_state = 'LONGEST_CHAIN'
 	`
 )
 
@@ -367,18 +375,19 @@ func (h *HeadersDb) GetChainBetweenTwoHashes(low string, high string) ([]*dto.Db
 
 // GetMerkleRootsConfirmations returns a confirmation of whether the given merkle roots are included in the longest chain.
 func (h *HeadersDb) GetMerkleRootsConfirmations(
-	merkleroots []string,
+	request []domains.MerkleRootConfirmationRequestItem,
 ) ([]*dto.DbMerkleRootConfirmation, error) {
 	var bh []*dto.DbMerkleRootConfirmation
 
-	params := strings.Repeat("(?),", len(merkleroots))
+	params := strings.Repeat("(?, ?),", len(request))
 	params = params[:len(params)-1]
 
 	query := strings.Replace(sqlMerkleRootsConfirmationsQuery, ":merkles:", params, 1)
 
 	queryParams := make([]interface{}, 0)
-	for _, m := range merkleroots {
-		queryParams = append(queryParams, m)
+	for _, item := range request {
+		queryParams = append(queryParams, item.MerkleRoot)
+		queryParams = append(queryParams, item.BlockHeight)
 	}
 
 	if err := h.db.Select(&bh, h.db.Rebind(query), queryParams...); err != nil {

@@ -2,10 +2,10 @@ package repository
 
 import (
 	"context"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 
 	"github.com/bitcoin-sv/pulse/data/sql"
 	"github.com/bitcoin-sv/pulse/domains"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	dto "github.com/bitcoin-sv/pulse/repository/dto"
 )
 
@@ -98,12 +98,15 @@ func (r *HeaderRepository) GetHeaderByHash(hash string) (*domains.BlockHeader, e
 }
 
 // GetMerkleRootsConfirmations returns confirmation of merkle roots inclusion in the longest chain.
-func (r *HeaderRepository) GetMerkleRootsConfirmations(merkleroots []string) ([]*domains.MerkleRootConfirmation, error) {
-	mrcs, err := r.db.GetMerkleRootsConfirmations(merkleroots)
+func (r *HeaderRepository) GetMerkleRootsConfirmations(
+	request []domains.MerkleRootConfirmationRequestItem,
+	maxBlockHeightExcess int,
+) ([]*domains.MerkleRootConfirmation, error) {
+	mrcs, err := r.db.GetMerkleRootsConfirmations(request)
 	if err != nil {
 		return nil, err
 	}
-	return dto.ConvertToMerkleRootsConfirmations(mrcs), nil
+	return dto.ConvertToMerkleRootsConfirmations(mrcs, maxBlockHeightExcess), nil
 }
 
 // GenesisExists check if genesis header is in db.

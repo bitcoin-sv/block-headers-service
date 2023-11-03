@@ -6,6 +6,7 @@ import (
 	"math"
 	"time"
 
+	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/config/p2pconfig"
 	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/bitcoin-sv/pulse/domains/logging"
@@ -20,15 +21,17 @@ type HeaderService struct {
 	repo        *repository.Repositories
 	checkpoints []chaincfg.Checkpoint
 	timeSource  p2pconfig.MedianTimeSource
+	merkleCfg   *config.Merkleroot
 	log         logging.Logger
 }
 
 // NewHeaderService creates and returns HeaderService instance.
-func NewHeaderService(repo *repository.Repositories, p2pCfg *p2pconfig.Config, lf logging.LoggerFactory) *HeaderService {
+func NewHeaderService(repo *repository.Repositories, p2pCfg *p2pconfig.Config, merkleCfg *config.Merkleroot, lf logging.LoggerFactory) *HeaderService {
 	return &HeaderService{
 		repo:        repo,
 		checkpoints: p2pCfg.Checkpoints,
 		timeSource:  p2pCfg.TimeSource,
+		merkleCfg:   merkleCfg,
 		log:         lf.NewLogger("header-service"),
 	}
 }
@@ -101,7 +104,6 @@ func (hs *HeaderService) GetTipHeight() int32 {
 // GetHeaderByHash returns header with given hash.
 func (hs *HeaderService) GetHeaderByHash(hash string) (*domains.BlockHeader, error) {
 	header, err := hs.repo.Headers.GetHeaderByHash(hash)
-
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +205,6 @@ func (hs *HeaderService) GetCommonAncestor(hashes []string) (*domains.BlockHeade
 // GetHeadersState returns state of the header with given hash.
 func (hs *HeaderService) GetHeadersState(hash string) (*domains.BlockHeaderState, error) {
 	header, err := hs.repo.Headers.GetHeaderByHash(hash)
-
 	if err != nil {
 		return nil, err
 	}
@@ -283,8 +284,10 @@ func (hs *HeaderService) GetHeightByHash(hash *chainhash.Hash) (int32, error) {
 
 // GetMerkleRootsConfirmations returns a confirmation of merkle roots inclusion in the longest chain
 // with hash of the block in which the merkle root is included.
-func (hs *HeaderService) GetMerkleRootsConfirmations(merkleroots []string) ([]*domains.MerkleRootConfirmation, error) {
-	return hs.repo.Headers.GetMerkleRootsConfirmations(merkleroots)
+func (hs *HeaderService) GetMerkleRootsConfirmations(
+	request []domains.MerkleRootConfirmationRequestItem,
+) ([]*domains.MerkleRootConfirmation, error) {
+	return hs.repo.Headers.GetMerkleRootsConfirmations(request, hs.merkleCfg.MaxBlockHeightExcess)
 }
 
 // LocateHeaders fetches headers for a number of blocks after the most recent known block
@@ -409,7 +412,6 @@ func (hs *HeaderService) Next(node *domains.BlockHeader) *domains.BlockHeader {
 // CountHeaders return current number of stored headers.
 func (hs *HeaderService) CountHeaders() int {
 	count, err := hs.repo.Headers.GetHeadersCount()
-
 	if err != nil {
 		return 0
 	}

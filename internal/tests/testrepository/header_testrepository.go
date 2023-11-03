@@ -190,23 +190,43 @@ func (r *HeaderTestRepository) GetChainBetweenTwoHashes(low string, high string)
 // GetMerkleRootsConfirmations returns a confirmation of merkle roots inclusion
 // in the longest chain with hash of the block in which the merkle root is included.
 func (r *HeaderTestRepository) GetMerkleRootsConfirmations(
-	merkleroots []string,
+	request []domains.MerkleRootConfirmationRequestItem,
+	maxBlockHeightExcess int,
 ) ([]*domains.MerkleRootConfirmation, error) {
 	mrcfs := make([]*domains.MerkleRootConfirmation, 0)
 
-	for _, mr := range merkleroots {
-		hash := ""
+	topHeight := int32(0)
+	for _, h := range *r.db {
+		if h.Height > topHeight {
+			topHeight = h.Height
+		}
+	}
+
+	for _, rq := range request {
+		found := false
+		confm := &domains.MerkleRootConfirmation{
+			MerkleRoot:  rq.MerkleRoot,
+			BlockHeight: rq.BlockHeight,
+		}
+
 		for _, h := range *r.db {
-			if h.MerkleRoot.String() == mr {
-				hash = h.Hash.String()
+			if h.MerkleRoot.String() == rq.MerkleRoot && h.Height == rq.BlockHeight {
+				found = true
+				confm.Hash = h.Hash.String()
+				confm.Confirmation = domains.Confirmed
 				break
 			}
 		}
-		mrcfs = append(mrcfs, &domains.MerkleRootConfirmation{
-			MerkleRoot: mr,
-			Hash:       hash,
-			Confirmed:  hash != "",
-		})
+
+		if !found {
+			if rq.BlockHeight > topHeight && (rq.BlockHeight-topHeight) < int32(maxBlockHeightExcess) {
+				confm.Confirmation = domains.UnableToVerify
+			} else {
+				confm.Confirmation = domains.Invalid
+			}
+		}
+
+		mrcfs = append(mrcfs, confm)
 	}
 
 	return mrcfs, nil

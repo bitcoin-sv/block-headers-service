@@ -344,13 +344,13 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "JSON",
-                        "name": "merkleroots",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "$ref": "#/definitions/domains.MerkleRootConfirmationRequestItem"
                             }
                         }
                     }
@@ -620,6 +620,30 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "domains.MerkleRootConfirmationRequestItem": {
+            "type": "object",
+            "properties": {
+                "blockHeight": {
+                    "type": "integer"
+                },
+                "merkleRoot": {
+                    "type": "string"
+                }
+            }
+        },
+        "domains.MerkleRootConfirmationState": {
+            "type": "string",
+            "enum": [
+                "CONFIRMED",
+                "UNABLE_TO_VERIFY",
+                "INVALID"
+            ],
+            "x-enum-varnames": [
+                "Confirmed",
+                "UnableToVerify",
+                "Invalid"
+            ]
+        },
         "domains.Token": {
             "type": "object",
             "properties": {
@@ -683,11 +707,14 @@ const docTemplate = `{
         "merkleroots.MerkleRootConfirmation": {
             "type": "object",
             "properties": {
-                "blockhash": {
+                "blockHash": {
                     "type": "string"
                 },
-                "confirmed": {
-                    "type": "boolean"
+                "blockHeight": {
+                    "type": "integer"
+                },
+                "confirmation": {
+                    "$ref": "#/definitions/domains.MerkleRootConfirmationState"
                 },
                 "merkleRoot": {
                     "type": "string"
@@ -697,8 +724,8 @@ const docTemplate = `{
         "merkleroots.MerkleRootsConfirmationsResponse": {
             "type": "object",
             "properties": {
-                "allConfirmed": {
-                    "type": "boolean"
+                "confirmationState": {
+                    "$ref": "#/definitions/domains.MerkleRootConfirmationState"
                 },
                 "confirmations": {
                     "type": "array",
