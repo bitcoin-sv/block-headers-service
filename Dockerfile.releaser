@@ -6,15 +6,15 @@ RUN apt-get update && apt-get install -y wget
 
 WORKDIR /app
 
-ENV DB_SCHEMA_PATH=./migrations
-COPY ./data/sql/migrations $DB_SCHEMA_PATH
+ENV DB_SCHEMAPATH=./migrations
+COPY ./data/sql/migrations $DB_SCHEMAPATH
 COPY ./entrypoint.sh .
 ARG project_name=pulse
 COPY ./$project_name .
 COPY ./artifacts/README.DOCKER.md ./README.md
 
 ARG version
-ARG gh_repository=libsv/$project_name
+ARG gh_repository=bitcoin-sv/$project_name
 ARG tag=${version:+v$version}
 ENV VERSION=${version:-develop}
 ENV TAG=${tag:-master}
