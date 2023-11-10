@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"log"
 
 	"os"
@@ -9,16 +8,20 @@ import (
 
 	"github.com/bitcoin-sv/pulse/config/p2pconfig"
 	"github.com/bitcoin-sv/pulse/domains/logging"
-	"github.com/bitcoin-sv/pulse/version"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 // Init creates and returns a new viper config.
-func Init(lf logging.LoggerFactory) *Config {
+func Init(lf logging.LoggerFactory) (*Config, *CLI) {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	setDefaults()
+
+	fs := &PulseFlagSet{}
+	cli := &CLI{}
+
+	initCliFlags(fs, cli)
+	initFlags(fs)
 
 	cfg := ParseConfig()
 	err := cfg.P2P.Validate()
@@ -26,8 +29,10 @@ func Init(lf logging.LoggerFactory) *Config {
 		log.Printf("p2p config is invalid: %v", err)
 		os.Exit(1)
 	}
+
 	cfg.P2P.TimeSource = p2pconfig.NewMedianTime(lf)
-	return cfg
+
+	return cfg, cli
 }
 
 func setDefaults() {
@@ -46,7 +51,7 @@ func setDefaultDb() {
 	viper.SetDefault(EnvResetDbOnStartup, false)
 	viper.SetDefault(EnvDbFilePath, "./data/blockheaders.db")
 	viper.SetDefault(EnvDbDsn, "file:./data/blockheaders.db?_foreign_keys=true&pooling=true")
-	viper.SetDefault(EnvDbSchema, "./data/sql/migrations")
+	viper.SetDefault(EnvDbSchema, "./database/migrations")
 	viper.SetDefault(EnvDbMigrate, true)
 	viper.SetDefault(EnvPreparedDb, false)
 	viper.SetDefault(EnvPreparedDbFilePath, "./data/blockheaders.xz")
@@ -98,9 +103,6 @@ func (c *Config) WithoutAuthorization() *Config {
 
 // ParseConfig init viper config based on flags, env variables and json config.
 func ParseConfig() *Config {
-	f := initFlags()
-	parseFlags(f)
-
 	configFile := viper.GetString(p2pConfigFilePath)
 	if configFile != "" {
 		viper.SetConfigFile(configFile)
@@ -120,13 +122,7 @@ func ParseConfig() *Config {
 	return c
 }
 
-func initFlags() CLI {
-	cli := CLI{}
-
-	fs := PulseFlagSet{}
-	fs.BoolVarP(&cli.ShowHelp, "help", "H", false, "show help")
-	fs.BoolVarP(&cli.ShowVersion, "version", "V", false, "print the version")
-
+func initFlags(fs *PulseFlagSet) {
 	fs.pflagsMapping()
 	fs.bindFlags()
 
@@ -135,18 +131,11 @@ func initFlags() CLI {
 		log.Printf("Flags can't be parsed: %v", err)
 		os.Exit(1)
 	}
-
-	return cli
 }
 
-func parseFlags(cli CLI) {
-	if cli.ShowHelp {
-		pflag.Usage()
-		os.Exit(0)
-	}
-
-	if cli.ShowVersion {
-		fmt.Println("pulse", "version", version.String())
-		os.Exit(0)
-	}
+func initCliFlags(fs *PulseFlagSet, cli *CLI) {
+	fs.BoolVarP(&cli.ShowHelp, "help", "H", false, "show help")
+	fs.BoolVarP(&cli.ShowVersion, "version", "V", false, "print the version")
+	fs.BoolVar(&cli.ExportHeaders, "exportHeaders", false, "export headers from database to CSV file")
+	fs.BoolVar(&cli.ImportHeaders, "importHeaders", false, "import headers from CSV file to database")
 }

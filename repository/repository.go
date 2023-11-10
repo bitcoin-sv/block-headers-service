@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/bitcoin-sv/pulse/data/sql"
+	"github.com/bitcoin-sv/pulse/database/sql"
 	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/pulse/notification"

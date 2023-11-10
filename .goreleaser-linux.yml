@@ -54,7 +54,7 @@ dockers:
       - "--build-arg=gh_repository={{ .Env.GITHUB_REPOSITORY }}"
     dockerfile: Dockerfile.releaser
     extra_files:
-      - data/sql/migrations/
+      - database/migrations/
       - entrypoint.sh
       - ./artifacts/README.DOCKER.md
   - goos: linux
@@ -78,7 +78,7 @@ dockers:
       - "--build-arg=gh_repository={{ .Env.GITHUB_REPOSITORY }}"
     dockerfile: Dockerfile.releaser
     extra_files:
-      - data/sql/migrations/
+      - database/migrations/
       - entrypoint.sh
       - ./artifacts/README.DOCKER.md
 

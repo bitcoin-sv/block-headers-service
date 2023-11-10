@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/bitcoin-sv/pulse/data/sql"
+	"github.com/bitcoin-sv/pulse/database/sql"
 	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	dto "github.com/bitcoin-sv/pulse/repository/dto"
