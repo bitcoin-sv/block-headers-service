@@ -210,6 +210,25 @@ func (h *HeadersDb) Create(ctx context.Context, req dto.DbBlockHeader) error {
 	return errors.Wrap(tx.Commit(), "failed to commit tx")
 }
 
+// CreateMultiple method will add multiple new records into db.
+func (h *HeadersDb) CreateMultiple(ctx context.Context, headers []dto.DbBlockHeader) error {
+	tx, err := h.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+
+	for _, record := range headers {
+		if _, err := tx.NamedExecContext(ctx, h.sqls[h.dbType][insertBH], record); err != nil {
+			return errors.Wrap(err, "failed to insert header")
+		}
+	}
+
+	return errors.Wrap(tx.Commit(), "failed to commit tx")
+}
+
 // UpdateState will update state of headers of hashes to given state.
 func (h *HeadersDb) UpdateState(ctx context.Context, hashes []string, state string) error {
 	tx, err := h.db.BeginTxx(ctx, nil)

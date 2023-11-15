@@ -22,6 +22,20 @@ func (r *HeaderRepository) AddHeaderToDatabase(header domains.BlockHeader) error
 	return err
 }
 
+// AddMultipleHeadersToDatabase adds multiple new headers to db.
+func (r *HeaderRepository) AddMultipleHeadersToDatabase(headers []domains.BlockHeader) error {
+	var dbHeaders []dto.DbBlockHeader
+
+	for _, header := range headers {
+		dbHeader := dto.ToDbBlockHeader(header)
+		dbHeaders = append(dbHeaders, dbHeader)
+	}
+
+	err := r.db.CreateMultiple(context.Background(), dbHeaders)
+
+	return err
+}
+
 // UpdateState changes state value to provided one for each of headers with provided hash.
 func (r *HeaderRepository) UpdateState(hashes []chainhash.Hash, state domains.HeaderState) error {
 	hs := make([]string, len(hashes))

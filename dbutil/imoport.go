@@ -21,8 +21,23 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type DbIndex struct {
+	name string
+	sql  string
+}
+
+type SQLitePragmaValues struct {
+	Synchronous int
+	JournalMode string
+	CacheSize   int
+}
+
+const insertTransactionSize = 500
+
 func ImportHeaders(cfg *config.Config) error {
 	fmt.Println("Import headers from file to the database")
+
+	startTime := time.Now()
 
 	if !fileExistsAndIsReadable(compressedHeadersFilePath) {
 		return fmt.Errorf("file %s does not exist or is not readable", compressedHeadersFilePath)
@@ -66,7 +81,29 @@ func ImportHeaders(cfg *config.Config) error {
 
 	fmt.Printf("Decompressed and wrote contents to %s\n", tmpHeadersFilePath)
 
+	pragmas, err := getSQLitePragmaValues(db)
+	if err != nil {
+		return err
+	}
+
+	if err := modifySQLitePragmas(db); err != nil {
+		return err
+	}
+
+	droppedIndexes, err := removeIndexes(db)
+	if err != nil {
+		return err
+	}
+
 	if err := importHeadersFromFile(db, headersRepo, tmpHeadersFilePath); err != nil {
+		return err
+	}
+
+	if err = restoreIndexes(db, droppedIndexes); err != nil {
+		return err
+	}
+
+	if err = restoreSQLitePragmas(db, *pragmas); err != nil {
 		return err
 	}
 
@@ -75,6 +112,12 @@ func ImportHeaders(cfg *config.Config) error {
 	}
 
 	fmt.Printf("Deleted temporary file %s\n", tmpHeadersFilePath)
+
+	endTime := time.Now()
+	elapsedTime := endTime.Sub(startTime)
+	fmt.Printf("Start Time: %s\n", startTime.Format("2006-01-02 15:04:05"))
+	fmt.Printf("End Time: %s\n", endTime.Format("2006-01-02 15:04:05"))
+	fmt.Printf("Elapsed Time: %s\n", elapsedTime)
 
 	return nil
 }
@@ -104,25 +147,34 @@ func importHeadersFromFile(db *sqlx.DB, repo *repository.HeaderRepository, input
 	previousBlockHash := chainhash.Hash{}
 	rowIndex := 0
 
+	var blocks []domains.BlockHeader
+
 	for {
-		record, err := reader.Read()
-		if err != nil {
-			if err != io.EOF {
-				fmt.Printf("Error reading record: %v\n", err)
+		for i := 0; i < insertTransactionSize; i++ {
+			record, err := reader.Read()
+			if err != nil {
+				if err != io.EOF {
+					fmt.Printf("Error reading record: %v\n", err)
+				}
+				break
 			}
+
+			block := parseRecord(record, int32(rowIndex), previousBlockHash)
+			blocks = append(blocks, block)
+
+			previousBlockHash = block.Hash
+			rowIndex++
+		}
+
+		if len(blocks) == 0 {
 			break
 		}
 
-		block := parseRecord(record, int32(rowIndex), previousBlockHash)
+		repo.AddMultipleHeadersToDatabase(blocks)
 
-		repo.AddHeaderToDatabase(block)
+		fmt.Printf("Inserted %d rows so far\n", rowIndex)
 
-		if rowIndex%1000 == 999 {
-			fmt.Printf("Inserted %d rows so far\n", rowIndex+1)
-		}
-
-		previousBlockHash = block.Hash
-		rowIndex++
+		blocks = nil
 	}
 
 	fmt.Printf("Inserted total of %d rows\n", rowIndex)
@@ -172,4 +224,106 @@ func parseBigInt(s string) *big.Int {
 	bi := new(big.Int)
 	bi.SetString(s, 10)
 	return bi
+}
+
+// TODO hide SQLite-specific code behind some kind of abstraction
+func getSQLitePragmaValues(db *sqlx.DB) (*SQLitePragmaValues, error) {
+	var pragmaValues SQLitePragmaValues
+
+	pragmaQueries := map[string]interface{}{
+		"synchronous":  &pragmaValues.Synchronous,
+		"journal_mode": &pragmaValues.JournalMode,
+		"cache_size":   &pragmaValues.CacheSize,
+	}
+
+	for pragmaName, target := range pragmaQueries {
+		query := fmt.Sprintf("PRAGMA %s", pragmaName)
+		err := db.QueryRow(query).Scan(target)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &pragmaValues, nil
+}
+
+// TODO hide SQLite-specific code behind some kind of abstraction
+func modifySQLitePragmas(db *sqlx.DB) error {
+	pragmas := []string{
+		"PRAGMA synchronous = OFF;",
+		"PRAGMA journal_mode = MEMORY;",
+		"PRAGMA cache_size = 10000;",
+	}
+
+	for _, pragma := range pragmas {
+		if _, err := db.Exec(pragma); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// TODO hide SQLite-specific code behind some kind of abstraction
+func restoreSQLitePragmas(db *sqlx.DB, values SQLitePragmaValues) error {
+	pragmas := []string{
+		fmt.Sprintf("PRAGMA synchronous = %d;", values.Synchronous),
+		fmt.Sprintf("PRAGMA journal_mode = %s;", values.JournalMode),
+		fmt.Sprintf("PRAGMA cache_size = %d;", values.CacheSize),
+	}
+
+	for _, pragma := range pragmas {
+		if _, err := db.Exec(pragma); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func removeIndexes(db *sqlx.DB) ([]DbIndex, error) {
+	var dbIndexes []DbIndex
+
+	indexesQueryRows, err := db.Query("SELECT name, sql FROM sqlite_master WHERE type='index' AND tbl_name ='headers' AND sql IS NOT NULL;")
+	if err != nil {
+		return nil, err
+	}
+
+	for indexesQueryRows.Next() {
+		var indexName, indexSQL string
+		err := indexesQueryRows.Scan(&indexName, &indexSQL)
+		if err != nil {
+			return nil, err
+		}
+
+		dbIndex := DbIndex{
+			name: indexName,
+			sql:  indexSQL,
+		}
+
+		dbIndexes = append(dbIndexes, dbIndex)
+	}
+
+	defer indexesQueryRows.Close()
+
+	for _, dbIndex := range dbIndexes {
+		fmt.Printf("Value: %v\n", dbIndex)
+
+		_, err = db.Exec(fmt.Sprintf("DROP INDEX IF EXISTS %s;", dbIndex.name))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return dbIndexes, nil
+}
+
+func restoreIndexes(db *sqlx.DB, dbIndexes []DbIndex) error {
+	for _, dbIndex := range dbIndexes {
+		_, err := db.Exec(dbIndex.sql)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
