@@ -63,7 +63,7 @@ func main() {
 
 	if cfg.Db.MigrateDb {
 		log.Info("migrating database")
-		if database.DoMigrations(db, cfg.Db); err != nil {
+		if err := database.DoMigrations(db, cfg.Db); err != nil {
 			log.Errorf("database migration failed because of error %v", err)
 			os.Exit(1)
 		}

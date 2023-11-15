@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 func fileExistsAndIsReadable(path string) bool {
@@ -31,12 +32,12 @@ func createDirectory(dirPath string) error {
 }
 
 func gzipCompress(inputFile, outputFile *os.File) error {
-	inputFile.Seek(0, 0)
+	if _, err := inputFile.Seek(0, 0); err != nil {
+		return err
+	}
 
 	csvReader := csv.NewReader(inputFile)
-
 	gzipWriter := gzip.NewWriter(outputFile)
-	defer gzipWriter.Close()
 
 	csvWriter := csv.NewWriter(gzipWriter)
 	defer csvWriter.Flush()
@@ -52,30 +53,57 @@ func gzipCompress(inputFile, outputFile *os.File) error {
 		}
 	}
 
+	if err := gzipWriter.Close(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func gzipDecompress(inputFilePath, outputFilePath string) error {
-	gzipFile, err := os.Open(inputFilePath)
+
+	currentDir, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-	defer gzipFile.Close()
+
+	inputFilePathFull := filepath.Clean(filepath.Join(currentDir, inputFilePath))
+	outputFilePathFull := filepath.Clean(filepath.Join(currentDir, outputFilePath))
+
+	gzipFile, err := os.Open(inputFilePathFull)
+	if err != nil {
+		return err
+	}
 
 	gzipReader, err := gzip.NewReader(gzipFile)
 	if err != nil {
 		return err
 	}
-	defer gzipReader.Close()
 
-	outputFile, err := os.Create(outputFilePath)
+	outputFile, err := os.Create(outputFilePathFull)
 	if err != nil {
 		return err
 	}
-	defer outputFile.Close()
 
-	_, err = io.Copy(outputFile, gzipReader)
-	if err != nil {
+	for {
+		_, err := io.CopyN(outputFile, gzipReader, 1048576)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return err
+		}
+	}
+
+	if err := gzipReader.Close(); err != nil {
+		return err
+	}
+
+	if err := gzipFile.Close(); err != nil {
+		return err
+	}
+
+	if err := outputFile.Close(); err != nil {
 		return err
 	}
 

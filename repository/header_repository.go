@@ -24,7 +24,7 @@ func (r *HeaderRepository) AddHeaderToDatabase(header domains.BlockHeader) error
 
 // AddMultipleHeadersToDatabase adds multiple new headers to db.
 func (r *HeaderRepository) AddMultipleHeadersToDatabase(headers []domains.BlockHeader) error {
-	var dbHeaders []dto.DbBlockHeader
+	dbHeaders := make([]dto.DbBlockHeader, 0, len(headers))
 
 	for _, header := range headers {
 		dbHeader := dto.ToDbBlockHeader(header)

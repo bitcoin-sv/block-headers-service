@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/database"
@@ -33,25 +33,25 @@ func ExportHeaders(cfg *config.Config, log logging.Logger) error {
 	log.Infof("Exporting headers from database to file %s", compressedHeadersFilePath)
 
 	tmpHeadersFileName := "headers.csv"
-	tmpHeadersFilePath := path.Join(tmpDir, tmpHeadersFileName)
+	tmpHeadersFilePath := filepath.Clean(filepath.Join(os.TempDir(), tmpHeadersFileName))
 
 	db, err := database.Connect(cfg.Db)
 	if err != nil {
 		return err
 	}
-	defer db.Close()
 
 	tmpCsvFile, err := os.Create(tmpHeadersFilePath)
 	if err != nil {
 		return err
 	}
-	defer tmpCsvFile.Close()
 
 	writer := csv.NewWriter(tmpCsvFile)
-	defer writer.Flush()
 
 	rows := queryDatabaseTable(db, log)
-	defer rows.Close()
+	defer func() {
+		_ = rows.Err()
+		_ = rows.Close()
+	}()
 
 	if err := writeColumnNamesToCsvFile(rows, writer); err != nil {
 		return err
@@ -61,6 +61,8 @@ func ExportHeaders(cfg *config.Config, log logging.Logger) error {
 		return err
 	}
 
+	writer.Flush()
+
 	log.Info("Data exported successfully")
 	log.Info("Compressing exported file")
 
@@ -68,9 +70,19 @@ func ExportHeaders(cfg *config.Config, log logging.Logger) error {
 	if err != nil {
 		return err
 	}
-	defer compressedFile.Close()
+
+	if err := db.Close(); err != nil {
+		return err
+	}
 
 	if err := gzipCompress(tmpCsvFile, compressedFile); err != nil {
+		return err
+	}
+
+	if err := tmpCsvFile.Close(); err != nil {
+		return err
+	}
+	if err := compressedFile.Close(); err != nil {
 		return err
 	}
 
@@ -128,7 +140,9 @@ func writeRowsToCsvFile(rows *sqlx.Rows, writer *csv.Writer) error {
 			recordStrings = append(recordStrings, string(*ptr.(*sql.RawBytes)))
 		}
 
-		writer.Write(recordStrings)
+		if err := writer.Write(recordStrings); err != nil {
+			return err
+		}
 	}
 
 	if rows.Err() != nil {

@@ -10,16 +10,16 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// DBAdapter defines the interface for a database adapter
+// DBAdapter defines the interface for a database adapter.
 type DBAdapter interface {
 	Connect(cfg *config.Db) (*sqlx.DB, error)
 	DoMigrations(db *sqlx.DB, cfg *config.Db) error
 }
 
-// NewDBAdapter provides the appropriate database adapter based on the config
+// NewDBAdapter provides the appropriate database adapter based on the config.
 func NewDBAdapter(cfg *config.Db) (DBAdapter, error) {
 	switch cfg.Type {
-	case "sqlite":
+	case config.DBSqlite:
 		return &SQLiteAdapter{}, nil
 	// TODO: add adapters for other databases, e.g. PostgreSQL
 	// case "postgresql":
@@ -29,7 +29,7 @@ func NewDBAdapter(cfg *config.Db) (DBAdapter, error) {
 	}
 }
 
-// Connect to the database using the specified adapter
+// Connect to the database using the specified adapter.
 func Connect(cfg *config.Db) (*sqlx.DB, error) {
 	adapter, err := NewDBAdapter(cfg)
 	if err != nil {

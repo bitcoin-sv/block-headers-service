@@ -8,6 +8,7 @@ import (
 	"math/big"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -50,11 +51,10 @@ func ImportHeaders(cfg *config.Config) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
 
 	fmt.Println("Running database migrations")
 
-	if database.DoMigrations(db, cfg.Db); err != nil {
+	if err := database.DoMigrations(db, cfg.Db); err != nil {
 		return err
 	}
 
@@ -95,7 +95,7 @@ func ImportHeaders(cfg *config.Config) error {
 		return err
 	}
 
-	if err := importHeadersFromFile(db, headersRepo, tmpHeadersFilePath); err != nil {
+	if err := importHeadersFromFile(headersRepo, tmpHeadersFilePath); err != nil {
 		return err
 	}
 
@@ -108,6 +108,10 @@ func ImportHeaders(cfg *config.Config) error {
 	}
 
 	if err := os.Remove(tmpHeadersFilePath); err != nil {
+		return err
+	}
+
+	if err := db.Close(); err != nil {
 		return err
 	}
 
@@ -129,14 +133,20 @@ func initHeadersRepo(db *sqlx.DB, cfg *config.Config) *repository.HeaderReposito
 	return headersRepo
 }
 
-func importHeadersFromFile(db *sqlx.DB, repo *repository.HeaderRepository, inputFilePath string) error {
+func importHeadersFromFile(repo *repository.HeaderRepository, inputFilePath string) error {
 	fmt.Println("Inserting headers from file to the database")
 
-	csvFile, err := os.Open(inputFilePath)
+	currentDir, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-	defer csvFile.Close()
+
+	inputFilePathFull := filepath.Clean(filepath.Join(currentDir, inputFilePath))
+
+	csvFile, err := os.Open(inputFilePathFull)
+	if err != nil {
+		return err
+	}
 
 	reader := csv.NewReader(csvFile)
 	_, err = reader.Read() // Skipping the column headers line
@@ -170,11 +180,17 @@ func importHeadersFromFile(db *sqlx.DB, repo *repository.HeaderRepository, input
 			break
 		}
 
-		repo.AddMultipleHeadersToDatabase(blocks)
+		if err := repo.AddMultipleHeadersToDatabase(blocks); err != nil {
+			return err
+		}
 
 		fmt.Printf("Inserted %d rows so far\n", rowIndex)
 
 		blocks = nil
+	}
+
+	if err := csvFile.Close(); err != nil {
+		return err
 	}
 
 	fmt.Printf("Inserted total of %d rows\n", rowIndex)
@@ -198,7 +214,7 @@ func parseRecord(record []string, rowIndex int32, previousBlockHash chainhash.Ha
 		Timestamp:     time.Unix(timestamp, 0),
 		Bits:          uint32(bits),
 		Nonce:         uint32(nonce),
-		State:         domains.HeaderState(domains.LongestChain),
+		State:         domains.LongestChain,
 		Chainwork:     chainWork,
 		CumulatedWork: cumulatedWork,
 		PreviousBlock: previousBlockHash,
@@ -226,7 +242,7 @@ func parseBigInt(s string) *big.Int {
 	return bi
 }
 
-// TODO hide SQLite-specific code behind some kind of abstraction
+// TODO hide SQLite-specific code behind some kind of abstraction.
 func getSQLitePragmaValues(db *sqlx.DB) (*SQLitePragmaValues, error) {
 	var pragmaValues SQLitePragmaValues
 
@@ -247,7 +263,7 @@ func getSQLitePragmaValues(db *sqlx.DB) (*SQLitePragmaValues, error) {
 	return &pragmaValues, nil
 }
 
-// TODO hide SQLite-specific code behind some kind of abstraction
+// TODO hide SQLite-specific code behind some kind of abstraction.
 func modifySQLitePragmas(db *sqlx.DB) error {
 	pragmas := []string{
 		"PRAGMA synchronous = OFF;",
@@ -264,7 +280,7 @@ func modifySQLitePragmas(db *sqlx.DB) error {
 	return nil
 }
 
-// TODO hide SQLite-specific code behind some kind of abstraction
+// TODO hide SQLite-specific code behind some kind of abstraction.
 func restoreSQLitePragmas(db *sqlx.DB, values SQLitePragmaValues) error {
 	pragmas := []string{
 		fmt.Sprintf("PRAGMA synchronous = %d;", values.Synchronous),
@@ -288,6 +304,12 @@ func removeIndexes(db *sqlx.DB) ([]DbIndex, error) {
 	if err != nil {
 		return nil, err
 	}
+	if indexesQueryRows.Err() != nil {
+		return nil, indexesQueryRows.Err()
+	}
+	defer func() {
+		_ = indexesQueryRows.Close()
+	}()
 
 	for indexesQueryRows.Next() {
 		var indexName, indexSQL string
@@ -303,8 +325,6 @@ func removeIndexes(db *sqlx.DB) ([]DbIndex, error) {
 
 		dbIndexes = append(dbIndexes, dbIndex)
 	}
-
-	defer indexesQueryRows.Close()
 
 	for _, dbIndex := range dbIndexes {
 		fmt.Printf("Value: %v\n", dbIndex)
