@@ -89,7 +89,6 @@ require (
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.10 // indirect
-	github.com/ulikunitz/xz v0.5.11
 	go.elastic.co/ecszerolog v0.1.0
 	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
