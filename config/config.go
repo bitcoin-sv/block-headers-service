@@ -142,5 +142,4 @@ type CLI struct {
 	ShowVersion   bool
 	ShowHelp      bool
 	ExportHeaders bool
-	ImportHeaders bool
 }

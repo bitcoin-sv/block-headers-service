@@ -18,7 +18,7 @@ ARG gh_repository=bitcoin-sv/$project_name
 ARG tag=${version:+v$version}
 ENV VERSION=${version:-develop}
 ENV TAG=${tag:-master}
-ENV PRELOADED_DB_URL="https://raw.githubusercontent.com/${gh_repository}/${TAG}/data/blockheaders.xz"
+ENV PRELOADED_DB_URL="https://raw.githubusercontent.com/${gh_repository}/${TAG}/data/blockheaders.csv.gz"
 
 VOLUME ["/app/data"]
 

@@ -1,4 +1,4 @@
-package dbutil
+package database
 
 import (
 	"database/sql"
@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/database"
 	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/jmoiron/sqlx"
 )
@@ -30,12 +29,12 @@ const (
 )
 
 func ExportHeaders(cfg *config.Config, log logging.Logger) error {
-	log.Infof("Exporting headers from database to file %s", compressedHeadersFilePath)
+	log.Infof("Exporting headers from database to file %s", cfg.Db.PreparedDbFilePath)
 
 	tmpHeadersFileName := "headers.csv"
 	tmpHeadersFilePath := filepath.Clean(filepath.Join(os.TempDir(), tmpHeadersFileName))
 
-	db, err := database.Connect(cfg.Db)
+	db, err := Connect(cfg.Db)
 	if err != nil {
 		return err
 	}
@@ -66,7 +65,7 @@ func ExportHeaders(cfg *config.Config, log logging.Logger) error {
 	log.Info("Data exported successfully")
 	log.Info("Compressing exported file")
 
-	compressedFile, err := os.Create(compressedHeadersFilePath)
+	compressedFile, err := os.Create(cfg.Db.PreparedDbFilePath)
 	if err != nil {
 		return err
 	}
@@ -90,7 +89,7 @@ func ExportHeaders(cfg *config.Config, log logging.Logger) error {
 		return err
 	}
 
-	log.Infof("File compressed successfully to %s", compressedHeadersFilePath)
+	log.Infof("File compressed successfully to %s", cfg.Db.PreparedDbFilePath)
 
 	return nil
 }

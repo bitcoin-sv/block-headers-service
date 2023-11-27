@@ -6,7 +6,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,7 +16,6 @@ import (
 	"github.com/bitcoin-sv/pulse/cli"
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/database"
-	"github.com/bitcoin-sv/pulse/dbutil"
 	"github.com/bitcoin-sv/pulse/notification"
 	"github.com/bitcoin-sv/pulse/transports/http/endpoints"
 	"github.com/bitcoin-sv/pulse/transports/websocket"
@@ -48,28 +46,10 @@ func main() {
 
 	cli.ParseCliFlags(cliFlags, cfg)
 
-	// TODO: Should this still be here, or should we support DB import only via CLI commands?
-	if cfg.Db.PreparedDb {
-		if err := dbutil.ImportHeaders(cfg); err != nil {
-			fmt.Printf("\nError: %v\n", err)
-		}
-	}
-
-	db, err := database.Connect(cfg.Db)
+	db, err := database.Init(cfg, log)
 	if err != nil {
-		log.Errorf("cannot setup database because of error %v", err)
+		log.Errorf("cannot setup database because of error: %v", err)
 		os.Exit(1)
-	}
-
-	if cfg.Db.MigrateDb {
-		log.Info("migrating database")
-		if err := database.DoMigrations(db, cfg.Db); err != nil {
-			log.Errorf("database migration failed because of error %v", err)
-			os.Exit(1)
-		}
-		log.Info("migrating database completed")
-	} else {
-		log.Info("migrate database set to false, skipping migration")
 	}
 
 	// Use all processor cores.

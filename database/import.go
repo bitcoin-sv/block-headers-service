@@ -1,4 +1,4 @@
-package dbutil
+package database
 
 import (
 	"encoding/csv"
@@ -7,16 +7,15 @@ import (
 	"io"
 	"math/big"
 	"os"
-	"path"
 	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/bitcoin-sv/pulse/app/logger"
 	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/database"
 	"github.com/bitcoin-sv/pulse/database/sql"
 	"github.com/bitcoin-sv/pulse/domains"
+	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/pulse/repository"
 	"github.com/jmoiron/sqlx"
@@ -35,51 +34,51 @@ type SQLitePragmaValues struct {
 
 const insertTransactionSize = 500
 
-func ImportHeaders(cfg *config.Config) error {
-	fmt.Println("Import headers from file to the database")
+func ImportHeaders(db *sqlx.DB, cfg *config.Config, log logging.Logger) error {
+	log.Info("Import headers from file to the database")
 
-	startTime := time.Now()
-
-	if !fileExistsAndIsReadable(compressedHeadersFilePath) {
-		return fmt.Errorf("file %s does not exist or is not readable", compressedHeadersFilePath)
+	if !fileExistsAndIsReadable(cfg.Db.PreparedDbFilePath) {
+		return fmt.Errorf("file %s does not exist or is not readable", cfg.Db.PreparedDbFilePath)
 	}
 
-	tmpHeadersFileName := "headers.csv"
-	tmpHeadersFilePath := path.Join(tmpDir, tmpHeadersFileName)
-
-	db, err := database.Connect(cfg.Db)
+	currentDir, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("Running database migrations")
-
-	if err := database.DoMigrations(db, cfg.Db); err != nil {
-		return err
-	}
-
-	fmt.Println("Database migrations completed")
 
 	headersRepo := initHeadersRepo(db, cfg)
 
 	dbHeadersCount, _ := headersRepo.GetHeadersCount()
 
 	if dbHeadersCount > 0 {
-		fmt.Printf("Database already contains %d block headers\n", dbHeadersCount)
-		return errors.New("the headers table in the database must be empty")
+		return fmt.Errorf("database already contains %d block headers, the headers table in the database must be empty", dbHeadersCount)
 	}
 
-	fmt.Printf("Decompressing file %s\n", compressedHeadersFilePath)
+	compressedHeadersFilePath := filepath.Clean(filepath.Join(currentDir, cfg.Db.PreparedDbFilePath))
+	tmpHeadersFileName := "headers.csv"
+	tmpHeadersFilePath := filepath.Clean(filepath.Join(os.TempDir(), tmpHeadersFileName))
 
-	if err := createDirectory(tmpDir); err != nil {
+	log.Infof("Decompressing file %s to %s", compressedHeadersFilePath, tmpHeadersFilePath)
+
+	compressedHeadersFile, err := os.Open(compressedHeadersFilePath)
+	if err != nil {
 		return err
 	}
 
-	if err := gzipDecompress(compressedHeadersFilePath, tmpHeadersFilePath); err != nil {
+	tmpHeadersFile, err := os.Create(tmpHeadersFilePath)
+	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Decompressed and wrote contents to %s\n", tmpHeadersFilePath)
+	if err := gzipDecompress(compressedHeadersFile, tmpHeadersFile); err != nil {
+		return err
+	}
+
+	if err := compressedHeadersFile.Close(); err != nil {
+		return err
+	}
+
+	log.Infof("Decompressed and wrote contents to %s", tmpHeadersFilePath)
 
 	pragmas, err := getSQLitePragmaValues(db)
 	if err != nil {
@@ -95,7 +94,11 @@ func ImportHeaders(cfg *config.Config) error {
 		return err
 	}
 
-	if err := importHeadersFromFile(headersRepo, tmpHeadersFilePath); err != nil {
+	if err := importHeadersFromFile(headersRepo, tmpHeadersFile, log); err != nil {
+		return err
+	}
+
+	if err := tmpHeadersFile.Close(); err != nil {
 		return err
 	}
 
@@ -111,17 +114,7 @@ func ImportHeaders(cfg *config.Config) error {
 		return err
 	}
 
-	if err := db.Close(); err != nil {
-		return err
-	}
-
-	fmt.Printf("Deleted temporary file %s\n", tmpHeadersFilePath)
-
-	endTime := time.Now()
-	elapsedTime := endTime.Sub(startTime)
-	fmt.Printf("Start Time: %s\n", startTime.Format("2006-01-02 15:04:05"))
-	fmt.Printf("End Time: %s\n", endTime.Format("2006-01-02 15:04:05"))
-	fmt.Printf("Elapsed Time: %s\n", elapsedTime)
+	log.Infof("Deleted temporary file %s", tmpHeadersFilePath)
 
 	return nil
 }
@@ -133,23 +126,16 @@ func initHeadersRepo(db *sqlx.DB, cfg *config.Config) *repository.HeaderReposito
 	return headersRepo
 }
 
-func importHeadersFromFile(repo *repository.HeaderRepository, inputFilePath string) error {
-	fmt.Println("Inserting headers from file to the database")
+func importHeadersFromFile(repo *repository.HeaderRepository, inputFile *os.File, log logging.Logger) error {
+	log.Info("Inserting headers from file to the database")
 
-	currentDir, err := os.Getwd()
-	if err != nil {
+	// Read from the beginning of the file
+	if _, err := inputFile.Seek(0, 0); err != nil {
 		return err
 	}
 
-	inputFilePathFull := filepath.Clean(filepath.Join(currentDir, inputFilePath))
-
-	csvFile, err := os.Open(inputFilePathFull)
-	if err != nil {
-		return err
-	}
-
-	reader := csv.NewReader(csvFile)
-	_, err = reader.Read() // Skipping the column headers line
+	reader := csv.NewReader(inputFile)
+	_, err := reader.Read() // Skipping the column headers line
 	if err != nil {
 		return err
 	}
@@ -163,8 +149,8 @@ func importHeadersFromFile(repo *repository.HeaderRepository, inputFilePath stri
 		for i := 0; i < insertTransactionSize; i++ {
 			record, err := reader.Read()
 			if err != nil {
-				if err != io.EOF {
-					fmt.Printf("Error reading record: %v\n", err)
+				if !errors.Is(err, io.EOF) {
+					log.Errorf("Error reading record: %v\n", err)
 				}
 				break
 			}
@@ -184,16 +170,12 @@ func importHeadersFromFile(repo *repository.HeaderRepository, inputFilePath stri
 			return err
 		}
 
-		fmt.Printf("Inserted %d rows so far\n", rowIndex)
+		log.Infof("Inserted %d rows so far", rowIndex)
 
 		blocks = nil
 	}
 
-	if err := csvFile.Close(); err != nil {
-		return err
-	}
-
-	fmt.Printf("Inserted total of %d rows\n", rowIndex)
+	log.Infof("Inserted total of %d rows", rowIndex)
 
 	return nil
 }

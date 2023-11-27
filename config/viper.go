@@ -20,8 +20,7 @@ func Init(lf logging.LoggerFactory) (*Config, *CLI) {
 	fs := &PulseFlagSet{}
 	cli := &CLI{}
 
-	initCliFlags(fs, cli)
-	initFlags(fs)
+	initFlags(fs, cli)
 
 	cfg := ParseConfig()
 	err := cfg.P2P.Validate()
@@ -54,7 +53,7 @@ func setDefaultDb() {
 	viper.SetDefault(EnvDbSchema, "./database/migrations")
 	viper.SetDefault(EnvDbMigrate, true)
 	viper.SetDefault(EnvPreparedDb, false)
-	viper.SetDefault(EnvPreparedDbFilePath, "./data/blockheaders.xz")
+	viper.SetDefault(EnvPreparedDbFilePath, "./data/blockheaders.csv.gz")
 }
 
 func setDefaultAuthorization() {
@@ -122,9 +121,10 @@ func ParseConfig() *Config {
 	return c
 }
 
-func initFlags(fs *PulseFlagSet) {
+func initFlags(fs *PulseFlagSet, cli *CLI) {
 	fs.pflagsMapping()
 	fs.bindFlags()
+	initCliFlags(fs, cli)
 
 	err := fs.Parse(os.Args[1:])
 	if err != nil {
@@ -137,5 +137,4 @@ func initCliFlags(fs *PulseFlagSet, cli *CLI) {
 	fs.BoolVarP(&cli.ShowHelp, "help", "H", false, "show help")
 	fs.BoolVarP(&cli.ShowVersion, "version", "V", false, "print the version")
 	fs.BoolVar(&cli.ExportHeaders, "exportHeaders", false, "export headers from database to CSV file")
-	fs.BoolVar(&cli.ImportHeaders, "importHeaders", false, "import headers from CSV file to database")
 }
