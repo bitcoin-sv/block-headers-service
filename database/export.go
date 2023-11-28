@@ -46,9 +46,12 @@ func ExportHeaders(cfg *config.Config, log logging.Logger) error {
 
 	writer := csv.NewWriter(tmpCsvFile)
 
-	rows := queryDatabaseTable(db, log)
+	rows, err := queryDatabaseTable(db, log)
+	if err != nil {
+		log.Errorf("Error querying database table: %w", err)
+		return err
+	}
 	defer func() {
-		_ = rows.Err()
 		_ = rows.Close()
 	}()
 
@@ -94,13 +97,22 @@ func ExportHeaders(cfg *config.Config, log logging.Logger) error {
 	return nil
 }
 
-func queryDatabaseTable(db *sqlx.DB, log logging.Logger) *sqlx.Rows {
+// func queryDatabaseTable(db *sqlx.DB, log logging.Logger) *sqlx.Rows {
+// 	rows, err := db.Queryx(selectHeadersSql)
+// 	if err != nil {
+// 		log.Errorf("Failed to query rows: %v", err)
+// 		os.Exit(1)
+// 	}
+// 	return rows
+// }
+
+func queryDatabaseTable(db *sqlx.DB, log logging.Logger) (*sqlx.Rows, error) {
 	rows, err := db.Queryx(selectHeadersSql)
 	if err != nil {
 		log.Errorf("Failed to query rows: %v", err)
-		os.Exit(1)
+		return nil, err
 	}
-	return rows
+	return rows, nil
 }
 
 func writeColumnNamesToCsvFile(rows *sqlx.Rows, writer *csv.Writer) error {
