@@ -43,8 +43,7 @@ func gzipDecompress(compressedFile, outputFile *os.File) error {
 
 	const chunkSize = 10 * 1024 * 1024 // 10 MB
 	for {
-		_, err := io.CopyN(outputFile, gzipReader, chunkSize)
-		if err != nil {
+		if _, err := io.CopyN(outputFile, gzipReader, chunkSize); err != nil {
 			if err == io.EOF {
 				break
 			}

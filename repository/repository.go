@@ -9,7 +9,8 @@ import (
 
 // Headers is a interface which represents methods performed on header table in defined storage.
 type Headers interface {
-	AddHeaderToDatabase(header domains.BlockHeader) error
+	AddHeaderToDatabase(domains.BlockHeader) error
+	AddMultipleHeadersToDatabase([]domains.BlockHeader) error
 	UpdateState([]chainhash.Hash, domains.HeaderState) error
 	GetHeaderByHeight(height int32) (*domains.BlockHeader, error)
 	GetHeaderByHeightRange(from int, to int) ([]*domains.BlockHeader, error)
