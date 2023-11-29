@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/jmoiron/sqlx"
+
 	"github.com/bitcoin-sv/pulse/app/logger"
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/database/sql"
@@ -18,7 +20,6 @@ import (
 	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/pulse/repository"
-	"github.com/jmoiron/sqlx"
 )
 
 type DbIndex struct {
@@ -32,7 +33,10 @@ type SQLitePragmaValues struct {
 	CacheSize   int
 }
 
-const insertTransactionSize = 500
+const (
+	insertTransactionSize = 100
+	numWorkers            = 5 // Adjust based on performance and resource constraints
+)
 
 func ImportHeaders(db *sqlx.DB, cfg *config.Config, log logging.Logger) error {
 	log.Info("Import headers from file to the database")
@@ -94,7 +98,7 @@ func ImportHeaders(db *sqlx.DB, cfg *config.Config, log logging.Logger) error {
 		return err
 	}
 
-	if err := importHeadersFromFile(headersRepo, tmpHeadersFile, log); err != nil {
+	if err := importHeadersFromFileConcurrent(headersRepo, tmpHeadersFile, log); err != nil {
 		return err
 	}
 
@@ -126,7 +130,85 @@ func initHeadersRepo(db *sqlx.DB, cfg *config.Config) *repository.HeaderReposito
 	return headersRepo
 }
 
-func importHeadersFromFile(repo *repository.HeaderRepository, inputFile *os.File, log logging.Logger) error {
+func importHeadersFromFileConcurrent(repo repository.Headers, inputFile *os.File, log logging.Logger) error {
+	log.Info("Inserting headers from file to the database")
+
+	if _, err := inputFile.Seek(0, 0); err != nil {
+		return err
+	}
+
+	reader := csv.NewReader(inputFile)
+	if _, err := reader.Read(); err != nil { // Skipping the column headers line
+		return err
+	}
+
+	// Channels for communication
+	blockCh := make(chan domains.BlockHeader)
+	errCh := make(chan error)
+	doneCh := make(chan struct{})
+
+	// Worker function to insert blocks
+	worker := func() {
+		defer func() {
+			doneCh <- struct{}{} // Signal completion
+		}()
+
+		var blocks []domains.BlockHeader
+
+		for block := range blockCh {
+			blocks = append(blocks, block)
+		}
+
+		if len(blocks) > 0 {
+			if err := repo.AddMultipleHeadersToDatabase(blocks); err != nil {
+				errCh <- err
+				return
+			}
+		}
+	}
+
+	// Start worker goroutines
+	for i := 0; i < numWorkers; i++ {
+		go worker()
+	}
+
+	// Read and process records concurrently
+	var (
+		previousBlockHash chainhash.Hash
+		rowIndex          int
+		record            []string
+		err               error
+	)
+	for {
+		for i := 0; i < insertTransactionSize; i++ {
+			record, err = reader.Read()
+			if err != nil {
+				if errors.Is(err, io.EOF) {
+					break
+				}
+				log.Errorf("Error reading record: %v", err)
+			}
+
+			block := parseRecord(record, int32(rowIndex), previousBlockHash)
+			blockCh <- block
+
+			previousBlockHash = block.Hash
+			rowIndex++
+		}
+
+		log.Infof("Inserted %d rows so far", rowIndex)
+		if errors.Is(err, io.EOF) {
+			log.Infof("last row %d", rowIndex)
+			close(blockCh) // Close the channel to signal workers to finish
+			break
+		}
+	}
+
+	log.Infof("Inserted total of %d rows", rowIndex)
+	return nil
+}
+
+func importHeadersFromFile(repo repository.Headers, inputFile *os.File, log logging.Logger) error {
 	log.Info("Inserting headers from file to the database")
 
 	// Read from the beginning of the file

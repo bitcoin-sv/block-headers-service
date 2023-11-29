@@ -3,12 +3,12 @@ package database
 import (
 	"fmt"
 
-	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/jmoiron/sqlx"
-
 	// use blank import to register sqlite driver.
 	_ "github.com/mattn/go-sqlite3"
+
+	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/pulse/domains/logging"
 )
 
 // DBAdapter defines the interface for a database adapter.
@@ -23,13 +23,18 @@ func Init(cfg *config.Config, log logging.Logger) (*sqlx.DB, error) {
 		return nil, err
 	}
 
-	if cfg.Db.MigrateDb || cfg.Db.PreparedDb {
-		log.Info("migrating database")
+	var dbAction string = "preparing"
+	switch {
+	case cfg.Db.MigrateDb:
+		dbAction = "migrating"
+		fallthrough
+	case cfg.Db.PreparedDb:
+		log.Infof("%s database", dbAction)
 		if err := DoMigrations(db, cfg.Db); err != nil {
 			return nil, err
 		}
-		log.Info("migrating database completed")
-	} else {
+		log.Infof("%s database completed", dbAction)
+	default:
 		log.Info("migrate database set to false, skipping migration")
 	}
 
