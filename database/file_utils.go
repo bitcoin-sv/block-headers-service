@@ -2,8 +2,11 @@ package database
 
 import (
 	"compress/gzip"
+	"fmt"
 	"io"
 	"os"
+
+	gz "github.com/klauspost/compress/gzip"
 )
 
 func fileExistsAndIsReadable(path string) bool {
@@ -16,20 +19,37 @@ func fileExistsAndIsReadable(path string) bool {
 	return false
 }
 
+func gzipFastCompress(inputFile, outputFile *os.File) error {
+	if _, err := inputFile.Seek(0, 0); err != nil {
+		return err
+	}
+
+	gzipWriter, err := gz.NewWriterLevel(outputFile, gz.BestSpeed)
+	if err != nil {
+		return fmt.Errorf("creating gzip writer: %w", err)
+	}
+	defer gzipWriter.Close()
+
+	if _, err := io.Copy(gzipWriter, inputFile); err != nil && err != io.EOF {
+		return fmt.Errorf("copying content to gzip writer: %w", err)
+	}
+
+	return nil
+}
+
 func gzipCompress(inputFile, outputFile *os.File) error {
 	if _, err := inputFile.Seek(0, 0); err != nil {
 		return err
 	}
 
-	gzipWriter := gzip.NewWriter(outputFile)
-
-	_, err := io.Copy(gzipWriter, inputFile)
+	gzipWriter, err := gzip.NewWriterLevel(outputFile, gzip.BestSpeed)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating gzip writer: %w", err)
 	}
+	defer gzipWriter.Close()
 
-	if err := gzipWriter.Close(); err != nil {
-		return err
+	if _, err := io.Copy(gzipWriter, inputFile); err != nil && err != io.EOF {
+		return fmt.Errorf("copying content to gzip writer: %w", err)
 	}
 
 	return nil
@@ -52,6 +72,24 @@ func gzipDecompress(compressedFile, outputFile *os.File) error {
 	}
 
 	if err := gzipReader.Close(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func gzipDecompressWithBuffer(compressedFile, outputFile *os.File) error {
+	gzipReader, err := gz.NewReader(compressedFile)
+	if err != nil {
+		return err
+	}
+	defer gzipReader.Close()
+
+	bufferSize := 16 * 1024 * 1024 // 16 MB buffer size
+	buffer := make([]byte, bufferSize)
+
+	// io.CopyBuffer for efficient decompression
+	if _, err = io.CopyBuffer(outputFile, gzipReader, buffer); err != nil && err != io.EOF {
 		return err
 	}
 

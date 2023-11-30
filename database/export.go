@@ -6,9 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/jmoiron/sqlx"
+
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/domains/logging"
-	"github.com/jmoiron/sqlx"
 )
 
 const (
@@ -51,9 +52,7 @@ func ExportHeaders(cfg *config.Config, log logging.Logger) error {
 		log.Errorf("Error querying database table: %w", err)
 		return err
 	}
-	defer func() {
-		_ = rows.Close()
-	}()
+	defer rows.Close()
 
 	if err := writeColumnNamesToCsvFile(rows, writer); err != nil {
 		return err
@@ -77,7 +76,7 @@ func ExportHeaders(cfg *config.Config, log logging.Logger) error {
 		return err
 	}
 
-	if err := gzipCompress(tmpCsvFile, compressedFile); err != nil {
+	if err := gzipFastCompress(tmpCsvFile, compressedFile); err != nil {
 		return err
 	}
 

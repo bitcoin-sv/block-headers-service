@@ -74,7 +74,7 @@ func ImportHeaders(db *sqlx.DB, cfg *config.Config, log logging.Logger) error {
 		return err
 	}
 
-	if err := gzipDecompress(compressedHeadersFile, tmpHeadersFile); err != nil {
+	if err := gzipDecompressWithBuffer(compressedHeadersFile, tmpHeadersFile); err != nil {
 		return err
 	}
 
