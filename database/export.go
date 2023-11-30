@@ -52,7 +52,11 @@ func ExportHeaders(cfg *config.Config, log logging.Logger) error {
 		log.Errorf("Error querying database table: %w", err)
 		return err
 	}
-	defer rows.Close()
+	defer func(log logging.Logger) {
+		if err := rows.Close(); err != nil {
+			log.Errorf("Error closing rows: %w", err)
+		}
+	}(log)
 
 	if err := writeColumnNamesToCsvFile(rows, writer); err != nil {
 		return err

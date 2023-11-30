@@ -28,7 +28,11 @@ func gzipFastCompress(inputFile, outputFile *os.File) error {
 	if err != nil {
 		return fmt.Errorf("creating gzip writer: %w", err)
 	}
-	defer gzipWriter.Close()
+	defer func() {
+		if closeErr := gzipWriter.Close(); closeErr != nil {
+			fmt.Printf("gzipWriter close error: %v", closeErr)
+		}
+	}()
 
 	if _, err := io.Copy(gzipWriter, inputFile); err != nil && err != io.EOF {
 		return fmt.Errorf("copying content to gzip writer: %w", err)
@@ -46,7 +50,11 @@ func gzipCompress(inputFile, outputFile *os.File) error {
 	if err != nil {
 		return fmt.Errorf("creating gzip writer: %w", err)
 	}
-	defer gzipWriter.Close()
+	defer func() {
+		if closeErr := gzipWriter.Close(); closeErr != nil {
+			fmt.Printf("gzipWriter close error: %v", closeErr)
+		}
+	}()
 
 	if _, err := io.Copy(gzipWriter, inputFile); err != nil && err != io.EOF {
 		return fmt.Errorf("copying content to gzip writer: %w", err)
@@ -83,7 +91,11 @@ func gzipDecompressWithBuffer(compressedFile, outputFile *os.File) error {
 	if err != nil {
 		return err
 	}
-	defer gzipReader.Close()
+	defer func() {
+		if closeErr := gzipReader.Close(); closeErr != nil {
+			fmt.Printf("gzipReader close error: %v", closeErr)
+		}
+	}()
 
 	bufferSize := 16 * 1024 * 1024 // 16 MB buffer size
 	buffer := make([]byte, bufferSize)
