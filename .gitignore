@@ -9,6 +9,7 @@ artifacts/
 dist/
 data/blockheaders.bck.db
 data/blockheaders.db-journal
+data/blockheaders.csv
 
 
 *.db*
