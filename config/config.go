@@ -139,6 +139,7 @@ type HTTP struct {
 
 // CLI represents a CLI struct.
 type CLI struct {
-	ShowVersion bool
-	ShowHelp    bool
+	ShowVersion   bool
+	ShowHelp      bool
+	ExportHeaders bool
 }

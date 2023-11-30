@@ -115,7 +115,7 @@ Settings related to database:
       - DB_DSN=file:/data/blockheaders.db?_foreign_keys=true&pooled=true
       - DB_SCHEMA_PATH=/migrations
       - DB_PREPAREDDB=true
-      - DB_PREPAREDDBFILE_PATH="./data/blockheaders.xz"
+      - DB_PREPAREDDBFILE_PATH="./data/blockheaders.csv.gz"
 
 DSN can be used to change the local database location - this should be a volume mount into the container while SQLite is the only db option, we will support more in future.
 

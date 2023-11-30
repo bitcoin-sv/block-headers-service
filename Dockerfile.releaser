@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y wget
 WORKDIR /app
 
 ENV DB_SCHEMAPATH=./migrations
-COPY ./data/sql/migrations $DB_SCHEMAPATH
+COPY ./database/migrations $DB_SCHEMAPATH
 COPY ./entrypoint.sh .
 ARG project_name=pulse
 COPY ./$project_name .
@@ -18,7 +18,7 @@ ARG gh_repository=bitcoin-sv/$project_name
 ARG tag=${version:+v$version}
 ENV VERSION=${version:-develop}
 ENV TAG=${tag:-master}
-ENV PRELOADED_DB_URL="https://raw.githubusercontent.com/${gh_repository}/${TAG}/data/blockheaders.xz"
+ENV PRELOADED_DB_URL="https://raw.githubusercontent.com/${gh_repository}/${TAG}/data/blockheaders.csv.gz"
 
 VOLUME ["/app/data"]
 
