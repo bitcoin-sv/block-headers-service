@@ -100,15 +100,6 @@ func ExportHeaders(cfg *config.Config, log logging.Logger) error {
 	return nil
 }
 
-// func queryDatabaseTable(db *sqlx.DB, log logging.Logger) *sqlx.Rows {
-// 	rows, err := db.Queryx(selectHeadersSql)
-// 	if err != nil {
-// 		log.Errorf("Failed to query rows: %v", err)
-// 		os.Exit(1)
-// 	}
-// 	return rows
-// }
-
 func queryDatabaseTable(db *sqlx.DB, log logging.Logger) (*sqlx.Rows, error) {
 	rows, err := db.Queryx(selectHeadersSql)
 	if err != nil {

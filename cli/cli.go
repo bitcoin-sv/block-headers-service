@@ -27,7 +27,6 @@ func ParseCliFlags(cli *config.CLI, cfg *config.Config) {
 	}
 
 	if cli.ExportHeaders {
-		// database.ExportHeaders(cfg, log)
 		if err := database.ExportHeaders(cfg, log); err != nil {
 			fmt.Printf("\nError: %v\n", err)
 			os.Exit(1)
