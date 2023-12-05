@@ -23,19 +23,8 @@ func Init(cfg *config.Config, log logging.Logger) (*sqlx.DB, error) {
 		return nil, err
 	}
 
-	var dbAction string = "preparing"
-	switch {
-	case cfg.Db.MigrateDb:
-		dbAction = "migrating"
-		fallthrough
-	case cfg.Db.PreparedDb:
-		log.Infof("%s database", dbAction)
-		if err := DoMigrations(db, cfg.Db); err != nil {
-			return nil, err
-		}
-		log.Infof("%s database completed", dbAction)
-	default:
-		log.Info("migrate database set to false, skipping migration")
+	if err := DoMigrations(db, cfg.Db); err != nil {
+		return nil, err
 	}
 
 	if cfg.Db.PreparedDb {

@@ -5,13 +5,14 @@ import (
 	"os"
 
 	"github.com/bitcoin-sv/pulse/app/logger"
+	"github.com/bitcoin-sv/pulse/cli/flags"
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/database"
 	"github.com/bitcoin-sv/pulse/version"
 	"github.com/spf13/pflag"
 )
 
-func ParseCliFlags(cli *config.CLI, cfg *config.Config) {
+func ParseCliFlags(cli *flags.CliFlags, cfg *config.Config) {
 
 	lf := logger.DefaultLoggerFactory()
 	log := lf.NewLogger("cli")

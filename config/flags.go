@@ -72,7 +72,6 @@ func (fs *PulseFlagSet) p2pFlagsMapping() {
 func (fs *PulseFlagSet) dbFlagsMapping() {
 	fs.String(schemaPathFlag, "", "path to db migration files")
 	fs.String(dsnFlag, "", "data source name")
-	fs.Bool(migrateFlag, false, "flag specifying wheather to run migrations")
 	fs.Bool(resetStateFlag, false, "flag specifying wheather to clear db and start synchronization from genesis header or start from last header in db")
 	fs.String(dbFilePathFlag, "", "path to db file")
 	fs.Bool(preparedDbFlag, false, "flag specifying wheather to use prepared db")
@@ -147,7 +146,6 @@ func (fs *PulseFlagSet) bindP2PFlags() {
 func (fs *PulseFlagSet) bindDBFlags() {
 	viper.BindPFlag(EnvDbSchema, fs.Lookup(schemaPathFlag))
 	viper.BindPFlag(EnvDbDsn, fs.Lookup(dsnFlag))
-	viper.BindPFlag(EnvDbMigrate, fs.Lookup(migrateFlag))
 	viper.BindPFlag(EnvResetDbOnStartup, fs.Lookup(resetStateFlag))
 	viper.BindPFlag(EnvDbFilePath, fs.Lookup(dbFilePathFlag))
 	viper.BindPFlag(EnvPreparedDb, fs.Lookup(preparedDbFlag))

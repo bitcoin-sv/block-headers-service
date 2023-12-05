@@ -6,19 +6,20 @@ import (
 	"os"
 	"strings"
 
+	cliFlags "github.com/bitcoin-sv/pulse/cli/flags"
 	"github.com/bitcoin-sv/pulse/config/p2pconfig"
 	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/spf13/viper"
 )
 
 // Init creates and returns a new viper config.
-func Init(lf logging.LoggerFactory) (*Config, *CLI) {
+func Init(lf logging.LoggerFactory) (*Config, *cliFlags.CliFlags) {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	setDefaults()
 
 	fs := &PulseFlagSet{}
-	cli := &CLI{}
+	cli := &cliFlags.CliFlags{}
 
 	initFlags(fs, cli)
 
@@ -51,7 +52,6 @@ func setDefaultDb() {
 	viper.SetDefault(EnvDbFilePath, "./data/blockheaders.db")
 	viper.SetDefault(EnvDbDsn, "file:./data/blockheaders.db?_foreign_keys=true&pooling=true")
 	viper.SetDefault(EnvDbSchema, "./database/migrations")
-	viper.SetDefault(EnvDbMigrate, true)
 	viper.SetDefault(EnvPreparedDb, false)
 	viper.SetDefault(EnvPreparedDbFilePath, "./data/blockheaders.csv.gz")
 }
@@ -121,7 +121,7 @@ func ParseConfig() *Config {
 	return c
 }
 
-func initFlags(fs *PulseFlagSet, cli *CLI) {
+func initFlags(fs *PulseFlagSet, cli *cliFlags.CliFlags) {
 	fs.pflagsMapping()
 	fs.bindFlags()
 	initCliFlags(fs, cli)
@@ -133,7 +133,7 @@ func initFlags(fs *PulseFlagSet, cli *CLI) {
 	}
 }
 
-func initCliFlags(fs *PulseFlagSet, cli *CLI) {
+func initCliFlags(fs *PulseFlagSet, cli *cliFlags.CliFlags) {
 	fs.BoolVarP(&cli.ShowHelp, "help", "H", false, "show help")
 	fs.BoolVarP(&cli.ShowVersion, "version", "V", false, "print the version")
 	fs.BoolVar(&cli.ExportHeaders, "exportHeaders", false, "export headers from database to CSV file")

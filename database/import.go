@@ -41,48 +41,30 @@ const (
 func ImportHeaders(db *sqlx.DB, cfg *config.Config, log logging.Logger) error {
 	log.Info("Import headers from file to the database")
 
-	if !fileExistsAndIsReadable(cfg.Db.PreparedDbFilePath) {
-		return fmt.Errorf("file %s does not exist or is not readable", cfg.Db.PreparedDbFilePath)
-	}
-
-	currentDir, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
 	headersRepo := initHeadersRepo(db, cfg)
 
 	dbHeadersCount, _ := headersRepo.GetHeadersCount()
 
 	if dbHeadersCount > 0 {
-		return fmt.Errorf("database already contains %d block headers, the headers table in the database must be empty", dbHeadersCount)
+		log.Infof("skipping preloading database from file, database already contains %d block headers", dbHeadersCount)
+		return nil
 	}
 
-	compressedHeadersFilePath := filepath.Clean(filepath.Join(currentDir, cfg.Db.PreparedDbFilePath))
-	tmpHeadersFileName := "headers.csv"
-	tmpHeadersFilePath := filepath.Clean(filepath.Join(os.TempDir(), tmpHeadersFileName))
-
-	log.Infof("Decompressing file %s to %s", compressedHeadersFilePath, tmpHeadersFilePath)
-
-	compressedHeadersFile, err := os.Open(compressedHeadersFilePath)
+	tmpHeadersFile, tmpHeadersFilePath, err := getHeadersFile(cfg.Db.PreparedDbFilePath, log)
 	if err != nil {
 		return err
 	}
+	defer func() {
+		_ = tmpHeadersFile.Close()
 
-	tmpHeadersFile, err := os.Create(tmpHeadersFilePath)
-	if err != nil {
-		return err
-	}
-
-	if err := gzipDecompressWithBuffer(compressedHeadersFile, tmpHeadersFile); err != nil {
-		return err
-	}
-
-	if err := compressedHeadersFile.Close(); err != nil {
-		return err
-	}
-
-	log.Infof("Decompressed and wrote contents to %s", tmpHeadersFilePath)
+		if fileExistsAndIsReadable(tmpHeadersFilePath) {
+			if err := os.Remove(tmpHeadersFilePath); err == nil {
+				log.Infof("Deleted temporary file %s", tmpHeadersFilePath)
+			} else {
+				log.Warnf("Unable to delete temporary file %s", tmpHeadersFilePath)
+			}
+		}
+	}()
 
 	pragmas, err := getSQLitePragmaValues(db)
 	if err != nil {
@@ -92,33 +74,27 @@ func ImportHeaders(db *sqlx.DB, cfg *config.Config, log logging.Logger) error {
 	if err := modifySQLitePragmas(db); err != nil {
 		return err
 	}
+	defer func() {
+		if err = restoreSQLitePragmas(db, *pragmas); err != nil {
+			log.Error(err)
+			os.Exit(1)
+		}
+	}()
 
 	droppedIndexes, err := removeIndexes(db)
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err = restoreIndexes(db, droppedIndexes); err != nil {
+			log.Error(err)
+			os.Exit(1)
+		}
+	}()
 
 	if err := importHeadersFromFileConcurrent(headersRepo, tmpHeadersFile, log); err != nil {
 		return err
 	}
-
-	if err := tmpHeadersFile.Close(); err != nil {
-		return err
-	}
-
-	if err = restoreIndexes(db, droppedIndexes); err != nil {
-		return err
-	}
-
-	if err = restoreSQLitePragmas(db, *pragmas); err != nil {
-		return err
-	}
-
-	if err := os.Remove(tmpHeadersFilePath); err != nil {
-		return err
-	}
-
-	log.Infof("Deleted temporary file %s", tmpHeadersFilePath)
 
 	return nil
 }
@@ -128,6 +104,45 @@ func initHeadersRepo(db *sqlx.DB, cfg *config.Config) *repository.HeaderReposito
 	headersDb := sql.NewHeadersDb(db, cfg.Db.Type, lf)
 	headersRepo := repository.NewHeadersRepository(headersDb)
 	return headersRepo
+}
+
+func getHeadersFile(preparedDbFilePath string, log logging.Logger) (*os.File, string, error) {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return nil, "", err
+	}
+
+	if !fileExistsAndIsReadable(preparedDbFilePath) {
+		return nil, "", fmt.Errorf("file %s does not exist or is not readable", preparedDbFilePath)
+	}
+
+	const tmpHeadersFileName = "pulse-blockheaders.csv"
+
+	compressedHeadersFilePath := filepath.Clean(filepath.Join(currentDir, preparedDbFilePath))
+	tmpHeadersFilePath := filepath.Clean(filepath.Join(os.TempDir(), tmpHeadersFileName))
+
+	log.Infof("Decompressing file %s to %s", compressedHeadersFilePath, tmpHeadersFilePath)
+
+	compressedHeadersFile, err := os.Open(compressedHeadersFilePath)
+	if err != nil {
+		return nil, "", err
+	}
+	defer func() {
+		_ = compressedHeadersFile.Close()
+	}()
+
+	tmpHeadersFile, err := os.Create(tmpHeadersFilePath)
+	if err != nil {
+		return nil, "", err
+	}
+
+	if err := gzipDecompressWithBuffer(compressedHeadersFile, tmpHeadersFile); err != nil {
+		return nil, "", err
+	}
+
+	log.Infof("Decompressed and wrote contents to %s", tmpHeadersFilePath)
+
+	return tmpHeadersFile, tmpHeadersFilePath, nil
 }
 
 func importHeadersFromFileConcurrent(repo repository.Headers, inputFile *os.File, log logging.Logger) error {

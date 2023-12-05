@@ -47,6 +47,7 @@ func ExportHeaders(cfg *config.Config, log logging.Logger) error {
 
 	writer := csv.NewWriter(tmpCsvFile)
 
+	// TODO: Consider querying the database for smaller data chunks to avoid potential performance issues
 	rows, err := queryDatabaseTable(db, log)
 	if err != nil {
 		log.Errorf("Error querying database table: %w", err)
