@@ -33,10 +33,7 @@ type SQLitePragmaValues struct {
 	CacheSize   int
 }
 
-const (
-	insertTransactionSize = 100
-	numWorkers            = 5 // Adjust based on performance and resource constraints
-)
+const insertBatchSize = 500
 
 func ImportHeaders(db *sqlx.DB, cfg *config.Config, log logging.Logger) error {
 	log.Info("Import headers from file to the database")
@@ -92,8 +89,13 @@ func ImportHeaders(db *sqlx.DB, cfg *config.Config, log logging.Logger) error {
 		}
 	}()
 
-	if err := importHeadersFromFileConcurrent(headersRepo, tmpHeadersFile, log); err != nil {
+	importCount, err := importHeadersFromFile(headersRepo, tmpHeadersFile, log)
+	if err != nil {
 		return err
+	}
+
+	if dbHeadersCount, _ = headersRepo.GetHeadersCount(); dbHeadersCount != importCount {
+		return fmt.Errorf("database is not consistent with csv file")
 	}
 
 	return nil
@@ -145,105 +147,27 @@ func getHeadersFile(preparedDbFilePath string, log logging.Logger) (*os.File, st
 	return tmpHeadersFile, tmpHeadersFilePath, nil
 }
 
-func importHeadersFromFileConcurrent(repo repository.Headers, inputFile *os.File, log logging.Logger) error {
-	log.Info("Inserting headers from file to the database")
-
-	if _, err := inputFile.Seek(0, 0); err != nil {
-		return err
-	}
-
-	reader := csv.NewReader(inputFile)
-	if _, err := reader.Read(); err != nil { // Skipping the column headers line
-		return err
-	}
-
-	// Channels for communication
-	blockCh := make(chan domains.BlockHeader)
-	errCh := make(chan error)
-	doneCh := make(chan struct{})
-
-	// Worker function to insert blocks
-	worker := func() {
-		defer func() {
-			doneCh <- struct{}{} // Signal completion
-		}()
-
-		var blocks []domains.BlockHeader
-
-		for block := range blockCh {
-			blocks = append(blocks, block)
-		}
-
-		if len(blocks) > 0 {
-			if err := repo.AddMultipleHeadersToDatabase(blocks); err != nil {
-				errCh <- err
-				return
-			}
-		}
-	}
-
-	// Start worker goroutines
-	for i := 0; i < numWorkers; i++ {
-		go worker()
-	}
-
-	// Read and process records concurrently
-	var (
-		previousBlockHash chainhash.Hash
-		rowIndex          int
-		record            []string
-		err               error
-	)
-	for {
-		for i := 0; i < insertTransactionSize; i++ {
-			record, err = reader.Read()
-			if err != nil {
-				if errors.Is(err, io.EOF) {
-					break
-				}
-				log.Errorf("Error reading record: %v", err)
-			}
-
-			block := parseRecord(record, int32(rowIndex), previousBlockHash)
-			blockCh <- block
-
-			previousBlockHash = block.Hash
-			rowIndex++
-		}
-
-		log.Infof("Inserted %d rows so far", rowIndex)
-		if errors.Is(err, io.EOF) {
-			log.Infof("last row %d", rowIndex)
-			close(blockCh) // Close the channel to signal workers to finish
-			break
-		}
-	}
-
-	log.Infof("Inserted total of %d rows", rowIndex)
-	return nil
-}
-
-func importHeadersFromFile(repo repository.Headers, inputFile *os.File, log logging.Logger) error {
+func importHeadersFromFile(repo repository.Headers, inputFile *os.File, log logging.Logger) (int, error) {
 	log.Info("Inserting headers from file to the database")
 
 	// Read from the beginning of the file
 	if _, err := inputFile.Seek(0, 0); err != nil {
-		return err
+		return 0, err
 	}
 
 	reader := csv.NewReader(inputFile)
 	_, err := reader.Read() // Skipping the column headers line
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	previousBlockHash := chainhash.Hash{}
 	rowIndex := 0
 
-	var blocks []domains.BlockHeader
-
 	for {
-		for i := 0; i < insertTransactionSize; i++ {
+		batch := make([]domains.BlockHeader, 0, insertBatchSize)
+
+		for i := 0; i < insertBatchSize; i++ {
 			record, err := reader.Read()
 			if err != nil {
 				if !errors.Is(err, io.EOF) {
@@ -253,28 +177,24 @@ func importHeadersFromFile(repo repository.Headers, inputFile *os.File, log logg
 			}
 
 			block := parseRecord(record, int32(rowIndex), previousBlockHash)
-			blocks = append(blocks, block)
+			batch = append(batch, block)
 
 			previousBlockHash = block.Hash
 			rowIndex++
 		}
 
-		if len(blocks) == 0 {
+		if len(batch) == 0 {
 			break
 		}
 
-		if err := repo.AddMultipleHeadersToDatabase(blocks); err != nil {
-			return err
+		if err := repo.AddMultipleHeadersToDatabase(batch); err != nil {
+			return rowIndex, err
 		}
-
-		log.Infof("Inserted %d rows so far", rowIndex)
-
-		blocks = nil
 	}
 
 	log.Infof("Inserted total of %d rows", rowIndex)
 
-	return nil
+	return rowIndex, nil
 }
 
 func parseRecord(record []string, rowIndex int32, previousBlockHash chainhash.Hash) domains.BlockHeader {
@@ -406,7 +326,7 @@ func removeIndexes(db *sqlx.DB) ([]DbIndex, error) {
 	}
 
 	for _, dbIndex := range dbIndexes {
-		fmt.Printf("Value: %v\n", dbIndex)
+		fmt.Printf("Drop Value: %v\n", dbIndex)
 
 		_, err = db.Exec(fmt.Sprintf("DROP INDEX IF EXISTS %s;", dbIndex.name))
 		if err != nil {
@@ -419,6 +339,8 @@ func removeIndexes(db *sqlx.DB) ([]DbIndex, error) {
 
 func restoreIndexes(db *sqlx.DB, dbIndexes []DbIndex) error {
 	for _, dbIndex := range dbIndexes {
+		fmt.Printf("Create Value: %v\n", dbIndex)
+
 		_, err := db.Exec(dbIndex.sql)
 		if err != nil {
 			return err
