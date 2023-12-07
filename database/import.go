@@ -170,10 +170,10 @@ func importHeadersFromFile(repo repository.Headers, inputFile *os.File, log logg
 		for i := 0; i < insertBatchSize; i++ {
 			record, err := reader.Read()
 			if err != nil {
-				if !errors.Is(err, io.EOF) {
-					log.Errorf("Error reading record: %v\n", err)
+				if errors.Is(err, io.EOF) {
+					break
 				}
-				break
+				return 0, fmt.Errorf("error reading record: %v", err)
 			}
 
 			block := parseRecord(record, int32(rowIndex), previousBlockHash)
