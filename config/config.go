@@ -13,8 +13,6 @@ const (
 	EnvDbSchema = "db.schemaPath"
 	// EnvDbDsn data source name.
 	EnvDbDsn = "db.dsn"
-	// EnvDbMigrate flag specifying wheather to run migrations.
-	EnvDbMigrate = "db.migrate"
 	// EnvResetDbOnStartup flag specifying wheather to clear db
 	// and start synchronization from genesis header or start from last header in db.
 	EnvResetDbOnStartup = "db.resetState"
@@ -104,7 +102,6 @@ type Db struct {
 	Type               DbType `mapstructure:"type"`
 	SchemaPath         string `mapstructure:"schemaPath"`
 	Dsn                string `mapstructure:"dsn"`
-	MigrateDb          bool   `mapstructure:"migrate"`
 	ResetState         bool   `mapstructure:"resetState"`
 	FilePath           string `mapstructure:"dbFilePath"`
 	PreparedDb         bool   `mapstructure:"preparedDb"`
@@ -135,10 +132,4 @@ type HTTP struct {
 	UrlRefix     string `mapstructure:"urlPrefix"`
 	UseAuth      bool   `mapstructure:"useAuth"`
 	AuthToken    string `mapstructure:"authToken"`
-}
-
-// CLI represents a CLI struct.
-type CLI struct {
-	ShowVersion bool
-	ShowHelp    bool
 }

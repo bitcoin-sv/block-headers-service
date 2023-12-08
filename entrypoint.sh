@@ -3,7 +3,7 @@
 export PRELOADED_DB_URL=${PRELOADED_DB_URL:? 'URL to download preloaded db is not set. Exiting.'}
 export DB_PREPAREDDB=false
 export DB_DBFILE_PATH=${DB_DBFILE_PATH:-'./data/blockheaders.db'}
-export DB_PREPAREDDBFILE_PATH=${DB_PREPAREDDBFILE_PATH:-'./data/blockheaders.xz'}
+export DB_PREPAREDDBFILE_PATH=${DB_PREPAREDDBFILE_PATH:-'./data/blockheaders.csv.gz'}
 preloaded=false
 clean=false
 

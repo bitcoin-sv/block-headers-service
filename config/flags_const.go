@@ -41,7 +41,6 @@ const (
 const (
 	schemaPathFlag         = "schemaPath"
 	dsnFlag                = "dsn"
-	migrateFlag            = "migrate"
 	resetStateFlag         = "resetState"
 	dbFilePathFlag         = "dbFilePath"
 	preparedDbFlag         = "preparedDb"

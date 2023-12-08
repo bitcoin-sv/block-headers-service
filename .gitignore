@@ -1,6 +1,7 @@
 debug
 .history
 .idea/*
+.tmp
 .vscode/*
 .DS_Store
 build/
@@ -8,6 +9,7 @@ artifacts/
 dist/
 data/blockheaders.bck.db
 data/blockheaders.db-journal
+data/blockheaders.csv
 
 
 *.db*

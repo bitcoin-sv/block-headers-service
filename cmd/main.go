@@ -6,8 +6,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,20 +13,18 @@ import (
 	"runtime/debug"
 	"syscall"
 
+	"github.com/bitcoin-sv/pulse/cli"
 	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/pulse/database"
 	"github.com/bitcoin-sv/pulse/notification"
 	"github.com/bitcoin-sv/pulse/transports/http/endpoints"
 	"github.com/bitcoin-sv/pulse/transports/websocket"
 
 	"github.com/bitcoin-sv/pulse/app/logger"
-	"github.com/bitcoin-sv/pulse/domains/logging"
 
-	"github.com/ulikunitz/xz"
-
-	"github.com/bitcoin-sv/pulse/config/databases"
 	"github.com/bitcoin-sv/pulse/config/p2pconfig"
 	"github.com/bitcoin-sv/pulse/config/p2pconfig/limits"
-	"github.com/bitcoin-sv/pulse/data/sql"
+	"github.com/bitcoin-sv/pulse/database/sql"
 	"github.com/bitcoin-sv/pulse/internal/wire"
 	"github.com/bitcoin-sv/pulse/repository"
 	"github.com/bitcoin-sv/pulse/service"
@@ -36,7 +32,6 @@ import (
 	"github.com/bitcoin-sv/pulse/transports/p2p"
 	peerpkg "github.com/bitcoin-sv/pulse/transports/p2p/peer"
 	"github.com/bitcoin-sv/pulse/version"
-	"github.com/jmoiron/sqlx"
 )
 
 // nolint: godot
@@ -47,23 +42,16 @@ func main() {
 	lf := logger.DefaultLoggerFactory()
 	log := lf.NewLogger("main")
 
-	cfg := config.Init(lf)
+	cfg, cliFlags := config.Init(lf)
 
-	// Unzip prepared db file if configured.
-	if cfg.Db.PreparedDb {
-		err := os.Remove(cfg.Db.FilePath)
-		if err != nil {
-			log.Error("Failed to remove old db file")
-		}
-		err = unzip(cfg.Db.PreparedDbFilePath, cfg.Db.FilePath)
-		if err != nil {
-			log.Error("Failed to unzip prepared db file - ", err)
-		}
+	cli.ParseCliFlags(cliFlags, cfg)
+
+	db, err := database.Init(cfg, log)
+	if err != nil {
+		log.Errorf("cannot setup database because of error: %v", err)
+		os.Exit(1)
 	}
 
-	freshDbIfConfigured(log, cfg.Db)
-
-	db := runDatabase(cfg, log)
 	// Use all processor cores.
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
@@ -153,64 +141,4 @@ func main() {
 	if err := server.Shutdown(); err != nil {
 		log.Errorf("failed to stop http server: %v", err)
 	}
-}
-
-func freshDbIfConfigured(log logging.Logger, cfg *config.Db) {
-	if cfg.ResetState {
-		err := os.Remove(cfg.FilePath)
-		if err != nil && fileExists(cfg.FilePath) {
-			log.Errorf("%s", err.Error())
-			os.Exit(1)
-		}
-	}
-}
-
-func runDatabase(c *config.Config, log logging.Logger) *sqlx.DB {
-	db, err := databases.NewDbSetup().
-		SetupDb(c.Db)
-	if err != nil {
-		log.Errorf("cannot setup database, because of error %v", err)
-		os.Exit(1)
-	}
-	return db
-}
-
-func fileExists(filename string) bool {
-	info, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
-}
-
-func unzip(src, dest string) (err error) {
-	fmt.Println("Unzipping file: " + src + " to " + dest)
-	// Open the compressed file for reading
-	f, err := os.Open(src) //nolint:gosec //variable is taken from config
-	if err != nil {
-		return fmt.Errorf("failed to open file: %w", err)
-	}
-	defer func() { err = f.Close() }() //nolint:all
-
-	// Create a new file for writing the uncompressed data
-	out, err := os.Create(dest) //nolint:gosec //variable is taken from config
-	if err != nil {
-		return fmt.Errorf("failed to create file: %w", err)
-	}
-	defer func() { err = out.Close() }() //nolint:all
-
-	// Create an xz reader to uncompress the data
-	r, err := xz.NewReader(f)
-	if err != nil {
-		return fmt.Errorf("failed to create xz reader: %w", err)
-	}
-
-	// Copy the uncompressed data to the output file
-	_, err = io.Copy(out, r)
-	if err != nil {
-		return fmt.Errorf("failed to copy data: %w", err)
-	}
-
-	fmt.Println("DB file extracted successfully")
-	return nil
 }

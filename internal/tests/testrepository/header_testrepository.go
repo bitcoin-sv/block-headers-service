@@ -25,6 +25,12 @@ func (r *HeaderTestRepository) AddHeaderToDatabase(header domains.BlockHeader) e
 	return nil
 }
 
+// AddMultipleHeadersToDatabase adds multiple new headers to db.
+func (r *HeaderTestRepository) AddMultipleHeadersToDatabase(headers []domains.BlockHeader) error {
+	*r.db = append(*r.db, headers...)
+	return nil
+}
+
 // UpdateState changes state value to provided one for each of headers with provided hash.
 func (r *HeaderTestRepository) UpdateState(hs []chainhash.Hash, s domains.HeaderState) error {
 	for _, h := range hs {

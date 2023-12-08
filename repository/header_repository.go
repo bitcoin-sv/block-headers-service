@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/bitcoin-sv/pulse/data/sql"
+	"github.com/bitcoin-sv/pulse/database/sql"
 	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	dto "github.com/bitcoin-sv/pulse/repository/dto"
@@ -19,6 +19,20 @@ type HeaderRepository struct {
 func (r *HeaderRepository) AddHeaderToDatabase(header domains.BlockHeader) error {
 	dbHeader := dto.ToDbBlockHeader(header)
 	err := r.db.Create(context.Background(), dbHeader)
+	return err
+}
+
+// AddMultipleHeadersToDatabase adds multiple new headers to db.
+func (r *HeaderRepository) AddMultipleHeadersToDatabase(headers []domains.BlockHeader) error {
+	dbHeaders := make([]dto.DbBlockHeader, 0, len(headers))
+
+	for _, header := range headers {
+		dbHeader := dto.ToDbBlockHeader(header)
+		dbHeaders = append(dbHeaders, dbHeader)
+	}
+
+	err := r.db.CreateMultiple(context.Background(), dbHeaders)
+
 	return err
 }
 

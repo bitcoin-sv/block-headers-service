@@ -71,7 +71,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 
 	viper.Reset()
 	lf := testlog.NewTestLoggerFactory()
-	cfg := config.Init(lf)
+	cfg, _ := config.Init(lf)
 
 	for _, opt := range ops {
 		switch opt := opt.(type) {

@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/bitcoin-sv/pulse/data/sql"
+	"github.com/bitcoin-sv/pulse/database/sql"
 	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/pulse/notification"
@@ -9,7 +9,8 @@ import (
 
 // Headers is a interface which represents methods performed on header table in defined storage.
 type Headers interface {
-	AddHeaderToDatabase(header domains.BlockHeader) error
+	AddHeaderToDatabase(domains.BlockHeader) error
+	AddMultipleHeadersToDatabase([]domains.BlockHeader) error
 	UpdateState([]chainhash.Hash, domains.HeaderState) error
 	GetHeaderByHeight(height int32) (*domains.BlockHeader, error)
 	GetHeaderByHeightRange(from int, to int) ([]*domains.BlockHeader, error)
