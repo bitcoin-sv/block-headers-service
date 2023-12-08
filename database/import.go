@@ -94,8 +94,8 @@ func ImportHeaders(db *sqlx.DB, cfg *config.Config, log logging.Logger) error {
 		return err
 	}
 
-	if dbHeadersCount, _ = headersRepo.GetHeadersCount(); dbHeadersCount != importCount {
-		return fmt.Errorf("database is not consistent with csv file")
+	if err := validateDbConsistency(importCount, headersRepo); err != nil {
+		return err
 	}
 
 	return nil
@@ -239,6 +239,14 @@ func parseBigInt(s string) *big.Int {
 	bi := new(big.Int)
 	bi.SetString(s, 10)
 	return bi
+}
+
+func validateDbConsistency(importCount int, repo *repository.HeaderRepository) error {
+	if dbHeadersCount, _ := repo.GetHeadersCount(); dbHeadersCount != importCount {
+		return fmt.Errorf("database is not consistent with csv file")
+	}
+
+	return nil
 }
 
 // TODO hide SQLite-specific code behind some kind of abstraction.
