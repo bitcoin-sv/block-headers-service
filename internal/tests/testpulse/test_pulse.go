@@ -28,7 +28,7 @@ type pulseOpt interface{}
 type ServicesOpt func(*service.Services)
 
 // ConfigOpt represents functions to configure test config.
-type ConfigOpt func(*config.Config)
+type ConfigOpt func(*config.AppConfig)
 
 // RepoOpt represents functions to configure test repositories.
 type RepoOpt func(*testrepository.TestRepositories)
@@ -40,7 +40,7 @@ type Cleanup func()
 type TestPulse struct {
 	t            *testing.T
 	lf           logging.LoggerFactory
-	config       *config.Config
+	config       *config.AppConfig
 	services     *service.Services
 	repositories *repository.Repositories
 	ws           websocket.Server
@@ -71,7 +71,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 
 	viper.Reset()
 	lf := testlog.NewTestLoggerFactory()
-	cfg, _ := config.Init(lf)
+	cfg, _ := config.Load(lf)
 
 	for _, opt := range ops {
 		switch opt := opt.(type) {

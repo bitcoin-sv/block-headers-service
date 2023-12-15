@@ -13,7 +13,6 @@ import (
 	"runtime/debug"
 	"syscall"
 
-	"github.com/bitcoin-sv/pulse/cli"
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/database"
 	"github.com/bitcoin-sv/pulse/notification"
@@ -42,9 +41,10 @@ func main() {
 	lf := logger.DefaultLoggerFactory()
 	log := lf.NewLogger("main")
 
-	cfg, cliFlags := config.Init(lf)
-
-	cli.ParseCliFlags(cliFlags, cfg)
+	cfg, err := config.Load(lf)
+	if err != nil {
+		log.Errorf("cannot load config because of error: %v", err)
+	}
 
 	db, err := database.Init(cfg, log)
 	if err != nil {

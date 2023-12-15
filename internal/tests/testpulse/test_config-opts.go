@@ -7,7 +7,7 @@ import (
 
 // WithoutApiAuthorization disables authorization.
 func WithoutApiAuthorization() ConfigOpt {
-	return func(c *config.Config) {
+	return func(c *config.AppConfig) {
 		c.WithoutAuthorization()
 	}
 }

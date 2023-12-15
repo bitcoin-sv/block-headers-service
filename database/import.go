@@ -35,7 +35,7 @@ type SQLitePragmaValues struct {
 
 const insertBatchSize = 500
 
-func ImportHeaders(db *sqlx.DB, cfg *config.Config, log logging.Logger) error {
+func ImportHeaders(db *sqlx.DB, cfg *config.AppConfig, log logging.Logger) error {
 	log.Info("Import headers from file to the database")
 
 	headersRepo := initHeadersRepo(db, cfg)
@@ -101,7 +101,7 @@ func ImportHeaders(db *sqlx.DB, cfg *config.Config, log logging.Logger) error {
 	return nil
 }
 
-func initHeadersRepo(db *sqlx.DB, cfg *config.Config) *repository.HeaderRepository {
+func initHeadersRepo(db *sqlx.DB, cfg *config.AppConfig) *repository.HeaderRepository {
 	lf := logger.DefaultLoggerFactory()
 	headersDb := sql.NewHeadersDb(db, cfg.Db.Type, lf)
 	headersRepo := repository.NewHeadersRepository(headersDb)

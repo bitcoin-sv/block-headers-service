@@ -69,7 +69,7 @@ type Dept struct {
 	Params        *chaincfg.Params
 	AdminToken    string
 	LoggerFactory logging.LoggerFactory
-	Config        *config.Config
+	Config        *config.AppConfig
 }
 
 // NewServices creates and returns Services instance.

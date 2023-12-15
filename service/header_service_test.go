@@ -358,7 +358,7 @@ func setUpServices() *testData {
 	mrconfig := config.Merkleroot{
 		MaxBlockHeightExcess: 6,
 	}
-	cfg := config.Config{
+	cfg := config.AppConfig{
 		P2P:        &p2pcfg,
 		Merkleroot: &mrconfig,
 	}

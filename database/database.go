@@ -17,7 +17,7 @@ type DBAdapter interface {
 	DoMigrations(db *sqlx.DB, cfg *config.Db) error
 }
 
-func Init(cfg *config.Config, log logging.Logger) (*sqlx.DB, error) {
+func Init(cfg *config.AppConfig, log logging.Logger) (*sqlx.DB, error) {
 	db, err := Connect(cfg.Db)
 	if err != nil {
 		return nil, err

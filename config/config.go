@@ -79,14 +79,23 @@ const (
 	EnvP2PBlocksForForkConfirmation = "p2p.blocksforconfirmation"
 )
 
+const (
+	ApplicationName       = "pulse"
+	APIVersion            = "v1"
+	Version               = "v0.6.0"
+	ConfigFilePathKey     = "config_file"
+	DefaultConfigFilePath = "config.yaml"
+	ConfigEnvPrefix       = "pulse_"
+)
+
 // DbType database type.
 type DbType string
 
 // DBSqlite creating config for sqlite db.
 const DBSqlite DbType = "sqlite"
 
-// Config returns strongly typed config values.
-type Config struct {
+// AppConfig returns strongly typed config values.
+type AppConfig struct {
 	ConfigFile    string            `mapstructure:"configFile"`
 	Db            *Db               `mapstructure:"db"`
 	P2P           *p2pconfig.Config `mapstructure:"p2p"`
