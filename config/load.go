@@ -7,6 +7,7 @@ import (
 
 	"os"
 
+	"github.com/bitcoin-sv/pulse/config/p2pconfig"
 	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
@@ -36,10 +37,12 @@ func Load(lf logging.LoggerFactory, cfg *AppConfig) (*AppConfig, error) {
 		return nil, err
 	}
 
-	// TODO: Check if this is needed
-	// err := cfg.P2P.Validate()
+	err := cfg.P2PConfig.Validate()
+	if err != nil {
+		return nil, err
+	}
 
-	// cfg.P2P.TimeSource = p2pconfig.NewMedianTime(lf)
+	cfg.P2PConfig.TimeSource = p2pconfig.NewMedianTime(lf)
 
 	return cfg, nil
 }
