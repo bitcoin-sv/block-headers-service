@@ -14,12 +14,15 @@ jobs:
   golangci:
     strategy:
       matrix:
-       go-version: [1.19.x]
        os: [ubuntu-latest]
     name: lint
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
+      - name: Install Go from go.mod
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
@@ -28,16 +31,15 @@ jobs:
   build:
     strategy:
       matrix:
-        go-version: [ 1.19.x ]
         os: [ ubuntu-latest ]
     runs-on:  ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Go ${{ matrix.go-version }}
+      - name: Set up Go from go.mod
         uses: actions/setup-go@v4
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version-file: go.mod
 
       - name: Clean test cache
         run: go clean -testcache
@@ -58,7 +60,7 @@ jobs:
       - run: git fetch --force --tags
       - uses: actions/setup-go@v4
         with:
-          go-version: 1.19
+          go-version-file: go.mod
       - uses: goreleaser/goreleaser-action@v4
         with:
           distribution: goreleaser
@@ -100,7 +102,7 @@ jobs:
       - run: git fetch --force --tags
       - uses: actions/setup-go@v4
         with:
-          go-version: 1.19
+          go-version-file: go.mod
       - name: Make directory for darwin bin
         run: |
           mkdir -p ./artifacts/darwin
