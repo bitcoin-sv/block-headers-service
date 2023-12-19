@@ -1,9 +1,12 @@
-package config
+package cli
 
 import (
 	"fmt"
 	"os"
 
+	"github.com/bitcoin-sv/pulse/app/logger"
+	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/pulse/database"
 	"github.com/bitcoin-sv/pulse/version"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -16,7 +19,7 @@ type cliFlags struct {
 	dumpConfig    bool `mapstructure:"dumpConfig"`
 }
 
-func loadFlags(cfg *AppConfig) error {
+func LoadFlags(cfg *config.AppConfig) error {
 	if !anyFlagsPassed() {
 		return nil
 	}
@@ -47,7 +50,7 @@ func anyFlagsPassed() bool {
 }
 
 func initFlags(fs *pflag.FlagSet, cliFlags *cliFlags) {
-	fs.StringP(ConfigFilePathKey, "C", "", "custom config file path")
+	fs.StringP(config.ConfigFilePathKey, "C", "", "custom config file path")
 
 	fs.BoolVar(&cliFlags.exportHeaders, "exportHeaders", false, "export headers from database to CSV file")
 	fs.BoolVarP(&cliFlags.showHelp, "help", "h", false, "show help")
@@ -55,10 +58,9 @@ func initFlags(fs *pflag.FlagSet, cliFlags *cliFlags) {
 	fs.BoolVarP(&cliFlags.dumpConfig, "dump_config", "d", false, "dump config to file, specified by config_file flag")
 }
 
-func parseCliFlags(fs *pflag.FlagSet, cli *cliFlags, cfg *AppConfig) {
-
-	// lf := logger.DefaultLoggerFactory()
-	// log := lf.NewLogger("cli")
+func parseCliFlags(fs *pflag.FlagSet, cli *cliFlags, cfg *config.AppConfig) {
+	lf := logger.DefaultLoggerFactory()
+	log := lf.NewLogger("flags")
 
 	if cli.showHelp {
 		pflag.Usage()
@@ -70,19 +72,18 @@ func parseCliFlags(fs *pflag.FlagSet, cli *cliFlags, cfg *AppConfig) {
 		os.Exit(0)
 	}
 
-	// TODO: move this somewhere else to not depend on database package
-	// if cli.exportHeaders {
-	// 	if err := database.ExportHeaders(cfg, log); err != nil {
-	// 		fmt.Printf("\nError: %v\n", err)
-	// 		os.Exit(1)
-	// 	}
-	// 	os.Exit(0)
-	// }
+	if cli.exportHeaders {
+		if err := database.ExportHeaders(cfg, log); err != nil {
+			fmt.Printf("\nError: %v\n", err)
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}
 
 	if cli.dumpConfig {
-		configPath := viper.GetString(ConfigFilePathKey)
+		configPath := viper.GetString(config.ConfigFilePathKey)
 		if configPath == "" {
-			configPath = DefaultConfigFilePath
+			configPath = config.DefaultConfigFilePath
 		}
 
 		err := viper.SafeWriteConfigAs(configPath)

@@ -70,8 +70,9 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	os.Args = []string{""}
 
 	viper.Reset()
+	defaultConfig := config.GetDefaultAppConfig()
 	lf := testlog.NewTestLoggerFactory()
-	cfg, _ := config.Load(lf)
+	cfg, _ := config.Load(lf, defaultConfig)
 
 	for _, opt := range ops {
 		switch opt := opt.(type) {
@@ -93,7 +94,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 		Repositories:  repo.ToDomainRepo(),
 		Peers:         nil,
 		Params:        p2pconfig.ActiveNetParams.Params,
-		AdminToken:    cfg.HTTP.AuthToken,
+		AdminToken:    cfg.HTTPConfig.AuthToken,
 		LoggerFactory: lf,
 		Config:        cfg,
 	})
@@ -105,21 +106,21 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 		}
 	}
 
-	port := cfg.HTTP.Port
-	urlPrefix := cfg.HTTP.UrlRefix
+	port := cfg.HTTPConfig.Port
+	urlPrefix := cfg.HTTPConfig.UrlPrefix
 	gin.SetMode(gin.TestMode)
-	server := httpserver.NewHttpServer(cfg.HTTP, lf)
-	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs, cfg.HTTP))
+	server := httpserver.NewHttpServer(cfg.HTTPConfig, lf)
+	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs, cfg.HTTPConfig))
 	engine := hijackEngine(server)
 
-	ws, err := websocket.NewServer(lf, hs, cfg.HTTP.UseAuth)
+	ws, err := websocket.NewServer(lf, hs, cfg.HTTPConfig.UseAuth)
 	if err != nil {
 		t.Fatalf("failed to init a new websocket server: %v\n", err)
 	}
 	server.ApplyConfiguration(ws.SetupEntrypoint)
 
 	hs.Notifier.AddChannel(hs.Webhooks)
-	hs.Notifier.AddChannel(notification.NewWebsocketChannel(lf, ws.Publisher(), cfg.Websocket))
+	hs.Notifier.AddChannel(notification.NewWebsocketChannel(lf, ws.Publisher(), cfg.WebsocketConfig))
 
 	if err := ws.Start(); err != nil {
 		panic(fmt.Sprintf("cannot start websocket server because of an error: %v", err))

@@ -1,4 +1,4 @@
-package config
+package cli
 
 // P2P consts.
 const (

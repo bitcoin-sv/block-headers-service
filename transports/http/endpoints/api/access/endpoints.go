@@ -3,6 +3,7 @@ package access
 import (
 	"net/http"
 
+	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/service"
 	"github.com/bitcoin-sv/pulse/transports/http/auth"
 	router "github.com/bitcoin-sv/pulse/transports/http/endpoints/routes"
@@ -20,11 +21,11 @@ func NewHandler(s *service.Services) router.ApiEndpoints {
 }
 
 // RegisterApiEndpoints registers routes that are part of service API.
-func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup) {
+func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup, cfg *config.HTTPConfig) {
 	tokens := router.Group("/access")
 	{
 		tokens.GET("", h.getToken)
-		tokens.POST("", auth.RequireAdmin(h.createToken))
+		tokens.POST("", auth.RequireAdmin(h.createToken, cfg.UseAuth))
 		tokens.DELETE("/:token", h.revokeToken)
 	}
 }

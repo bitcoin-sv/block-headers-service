@@ -21,12 +21,12 @@ type HeaderService struct {
 	repo        *repository.Repositories
 	checkpoints []chaincfg.Checkpoint
 	timeSource  p2pconfig.MedianTimeSource
-	merkleCfg   *config.Merkleroot
+	merkleCfg   *config.MerkleRootConfig
 	log         logging.Logger
 }
 
 // NewHeaderService creates and returns HeaderService instance.
-func NewHeaderService(repo *repository.Repositories, p2pCfg *p2pconfig.Config, merkleCfg *config.Merkleroot, lf logging.LoggerFactory) *HeaderService {
+func NewHeaderService(repo *repository.Repositories, p2pCfg *p2pconfig.Config, merkleCfg *config.MerkleRootConfig, lf logging.LoggerFactory) *HeaderService {
 	return &HeaderService{
 		repo:        repo,
 		checkpoints: p2pCfg.Checkpoints,

@@ -13,21 +13,21 @@ import (
 
 // DBAdapter defines the interface for a database adapter.
 type DBAdapter interface {
-	Connect(cfg *config.Db) (*sqlx.DB, error)
-	DoMigrations(db *sqlx.DB, cfg *config.Db) error
+	Connect(cfg *config.DbConfig) (*sqlx.DB, error)
+	DoMigrations(db *sqlx.DB, cfg *config.DbConfig) error
 }
 
 func Init(cfg *config.AppConfig, log logging.Logger) (*sqlx.DB, error) {
-	db, err := Connect(cfg.Db)
+	db, err := Connect(cfg.DbConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := DoMigrations(db, cfg.Db); err != nil {
+	if err := DoMigrations(db, cfg.DbConfig); err != nil {
 		return nil, err
 	}
 
-	if cfg.Db.PreparedDb {
+	if cfg.DbConfig.PreparedDb {
 		if err := ImportHeaders(db, cfg, log); err != nil {
 			return nil, err
 		}
@@ -37,7 +37,7 @@ func Init(cfg *config.AppConfig, log logging.Logger) (*sqlx.DB, error) {
 }
 
 // Connect to the database using the specified adapter.
-func Connect(cfg *config.Db) (*sqlx.DB, error) {
+func Connect(cfg *config.DbConfig) (*sqlx.DB, error) {
 	adapter, err := NewDBAdapter(cfg)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func Connect(cfg *config.Db) (*sqlx.DB, error) {
 	return adapter.Connect(cfg)
 }
 
-func DoMigrations(db *sqlx.DB, cfg *config.Db) error {
+func DoMigrations(db *sqlx.DB, cfg *config.DbConfig) error {
 	adapter, err := NewDBAdapter(cfg)
 	if err != nil {
 		return err
@@ -55,7 +55,7 @@ func DoMigrations(db *sqlx.DB, cfg *config.Db) error {
 }
 
 // NewDBAdapter provides the appropriate database adapter based on the config.
-func NewDBAdapter(cfg *config.Db) (DBAdapter, error) {
+func NewDBAdapter(cfg *config.DbConfig) (DBAdapter, error) {
 	switch cfg.Type {
 	case config.DBSqlite:
 		return &SQLiteAdapter{}, nil

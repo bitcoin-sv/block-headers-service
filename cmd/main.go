@@ -13,8 +13,10 @@ import (
 	"runtime/debug"
 	"syscall"
 
+	"github.com/bitcoin-sv/pulse/cli"
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/database"
+	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/notification"
 	"github.com/bitcoin-sv/pulse/transports/http/endpoints"
 	"github.com/bitcoin-sv/pulse/transports/websocket"
@@ -38,12 +40,18 @@ import (
 // @in header
 // @name Authorization
 func main() {
-	lf := logger.DefaultLoggerFactory()
-	log := lf.NewLogger("main")
+	lf, log := createLogger()
 
-	cfg, err := config.Load(lf)
+	defaultConfig := config.GetDefaultAppConfig()
+	if err := cli.LoadFlags(defaultConfig); err != nil {
+		log.Errorf("cannot load flags because of error: %v", err)
+		os.Exit(1)
+	}
+
+	cfg, err := config.Load(lf, defaultConfig)
 	if err != nil {
 		log.Errorf("cannot load config because of error: %v", err)
+		os.Exit(1)
 	}
 
 	db, err := database.Init(cfg, log)
@@ -67,36 +75,36 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger.SetLevelFromString(lf, cfg.P2P.LogLevel)
-	logger.SetLevelFromString(log, cfg.P2P.LogLevel)
+	logger.SetLevelFromString(lf, cfg.P2PConfig.LogLevel)
+	logger.SetLevelFromString(log, cfg.P2PConfig.LogLevel)
 
 	// Do required one-time initialization on wire
-	wire.SetLimits(cfg.P2P.ExcessiveBlockSize)
+	wire.SetLimits(cfg.P2PConfig.ExcessiveBlockSize)
 
 	// Show version at startup.
 	log.Infof("Version %s", version.String())
 
 	peers := make(map[*peerpkg.Peer]*peerpkg.PeerSyncState)
-	headersStore := sql.NewHeadersDb(db, cfg.Db.Type, lf)
+	headersStore := sql.NewHeadersDb(db, cfg.DbConfig.Type, lf)
 	repo := repository.NewRepositories(headersStore)
 	hs := service.NewServices(service.Dept{
 		Repositories:  repo,
 		Peers:         peers,
 		Params:        p2pconfig.ActiveNetParams.Params,
-		AdminToken:    cfg.HTTP.AuthToken,
+		AdminToken:    cfg.HTTPConfig.AuthToken,
 		LoggerFactory: lf,
 		Config:        cfg,
 	})
-	p2pServer, err := p2p.NewServer(hs, peers, cfg.P2P, lf)
+	p2pServer, err := p2p.NewServer(hs, peers, cfg.P2PConfig, lf)
 	if err != nil {
 		log.Errorf("failed to init a new p2p server: %v\n", err)
 		os.Exit(1)
 	}
 
-	server := httpserver.NewHttpServer(cfg.HTTP, lf)
-	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs, cfg.HTTP))
+	server := httpserver.NewHttpServer(cfg.HTTPConfig, lf)
+	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs, cfg.HTTPConfig))
 
-	ws, err := websocket.NewServer(lf, hs, cfg.HTTP.UseAuth)
+	ws, err := websocket.NewServer(lf, hs, cfg.HTTPConfig.UseAuth)
 	if err != nil {
 		log.Errorf("failed to init a new websocket server: %v\n", err)
 		os.Exit(1)
@@ -104,7 +112,7 @@ func main() {
 	server.ApplyConfiguration(ws.SetupEntrypoint)
 
 	hs.Notifier.AddChannel(hs.Webhooks)
-	hs.Notifier.AddChannel(notification.NewWebsocketChannel(lf, ws.Publisher(), cfg.Websocket))
+	hs.Notifier.AddChannel(notification.NewWebsocketChannel(lf, ws.Publisher(), cfg.WebsocketConfig))
 
 	go func() {
 		if err := server.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -141,4 +149,10 @@ func main() {
 	if err := server.Shutdown(); err != nil {
 		log.Errorf("failed to stop http server: %v", err)
 	}
+}
+
+func createLogger() (logging.LoggerFactory, logging.Logger) {
+	lf := logger.DefaultLoggerFactory()
+	log := lf.NewLogger("main")
+	return lf, log
 }

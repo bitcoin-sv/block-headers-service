@@ -355,12 +355,12 @@ func setUpServices() *testData {
 	}
 
 	p2pcfg := fixtures.DefaultP2PConfig()
-	mrconfig := config.Merkleroot{
+	mrconfig := config.MerkleRootConfig{
 		MaxBlockHeightExcess: 6,
 	}
 	cfg := config.AppConfig{
-		P2P:        &p2pcfg,
-		Merkleroot: &mrconfig,
+		P2PConfig:        &p2pcfg,
+		MerkleRootConfig: &mrconfig,
 	}
 	hs := NewServices(Dept{
 		Repositories:  repo,

@@ -78,7 +78,7 @@ func NewServices(d Dept) *Services {
 
 	return &Services{
 		Network:  NewNetworkService(d.Peers),
-		Headers:  NewHeaderService(d.Repositories, d.Config.P2P, d.Config.Merkleroot, d.LoggerFactory),
+		Headers:  NewHeaderService(d.Repositories, d.Config.P2PConfig, d.Config.MerkleRootConfig, d.LoggerFactory),
 		Notifier: notifier,
 		Chains:   newChainService(d, notifier),
 		Tokens:   NewTokenService(d.Repositories, d.AdminToken),
@@ -101,7 +101,7 @@ func newWebhooks(d Dept) *notification.WebhooksService {
 		d.Repositories.Webhooks,
 		client.NewWebhookTargetClient(),
 		d.LoggerFactory,
-		d.Config.Webhook,
+		d.Config.WebhookConfig,
 	)
 }
 

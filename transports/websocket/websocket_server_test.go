@@ -12,7 +12,7 @@ import (
 
 func TestWebsocketCommunicationWithoutAuthentication(t *testing.T) {
 	//setup
-	p, cleanup := testpulse.NewTestPulse(t, testpulse.WithoutApiAuthorization())
+	p, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
 	//given

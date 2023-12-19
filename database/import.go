@@ -47,7 +47,7 @@ func ImportHeaders(db *sqlx.DB, cfg *config.AppConfig, log logging.Logger) error
 		return nil
 	}
 
-	tmpHeadersFile, tmpHeadersFilePath, err := getHeadersFile(cfg.Db.PreparedDbFilePath, log)
+	tmpHeadersFile, tmpHeadersFilePath, err := getHeadersFile(cfg.DbConfig.PreparedDbFilePath, log)
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func ImportHeaders(db *sqlx.DB, cfg *config.AppConfig, log logging.Logger) error
 
 func initHeadersRepo(db *sqlx.DB, cfg *config.AppConfig) *repository.HeaderRepository {
 	lf := logger.DefaultLoggerFactory()
-	headersDb := sql.NewHeadersDb(db, cfg.Db.Type, lf)
+	headersDb := sql.NewHeadersDb(db, cfg.DbConfig.Type, lf)
 	headersRepo := repository.NewHeadersRepository(headersDb)
 	return headersRepo
 }

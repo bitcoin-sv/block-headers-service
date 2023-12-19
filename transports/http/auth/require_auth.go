@@ -4,17 +4,15 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/gin-gonic/gin"
-	"github.com/spf13/viper"
 )
 
 // RequireAdmin adds wrapper to endpoint handler
 // that will check if the endpoint was called with admin token.
 // This verification will be skipped if authentication isn't enabled.
-func RequireAdmin(handler gin.HandlerFunc) gin.HandlerFunc {
-	if viper.GetBool(config.EnvHttpServerUseAuth) {
+func RequireAdmin(handler gin.HandlerFunc, requireAdmin bool) gin.HandlerFunc {
+	if requireAdmin {
 		return func(c *gin.Context) {
 			token, exist := c.Get("token")
 			if !exist {

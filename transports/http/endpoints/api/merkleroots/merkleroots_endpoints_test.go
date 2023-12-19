@@ -17,7 +17,7 @@ import (
 
 func TestReturnSuccessFromVerify(t *testing.T) {
 	// setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
+	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{
 		{
@@ -91,7 +91,7 @@ func TestReturnFailureFromVerifyWhenAuthorizationIsTurnedOnAndCalledWithoutToken
 
 func TestReturnInvalidFromVerify(t *testing.T) {
 	// setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
+	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain())
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{
 		{
@@ -158,7 +158,7 @@ func TestReturnInvalidFromVerify(t *testing.T) {
 
 func TestReturnPartialSuccessFromVerify(t *testing.T) {
 	// setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
+	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain())
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{
 		{
@@ -215,7 +215,7 @@ func TestReturnPartialSuccessFromVerify(t *testing.T) {
 
 func TestReturnBadRequestErrorFromVerifyWhenGivenEmtpyArray(t *testing.T) {
 	// setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
+	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain())
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{}
 	expected_result := struct {

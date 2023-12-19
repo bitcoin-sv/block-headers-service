@@ -12,7 +12,6 @@ import (
 	"github.com/bitcoin-sv/pulse/internal/tests/testpulse"
 
 	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/spf13/viper"
 )
 
 const EmptyToken = ""
@@ -49,14 +48,12 @@ func TestAccessEndpointWithWrongAuthHeader(t *testing.T) {
 // Tests the GET /access endpoint with global auth token.
 func TestAccessEndpointWithGlobalAuthHeader(t *testing.T) {
 	//setup
+	cfg := config.GetDefaultAppConfig()
 	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
-	//given
-	authToken := viper.GetString(config.EnvHttpServerAuthToken)
-
 	//when
-	res := pulse.Api().Call(getTokenInfo(authToken))
+	res := pulse.Api().Call(getTokenInfo(cfg.ConfigFile))
 
 	if res.Code != http.StatusOK {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusOK, res.Code)
@@ -71,14 +68,12 @@ func TestAccessEndpointWithGlobalAuthHeader(t *testing.T) {
 // Tests the POST /access endpoint with created auth token.
 func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 	//setup
+	cfg := config.GetDefaultAppConfig()
 	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
-	//given
-	authToken := viper.GetString(config.EnvHttpServerAuthToken)
-
 	//when
-	res := pulse.Api().Call(createToken(authToken))
+	res := pulse.Api().Call(createToken(cfg.HTTPConfig.AuthToken))
 
 	//then
 	if res.Code != http.StatusOK {
@@ -113,14 +108,12 @@ func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 // Tests the DELETE method for the /access endpoint for created auth token.
 func TestDeleteTokenEndpoint(t *testing.T) {
 	//setup
+	cfg := config.GetDefaultAppConfig()
 	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
-	//given
-	authToken := viper.GetString(config.EnvHttpServerAuthToken)
-
 	//when
-	res := pulse.Api().Call(createToken(authToken))
+	res := pulse.Api().Call(createToken(cfg.HTTPConfig.AuthToken))
 
 	//then
 	if res.Code != http.StatusOK {
@@ -135,7 +128,7 @@ func TestDeleteTokenEndpoint(t *testing.T) {
 	}
 
 	//when
-	res = pulse.Api().Call(deleteToken(authToken, body.Token))
+	res = pulse.Api().Call(deleteToken(cfg.HTTPConfig.AuthToken, body.Token))
 
 	if res.Code != http.StatusOK {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusOK, res.Code)

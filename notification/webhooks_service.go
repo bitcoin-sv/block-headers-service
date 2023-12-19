@@ -13,11 +13,11 @@ type WebhooksService struct {
 	webhooks Webhooks
 	client   WebhookTargetClient
 	log      logging.Logger
-	cfg      *config.Webhook
+	cfg      *config.WebhookConfig
 }
 
 // NewWebhooksService creates and returns WebhooksService instance.
-func NewWebhooksService(repo Webhooks, client WebhookTargetClient, lf logging.LoggerFactory, cfg *config.Webhook) *WebhooksService {
+func NewWebhooksService(repo Webhooks, client WebhookTargetClient, lf logging.LoggerFactory, cfg *config.WebhookConfig) *WebhooksService {
 	return &WebhooksService{
 		webhooks: repo,
 		client:   client,
