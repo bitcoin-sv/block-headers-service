@@ -157,8 +157,7 @@ func (c *Config) BsvdLookup(host string) ([]net.IP, error) {
 // could itself use a proxy or not).
 func (c *Config) BsvdDial(addr net.Addr) (net.Conn, error) {
 	if strings.Contains(addr.String(), ".onion:") {
-		return c.oniondial(addr.Network(), addr.String(),
-			DefaultConnectTimeout)
+		return nil, fmt.Errorf("no possibility to use onion addresses: %v", addr)
 	}
 	return c.dial(addr.Network(), addr.String(), DefaultConnectTimeout)
 }

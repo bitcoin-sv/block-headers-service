@@ -305,7 +305,7 @@ func (sp *serverPeer) OnVersion(_ *peer.Peer, msg *wire.MsgVersion) *wire.MsgRej
 	isInbound := sp.Inbound()
 	remoteAddr := sp.NA()
 	addrManager := sp.server.addrManager
-	if !sp.server.p2pConfig.SimNet && !isInbound {
+	if !isInbound {
 		addrManager.SetServices(remoteAddr, msg.Services)
 	}
 
@@ -328,10 +328,10 @@ func (sp *serverPeer) OnVersion(_ *peer.Peer, msg *wire.MsgVersion) *wire.MsgRej
 	// on the simulation test network since it is only intended to connect
 	// to specified peers and actively avoids advertising and connecting to
 	// discovered peers.
-	if !sp.server.p2pConfig.SimNet && !isInbound {
+	if !isInbound {
 		// Advertise the local address when the server accepts incoming
 		// connections and it believes itself to be close to the best known tip.
-		if !sp.server.p2pConfig.DisableListen && sp.server.syncManager.IsCurrent() {
+		if sp.server.syncManager.IsCurrent() {
 			// Get address that best matches.
 			lna := addrManager.GetBestLocalAddress(remoteAddr)
 			if addrmgr.IsRoutable(lna) {
@@ -435,13 +435,6 @@ func (sp *serverPeer) OnProtoconf(_ *peer.Peer, msg *wire.MsgProtoconf) {
 // manager.
 func (sp *serverPeer) OnGetAddr(_ *peer.Peer, msg *wire.MsgGetAddr) {
 	sp.log.Infof("[Server] OnGetAddr msg: %#v", msg)
-	// Don't return any addresses when running on the simulation test
-	// network.  This helps prevent the network from becoming another
-	// public test network since it will not be able to learn about other
-	// peers that have not specifically been provided.
-	if sp.server.p2pConfig.SimNet {
-		return
-	}
 
 	// Do not accept getaddr requests from outbound peers.  This reduces
 	// fingerprinting attacks.
@@ -483,16 +476,6 @@ func (sp *serverPeer) OnGetAddr(_ *peer.Peer, msg *wire.MsgGetAddr) {
 // OnAddr is invoked when a peer receives an addr bitcoin message and is
 // used to notify the server about advertised addresses.
 func (sp *serverPeer) OnAddr(_ *peer.Peer, msg *wire.MsgAddr) {
-	// Peer log
-	// srvrconfigs.Log.Infof("[Server] OnAddr msg: %#v", msg)
-	// Ignore addresses when running on the simulation test network.  This
-	// helps prevent the network from becoming another public test network
-	// since it will not be able to learn about other peers that have not
-	// specifically been provided.
-	if sp.server.p2pConfig.SimNet {
-		return
-	}
-
 	// Ignore old style addresses which don't include a timestamp.
 	if sp.ProtocolVersion() < wire.NetAddressTimeVersion {
 		return
@@ -907,13 +890,22 @@ func newPeerConfig(sp *serverPeer) *peer.Config {
 		HostToNetAddress:  sp.server.addrManager.HostToNetAddress,
 		UserAgentName:     userAgentName,
 		UserAgentVersion:  userAgentVersion,
-		UserAgentComments: sp.server.p2pConfig.UserAgentComments,
+		UserAgentComments: initUserAgentComments(sp.server.p2pConfig.ExcessiveBlockSize),
 		ChainParams:       sp.server.chainParams,
 		Services:          sp.server.wireServices,
 		// ProtocolVersion:   peer.MaxProtocolVersion,
 		ProtocolVersion: uint32(70013),
 		TrickleInterval: sp.server.p2pConfig.TrickleInterval,
 	}
+}
+
+func initUserAgentComments(excessiveBlockSize uint32) []string {
+	var userAgentComments []string
+	if excessiveBlockSize != 0 {
+		userAgentComments = append(userAgentComments, fmt.Sprintf("EB%v", excessiveBlockSize))
+	}
+
+	return userAgentComments
 }
 
 // inboundPeerConnected is invoked by the connection manager when a new inbound
@@ -986,19 +978,17 @@ func (s *server) peerHandler() {
 		connectionCount: make(map[string]int),
 	}
 
-	if !s.p2pConfig.DisableDNSSeed {
-		// Add peers discovered through DNS to the address manager.
-		fmt.Printf("[Server] configs.ActiveNetParams.Params: %#v", pretty.Formatter(p2pconfig.ActiveNetParams.Params))
-		connmgr.SeedFromDNS(p2pconfig.ActiveNetParams.Params, defaultRequiredServices,
-			s.p2pConfig.BsvdLookup, func(addrs []*wire.NetAddress) {
-				// Bitcoind uses a lookup of the dns seeder here. This
-				// is rather strange since the values looked up by the
-				// DNS seed lookups will vary quite a lot.
-				// to replicate this behavior we put all addresses as
-				// having come from the first one.
-				s.addrManager.AddAddresses(addrs, addrs[0])
-			}, s.log)
-	}
+	// Add peers discovered through DNS to the address manager.
+	fmt.Printf("[Server] configs.ActiveNetParams.Params: %#v", pretty.Formatter(p2pconfig.ActiveNetParams.Params))
+	connmgr.SeedFromDNS(p2pconfig.ActiveNetParams.Params, defaultRequiredServices,
+		s.p2pConfig.BsvdLookup, func(addrs []*wire.NetAddress) {
+			// Bitcoind uses a lookup of the dns seeder here. This
+			// is rather strange since the values looked up by the
+			// DNS seed lookups will vary quite a lot.
+			// to replicate this behavior we put all addresses as
+			// having come from the first one.
+			s.addrManager.AddAddresses(addrs, addrs[0])
+		}, s.log)
 	go s.connManager.Start()
 
 out:
@@ -1332,23 +1322,18 @@ out:
 func newServer(chainParams *chaincfg.Params, services *service.Services,
 	peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *p2pconfig.Config, lf logging.LoggerFactory) (*server, error) {
 	wireServices := defaultServices
-	if p2pCfg.NoCFilters {
-		wireServices &^= wire.SFNodeCF
-	}
 
 	amgr := addrmgr.New(p2pCfg.BsvdLookup, lf)
 
 	var listeners []net.Listener
 	var nat NAT
-	if !p2pCfg.DisableListen {
-		var err error
-		listeners, nat, err = initListeners(amgr, wireServices, p2pCfg)
-		if err != nil {
-			return nil, err
-		}
-		if len(listeners) == 0 {
-			return nil, errors.New("no valid listen address")
-		}
+	var err error
+	listeners, nat, err = initListeners(amgr, wireServices, p2pCfg)
+	if err != nil {
+		return nil, err
+	}
+	if len(listeners) == 0 {
+		return nil, errors.New("no valid listen address")
 	}
 
 	initErr := services.Headers.InsertGenesisHeaderInDatabase()
@@ -1376,9 +1361,6 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 		log:                  lf.NewLogger("server"),
 	}
 
-	// Create a new block chain instance with the appropriate config.
-	var err error
-
 	if err != nil {
 		return nil, err
 	}
@@ -1405,8 +1387,7 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 	// specified peers and actively avoid advertising and connecting to
 	// discovered peers in order to prevent it from becoming a public test
 	// network.
-	var newAddressFunc func() (net.Addr, error)
-	newAddressFunc = func() (net.Addr, error) {
+	newAddressFunc := func() (net.Addr, error) {
 		for tries := 0; tries < 100; tries++ {
 			addr := s.addrManager.GetAddress()
 			// Peer log
@@ -1492,80 +1473,10 @@ func initListeners(amgr *addrmgr.AddrManager, services wire.ServiceFlag, p2pCfg 
 	}
 
 	var nat NAT
-	defaultPort, err := strconv.ParseUint(p2pconfig.ActiveNetParams.DefaultPort, 10, 16)
 	if err != nil {
 		amgr.Log.Errorf("Can not parse default port %s for active chain: %v",
 			p2pconfig.ActiveNetParams.DefaultPort, err)
 		return nil, nil, err
-	}
-	if len(p2pCfg.ExternalIPs) != 0 {
-		for _, sip := range p2pCfg.ExternalIPs {
-			eport := uint16(defaultPort)
-			host, portstr, err := net.SplitHostPort(sip)
-			if err != nil {
-				// no port, use default.
-				host = sip
-			} else {
-				port, err := strconv.ParseUint(portstr, 10, 16)
-				if err != nil {
-					amgr.Log.Warnf("Can not parse port from %s for "+
-						"externalip: %v", sip, err)
-					continue
-				}
-				eport = uint16(port)
-			}
-			na, err := amgr.HostToNetAddress(host, eport, services)
-			if err != nil {
-				amgr.Log.Warnf("Not adding %s as externalip: %v", sip, err)
-				continue
-			}
-
-			// Found a valid external IP, make sure we use these details
-			// so peers get the correct IP information. Since we can only
-			// advertise one IP, use the first seen.
-			if addrMe == nil {
-				addrMe = na
-			}
-
-			err = amgr.AddLocalAddress(na, addrmgr.ManualPrio)
-			if err != nil {
-				amgr.Log.Warnf("Skipping specified external IP: %v", err)
-			}
-		}
-	} else {
-		if p2pCfg.Upnp {
-			var err error
-			nat, err = Discover()
-			if err != nil {
-				amgr.Log.Warnf("Can't discover upnp: %v", err)
-			}
-			// nil nat here is fine, just means no upnp on network.
-
-			// Found a valid external IP, make sure we use these details
-			// so peers get the correct IP information.
-			if nat != nil {
-				addr, err := nat.GetExternalAddress()
-				if err == nil {
-					eport := uint16(defaultPort)
-					na, err := amgr.HostToNetAddress(addr.String(), eport, services)
-					if err == nil {
-						if addrMe == nil {
-							addrMe = na
-						}
-					}
-
-				}
-			}
-		}
-
-		// Add bound addresses to address manager to be advertised to peers.
-		for _, listener := range listeners {
-			addr := listener.Addr().String()
-			err := addLocalAddress(amgr, addr, services, amgr.Log)
-			if err != nil {
-				amgr.Log.Warnf("Skipping bound address %s: %v", addr, err)
-			}
-		}
 	}
 
 	return listeners, nat, nil

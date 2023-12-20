@@ -22,11 +22,8 @@
         "addcheckpoint": "",
         "nocheckpoints": "",
         "loglevel": "",
-        "upnp": "",
         "excessiveblocksize": 128000000,
         "trickleinterval": "50ms",
-        "uacomment": "",
-        "nocfilters": "",
         "targetoutboundpeers": 8,
         "blocksforconfirmation": 10
     },
