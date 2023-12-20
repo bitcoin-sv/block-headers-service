@@ -56,7 +56,7 @@ func TestGetTips(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t)
+		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithoutApiAuthorization())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -104,7 +104,7 @@ func TestGetTipLongest(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t)
+		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithoutApiAuthorization())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -151,7 +151,7 @@ func TestPruneTip(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain())
+		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
 		defer cleanup()
 		expected_result := struct {
 			code int

@@ -83,3 +83,8 @@ type P2PConfig struct {
 	Checkpoints               []chaincfg.Checkpoint
 	TimeSource                MedianTimeSource
 }
+
+func (c *AppConfig) WithoutAuthorization() *AppConfig {
+	c.HTTPConfig.UseAuth = false
+	return c
+}
