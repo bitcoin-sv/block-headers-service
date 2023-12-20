@@ -1427,20 +1427,14 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 
 	}
 
-	// Create a connection manager.
-	targetOutbound := p2pCfg.TargetOutboundPeers
-	if p2pCfg.MaxPeers < int(targetOutbound) {
-		targetOutbound = uint32(p2pCfg.MaxPeers)
-	}
 	cmgr, err := connmgr.New(&connmgr.Config{
-		Listeners:      listeners,
-		OnAccept:       s.inboundPeerConnected,
-		RetryDuration:  connectionRetryInterval,
-		TargetOutbound: targetOutbound,
-		Dial:           p2pCfg.BsvdDial,
-		OnConnection:   s.outboundPeerConnected,
-		GetNewAddress:  newAddressFunc,
-		LoggerFactory:  lf,
+		Listeners:     listeners,
+		OnAccept:      s.inboundPeerConnected,
+		RetryDuration: connectionRetryInterval,
+		Dial:          p2pCfg.BsvdDial,
+		OnConnection:  s.outboundPeerConnected,
+		GetNewAddress: newAddressFunc,
+		LoggerFactory: lf,
 	})
 	if err != nil {
 		return nil, err

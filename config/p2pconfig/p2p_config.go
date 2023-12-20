@@ -22,7 +22,6 @@ type Config struct {
 	LogLevel                  string        `mapstructure:"loglevel" description:"Logging level for all subsystems {trace, debug, info, warn, error, critical} -- You may also specify <subsystem>=<level>,<subsystem2>=<level>,... to set the log level for individual subsystems -- Use show to list available subsystems"`
 	ExcessiveBlockSize        uint32        `mapstructure:"excessiveblocksize" description:"The maximum size block (in bytes) this node will accept. Cannot be less than 32000000."`
 	TrickleInterval           time.Duration `mapstructure:"trickleinterval" description:"Minimum time between attempts to send new inventory to a connected peer"`
-	TargetOutboundPeers       uint32        `mapstructure:"targetoutboundpeers" description:"number of outbound connections to maintain"`
 	BlocksForForkConfirmation int           `mapstructure:"blocksforconfirmation" description:"Minimum number of blocks to consider a block confirmed"`
 	lookup                    func(string) ([]net.IP, error)
 	dial                      func(string, string, time.Duration) (net.Conn, error)
