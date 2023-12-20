@@ -21,7 +21,6 @@ type DbType string
 
 // AppConfig returns strongly typed config values.
 type AppConfig struct {
-	ConfigFile       string            `mapstructure:"config_file"`
 	DbConfig         *DbConfig         `mapstructure:"db"`
 	P2PConfig        *P2PConfig        `mapstructure:"p2p"`
 	MerkleRootConfig *MerkleRootConfig `mapstructure:"merkleroot"`
