@@ -1327,7 +1327,7 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 	var listeners []net.Listener
 	var nat NAT
 	var err error
-	listeners, nat, err = initListeners(amgr, wireServices, p2pCfg)
+	listeners, nat, err = initListeners(amgr, p2pCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -1446,7 +1446,7 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 // initListeners initializes the configured net listeners and adds any bound
 // addresses to the address manager. Returns the listeners and a NAT interface,
 // which is non-nil if UPnP is in use.
-func initListeners(amgr *addrmgr.AddrManager, services wire.ServiceFlag, p2pCfg *config.P2PConfig) ([]net.Listener, NAT, error) {
+func initListeners(amgr *addrmgr.AddrManager, p2pCfg *config.P2PConfig) ([]net.Listener, NAT, error) {
 	listenAddrs := prepareListeners()
 
 	// Listen for TCP connections at the configured addresses
