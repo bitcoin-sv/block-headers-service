@@ -212,7 +212,7 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain())
+		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
 		defer cleanup()
 		expected_result := struct {
 			code int

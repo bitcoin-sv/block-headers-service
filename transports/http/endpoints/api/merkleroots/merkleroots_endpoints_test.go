@@ -17,7 +17,7 @@ import (
 
 func TestReturnSuccessFromVerify(t *testing.T) {
 	// setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithoutApiAuthorization())
+	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{
 		{
