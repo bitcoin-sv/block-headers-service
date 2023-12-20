@@ -1,7 +1,6 @@
 {
     "p2p": {
         "logdir": "",
-        "addpeer": "",
         "connect": "",
         "nolisten": true,
         "listen": "",
@@ -20,8 +19,6 @@
         "noonion": true,
         "torisolation": "",
         "testnet": "",
-        "regtest": "",
-        "simnet": "",
         "addcheckpoint": "",
         "nocheckpoints": "",
         "loglevel": "",

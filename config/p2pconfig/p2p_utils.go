@@ -13,40 +13,6 @@ import (
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 )
 
-// normalizeAddress returns addr with the passed default port appended if
-// there is not already a port specified.
-func normalizeAddress(addr, defaultPort string) string {
-	_, _, err := net.SplitHostPort(addr)
-	if err != nil {
-		return net.JoinHostPort(addr, defaultPort)
-	}
-	return addr
-}
-
-// normalizeAddresses returns a new slice with all the passed peer addresses
-// normalised with the given default port, and all duplicates removed.
-func normalizeAddresses(addrs []string, defaultPort string) []string {
-	for i, addr := range addrs {
-		addrs[i] = normalizeAddress(addr, defaultPort)
-	}
-
-	return removeDuplicateAddresses(addrs)
-}
-
-// removeDuplicateAddresses returns a new slice with all duplicate entries in
-// addrs removed.
-func removeDuplicateAddresses(addrs []string) []string {
-	result := make([]string, 0, len(addrs))
-	seen := map[string]struct{}{}
-	for _, val := range addrs {
-		if _, ok := seen[val]; !ok {
-			result = append(result, val)
-			seen[val] = struct{}{}
-		}
-	}
-	return result
-}
-
 // cleanAndExpandPath expands environment variables and leading ~ in the
 // passed path, cleans the result, and returns it.
 func cleanAndExpandPath(path string) string {
