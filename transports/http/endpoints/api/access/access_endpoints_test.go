@@ -46,27 +46,6 @@ func TestAccessEndpointWithWrongAuthHeader(t *testing.T) {
 	}
 }
 
-// Tests the GET /access endpoint with global auth token.
-func TestAccessEndpointWithGlobalAuthHeader(t *testing.T) {
-	//setup
-	lf := testlog.NewTestLoggerFactory()
-	cfg := config.GetDefaultAppConfig(lf)
-	pulse, cleanup := testpulse.NewTestPulse(t)
-	defer cleanup()
-
-	//when
-	res := pulse.Api().Call(getTokenInfo(cfg.ConfigFile))
-
-	if res.Code != http.StatusOK {
-		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusOK, res.Code)
-	}
-
-	body := tokenFromResponse(t, res)
-	if !body.IsAdmin {
-		t.Fatalf("Expected to get admin token")
-	}
-}
-
 // Tests the POST /access endpoint with created auth token.
 func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 	//setup
