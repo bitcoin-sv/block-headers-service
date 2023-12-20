@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Added a mutex lock for a race-condition
+// Added a mutex lock for a race-condition.
 var viperLock sync.Mutex
 
 // Load creates and returns a new viper config.

@@ -1325,9 +1325,8 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 	amgr := addrmgr.New(p2pCfg.BsvdLookup, lf)
 
 	var listeners []net.Listener
-	var nat NAT
 	var err error
-	listeners, nat, err = initListeners(amgr, p2pCfg)
+	listeners, err = initListeners(amgr)
 	if err != nil {
 		return nil, err
 	}
@@ -1353,7 +1352,7 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 		quit:                 make(chan struct{}),
 		modifyRebroadcastInv: make(chan interface{}),
 		peerHeightsUpdate:    make(chan updatePeerHeightsMsg),
-		nat:                  nat,
+		nat:                  nil,
 		timeSource:           p2pCfg.TimeSource,
 		wireServices:         wireServices,
 		p2pConfig:            p2pCfg,
@@ -1446,13 +1445,13 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 // initListeners initializes the configured net listeners and adds any bound
 // addresses to the address manager. Returns the listeners and a NAT interface,
 // which is non-nil if UPnP is in use.
-func initListeners(amgr *addrmgr.AddrManager, p2pCfg *config.P2PConfig) ([]net.Listener, NAT, error) {
+func initListeners(amgr *addrmgr.AddrManager) ([]net.Listener, error) {
 	listenAddrs := prepareListeners()
 
 	// Listen for TCP connections at the configured addresses
 	netAddrs, err := parseListeners(listenAddrs)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	listeners := make([]net.Listener, 0, len(netAddrs))
@@ -1465,14 +1464,13 @@ func initListeners(amgr *addrmgr.AddrManager, p2pCfg *config.P2PConfig) ([]net.L
 		listeners = append(listeners, listener)
 	}
 
-	var nat NAT
 	if err != nil {
 		amgr.Log.Errorf("Can not parse default port %s for active chain: %v",
 			config.ActiveNetParams.DefaultPort, err)
-		return nil, nil, err
+		return nil, err
 	}
 
-	return listeners, nat, nil
+	return listeners, nil
 }
 
 func prepareListeners() []string {
@@ -1525,58 +1523,6 @@ func addrStringToNetAddr(addr string, p2pCfg *config.P2PConfig) (net.Addr, error
 		IP:   ips[0],
 		Port: port,
 	}, nil
-}
-
-// addLocalAddress adds an address that this node is listening on to the
-// address manager so that it may be relayed to peers.
-func addLocalAddress(addrMgr *addrmgr.AddrManager, addr string, services wire.ServiceFlag, log logging.Logger) error {
-	host, portStr, err := net.SplitHostPort(addr)
-	if err != nil {
-		return err
-	}
-	port, err := strconv.ParseUint(portStr, 10, 16)
-	if err != nil {
-		return err
-	}
-
-	if ip := net.ParseIP(host); ip != nil && ip.IsUnspecified() {
-		// If bound to unspecified address, advertise all local interfaces
-		addrs, err := net.InterfaceAddrs()
-		if err != nil {
-			return err
-		}
-
-		for _, addr := range addrs {
-			ifaceIP, _, err := net.ParseCIDR(addr.String())
-			if err != nil {
-				continue
-			}
-
-			// If bound to 0.0.0.0, do not add IPv6 interfaces and if bound to
-			// ::, do not add IPv4 interfaces.
-			if (ip.To4() == nil) != (ifaceIP.To4() == nil) {
-				continue
-			}
-
-			netAddr := wire.NewNetAddressIPPort(ifaceIP, uint16(port), services)
-			err = addrMgr.AddLocalAddress(netAddr, addrmgr.BoundPrio)
-			if err != nil {
-				log.Info(err)
-			}
-		}
-	} else {
-		netAddr, err := addrMgr.HostToNetAddress(host, uint16(port), services)
-		if err != nil {
-			return err
-		}
-
-		err = addrMgr.AddLocalAddress(netAddr, addrmgr.BoundPrio)
-		if err != nil {
-			log.Info(err)
-		}
-	}
-
-	return nil
 }
 
 // dynamicTickDuration is a convenience function used to dynamically choose a
