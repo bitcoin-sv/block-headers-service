@@ -1,20 +1,23 @@
 package config
 
 import (
+	"net"
 	"time"
+
+	"github.com/bitcoin-sv/pulse/domains/logging"
 )
 
 // DBSqlite creating config for sqlite db.
 const DBSqlite DbType = "sqlite"
 
-func GetDefaultAppConfig() *AppConfig {
+func GetDefaultAppConfig(lf logging.LoggerFactory) *AppConfig {
 	return &AppConfig{
 		DbConfig:         getDbDefaults(),
 		HTTPConfig:       getAuthConfigDefaults(),
 		MerkleRootConfig: getMerkleRootDefaults(),
 		WebsocketConfig:  getWebsocketDefaults(),
 		WebhookConfig:    getWebhookDefaults(),
-		P2PConfig:        getP2PDefaults(),
+		P2PConfig:        getP2PDefaults(lf),
 	}
 }
 
@@ -59,10 +62,9 @@ func getWebhookDefaults() *WebhookConfig {
 	}
 }
 
-func getP2PDefaults() *P2PConfig {
+func getP2PDefaults(lf logging.LoggerFactory) *P2PConfig {
 	return &P2PConfig{
 		LogLevel:                  "info",
-		LogDir:                    "./logs",
 		MaxPeers:                  125,
 		MaxPeersPerIP:             5,
 		BanDuration:               time.Hour * 24,
@@ -70,5 +72,11 @@ func getP2PDefaults() *P2PConfig {
 		ExcessiveBlockSize:        128000000,
 		TrickleInterval:           50 * time.Millisecond,
 		BlocksForForkConfirmation: 10,
+		DefaultConnectTimeout:     30 * time.Second,
+		DisableCheckpoints:        false,
+		Dial:                      net.DialTimeout,
+		Lookup:                    net.LookupIP,
+		TimeSource:                NewMedianTime(lf),
+		Checkpoints:               ActiveNetParams.Checkpoints,
 	}
 }

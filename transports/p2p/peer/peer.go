@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/bitcoin-sv/pulse/app/logger"
-	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg"
@@ -2090,11 +2089,6 @@ func newPeerBase(origCfg *Config, inbound bool) *Peer {
 	// Set the chain parameters to testnet if the caller did not specify any.
 	if cfg.ChainParams == nil {
 		cfg.ChainParams = &chaincfg.TestNet3Params
-	}
-
-	// Set the trickle interval if a non-positive value is specified.
-	if cfg.TrickleInterval <= 0 {
-		cfg.TrickleInterval = config.DefaultTrickleInterval
 	}
 
 	p := Peer{

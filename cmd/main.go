@@ -41,7 +41,7 @@ import (
 func main() {
 	lf, log := createLogger()
 
-	defaultConfig := config.GetDefaultAppConfig()
+	defaultConfig := config.GetDefaultAppConfig(lf)
 	if err := cli.LoadFlags(defaultConfig); err != nil {
 		log.Errorf("cannot load flags because of error: %v", err)
 		os.Exit(1)

@@ -348,24 +348,25 @@ func TestMerkleRootConfirmations(t *testing.T) {
 }
 
 func setUpServices() *testData {
+	lf := testlog.NewTestLoggerFactory()
 	db, _ := fixtures.LongestChain()
 	var array []domains.BlockHeader = db
 	repo := &repository.Repositories{
 		Headers: testrepository.NewHeadersTestRepository(&array),
 	}
 
-	p2pcfg := fixtures.DefaultP2PConfig()
+	p2pcfg := config.GetDefaultAppConfig(lf).P2PConfig
 	mrconfig := config.MerkleRootConfig{
 		MaxBlockHeightExcess: 6,
 	}
 	cfg := config.AppConfig{
-		P2PConfig:        &p2pcfg,
+		P2PConfig:        p2pcfg,
 		MerkleRootConfig: &mrconfig,
 	}
 	hs := NewServices(Dept{
 		Repositories:  repo,
 		Peers:         nil,
-		LoggerFactory: testlog.NewTestLoggerFactory(),
+		LoggerFactory: lf,
 		Config:        &cfg,
 	})
 

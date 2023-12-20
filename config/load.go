@@ -22,7 +22,7 @@ func Load(lf logging.LoggerFactory, cfg *AppConfig) (*AppConfig, error) {
 	viperLock.Lock()
 	defer viperLock.Unlock()
 
-	if err := setDefaults(); err != nil {
+	if err := setDefaults(lf); err != nil {
 		return nil, err
 	}
 
@@ -36,22 +36,14 @@ func Load(lf logging.LoggerFactory, cfg *AppConfig) (*AppConfig, error) {
 		return nil, err
 	}
 
-	// TODO: BUX-375 - Move this to p2p when we have a proper config validation
-	err := cfg.P2PConfig.Validate()
-	if err != nil {
-		return nil, err
-	}
-
-	cfg.P2PConfig.TimeSource = NewMedianTime(lf)
-
 	return cfg, nil
 }
 
-func setDefaults() error {
+func setDefaults(lf logging.LoggerFactory) error {
 	viper.SetDefault(ConfigFilePathKey, DefaultConfigFilePath)
 
 	defaultsMap := make(map[string]interface{})
-	if err := mapstructure.Decode(GetDefaultAppConfig(), &defaultsMap); err != nil {
+	if err := mapstructure.Decode(GetDefaultAppConfig(lf), &defaultsMap); err != nil {
 		return err
 	}
 
