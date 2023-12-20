@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/bitcoin-sv/pulse/app/logger"
-	"github.com/bitcoin-sv/pulse/config/p2pconfig"
+	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
@@ -203,9 +203,9 @@ type server struct {
 	wg                   sync.WaitGroup
 	quit                 chan struct{}
 	nat                  NAT
-	timeSource           p2pconfig.MedianTimeSource
+	timeSource           config.MedianTimeSource
 	wireServices         wire.ServiceFlag
-	p2pConfig            *p2pconfig.Config
+	p2pConfig            *config.P2PConfig
 	log                  logging.Logger
 }
 
@@ -893,9 +893,8 @@ func newPeerConfig(sp *serverPeer) *peer.Config {
 		UserAgentComments: initUserAgentComments(sp.server.p2pConfig.ExcessiveBlockSize),
 		ChainParams:       sp.server.chainParams,
 		Services:          sp.server.wireServices,
-		// ProtocolVersion:   peer.MaxProtocolVersion,
-		ProtocolVersion: uint32(70013),
-		TrickleInterval: sp.server.p2pConfig.TrickleInterval,
+		ProtocolVersion:   uint32(70013),
+		TrickleInterval:   sp.server.p2pConfig.TrickleInterval,
 	}
 }
 
@@ -979,8 +978,8 @@ func (s *server) peerHandler() {
 	}
 
 	// Add peers discovered through DNS to the address manager.
-	fmt.Printf("[Server] configs.ActiveNetParams.Params: %#v", pretty.Formatter(p2pconfig.ActiveNetParams.Params))
-	connmgr.SeedFromDNS(p2pconfig.ActiveNetParams.Params, defaultRequiredServices,
+	fmt.Printf("[Server] configs.ActiveNetParams.Params: %#v", pretty.Formatter(config.ActiveNetParams.Params))
+	connmgr.SeedFromDNS(config.ActiveNetParams.Params, defaultRequiredServices,
 		s.p2pConfig.BsvdLookup, func(addrs []*wire.NetAddress) {
 			// Bitcoind uses a lookup of the dns seeder here. This
 			// is rather strange since the values looked up by the
@@ -1266,7 +1265,7 @@ func (s *server) upnpUpdateThread() {
 	// Go off immediately to prevent code duplication, thereafter we renew
 	// lease every 15 minutes.
 	timer := time.NewTimer(0 * time.Second)
-	lport, _ := strconv.ParseInt(p2pconfig.ActiveNetParams.DefaultPort, 10, 16)
+	lport, _ := strconv.ParseInt(config.ActiveNetParams.DefaultPort, 10, 16)
 	first := true
 out:
 	for {
@@ -1320,7 +1319,7 @@ out:
 // bitcoin network type specified by chainParams.  Use start to begin accepting
 // connections from peers.
 func newServer(chainParams *chaincfg.Params, services *service.Services,
-	peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *p2pconfig.Config, lf logging.LoggerFactory) (*server, error) {
+	peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *config.P2PConfig, lf logging.LoggerFactory) (*server, error) {
 	wireServices := defaultServices
 
 	amgr := addrmgr.New(p2pCfg.BsvdLookup, lf)
@@ -1415,7 +1414,7 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 
 			// allow nondefault ports after 50 failed tries.
 			if tries < 50 && fmt.Sprintf("%d", addr.NetAddress().Port) !=
-				p2pconfig.ActiveNetParams.DefaultPort {
+				config.ActiveNetParams.DefaultPort {
 				continue
 			}
 
@@ -1447,7 +1446,7 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 // initListeners initializes the configured net listeners and adds any bound
 // addresses to the address manager. Returns the listeners and a NAT interface,
 // which is non-nil if UPnP is in use.
-func initListeners(amgr *addrmgr.AddrManager, services wire.ServiceFlag, p2pCfg *p2pconfig.Config) ([]net.Listener, NAT, error) {
+func initListeners(amgr *addrmgr.AddrManager, services wire.ServiceFlag, p2pCfg *config.P2PConfig) ([]net.Listener, NAT, error) {
 	listenAddrs := prepareListeners()
 
 	// Listen for TCP connections at the configured addresses
@@ -1469,7 +1468,7 @@ func initListeners(amgr *addrmgr.AddrManager, services wire.ServiceFlag, p2pCfg 
 	var nat NAT
 	if err != nil {
 		amgr.Log.Errorf("Can not parse default port %s for active chain: %v",
-			p2pconfig.ActiveNetParams.DefaultPort, err)
+			config.ActiveNetParams.DefaultPort, err)
 		return nil, nil, err
 	}
 
@@ -1478,7 +1477,7 @@ func initListeners(amgr *addrmgr.AddrManager, services wire.ServiceFlag, p2pCfg 
 
 func prepareListeners() []string {
 	listeners := []string{
-		net.JoinHostPort("", p2pconfig.ActiveNetParams.DefaultPort),
+		net.JoinHostPort("", config.ActiveNetParams.DefaultPort),
 	}
 
 	return listeners
@@ -1488,7 +1487,7 @@ func prepareListeners() []string {
 // a net.Addr which maps to the original address with any host names resolved
 // to IP addresses.  It also handles tor addresses properly by returning a
 // net.Addr that encapsulates the address.
-func addrStringToNetAddr(addr string, p2pCfg *p2pconfig.Config) (net.Addr, error) {
+func addrStringToNetAddr(addr string, p2pCfg *config.P2PConfig) (net.Addr, error) {
 	host, strPort, err := net.SplitHostPort(addr)
 	if err != nil {
 		return nil, err
@@ -1608,7 +1607,7 @@ func dynamicTickDuration(remaining time.Duration) time.Duration {
 // notified with the server once it is setup so it can gracefully stop it when
 // requested from the service control manager.
 func RunServer(serverChan chan<- *server, services *service.Services,
-	peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *p2pconfig.Config, lf logging.LoggerFactory) error {
+	peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *config.P2PConfig, lf logging.LoggerFactory) error {
 	// Get a channel that will be closed when a shutdown signal has been
 	// triggered either from an OS signal such as SIGINT (Ctrl+C) or from
 	// another subsystem
@@ -1635,8 +1634,8 @@ func RunServer(serverChan chan<- *server, services *service.Services,
 }
 
 // Create and start server, return error if server was not created correctly.
-func createAndStartServer(serverChan chan<- *server, services *service.Services, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *p2pconfig.Config, lf logging.LoggerFactory) (*server, error) {
-	server, err := newServer(p2pconfig.ActiveNetParams.Params, services, peers, p2pCfg, lf)
+func createAndStartServer(serverChan chan<- *server, services *service.Services, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *config.P2PConfig, lf logging.LoggerFactory) (*server, error) {
+	server, err := newServer(config.ActiveNetParams.Params, services, peers, p2pCfg, lf)
 	if err != nil {
 		log := lf.NewLogger("server")
 		log.Errorf("Unable to start server: %v", err)
@@ -1654,9 +1653,9 @@ func createAndStartServer(serverChan chan<- *server, services *service.Services,
 }
 
 // NewServer creates and return p2p server.
-func NewServer(services *service.Services, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *p2pconfig.Config, lf logging.LoggerFactory) (*server, error) {
+func NewServer(services *service.Services, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *config.P2PConfig, lf logging.LoggerFactory) (*server, error) {
 	log := lf.NewLogger("server")
-	server, err := newServer(p2pconfig.ActiveNetParams.Params, services, peers, p2pCfg, lf)
+	server, err := newServer(config.ActiveNetParams.Params, services, peers, p2pCfg, lf)
 	if err != nil {
 		log.Errorf("Unable to start server: %v", err)
 		return nil, err

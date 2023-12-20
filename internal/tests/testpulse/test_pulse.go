@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/config/p2pconfig"
 	"github.com/bitcoin-sv/pulse/domains/logging"
 	testlog "github.com/bitcoin-sv/pulse/internal/tests/log"
 	"github.com/bitcoin-sv/pulse/internal/tests/testrepository"
@@ -93,7 +92,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	hs := service.NewServices(service.Dept{
 		Repositories:  repo.ToDomainRepo(),
 		Peers:         nil,
-		Params:        p2pconfig.ActiveNetParams.Params,
+		Params:        config.ActiveNetParams.Params,
 		AdminToken:    cfg.HTTPConfig.AuthToken,
 		LoggerFactory: lf,
 		Config:        cfg,

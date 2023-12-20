@@ -15,6 +15,7 @@ import (
 
 	"github.com/bitcoin-sv/pulse/cli"
 	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/pulse/config/limits"
 	"github.com/bitcoin-sv/pulse/database"
 	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/notification"
@@ -23,8 +24,6 @@ import (
 
 	"github.com/bitcoin-sv/pulse/app/logger"
 
-	"github.com/bitcoin-sv/pulse/config/p2pconfig"
-	"github.com/bitcoin-sv/pulse/config/p2pconfig/limits"
 	"github.com/bitcoin-sv/pulse/database/sql"
 	"github.com/bitcoin-sv/pulse/internal/wire"
 	"github.com/bitcoin-sv/pulse/repository"
@@ -90,7 +89,7 @@ func main() {
 	hs := service.NewServices(service.Dept{
 		Repositories:  repo,
 		Peers:         peers,
-		Params:        p2pconfig.ActiveNetParams.Params,
+		Params:        config.ActiveNetParams.Params,
 		AdminToken:    cfg.HTTPConfig.AuthToken,
 		LoggerFactory: lf,
 		Config:        cfg,

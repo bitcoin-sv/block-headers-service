@@ -1,4 +1,4 @@
-package p2pconfig
+package config
 
 import (
 	"fmt"
@@ -142,7 +142,7 @@ func mergeCheckpoints(defaultCheckpoints, additional []chaincfg.Checkpoint) []ch
 //
 // Any attempt to resolve a tor address (.onion) will return an error since they
 // are not intended to be resolved outside of the tor proxy.
-func (c *Config) BsvdLookup(host string) ([]net.IP, error) {
+func (c *P2PConfig) BsvdLookup(host string) ([]net.IP, error) {
 	if strings.HasSuffix(host, ".onion") {
 		return nil, fmt.Errorf("attempt to resolve tor address %s", host)
 	}
@@ -155,7 +155,7 @@ func (c *Config) BsvdLookup(host string) ([]net.IP, error) {
 // example, .onion addresses will be dialed using the onion specific proxy if
 // one was specified, but will otherwise use the normal dial function (which
 // could itself use a proxy or not).
-func (c *Config) BsvdDial(addr net.Addr) (net.Conn, error) {
+func (c *P2PConfig) BsvdDial(addr net.Addr) (net.Conn, error) {
 	if strings.Contains(addr.String(), ".onion:") {
 		return nil, fmt.Errorf("no possibility to use onion addresses: %v", addr)
 	}

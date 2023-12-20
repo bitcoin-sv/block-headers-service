@@ -2,8 +2,6 @@ package config
 
 import (
 	"time"
-
-	"github.com/bitcoin-sv/pulse/config/p2pconfig"
 )
 
 // DBSqlite creating config for sqlite db.
@@ -61,8 +59,8 @@ func getWebhookDefaults() *WebhookConfig {
 	}
 }
 
-func getP2PDefaults() *p2pconfig.Config {
-	return &p2pconfig.Config{
+func getP2PDefaults() *P2PConfig {
+	return &P2PConfig{
 		LogLevel:                  "info",
 		LogDir:                    "./logs",
 		MaxPeers:                  125,

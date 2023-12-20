@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/bitcoin-sv/pulse/app/logger"
-	"github.com/bitcoin-sv/pulse/config/p2pconfig"
+	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg"
@@ -2094,7 +2094,7 @@ func newPeerBase(origCfg *Config, inbound bool) *Peer {
 
 	// Set the trickle interval if a non-positive value is specified.
 	if cfg.TrickleInterval <= 0 {
-		cfg.TrickleInterval = p2pconfig.DefaultTrickleInterval
+		cfg.TrickleInterval = config.DefaultTrickleInterval
 	}
 
 	p := Peer{

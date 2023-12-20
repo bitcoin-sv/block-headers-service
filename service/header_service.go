@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/config/p2pconfig"
 	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg"
@@ -20,13 +19,13 @@ import (
 type HeaderService struct {
 	repo        *repository.Repositories
 	checkpoints []chaincfg.Checkpoint
-	timeSource  p2pconfig.MedianTimeSource
+	timeSource  config.MedianTimeSource
 	merkleCfg   *config.MerkleRootConfig
 	log         logging.Logger
 }
 
 // NewHeaderService creates and returns HeaderService instance.
-func NewHeaderService(repo *repository.Repositories, p2pCfg *p2pconfig.Config, merkleCfg *config.MerkleRootConfig, lf logging.LoggerFactory) *HeaderService {
+func NewHeaderService(repo *repository.Repositories, p2pCfg *config.P2PConfig, merkleCfg *config.MerkleRootConfig, lf logging.LoggerFactory) *HeaderService {
 	return &HeaderService{
 		repo:        repo,
 		checkpoints: p2pCfg.Checkpoints,

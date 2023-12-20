@@ -1,18 +1,18 @@
 package fixtures
 
-import "github.com/bitcoin-sv/pulse/config/p2pconfig"
+import "github.com/bitcoin-sv/pulse/config"
 
 // DefaultP2PConfig default p2p config for test purposes.
-func DefaultP2PConfig() p2pconfig.Config {
-	return p2pconfig.Config{
-		LogLevel:                  p2pconfig.DefaultLogLevel,
-		MaxPeers:                  p2pconfig.DefaultMaxPeers,
-		MaxPeersPerIP:             p2pconfig.DefaultMaxPeersPerIP,
-		MinSyncPeerNetworkSpeed:   p2pconfig.DefaultMinSyncPeerNetworkSpeed,
-		BanDuration:               p2pconfig.DefaultBanDuration,
-		LogDir:                    p2pconfig.DefaultLogDir,
-		ExcessiveBlockSize:        p2pconfig.DefaultExcessiveBlockSize,
-		TrickleInterval:           p2pconfig.DefaultTrickleInterval,
-		BlocksForForkConfirmation: p2pconfig.DefaultBlocksToConfirmFork,
+func DefaultP2PConfig() config.P2PConfig {
+	return config.P2PConfig{
+		LogLevel:                  config.DefaultLogLevel,
+		MaxPeers:                  config.DefaultMaxPeers,
+		MaxPeersPerIP:             config.DefaultMaxPeersPerIP,
+		MinSyncPeerNetworkSpeed:   config.DefaultMinSyncPeerNetworkSpeed,
+		BanDuration:               config.DefaultBanDuration,
+		LogDir:                    config.DefaultLogDir,
+		ExcessiveBlockSize:        config.DefaultExcessiveBlockSize,
+		TrickleInterval:           config.DefaultTrickleInterval,
+		BlocksForForkConfirmation: config.DefaultBlocksToConfirmFork,
 	}
 }

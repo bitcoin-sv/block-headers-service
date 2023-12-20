@@ -1,8 +1,11 @@
 package config
 
 import (
-	"github.com/bitcoin-sv/pulse/config/p2pconfig"
+	"net"
+	"time"
+
 	"github.com/bitcoin-sv/pulse/domains/logging"
+	"github.com/bitcoin-sv/pulse/internal/chaincfg"
 )
 
 const (
@@ -21,7 +24,7 @@ type DbType string
 type AppConfig struct {
 	ConfigFile       string            `mapstructure:"configFile"`
 	DbConfig         *DbConfig         `mapstructure:"db"`
-	P2PConfig        *p2pconfig.Config `mapstructure:"p2p"`
+	P2PConfig        *P2PConfig        `mapstructure:"p2p"`
 	MerkleRootConfig *MerkleRootConfig `mapstructure:"merkleroot"`
 	WebhookConfig    *WebhookConfig    `mapstructure:"webhook"`
 	WebsocketConfig  *WebsocketConfig  `mapstructure:"websocket"`
@@ -63,4 +66,23 @@ type HTTPConfig struct {
 	UrlPrefix    string `mapstructure:"urlPrefix"`
 	UseAuth      bool   `mapstructure:"useAuth"`
 	AuthToken    string `mapstructure:"authToken"`
+}
+
+// P2PConfig represents a p2p config.
+type P2PConfig struct {
+	LogDir                    string        `mapstructure:"logdir" description:"Directory to log output."`
+	MaxPeers                  int           `mapstructure:"maxpeers" description:"Max number of inbound and outbound peers"`
+	MaxPeersPerIP             int           `mapstructure:"maxpeersperip" description:"Max number of inbound and outbound peers per IP"`
+	BanDuration               time.Duration `mapstructure:"banduration" description:"How long to ban misbehaving peers.  Valid time units are {s, m, h}.  Minimum 1 second"`
+	MinSyncPeerNetworkSpeed   uint64        `mapstructure:"minsyncpeernetworkspeed" description:"Disconnect sync peers slower than this threshold in bytes/sec"`
+	AddCheckpoints            []string      `mapstructure:"addcheckpoint" description:"Add a custom checkpoint.  Format: '<height>:<hash>'"`
+	DisableCheckpoints        bool          `mapstructure:"nocheckpoints" description:"Disable built-in checkpoints.  Don't do this unless you know what you're doing."`
+	LogLevel                  string        `mapstructure:"loglevel" description:"Logging level for all subsystems {trace, debug, info, warn, error, critical} -- You may also specify <subsystem>=<level>,<subsystem2>=<level>,... to set the log level for individual subsystems -- Use show to list available subsystems"`
+	ExcessiveBlockSize        uint32        `mapstructure:"excessiveblocksize" description:"The maximum size block (in bytes) this node will accept. Cannot be less than 32000000."`
+	TrickleInterval           time.Duration `mapstructure:"trickleinterval" description:"Minimum time between attempts to send new inventory to a connected peer"`
+	BlocksForForkConfirmation int           `mapstructure:"blocksforconfirmation" description:"Minimum number of blocks to consider a block confirmed"`
+	lookup                    func(string) ([]net.IP, error)
+	dial                      func(string, string, time.Duration) (net.Conn, error)
+	Checkpoints               []chaincfg.Checkpoint
+	TimeSource                MedianTimeSource
 }
