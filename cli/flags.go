@@ -52,7 +52,7 @@ func anyFlagsPassed() bool {
 func initFlags(fs *pflag.FlagSet, cliFlags *cliFlags) {
 	fs.StringP(config.ConfigFilePathKey, "C", "", "custom config file path")
 
-	fs.BoolVar(&cliFlags.exportHeaders, "exportHeaders", false, "export headers from database to CSV file")
+	fs.BoolVarP(&cliFlags.exportHeaders, "export_headers", "e", false, "export headers from database to CSV file")
 	fs.BoolVarP(&cliFlags.showHelp, "help", "h", false, "show help")
 	fs.BoolVarP(&cliFlags.showVersion, "version", "v", false, "show version")
 	fs.BoolVarP(&cliFlags.dumpConfig, "dump_config", "d", false, "dump config to file, specified by config_file flag")

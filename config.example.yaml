@@ -1,74 +1,71 @@
 # Application Configuration Example
 
-# Configuration file path
-configFile: "path/to/config/file"
-
 # Database Configuration
 db:
   # Database type (default: sqlite)
   type: sqlite
   # Path to the database schema
-  schemaPath: "./database/migrations"
+  schema_path: "./database/migrations"
   # Data Source Name
   dsn: "file:./data/blockheaders.db?_foreign_keys=true&pooling=true"
   # Database file path
-  filePath: "./data/blockheaders.db"
+  file_path: "./data/blockheaders.db"
   # Whether prepared DB is enabled
-  preparedDb: false
+  prepared_db: false
   # Path to prepared database file
-  preparedDbFilePath: "./data/blockheaders.csv.gz"
+  prepared_db_file_path: "./data/blockheaders.csv.gz"
 
 # P2P Configuration
 p2p:
   # Maximum number of peers (inbound and outbound)
-  maxpeers: 125
+  max_peers: 125
   # Maximum number of peers per IP
-  maxpeersperip: 5
+  max_peers_per_ip: 5
   # Duration to ban misbehaving peers
-  banduration: 24h
+  ban_duration: 24h
   # Minimum sync peer network speed
-  minsyncpeernetworkspeed: 51200
+  min_sync_peer_network_speed: 51200
   # Disable built-in checkpoints
-  nocheckpoints: false
+  disable_checkpoints: false
   # Logging level for subsystems
-  loglevel: info
+  log_level: info
   # Maximum block size accepted by the node
-  excessiveblocksize: 128000000
+  excessive_block_size: 128000000
   # Minimum time between attempts to send new inventory
-  trickleinterval: 50ms
+  trickle_interval: 50ms
   # Minimum number of blocks for confirmation
-  blocksforconfirmation: 10
+  blocks_for_confirmation: 10
   # Default connection timeout
-  defaultconnecttimeout: 30s
+  default_connect_timeout: 30s
 
 # Merkle Root Configuration
 merkleroot:
   # Maximum block height excess
-  maxBlockHeightExcess: 6
+  max_block_height_excess: 6
 
 # Webhook Configuration
 webhook:
   # Maximum number of tries for webhook
-  maxTries: 10
+  max_tries: 10
 
 # Websocket Configuration
 websocket:
   # Maximum number of history items
-  historyMax: 300
+  history_max: 300
   # History time-to-live
-  historyTTL: 10
+  history_ttl: 10
 
 # HTTP Configuration
 http:
   # Read timeout
-  readTimeout: 10
+  read_timeout: 10
   # Write timeout
-  writeTimeout: 10
+  write_timeout: 10
   # HTTP server port
   port: 8080
   # URL prefix for API
-  urlPrefix: "/api/v1"
+  url_prefix: "/api/v1"
   # Enable authentication
-  useAuth: true
+  use_auth: true
   # Authentication token
-  authToken: "mQZQ6WmxURxWz5ch"
+  auth_token: "mQZQ6WmxURxWz5ch"
