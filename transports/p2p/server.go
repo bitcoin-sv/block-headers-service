@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/bitcoin-sv/pulse/app/logger"
-	"github.com/bitcoin-sv/pulse/config/p2pconfig"
+	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
@@ -203,9 +203,9 @@ type server struct {
 	wg                   sync.WaitGroup
 	quit                 chan struct{}
 	nat                  NAT
-	timeSource           p2pconfig.MedianTimeSource
+	timeSource           config.MedianTimeSource
 	wireServices         wire.ServiceFlag
-	p2pConfig            *p2pconfig.Config
+	p2pConfig            *config.P2PConfig
 	log                  logging.Logger
 }
 
@@ -305,7 +305,7 @@ func (sp *serverPeer) OnVersion(_ *peer.Peer, msg *wire.MsgVersion) *wire.MsgRej
 	isInbound := sp.Inbound()
 	remoteAddr := sp.NA()
 	addrManager := sp.server.addrManager
-	if !sp.server.p2pConfig.SimNet && !isInbound {
+	if !isInbound {
 		addrManager.SetServices(remoteAddr, msg.Services)
 	}
 
@@ -328,10 +328,10 @@ func (sp *serverPeer) OnVersion(_ *peer.Peer, msg *wire.MsgVersion) *wire.MsgRej
 	// on the simulation test network since it is only intended to connect
 	// to specified peers and actively avoids advertising and connecting to
 	// discovered peers.
-	if !sp.server.p2pConfig.SimNet && !isInbound {
+	if !isInbound {
 		// Advertise the local address when the server accepts incoming
 		// connections and it believes itself to be close to the best known tip.
-		if !sp.server.p2pConfig.DisableListen && sp.server.syncManager.IsCurrent() {
+		if sp.server.syncManager.IsCurrent() {
 			// Get address that best matches.
 			lna := addrManager.GetBestLocalAddress(remoteAddr)
 			if addrmgr.IsRoutable(lna) {
@@ -435,13 +435,6 @@ func (sp *serverPeer) OnProtoconf(_ *peer.Peer, msg *wire.MsgProtoconf) {
 // manager.
 func (sp *serverPeer) OnGetAddr(_ *peer.Peer, msg *wire.MsgGetAddr) {
 	sp.log.Infof("[Server] OnGetAddr msg: %#v", msg)
-	// Don't return any addresses when running on the simulation test
-	// network.  This helps prevent the network from becoming another
-	// public test network since it will not be able to learn about other
-	// peers that have not specifically been provided.
-	if sp.server.p2pConfig.SimNet {
-		return
-	}
 
 	// Do not accept getaddr requests from outbound peers.  This reduces
 	// fingerprinting attacks.
@@ -483,16 +476,6 @@ func (sp *serverPeer) OnGetAddr(_ *peer.Peer, msg *wire.MsgGetAddr) {
 // OnAddr is invoked when a peer receives an addr bitcoin message and is
 // used to notify the server about advertised addresses.
 func (sp *serverPeer) OnAddr(_ *peer.Peer, msg *wire.MsgAddr) {
-	// Peer log
-	// srvrconfigs.Log.Infof("[Server] OnAddr msg: %#v", msg)
-	// Ignore addresses when running on the simulation test network.  This
-	// helps prevent the network from becoming another public test network
-	// since it will not be able to learn about other peers that have not
-	// specifically been provided.
-	if sp.server.p2pConfig.SimNet {
-		return
-	}
-
 	// Ignore old style addresses which don't include a timestamp.
 	if sp.ProtocolVersion() < wire.NetAddressTimeVersion {
 		return
@@ -600,18 +583,18 @@ func (s *server) handleAddPeerMsg(state *peerState, sp *serverPeer) bool {
 	}
 
 	// Limit max number of total peers per ip.
-	if state.CountIP(host) >= s.p2pConfig.MaxPeersPerIP {
+	if state.CountIP(host) >= config.MaxPeersPerIP {
 		sp.log.Infof("Max peers per IP reached [%d] - disconnecting peer %s",
-			s.p2pConfig.MaxPeersPerIP, sp)
+			config.MaxPeersPerIP, sp)
 		sp.Disconnect()
 
 		return false
 	}
 
 	// Limit max number of total peers.
-	if state.Count() >= s.p2pConfig.MaxPeers {
+	if state.Count() >= config.MaxPeers {
 		sp.log.Infof("Max peers reached [%d] - disconnecting peer %s",
-			s.p2pConfig.MaxPeers, sp)
+			config.MaxPeers, sp)
 		sp.Disconnect()
 		// TODO: how to handle permanent peers here?
 		// they should be rescheduled.
@@ -778,7 +761,7 @@ func (s *server) handleQuery(state *peerState, querymsg interface{}) {
 		// TODO: duplicate oneshots?
 		// Limit max number of total peers.
 		fmt.Print("[Server] connectNodeMsg")
-		if state.Count() >= s.p2pConfig.MaxPeers {
+		if state.Count() >= config.MaxPeers {
 			msg.reply <- errors.New("max peers reached")
 			return
 		}
@@ -905,16 +888,23 @@ func newPeerConfig(sp *serverPeer) *peer.Config {
 		AddrMe:            addrMe,
 		NewestBlock:       sp.newestBlock,
 		HostToNetAddress:  sp.server.addrManager.HostToNetAddress,
-		Proxy:             sp.server.p2pConfig.Proxy,
 		UserAgentName:     userAgentName,
 		UserAgentVersion:  userAgentVersion,
-		UserAgentComments: sp.server.p2pConfig.UserAgentComments,
+		UserAgentComments: initUserAgentComments(config.ExcessiveBlockSize),
 		ChainParams:       sp.server.chainParams,
 		Services:          sp.server.wireServices,
-		// ProtocolVersion:   peer.MaxProtocolVersion,
-		ProtocolVersion: uint32(70013),
-		TrickleInterval: sp.server.p2pConfig.TrickleInterval,
+		ProtocolVersion:   uint32(70013),
+		TrickleInterval:   config.TrickleLinterval,
 	}
+}
+
+func initUserAgentComments(excessiveBlockSize uint32) []string {
+	var userAgentComments []string
+	if excessiveBlockSize != 0 {
+		userAgentComments = append(userAgentComments, fmt.Sprintf("EB%v", excessiveBlockSize))
+	}
+
+	return userAgentComments
 }
 
 // inboundPeerConnected is invoked by the connection manager when a new inbound
@@ -987,19 +977,17 @@ func (s *server) peerHandler() {
 		connectionCount: make(map[string]int),
 	}
 
-	if !s.p2pConfig.DisableDNSSeed {
-		// Add peers discovered through DNS to the address manager.
-		fmt.Printf("[Server] configs.ActiveNetParams.Params: %#v", pretty.Formatter(p2pconfig.ActiveNetParams.Params))
-		connmgr.SeedFromDNS(p2pconfig.ActiveNetParams.Params, defaultRequiredServices,
-			s.p2pConfig.BsvdLookup, func(addrs []*wire.NetAddress) {
-				// Bitcoind uses a lookup of the dns seeder here. This
-				// is rather strange since the values looked up by the
-				// DNS seed lookups will vary quite a lot.
-				// to replicate this behavior we put all addresses as
-				// having come from the first one.
-				s.addrManager.AddAddresses(addrs, addrs[0])
-			}, s.log)
-	}
+	// Add peers discovered through DNS to the address manager.
+	fmt.Printf("[Server] configs.ActiveNetParams.Params: %#v", pretty.Formatter(config.ActiveNetParams.Params))
+	connmgr.SeedFromDNS(config.ActiveNetParams.Params, defaultRequiredServices,
+		s.p2pConfig.BsvdLookup, func(addrs []*wire.NetAddress) {
+			// Bitcoind uses a lookup of the dns seeder here. This
+			// is rather strange since the values looked up by the
+			// DNS seed lookups will vary quite a lot.
+			// to replicate this behavior we put all addresses as
+			// having come from the first one.
+			s.addrManager.AddAddresses(addrs, addrs[0])
+		}, s.log)
 	go s.connManager.Start()
 
 out:
@@ -1277,7 +1265,7 @@ func (s *server) upnpUpdateThread() {
 	// Go off immediately to prevent code duplication, thereafter we renew
 	// lease every 15 minutes.
 	timer := time.NewTimer(0 * time.Second)
-	lport, _ := strconv.ParseInt(p2pconfig.ActiveNetParams.DefaultPort, 10, 16)
+	lport, _ := strconv.ParseInt(config.ActiveNetParams.DefaultPort, 10, 16)
 	first := true
 out:
 	for {
@@ -1330,26 +1318,20 @@ out:
 // newServer returns a new bsvd server configured to listen on addr for the
 // bitcoin network type specified by chainParams.  Use start to begin accepting
 // connections from peers.
-func newServer(listenAddrs []string, chainParams *chaincfg.Params, services *service.Services,
-	peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *p2pconfig.Config, lf logging.LoggerFactory) (*server, error) {
+func newServer(chainParams *chaincfg.Params, services *service.Services,
+	peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *config.P2PConfig, lf logging.LoggerFactory) (*server, error) {
 	wireServices := defaultServices
-	if p2pCfg.NoCFilters {
-		wireServices &^= wire.SFNodeCF
-	}
 
 	amgr := addrmgr.New(p2pCfg.BsvdLookup, lf)
 
 	var listeners []net.Listener
-	var nat NAT
-	if !p2pCfg.DisableListen {
-		var err error
-		listeners, nat, err = initListeners(amgr, listenAddrs, wireServices, p2pCfg)
-		if err != nil {
-			return nil, err
-		}
-		if len(listeners) == 0 {
-			return nil, errors.New("no valid listen address")
-		}
+	var err error
+	listeners, err = initListeners(amgr)
+	if err != nil {
+		return nil, err
+	}
+	if len(listeners) == 0 {
+		return nil, errors.New("no valid listen address")
 	}
 
 	initErr := services.Headers.InsertGenesisHeaderInDatabase()
@@ -1361,24 +1343,21 @@ func newServer(listenAddrs []string, chainParams *chaincfg.Params, services *ser
 		startupTime:          time.Now().Unix(),
 		chainParams:          chainParams,
 		addrManager:          amgr,
-		newPeers:             make(chan *serverPeer, p2pCfg.MaxPeers),
-		donePeers:            make(chan *serverPeer, p2pCfg.MaxPeers),
-		banPeers:             make(chan *peer.Peer, p2pCfg.MaxPeers),
+		newPeers:             make(chan *serverPeer, config.MaxPeers),
+		donePeers:            make(chan *serverPeer, config.MaxPeers),
+		banPeers:             make(chan *peer.Peer, config.MaxPeers),
 		query:                make(chan interface{}),
-		relayInv:             make(chan relayMsg, p2pCfg.MaxPeers),
-		broadcast:            make(chan broadcastMsg, p2pCfg.MaxPeers),
+		relayInv:             make(chan relayMsg, config.MaxPeers),
+		broadcast:            make(chan broadcastMsg, config.MaxPeers),
 		quit:                 make(chan struct{}),
 		modifyRebroadcastInv: make(chan interface{}),
 		peerHeightsUpdate:    make(chan updatePeerHeightsMsg),
-		nat:                  nat,
+		nat:                  nil,
 		timeSource:           p2pCfg.TimeSource,
 		wireServices:         wireServices,
 		p2pConfig:            p2pCfg,
 		log:                  lf.NewLogger("server"),
 	}
-
-	// Create a new block chain instance with the appropriate config.
-	var err error
 
 	if err != nil {
 		return nil, err
@@ -1388,8 +1367,8 @@ func newServer(listenAddrs []string, chainParams *chaincfg.Params, services *ser
 		PeerNotifier:              &s,
 		ChainParams:               s.chainParams,
 		DisableCheckpoints:        p2pCfg.DisableCheckpoints,
-		MaxPeers:                  p2pCfg.MaxPeers,
-		MinSyncPeerNetworkSpeed:   p2pCfg.MinSyncPeerNetworkSpeed,
+		MaxPeers:                  config.MaxPeers,
+		MinSyncPeerNetworkSpeed:   config.MinSyncPeerNetworkSpeed,
 		BlocksForForkConfirmation: p2pCfg.BlocksForForkConfirmation,
 		LoggerFactory:             lf,
 		Services:                  services,
@@ -1406,84 +1385,59 @@ func newServer(listenAddrs []string, chainParams *chaincfg.Params, services *ser
 	// specified peers and actively avoid advertising and connecting to
 	// discovered peers in order to prevent it from becoming a public test
 	// network.
-	var newAddressFunc func() (net.Addr, error)
-	if !p2pCfg.SimNet && len(p2pCfg.ConnectPeers) == 0 {
-		newAddressFunc = func() (net.Addr, error) {
-			for tries := 0; tries < 100; tries++ {
-				addr := s.addrManager.GetAddress()
-				// Peer log
-				// srvrconfigs.Log.Infof("[Server] newServer addr: %#v", addr)
-				if addr == nil {
-					break
-				}
-
-				// Address will not be invalid, local or unroutable
-				// because addrmanager rejects those on addition.
-				// Just check that we don't already have an address
-				// in the same group so that we are not connecting
-				// to the same network segment at the expense of
-				// others.
-				key := addrmgr.GroupKey(addr.NetAddress())
-				if s.OutboundGroupCount(key) != 0 {
-					continue
-				}
-
-				// only allow recent nodes (10mins) after we failed 30
-				// times
-				if tries < 30 && time.Since(addr.LastAttempt()) < 10*time.Minute {
-					continue
-				}
-
-				// allow nondefault ports after 50 failed tries.
-				if tries < 50 && fmt.Sprintf("%d", addr.NetAddress().Port) !=
-					p2pconfig.ActiveNetParams.DefaultPort {
-					continue
-				}
-
-				addrString := addrmgr.NetAddressKey(addr.NetAddress())
-				return addrStringToNetAddr(addrString, s.p2pConfig)
+	newAddressFunc := func() (net.Addr, error) {
+		for tries := 0; tries < 100; tries++ {
+			addr := s.addrManager.GetAddress()
+			// Peer log
+			// srvrconfigs.Log.Infof("[Server] newServer addr: %#v", addr)
+			if addr == nil {
+				break
 			}
 
-			return nil, errors.New("no valid connect address")
+			// Address will not be invalid, local or unroutable
+			// because addrmanager rejects those on addition.
+			// Just check that we don't already have an address
+			// in the same group so that we are not connecting
+			// to the same network segment at the expense of
+			// others.
+			key := addrmgr.GroupKey(addr.NetAddress())
+			if s.OutboundGroupCount(key) != 0 {
+				continue
+			}
+
+			// only allow recent nodes (10mins) after we failed 30
+			// times
+			if tries < 30 && time.Since(addr.LastAttempt()) < 10*time.Minute {
+				continue
+			}
+
+			// allow nondefault ports after 50 failed tries.
+			if tries < 50 && fmt.Sprintf("%d", addr.NetAddress().Port) !=
+				config.ActiveNetParams.DefaultPort {
+				continue
+			}
+
+			addrString := addrmgr.NetAddressKey(addr.NetAddress())
+			return addrStringToNetAddr(addrString, s.p2pConfig)
 		}
+
+		return nil, errors.New("no valid connect address")
+
 	}
 
-	// Create a connection manager.
-	targetOutbound := p2pCfg.TargetOutboundPeers
-	if p2pCfg.MaxPeers < int(targetOutbound) {
-		targetOutbound = uint32(p2pCfg.MaxPeers)
-	}
 	cmgr, err := connmgr.New(&connmgr.Config{
-		Listeners:      listeners,
-		OnAccept:       s.inboundPeerConnected,
-		RetryDuration:  connectionRetryInterval,
-		TargetOutbound: targetOutbound,
-		Dial:           p2pCfg.BsvdDial,
-		OnConnection:   s.outboundPeerConnected,
-		GetNewAddress:  newAddressFunc,
-		LoggerFactory:  lf,
+		Listeners:     listeners,
+		OnAccept:      s.inboundPeerConnected,
+		RetryDuration: connectionRetryInterval,
+		Dial:          p2pCfg.BsvdDial,
+		OnConnection:  s.outboundPeerConnected,
+		GetNewAddress: newAddressFunc,
+		LoggerFactory: lf,
 	})
 	if err != nil {
 		return nil, err
 	}
 	s.connManager = cmgr
-
-	// Start up persistent peers.
-	permanentPeers := s.p2pConfig.ConnectPeers
-	if len(permanentPeers) == 0 {
-		permanentPeers = s.p2pConfig.AddPeers
-	}
-	for _, addr := range permanentPeers {
-		netAddr, err := addrStringToNetAddr(addr, s.p2pConfig)
-		if err != nil {
-			return nil, err
-		}
-
-		go s.connManager.Connect(&connmgr.ConnReq{
-			Addr:      netAddr,
-			Permanent: true,
-		})
-	}
 
 	return &s, nil
 }
@@ -1491,11 +1445,13 @@ func newServer(listenAddrs []string, chainParams *chaincfg.Params, services *ser
 // initListeners initializes the configured net listeners and adds any bound
 // addresses to the address manager. Returns the listeners and a NAT interface,
 // which is non-nil if UPnP is in use.
-func initListeners(amgr *addrmgr.AddrManager, listenAddrs []string, services wire.ServiceFlag, p2pCfg *p2pconfig.Config) ([]net.Listener, NAT, error) {
+func initListeners(amgr *addrmgr.AddrManager) ([]net.Listener, error) {
+	listenAddrs := prepareListeners()
+
 	// Listen for TCP connections at the configured addresses
 	netAddrs, err := parseListeners(listenAddrs)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	listeners := make([]net.Listener, 0, len(netAddrs))
@@ -1508,91 +1464,28 @@ func initListeners(amgr *addrmgr.AddrManager, listenAddrs []string, services wir
 		listeners = append(listeners, listener)
 	}
 
-	var nat NAT
-	defaultPort, err := strconv.ParseUint(p2pconfig.ActiveNetParams.DefaultPort, 10, 16)
 	if err != nil {
 		amgr.Log.Errorf("Can not parse default port %s for active chain: %v",
-			p2pconfig.ActiveNetParams.DefaultPort, err)
-		return nil, nil, err
-	}
-	if len(p2pCfg.ExternalIPs) != 0 {
-		for _, sip := range p2pCfg.ExternalIPs {
-			eport := uint16(defaultPort)
-			host, portstr, err := net.SplitHostPort(sip)
-			if err != nil {
-				// no port, use default.
-				host = sip
-			} else {
-				port, err := strconv.ParseUint(portstr, 10, 16)
-				if err != nil {
-					amgr.Log.Warnf("Can not parse port from %s for "+
-						"externalip: %v", sip, err)
-					continue
-				}
-				eport = uint16(port)
-			}
-			na, err := amgr.HostToNetAddress(host, eport, services)
-			if err != nil {
-				amgr.Log.Warnf("Not adding %s as externalip: %v", sip, err)
-				continue
-			}
-
-			// Found a valid external IP, make sure we use these details
-			// so peers get the correct IP information. Since we can only
-			// advertise one IP, use the first seen.
-			if addrMe == nil {
-				addrMe = na
-			}
-
-			err = amgr.AddLocalAddress(na, addrmgr.ManualPrio)
-			if err != nil {
-				amgr.Log.Warnf("Skipping specified external IP: %v", err)
-			}
-		}
-	} else {
-		if p2pCfg.Upnp {
-			var err error
-			nat, err = Discover()
-			if err != nil {
-				amgr.Log.Warnf("Can't discover upnp: %v", err)
-			}
-			// nil nat here is fine, just means no upnp on network.
-
-			// Found a valid external IP, make sure we use these details
-			// so peers get the correct IP information.
-			if nat != nil {
-				addr, err := nat.GetExternalAddress()
-				if err == nil {
-					eport := uint16(defaultPort)
-					na, err := amgr.HostToNetAddress(addr.String(), eport, services)
-					if err == nil {
-						if addrMe == nil {
-							addrMe = na
-						}
-					}
-
-				}
-			}
-		}
-
-		// Add bound addresses to address manager to be advertised to peers.
-		for _, listener := range listeners {
-			addr := listener.Addr().String()
-			err := addLocalAddress(amgr, addr, services, amgr.Log)
-			if err != nil {
-				amgr.Log.Warnf("Skipping bound address %s: %v", addr, err)
-			}
-		}
+			config.ActiveNetParams.DefaultPort, err)
+		return nil, err
 	}
 
-	return listeners, nat, nil
+	return listeners, nil
+}
+
+func prepareListeners() []string {
+	listeners := []string{
+		net.JoinHostPort("", config.ActiveNetParams.DefaultPort),
+	}
+
+	return listeners
 }
 
 // addrStringToNetAddr takes an address in the form of 'host:port' and returns
 // a net.Addr which maps to the original address with any host names resolved
 // to IP addresses.  It also handles tor addresses properly by returning a
 // net.Addr that encapsulates the address.
-func addrStringToNetAddr(addr string, p2pCfg *p2pconfig.Config) (net.Addr, error) {
+func addrStringToNetAddr(addr string, p2pCfg *config.P2PConfig) (net.Addr, error) {
 	host, strPort, err := net.SplitHostPort(addr)
 	if err != nil {
 		return nil, err
@@ -1614,11 +1507,7 @@ func addrStringToNetAddr(addr string, p2pCfg *p2pconfig.Config) (net.Addr, error
 	// Tor addresses cannot be resolved to an IP, so just return an onion
 	// address instead.
 	if strings.HasSuffix(host, ".onion") {
-		if p2pCfg.NoOnion {
-			return nil, errors.New("tor has been disabled")
-		}
-
-		return &onionAddr{addr: addr}, nil
+		return nil, errors.New("tor option is not allowed")
 	}
 
 	// Attempt to look up an IP address associated with the parsed host.
@@ -1634,58 +1523,6 @@ func addrStringToNetAddr(addr string, p2pCfg *p2pconfig.Config) (net.Addr, error
 		IP:   ips[0],
 		Port: port,
 	}, nil
-}
-
-// addLocalAddress adds an address that this node is listening on to the
-// address manager so that it may be relayed to peers.
-func addLocalAddress(addrMgr *addrmgr.AddrManager, addr string, services wire.ServiceFlag, log logging.Logger) error {
-	host, portStr, err := net.SplitHostPort(addr)
-	if err != nil {
-		return err
-	}
-	port, err := strconv.ParseUint(portStr, 10, 16)
-	if err != nil {
-		return err
-	}
-
-	if ip := net.ParseIP(host); ip != nil && ip.IsUnspecified() {
-		// If bound to unspecified address, advertise all local interfaces
-		addrs, err := net.InterfaceAddrs()
-		if err != nil {
-			return err
-		}
-
-		for _, addr := range addrs {
-			ifaceIP, _, err := net.ParseCIDR(addr.String())
-			if err != nil {
-				continue
-			}
-
-			// If bound to 0.0.0.0, do not add IPv6 interfaces and if bound to
-			// ::, do not add IPv4 interfaces.
-			if (ip.To4() == nil) != (ifaceIP.To4() == nil) {
-				continue
-			}
-
-			netAddr := wire.NewNetAddressIPPort(ifaceIP, uint16(port), services)
-			err = addrMgr.AddLocalAddress(netAddr, addrmgr.BoundPrio)
-			if err != nil {
-				log.Info(err)
-			}
-		}
-	} else {
-		netAddr, err := addrMgr.HostToNetAddress(host, uint16(port), services)
-		if err != nil {
-			return err
-		}
-
-		err = addrMgr.AddLocalAddress(netAddr, addrmgr.BoundPrio)
-		if err != nil {
-			log.Info(err)
-		}
-	}
-
-	return nil
 }
 
 // dynamicTickDuration is a convenience function used to dynamically choose a
@@ -1716,7 +1553,7 @@ func dynamicTickDuration(remaining time.Duration) time.Duration {
 // notified with the server once it is setup so it can gracefully stop it when
 // requested from the service control manager.
 func RunServer(serverChan chan<- *server, services *service.Services,
-	peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *p2pconfig.Config, lf logging.LoggerFactory) error {
+	peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *config.P2PConfig, lf logging.LoggerFactory) error {
 	// Get a channel that will be closed when a shutdown signal has been
 	// triggered either from an OS signal such as SIGINT (Ctrl+C) or from
 	// another subsystem
@@ -1743,12 +1580,11 @@ func RunServer(serverChan chan<- *server, services *service.Services,
 }
 
 // Create and start server, return error if server was not created correctly.
-func createAndStartServer(serverChan chan<- *server, services *service.Services, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *p2pconfig.Config, lf logging.LoggerFactory) (*server, error) {
-	server, err := newServer(p2pCfg.Listeners, p2pconfig.ActiveNetParams.Params, services, peers, p2pCfg, lf)
+func createAndStartServer(serverChan chan<- *server, services *service.Services, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *config.P2PConfig, lf logging.LoggerFactory) (*server, error) {
+	server, err := newServer(config.ActiveNetParams.Params, services, peers, p2pCfg, lf)
 	if err != nil {
 		log := lf.NewLogger("server")
-		log.Errorf("Unable to start server on %v: %v",
-			p2pCfg.Listeners, err)
+		log.Errorf("Unable to start server: %v", err)
 		return nil, err
 	}
 	err = server.Start()
@@ -1763,12 +1599,11 @@ func createAndStartServer(serverChan chan<- *server, services *service.Services,
 }
 
 // NewServer creates and return p2p server.
-func NewServer(services *service.Services, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *p2pconfig.Config, lf logging.LoggerFactory) (*server, error) {
+func NewServer(services *service.Services, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *config.P2PConfig, lf logging.LoggerFactory) (*server, error) {
 	log := lf.NewLogger("server")
-	server, err := newServer(p2pCfg.Listeners, p2pconfig.ActiveNetParams.Params, services, peers, p2pCfg, lf)
+	server, err := newServer(config.ActiveNetParams.Params, services, peers, p2pCfg, lf)
 	if err != nil {
-		log.Errorf("Unable to start server on %v: %v",
-			p2pCfg.Listeners, err)
+		log.Errorf("Unable to start server: %v", err)
 		return nil, err
 	}
 	return server, nil

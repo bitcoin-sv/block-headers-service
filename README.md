@@ -84,6 +84,58 @@ Database schema below:
 <!-- GETTING STARTED -->
 ## Getting Started
 
+### Config Variables
+
+Default config variables can be overridden by (in this order of importance):
+
+1. Flags (only the ones below)
+2. ENV variables
+3. Config file
+
+#### Flags
+
+Available flags:
+
+```bash
+  -C, --config_file string                       custom config file path
+  -h, --help                                     show help
+  -v, --version                                  show version
+  -d, --dump_config                              dump config to file, specified by config_file (-C) flag
+  -e, --export_headers                           export headers to file
+```
+
+To generate config file with defaults, use the --dump flag, or:
+
+```bash
+go run ./cmd/main.go -d
+```
+
+The default config file path is **project root**, and the default file name is **config.yaml**. This can be overridden by -C flag.
+
+```bash
+go run ./cmd/main.go -C /my/config.yaml
+```
+
+#### Environment variables
+
+To override any config variable with ENV, use the "pulse\_" prefix with mapstructure annotation path with "_" as a delimiter in all uppercase. Example:
+
+Let's take this fragment of AppConfig from `config.example.yaml`:
+
+```yaml
+websocket:
+  # Maximum number of history items
+  history_max: 300
+  # History time-to-live
+  history_ttl: 10
+```
+
+To override admin_key in auth config, use the path with "_" as a path delimiter and pulse\_ as prefix. So:
+
+```bash
+PULSE_HISTORY_MAX=300
+```
+
 ### Installation
 1. Install Go according to the installation instructions here: http://golang.org/doc/install
 2. Clone the repo

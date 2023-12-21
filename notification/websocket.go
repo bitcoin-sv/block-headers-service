@@ -22,7 +22,7 @@ type wsChan struct {
 }
 
 // NewWebsocketChannel create Channel implementation communicating via websocket.
-func NewWebsocketChannel(lf logging.LoggerFactory, publisher WebsocketPublisher, cfg *config.Websocket) Channel {
+func NewWebsocketChannel(lf logging.LoggerFactory, publisher WebsocketPublisher, cfg *config.WebsocketConfig) Channel {
 	return &wsChan{
 		publisher:      publisher,
 		log:            lf.NewLogger("ws-channel"),

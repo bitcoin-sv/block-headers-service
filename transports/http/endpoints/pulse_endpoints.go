@@ -22,10 +22,10 @@ import (
 // SetupPulseRoutes main point where we're registering endpoints registrars (handlers that will register endpoints in gin engine)
 //
 //	and middlewares. It's returning function that can be used to setup engine of httpserver.HttpServer
-func SetupPulseRoutes(s *service.Services, cfg *config.HTTP) httpserver.GinEngineOpt {
+func SetupPulseRoutes(s *service.Services, cfg *config.HTTPConfig) httpserver.GinEngineOpt {
 	routes := []interface{}{
 		status.NewHandler(s),
-		swagger.NewHandler(s),
+		swagger.NewHandler(s, "/api/v1"),
 		access.NewHandler(s),
 		headers.NewHandler(s),
 		network.NewHandler(s),
@@ -38,14 +38,14 @@ func SetupPulseRoutes(s *service.Services, cfg *config.HTTP) httpserver.GinEngin
 
 	return func(engine *gin.Engine) {
 		rootRouter := engine.Group("")
-		prefix := cfg.UrlRefix
+		prefix := "/api/v1"
 		apiRouter := engine.Group(prefix, apiMiddlewares...)
 		for _, r := range routes {
 			switch r := r.(type) {
 			case router.RootEndpoints:
 				r.RegisterEndpoints(rootRouter)
 			case router.ApiEndpoints:
-				r.RegisterApiEndpoints(apiRouter)
+				r.RegisterApiEndpoints(apiRouter, cfg)
 			default:
 				panic(errors.New("unexpected router endpoints registrar"))
 			}

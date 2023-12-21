@@ -69,7 +69,7 @@ type Dept struct {
 	Params        *chaincfg.Params
 	AdminToken    string
 	LoggerFactory logging.LoggerFactory
-	Config        *config.Config
+	Config        *config.AppConfig
 }
 
 // NewServices creates and returns Services instance.
@@ -78,7 +78,7 @@ func NewServices(d Dept) *Services {
 
 	return &Services{
 		Network:  NewNetworkService(d.Peers),
-		Headers:  NewHeaderService(d.Repositories, d.Config.P2P, d.Config.Merkleroot, d.LoggerFactory),
+		Headers:  NewHeaderService(d.Repositories, d.Config.P2P, d.Config.MerkleRoot, d.LoggerFactory),
 		Notifier: notifier,
 		Chains:   newChainService(d, notifier),
 		Tokens:   NewTokenService(d.Repositories, d.AdminToken),

@@ -19,11 +19,11 @@ const (
 // TokenMiddleware middleware that is retrieving token from Authorization header.
 type TokenMiddleware struct {
 	tokens service.Tokens
-	cfg    *config.HTTP
+	cfg    *config.HTTPConfig
 }
 
 // NewMiddleware create Token middleware that is retrieving token from Authorization header.
-func NewMiddleware(s *service.Services, cfg *config.HTTP) *TokenMiddleware {
+func NewMiddleware(s *service.Services, cfg *config.HTTPConfig) *TokenMiddleware {
 	return &TokenMiddleware{
 		tokens: s.Tokens,
 		cfg:    cfg,

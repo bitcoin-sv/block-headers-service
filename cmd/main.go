@@ -15,15 +15,15 @@ import (
 
 	"github.com/bitcoin-sv/pulse/cli"
 	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/pulse/config/limits"
 	"github.com/bitcoin-sv/pulse/database"
+	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/notification"
 	"github.com/bitcoin-sv/pulse/transports/http/endpoints"
 	"github.com/bitcoin-sv/pulse/transports/websocket"
 
 	"github.com/bitcoin-sv/pulse/app/logger"
 
-	"github.com/bitcoin-sv/pulse/config/p2pconfig"
-	"github.com/bitcoin-sv/pulse/config/p2pconfig/limits"
 	"github.com/bitcoin-sv/pulse/database/sql"
 	"github.com/bitcoin-sv/pulse/internal/wire"
 	"github.com/bitcoin-sv/pulse/repository"
@@ -39,12 +39,19 @@ import (
 // @in header
 // @name Authorization
 func main() {
-	lf := logger.DefaultLoggerFactory()
-	log := lf.NewLogger("main")
+	lf, log := createLogger()
 
-	cfg, cliFlags := config.Init(lf)
+	defaultConfig := config.GetDefaultAppConfig(lf)
+	if err := cli.LoadFlags(defaultConfig); err != nil {
+		log.Errorf("cannot load flags because of error: %v", err)
+		os.Exit(1)
+	}
 
-	cli.ParseCliFlags(cliFlags, cfg)
+	cfg, err := config.Load(lf, defaultConfig)
+	if err != nil {
+		log.Errorf("cannot load config because of error: %v", err)
+		os.Exit(1)
+	}
 
 	db, err := database.Init(cfg, log)
 	if err != nil {
@@ -71,7 +78,7 @@ func main() {
 	logger.SetLevelFromString(log, cfg.P2P.LogLevel)
 
 	// Do required one-time initialization on wire
-	wire.SetLimits(cfg.P2P.ExcessiveBlockSize)
+	wire.SetLimits(config.ExcessiveBlockSize)
 
 	// Show version at startup.
 	log.Infof("Version %s", version.String())
@@ -82,7 +89,7 @@ func main() {
 	hs := service.NewServices(service.Dept{
 		Repositories:  repo,
 		Peers:         peers,
-		Params:        p2pconfig.ActiveNetParams.Params,
+		Params:        config.ActiveNetParams.Params,
 		AdminToken:    cfg.HTTP.AuthToken,
 		LoggerFactory: lf,
 		Config:        cfg,
@@ -141,4 +148,10 @@ func main() {
 	if err := server.Shutdown(); err != nil {
 		log.Errorf("failed to stop http server: %v", err)
 	}
+}
+
+func createLogger() (logging.LoggerFactory, logging.Logger) {
+	lf := logger.DefaultLoggerFactory()
+	log := lf.NewLogger("main")
+	return lf, log
 }

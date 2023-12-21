@@ -9,10 +9,10 @@ import (
 
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/internal/tests/assert"
+	testlog "github.com/bitcoin-sv/pulse/internal/tests/log"
 	"github.com/bitcoin-sv/pulse/internal/tests/testpulse"
 
 	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/spf13/viper"
 )
 
 const EmptyToken = ""
@@ -32,28 +32,16 @@ func TestAccessEndpointWithoutAuthHeader(t *testing.T) {
 	}
 }
 
-// Tests the GET /access endpoint with wrong header.
-func TestAccessEndpointWithWrongAuthHeader(t *testing.T) {
-	//setup
-	pulse, cleanup := testpulse.NewTestPulse(t)
-	defer cleanup()
-
-	//when
-	res := pulse.Api().Call(getTokenInfo("wrong_token"))
-
-	if res.Code != http.StatusUnauthorized {
-		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusUnauthorized, res.Code)
-	}
-}
-
-// Tests the GET /access endpoint with global auth token.
+// Tests the GET /access endpoint with global auth header.
 func TestAccessEndpointWithGlobalAuthHeader(t *testing.T) {
 	//setup
+	lf := testlog.NewTestLoggerFactory()
+	cfg := config.GetDefaultAppConfig(lf)
 	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
 	//given
-	authToken := viper.GetString(config.EnvHttpServerAuthToken)
+	authToken := cfg.HTTP.AuthToken
 
 	//when
 	res := pulse.Api().Call(getTokenInfo(authToken))
@@ -68,17 +56,30 @@ func TestAccessEndpointWithGlobalAuthHeader(t *testing.T) {
 	}
 }
 
-// Tests the POST /access endpoint with created auth token.
-func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
+// Tests the GET /access endpoint with wrong header.
+func TestAccessEndpointWithWrongAuthHeader(t *testing.T) {
 	//setup
 	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
-	//given
-	authToken := viper.GetString(config.EnvHttpServerAuthToken)
+	//when
+	res := pulse.Api().Call(getTokenInfo("wrong_token"))
+
+	if res.Code != http.StatusUnauthorized {
+		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusUnauthorized, res.Code)
+	}
+}
+
+// Tests the POST /access endpoint with created auth token.
+func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
+	//setup
+	lf := testlog.NewTestLoggerFactory()
+	cfg := config.GetDefaultAppConfig(lf)
+	pulse, cleanup := testpulse.NewTestPulse(t)
+	defer cleanup()
 
 	//when
-	res := pulse.Api().Call(createToken(authToken))
+	res := pulse.Api().Call(createToken(cfg.HTTP.AuthToken))
 
 	//then
 	if res.Code != http.StatusOK {
@@ -113,14 +114,13 @@ func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 // Tests the DELETE method for the /access endpoint for created auth token.
 func TestDeleteTokenEndpoint(t *testing.T) {
 	//setup
+	lf := testlog.NewTestLoggerFactory()
+	cfg := config.GetDefaultAppConfig(lf)
 	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
-	//given
-	authToken := viper.GetString(config.EnvHttpServerAuthToken)
-
 	//when
-	res := pulse.Api().Call(createToken(authToken))
+	res := pulse.Api().Call(createToken(cfg.HTTP.AuthToken))
 
 	//then
 	if res.Code != http.StatusOK {
@@ -135,7 +135,7 @@ func TestDeleteTokenEndpoint(t *testing.T) {
 	}
 
 	//when
-	res = pulse.Api().Call(deleteToken(authToken, body.Token))
+	res = pulse.Api().Call(deleteToken(cfg.HTTP.AuthToken, body.Token))
 
 	if res.Code != http.StatusOK {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusOK, res.Code)

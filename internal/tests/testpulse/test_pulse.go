@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/config/p2pconfig"
 	"github.com/bitcoin-sv/pulse/domains/logging"
 	testlog "github.com/bitcoin-sv/pulse/internal/tests/log"
 	"github.com/bitcoin-sv/pulse/internal/tests/testrepository"
@@ -28,7 +27,7 @@ type pulseOpt interface{}
 type ServicesOpt func(*service.Services)
 
 // ConfigOpt represents functions to configure test config.
-type ConfigOpt func(*config.Config)
+type ConfigOpt func(*config.AppConfig)
 
 // RepoOpt represents functions to configure test repositories.
 type RepoOpt func(*testrepository.TestRepositories)
@@ -40,7 +39,7 @@ type Cleanup func()
 type TestPulse struct {
 	t            *testing.T
 	lf           logging.LoggerFactory
-	config       *config.Config
+	config       *config.AppConfig
 	services     *service.Services
 	repositories *repository.Repositories
 	ws           websocket.Server
@@ -71,7 +70,8 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 
 	viper.Reset()
 	lf := testlog.NewTestLoggerFactory()
-	cfg, _ := config.Init(lf)
+	defaultConfig := config.GetDefaultAppConfig(lf)
+	cfg, _ := config.Load(lf, defaultConfig)
 
 	for _, opt := range ops {
 		switch opt := opt.(type) {
@@ -92,7 +92,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	hs := service.NewServices(service.Dept{
 		Repositories:  repo.ToDomainRepo(),
 		Peers:         nil,
-		Params:        p2pconfig.ActiveNetParams.Params,
+		Params:        config.ActiveNetParams.Params,
 		AdminToken:    cfg.HTTP.AuthToken,
 		LoggerFactory: lf,
 		Config:        cfg,
@@ -106,7 +106,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	}
 
 	port := cfg.HTTP.Port
-	urlPrefix := cfg.HTTP.UrlRefix
+	urlPrefix := "/api/v1"
 	gin.SetMode(gin.TestMode)
 	server := httpserver.NewHttpServer(cfg.HTTP, lf)
 	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs, cfg.HTTP))

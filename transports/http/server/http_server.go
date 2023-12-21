@@ -23,7 +23,7 @@ type HttpServer struct {
 }
 
 // NewHttpServer creates and returns HttpServer instance.
-func NewHttpServer(cfg *config.HTTP, lf logging.LoggerFactory) *HttpServer {
+func NewHttpServer(cfg *config.HTTPConfig, lf logging.LoggerFactory) *HttpServer {
 	handler := gin.Default()
 
 	return &HttpServer{

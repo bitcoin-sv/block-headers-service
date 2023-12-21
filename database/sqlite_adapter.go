@@ -17,7 +17,7 @@ import (
 
 type SQLiteAdapter struct{}
 
-func (a *SQLiteAdapter) Connect(cfg *config.Db) (*sqlx.DB, error) {
+func (a *SQLiteAdapter) Connect(cfg *config.DbConfig) (*sqlx.DB, error) {
 	db, err := sqlx.Open("sqlite3", cfg.Dsn)
 	if err != nil {
 		return nil, err
@@ -26,7 +26,7 @@ func (a *SQLiteAdapter) Connect(cfg *config.Db) (*sqlx.DB, error) {
 	return db, nil
 }
 
-func (a *SQLiteAdapter) DoMigrations(db *sqlx.DB, cfg *config.Db) error {
+func (a *SQLiteAdapter) DoMigrations(db *sqlx.DB, cfg *config.DbConfig) error {
 	driver, err := sqlite3.WithInstance(db.DB, &sqlite3.Config{})
 	if err != nil {
 		return err

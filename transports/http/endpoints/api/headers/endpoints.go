@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/service"
 	router "github.com/bitcoin-sv/pulse/transports/http/endpoints/routes"
 )
@@ -20,7 +21,7 @@ func NewHandler(s *service.Services) router.ApiEndpoints {
 }
 
 // RegisterApiEndpoints registers routes that are part of service API.
-func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup) {
+func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup, cfg *config.HTTPConfig) {
 	headers := router.Group("/chain/header")
 	{
 		headers.GET("/:hash", h.getHeaderByHash)

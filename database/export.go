@@ -29,7 +29,7 @@ const (
 	`
 )
 
-func ExportHeaders(cfg *config.Config, log logging.Logger) error {
+func ExportHeaders(cfg *config.AppConfig, log logging.Logger) error {
 	log.Infof("Exporting headers from database to file %s", cfg.Db.PreparedDbFilePath)
 
 	tmpHeadersFileName := "headers.csv"

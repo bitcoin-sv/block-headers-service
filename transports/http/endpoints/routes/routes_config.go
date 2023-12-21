@@ -1,6 +1,9 @@
 package router
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/bitcoin-sv/pulse/config"
+	"github.com/gin-gonic/gin"
+)
 
 // RootEndpointsFunc wrapping type for function to mark it as implementation of RootEndpoints.
 type RootEndpointsFunc func(router *gin.RouterGroup)
@@ -17,7 +20,7 @@ type ApiEndpointsFunc func(router *gin.RouterGroup)
 // ApiEndpoints registrar which will register routes in API routes group.
 type ApiEndpoints interface {
 	// RegisterApiEndpoints register API endpoints.
-	RegisterApiEndpoints(router *gin.RouterGroup)
+	RegisterApiEndpoints(router *gin.RouterGroup, cfg *config.HTTPConfig)
 }
 
 // RegisterEndpoints register root endpoints by registrar RootEndpointsFunc.
