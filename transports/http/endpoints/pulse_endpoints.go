@@ -25,7 +25,7 @@ import (
 func SetupPulseRoutes(s *service.Services, cfg *config.HTTPConfig) httpserver.GinEngineOpt {
 	routes := []interface{}{
 		status.NewHandler(s),
-		swagger.NewHandler(s, cfg.UrlPrefix),
+		swagger.NewHandler(s, "/api/v1"),
 		access.NewHandler(s),
 		headers.NewHandler(s),
 		network.NewHandler(s),
@@ -38,7 +38,7 @@ func SetupPulseRoutes(s *service.Services, cfg *config.HTTPConfig) httpserver.Gi
 
 	return func(engine *gin.Engine) {
 		rootRouter := engine.Group("")
-		prefix := cfg.UrlPrefix
+		prefix := "/api/v1"
 		apiRouter := engine.Group(prefix, apiMiddlewares...)
 		for _, r := range routes {
 			switch r := r.(type) {

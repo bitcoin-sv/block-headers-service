@@ -106,7 +106,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	}
 
 	port := cfg.HTTP.Port
-	urlPrefix := cfg.HTTP.UrlPrefix
+	urlPrefix := "/api/v1"
 	gin.SetMode(gin.TestMode)
 	server := httpserver.NewHttpServer(cfg.HTTP, lf)
 	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs, cfg.HTTP))

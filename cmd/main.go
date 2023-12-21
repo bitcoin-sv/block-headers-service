@@ -78,7 +78,7 @@ func main() {
 	logger.SetLevelFromString(log, cfg.P2P.LogLevel)
 
 	// Do required one-time initialization on wire
-	wire.SetLimits(cfg.P2P.ExcessiveBlockSize)
+	wire.SetLimits(config.ExcessiveBlockSize)
 
 	// Show version at startup.
 	log.Infof("Version %s", version.String())

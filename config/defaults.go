@@ -37,7 +37,6 @@ func getHttpConfigDefaults() *HTTPConfig {
 		ReadTimeout:  10,
 		WriteTimeout: 10,
 		Port:         8080,
-		UrlPrefix:    "/api/v1",
 		UseAuth:      true,
 		AuthToken:    "mQZQ6WmxURxWz5ch",
 	}
@@ -65,12 +64,7 @@ func getWebhookDefaults() *WebhookConfig {
 func getP2PDefaults(lf logging.LoggerFactory) *P2PConfig {
 	return &P2PConfig{
 		LogLevel:                  "info",
-		MaxPeers:                  125,
-		MaxPeersPerIP:             5,
 		BanDuration:               time.Hour * 24,
-		MinSyncPeerNetworkSpeed:   51200,
-		ExcessiveBlockSize:        128000000,
-		TrickleInterval:           50 * time.Millisecond,
 		BlocksForForkConfirmation: 10,
 		DefaultConnectTimeout:     30 * time.Second,
 		DisableCheckpoints:        false,

@@ -583,18 +583,18 @@ func (s *server) handleAddPeerMsg(state *peerState, sp *serverPeer) bool {
 	}
 
 	// Limit max number of total peers per ip.
-	if state.CountIP(host) >= s.p2pConfig.MaxPeersPerIP {
+	if state.CountIP(host) >= config.MaxPeersPerIP {
 		sp.log.Infof("Max peers per IP reached [%d] - disconnecting peer %s",
-			s.p2pConfig.MaxPeersPerIP, sp)
+			config.MaxPeersPerIP, sp)
 		sp.Disconnect()
 
 		return false
 	}
 
 	// Limit max number of total peers.
-	if state.Count() >= s.p2pConfig.MaxPeers {
+	if state.Count() >= config.MaxPeers {
 		sp.log.Infof("Max peers reached [%d] - disconnecting peer %s",
-			s.p2pConfig.MaxPeers, sp)
+			config.MaxPeers, sp)
 		sp.Disconnect()
 		// TODO: how to handle permanent peers here?
 		// they should be rescheduled.
@@ -761,7 +761,7 @@ func (s *server) handleQuery(state *peerState, querymsg interface{}) {
 		// TODO: duplicate oneshots?
 		// Limit max number of total peers.
 		fmt.Print("[Server] connectNodeMsg")
-		if state.Count() >= s.p2pConfig.MaxPeers {
+		if state.Count() >= config.MaxPeers {
 			msg.reply <- errors.New("max peers reached")
 			return
 		}
@@ -890,11 +890,11 @@ func newPeerConfig(sp *serverPeer) *peer.Config {
 		HostToNetAddress:  sp.server.addrManager.HostToNetAddress,
 		UserAgentName:     userAgentName,
 		UserAgentVersion:  userAgentVersion,
-		UserAgentComments: initUserAgentComments(sp.server.p2pConfig.ExcessiveBlockSize),
+		UserAgentComments: initUserAgentComments(config.ExcessiveBlockSize),
 		ChainParams:       sp.server.chainParams,
 		Services:          sp.server.wireServices,
 		ProtocolVersion:   uint32(70013),
-		TrickleInterval:   sp.server.p2pConfig.TrickleInterval,
+		TrickleInterval:   config.TrickleLinterval,
 	}
 }
 
@@ -1343,12 +1343,12 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 		startupTime:          time.Now().Unix(),
 		chainParams:          chainParams,
 		addrManager:          amgr,
-		newPeers:             make(chan *serverPeer, p2pCfg.MaxPeers),
-		donePeers:            make(chan *serverPeer, p2pCfg.MaxPeers),
-		banPeers:             make(chan *peer.Peer, p2pCfg.MaxPeers),
+		newPeers:             make(chan *serverPeer, config.MaxPeers),
+		donePeers:            make(chan *serverPeer, config.MaxPeers),
+		banPeers:             make(chan *peer.Peer, config.MaxPeers),
 		query:                make(chan interface{}),
-		relayInv:             make(chan relayMsg, p2pCfg.MaxPeers),
-		broadcast:            make(chan broadcastMsg, p2pCfg.MaxPeers),
+		relayInv:             make(chan relayMsg, config.MaxPeers),
+		broadcast:            make(chan broadcastMsg, config.MaxPeers),
 		quit:                 make(chan struct{}),
 		modifyRebroadcastInv: make(chan interface{}),
 		peerHeightsUpdate:    make(chan updatePeerHeightsMsg),
@@ -1367,8 +1367,8 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 		PeerNotifier:              &s,
 		ChainParams:               s.chainParams,
 		DisableCheckpoints:        p2pCfg.DisableCheckpoints,
-		MaxPeers:                  p2pCfg.MaxPeers,
-		MinSyncPeerNetworkSpeed:   p2pCfg.MinSyncPeerNetworkSpeed,
+		MaxPeers:                  config.MaxPeers,
+		MinSyncPeerNetworkSpeed:   config.MinSyncPeerNetworkSpeed,
 		BlocksForForkConfirmation: p2pCfg.BlocksForForkConfirmation,
 		LoggerFactory:             lf,
 		Services:                  services,

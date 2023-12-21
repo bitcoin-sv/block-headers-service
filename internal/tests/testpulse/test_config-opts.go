@@ -5,8 +5,8 @@ import (
 	"github.com/bitcoin-sv/pulse/internal/tests/testrepository"
 )
 
-// WithApiAuthorization allows to not use authorization in Pulse.
-func WithoutApiAuthorization() ConfigOpt {
+// WithApiAuthorizationDisabled allows to not use authorization in Pulse.
+func WithApiAuthorizationDisabled() ConfigOpt {
 	return func(c *config.AppConfig) {
 		c.WithoutAuthorization()
 	}

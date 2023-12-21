@@ -52,7 +52,7 @@ func TestGetHeaderByHash(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
+		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -76,7 +76,7 @@ func TestGetHeaderByHash(t *testing.T) {
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
+		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -120,7 +120,7 @@ func TestGetHeaderByHeight(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
+		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -144,7 +144,7 @@ func TestGetHeaderByHeight(t *testing.T) {
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
+		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -188,7 +188,7 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
+		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -212,7 +212,7 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
+		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -256,7 +256,7 @@ func TestGetCommonAncestor(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
+		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
 		defer cleanup()
 		genesis := domains.CreateGenesisHeaderBlock()
 		expected_response := headers.BlockHeaderResponse{
@@ -291,7 +291,7 @@ func TestGetCommonAncestor(t *testing.T) {
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
+		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -335,7 +335,7 @@ func TestGetHeadersState(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
+		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_response := headers.BlockHeaderStateResponse{
 			Header:    expected_obj,
@@ -365,7 +365,7 @@ func TestGetHeadersState(t *testing.T) {
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithoutApiAuthorization())
+		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
