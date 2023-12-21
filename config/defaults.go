@@ -12,12 +12,12 @@ const DBSqlite DbType = "sqlite"
 
 func GetDefaultAppConfig(lf logging.LoggerFactory) *AppConfig {
 	return &AppConfig{
-		DbConfig:         getDbDefaults(),
-		HTTPConfig:       getAuthConfigDefaults(),
-		MerkleRootConfig: getMerkleRootDefaults(),
-		WebsocketConfig:  getWebsocketDefaults(),
-		WebhookConfig:    getWebhookDefaults(),
-		P2PConfig:        getP2PDefaults(lf),
+		Db:         getDbDefaults(),
+		HTTP:       getAuthConfigDefaults(),
+		MerkleRoot: getMerkleRootDefaults(),
+		Websocket:  getWebsocketDefaults(),
+		Webhook:    getWebhookDefaults(),
+		P2P:        getP2PDefaults(lf),
 	}
 }
 

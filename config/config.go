@@ -21,12 +21,12 @@ type DbType string
 
 // AppConfig returns strongly typed config values.
 type AppConfig struct {
-	DbConfig         *DbConfig         `mapstructure:"db"`
-	P2PConfig        *P2PConfig        `mapstructure:"p2p"`
-	MerkleRootConfig *MerkleRootConfig `mapstructure:"merkleroot"`
-	WebhookConfig    *WebhookConfig    `mapstructure:"webhook"`
-	WebsocketConfig  *WebsocketConfig  `mapstructure:"websocket"`
-	HTTPConfig       *HTTPConfig       `mapstructure:"http"`
+	Db         *DbConfig         `mapstructure:"db"`
+	P2P        *P2PConfig        `mapstructure:"p2p"`
+	MerkleRoot *MerkleRootConfig `mapstructure:"merkleroot"`
+	Webhook    *WebhookConfig    `mapstructure:"webhook"`
+	Websocket  *WebsocketConfig  `mapstructure:"websocket"`
+	HTTP       *HTTPConfig       `mapstructure:"http"`
 }
 
 // DbConfig represents a database connection.
@@ -84,6 +84,6 @@ type P2PConfig struct {
 }
 
 func (c *AppConfig) WithoutAuthorization() *AppConfig {
-	c.HTTPConfig.UseAuth = false
+	c.HTTP.UseAuth = false
 	return c
 }

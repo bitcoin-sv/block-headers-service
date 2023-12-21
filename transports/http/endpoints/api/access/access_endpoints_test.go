@@ -55,7 +55,7 @@ func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 	defer cleanup()
 
 	//when
-	res := pulse.Api().Call(createToken(cfg.HTTPConfig.AuthToken))
+	res := pulse.Api().Call(createToken(cfg.HTTP.AuthToken))
 
 	//then
 	if res.Code != http.StatusOK {
@@ -96,7 +96,7 @@ func TestDeleteTokenEndpoint(t *testing.T) {
 	defer cleanup()
 
 	//when
-	res := pulse.Api().Call(createToken(cfg.HTTPConfig.AuthToken))
+	res := pulse.Api().Call(createToken(cfg.HTTP.AuthToken))
 
 	//then
 	if res.Code != http.StatusOK {
@@ -111,7 +111,7 @@ func TestDeleteTokenEndpoint(t *testing.T) {
 	}
 
 	//when
-	res = pulse.Api().Call(deleteToken(cfg.HTTPConfig.AuthToken, body.Token))
+	res = pulse.Api().Call(deleteToken(cfg.HTTP.AuthToken, body.Token))
 
 	if res.Code != http.StatusOK {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusOK, res.Code)

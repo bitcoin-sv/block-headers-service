@@ -93,7 +93,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 		Repositories:  repo.ToDomainRepo(),
 		Peers:         nil,
 		Params:        config.ActiveNetParams.Params,
-		AdminToken:    cfg.HTTPConfig.AuthToken,
+		AdminToken:    cfg.HTTP.AuthToken,
 		LoggerFactory: lf,
 		Config:        cfg,
 	})
@@ -105,21 +105,21 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 		}
 	}
 
-	port := cfg.HTTPConfig.Port
-	urlPrefix := cfg.HTTPConfig.UrlPrefix
+	port := cfg.HTTP.Port
+	urlPrefix := cfg.HTTP.UrlPrefix
 	gin.SetMode(gin.TestMode)
-	server := httpserver.NewHttpServer(cfg.HTTPConfig, lf)
-	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs, cfg.HTTPConfig))
+	server := httpserver.NewHttpServer(cfg.HTTP, lf)
+	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs, cfg.HTTP))
 	engine := hijackEngine(server)
 
-	ws, err := websocket.NewServer(lf, hs, cfg.HTTPConfig.UseAuth)
+	ws, err := websocket.NewServer(lf, hs, cfg.HTTP.UseAuth)
 	if err != nil {
 		t.Fatalf("failed to init a new websocket server: %v\n", err)
 	}
 	server.ApplyConfiguration(ws.SetupEntrypoint)
 
 	hs.Notifier.AddChannel(hs.Webhooks)
-	hs.Notifier.AddChannel(notification.NewWebsocketChannel(lf, ws.Publisher(), cfg.WebsocketConfig))
+	hs.Notifier.AddChannel(notification.NewWebsocketChannel(lf, ws.Publisher(), cfg.Websocket))
 
 	if err := ws.Start(); err != nil {
 		panic(fmt.Sprintf("cannot start websocket server because of an error: %v", err))

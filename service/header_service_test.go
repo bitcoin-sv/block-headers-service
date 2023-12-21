@@ -355,13 +355,13 @@ func setUpServices() *testData {
 		Headers: testrepository.NewHeadersTestRepository(&array),
 	}
 
-	p2pcfg := config.GetDefaultAppConfig(lf).P2PConfig
+	p2pcfg := config.GetDefaultAppConfig(lf).P2P
 	mrconfig := config.MerkleRootConfig{
 		MaxBlockHeightExcess: 6,
 	}
 	cfg := config.AppConfig{
-		P2PConfig:        p2pcfg,
-		MerkleRootConfig: &mrconfig,
+		P2P:        p2pcfg,
+		MerkleRoot: &mrconfig,
 	}
 	hs := NewServices(Dept{
 		Repositories:  repo,

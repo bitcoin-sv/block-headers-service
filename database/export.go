@@ -30,12 +30,12 @@ const (
 )
 
 func ExportHeaders(cfg *config.AppConfig, log logging.Logger) error {
-	log.Infof("Exporting headers from database to file %s", cfg.DbConfig.PreparedDbFilePath)
+	log.Infof("Exporting headers from database to file %s", cfg.Db.PreparedDbFilePath)
 
 	tmpHeadersFileName := "headers.csv"
 	tmpHeadersFilePath := filepath.Clean(filepath.Join(os.TempDir(), tmpHeadersFileName))
 
-	db, err := Connect(cfg.DbConfig)
+	db, err := Connect(cfg.Db)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func ExportHeaders(cfg *config.AppConfig, log logging.Logger) error {
 	log.Info("Data exported successfully")
 	log.Info("Compressing exported file")
 
-	compressedFile, err := os.Create(cfg.DbConfig.PreparedDbFilePath)
+	compressedFile, err := os.Create(cfg.Db.PreparedDbFilePath)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func ExportHeaders(cfg *config.AppConfig, log logging.Logger) error {
 		return err
 	}
 
-	log.Infof("File compressed successfully to %s", cfg.DbConfig.PreparedDbFilePath)
+	log.Infof("File compressed successfully to %s", cfg.Db.PreparedDbFilePath)
 
 	return nil
 }

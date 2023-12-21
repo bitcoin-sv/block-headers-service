@@ -18,16 +18,16 @@ type DBAdapter interface {
 }
 
 func Init(cfg *config.AppConfig, log logging.Logger) (*sqlx.DB, error) {
-	db, err := Connect(cfg.DbConfig)
+	db, err := Connect(cfg.Db)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := DoMigrations(db, cfg.DbConfig); err != nil {
+	if err := DoMigrations(db, cfg.Db); err != nil {
 		return nil, err
 	}
 
-	if cfg.DbConfig.PreparedDb {
+	if cfg.Db.PreparedDb {
 		if err := ImportHeaders(db, cfg, log); err != nil {
 			return nil, err
 		}
