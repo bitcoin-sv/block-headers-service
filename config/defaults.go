@@ -13,7 +13,7 @@ const DBSqlite DbType = "sqlite"
 func GetDefaultAppConfig(lf logging.LoggerFactory) *AppConfig {
 	return &AppConfig{
 		Db:         getDbDefaults(),
-		HTTP:       getAuthConfigDefaults(),
+		HTTP:       getHttpConfigDefaults(),
 		MerkleRoot: getMerkleRootDefaults(),
 		Websocket:  getWebsocketDefaults(),
 		Webhook:    getWebhookDefaults(),
@@ -32,7 +32,7 @@ func getDbDefaults() *DbConfig {
 	}
 }
 
-func getAuthConfigDefaults() *HTTPConfig {
+func getHttpConfigDefaults() *HTTPConfig {
 	return &HTTPConfig{
 		ReadTimeout:  10,
 		WriteTimeout: 10,
