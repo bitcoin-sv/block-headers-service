@@ -130,7 +130,7 @@ websocket:
   history_ttl: 10
 ```
 
-To override history_max in auth config, use the path with "_" as a path delimiter and pulse\_ as prefix. So:
+To override history_max in websocket config, use the path with "_" as a path delimiter and pulse\_ as prefix. So:
 
 ```bash
 PULSE_HISTORY_MAX=300
