@@ -40,7 +40,7 @@ func LoadFlags(cfg *config.AppConfig) error {
 		os.Exit(1)
 	}
 
-	parseCliFlags(cli, cfg)
+	parseCliFlags(cli, cfg, pulseFlags)
 
 	return nil
 }
@@ -58,12 +58,12 @@ func initFlags(fs *pflag.FlagSet, cliFlags *cliFlags) {
 	fs.BoolVarP(&cliFlags.dumpConfig, "dump_config", "d", false, "dump config to file, specified by config_file flag")
 }
 
-func parseCliFlags(cli *cliFlags, cfg *config.AppConfig) {
+func parseCliFlags(cli *cliFlags, cfg *config.AppConfig, pulseFlags *pflag.FlagSet) {
 	lf := logger.DefaultLoggerFactory()
 	log := lf.NewLogger("flags")
 
 	if cli.showHelp {
-		pflag.Usage()
+		pulseFlags.PrintDefaults()
 		os.Exit(0)
 	}
 
