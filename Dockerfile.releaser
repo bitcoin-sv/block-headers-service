@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y wget
 
 WORKDIR /app
 
-ENV DB_SCHEMAPATH=./migrations
+ENV DB_SCHEMA_PATH=./migrations
 COPY ./database/migrations $DB_SCHEMAPATH
 COPY ./entrypoint.sh .
 ARG project_name=pulse
