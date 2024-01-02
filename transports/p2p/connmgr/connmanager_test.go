@@ -7,6 +7,7 @@ package connmgr
 import (
 	"errors"
 	"fmt"
+	"github.com/bitcoin-sv/pulse/logging"
 	"github.com/rs/zerolog"
 	"io"
 	"net"
@@ -72,14 +73,16 @@ func mockDialer(addr net.Addr) (net.Conn, error) {
 
 // TestNewConfig tests that new ConnManager config is validated as expected.
 func TestNewConfig(t *testing.T) {
-	log := zerolog.Nop()
-	_, err := New(&Config{})
+	log := logging.GetDefaultLogger()
+	_, err := New(&Config{
+		Logger: log,
+	})
 	if err == nil {
 		t.Fatalf("New expected error: 'Dial can't be nil', got nil")
 	}
 	_, err = New(&Config{
 		Dial:   mockDialer,
-		Logger: &log,
+		Logger: log,
 	})
 	if err != nil {
 		t.Fatalf("New unexpected error: %v", err)

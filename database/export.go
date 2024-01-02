@@ -50,12 +50,12 @@ func ExportHeaders(cfg *config.AppConfig, log *zerolog.Logger) error {
 	// TODO: Consider querying the database for smaller data chunks to avoid potential performance issues
 	rows, err := queryDatabaseTable(db, log)
 	if err != nil {
-		log.Error().Msgf("Error querying database table: %w", err)
+		log.Error().Msgf("Error querying database table: %s", err.Error())
 		return err
 	}
 	defer func(log *zerolog.Logger) {
 		if err := rows.Close(); err != nil {
-			log.Error().Msgf("Error closing rows: %w", err)
+			log.Error().Msgf("Error closing rows: %s", err.Error())
 		}
 	}(log)
 

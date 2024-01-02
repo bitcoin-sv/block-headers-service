@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"github.com/bitcoin-sv/pulse/logging"
 	"testing"
 
 	"github.com/bitcoin-sv/pulse/internal/tests/assert"
@@ -10,7 +11,6 @@ import (
 
 func TestReturningExpectedLoggingLevel(t *testing.T) {
 	//setup
-	//lf := testlog.NewTestLoggerFactory()
 
 	for name, params := range map[string]struct {
 		appLoggingLevel      zerolog.Level
