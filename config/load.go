@@ -2,12 +2,13 @@ package config
 
 import (
 	"fmt"
+	"github.com/bitcoin-sv/pulse/logging"
+	"github.com/rs/zerolog"
 	"strings"
 	"sync"
 
 	"os"
 
-	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 )
@@ -16,34 +17,38 @@ import (
 var viperLock sync.Mutex
 
 // Load creates and returns a new viper config.
-func Load(lf logging.LoggerFactory, cfg *AppConfig) (*AppConfig, error) {
-	logger := lf.NewLogger("config")
-
+func Load(cfg *AppConfig) (*AppConfig, *zerolog.Logger, error) {
 	viperLock.Lock()
 	defer viperLock.Unlock()
 
-	if err := setDefaults(lf); err != nil {
-		return nil, err
+	if err := setDefaults(); err != nil {
+		return nil, nil, err
 	}
 
 	envConfig()
 
-	if err := loadFromFile(logger); err != nil {
-		return nil, err
+	if err := loadFromFile(); err != nil {
+		return nil, nil, err
 	}
 
 	if err := unmarshallToAppConfig(cfg); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return cfg, nil
+	logger, err := logging.CreateLogger(cfg.Logging.InstanceName, cfg.Logging.Format, cfg.Logging.Level, cfg.Logging.LogOrigin)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return cfg, logger, nil
 }
 
-func setDefaults(lf logging.LoggerFactory) error {
+func setDefaults() error {
+	defaultLog := logging.GetDefaultLogger()
 	viper.SetDefault(ConfigFilePathKey, DefaultConfigFilePath)
 
 	defaultsMap := make(map[string]interface{})
-	if err := mapstructure.Decode(GetDefaultAppConfig(lf), &defaultsMap); err != nil {
+	if err := mapstructure.Decode(GetDefaultAppConfig(defaultLog), &defaultsMap); err != nil {
 		return err
 	}
 
@@ -54,13 +59,14 @@ func setDefaults(lf logging.LoggerFactory) error {
 	return nil
 }
 
-func loadFromFile(logger logging.Logger) error {
+func loadFromFile() error {
+	defaultLog := logging.GetDefaultLogger()
 	configFilePath := viper.GetString(ConfigFilePathKey)
 
 	if configFilePath == DefaultConfigFilePath {
 		_, err := os.Stat(DefaultConfigFilePath)
 		if os.IsNotExist(err) {
-			logger.Debug("Config file not specified. Using defaults")
+			defaultLog.Debug().Msg("Config file not specified. Using defaults")
 			return nil
 		}
 		configFilePath = DefaultConfigFilePath
@@ -69,7 +75,7 @@ func loadFromFile(logger logging.Logger) error {
 	viper.SetConfigFile(configFilePath)
 	if err := viper.ReadInConfig(); err != nil {
 		err = fmt.Errorf("config cannot be read from path[%s]: %v", configFilePath, err.Error())
-		logger.Error(err.Error())
+		defaultLog.Error().Msg(err.Error())
 		return err
 	}
 

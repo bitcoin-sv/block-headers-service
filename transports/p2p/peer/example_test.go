@@ -7,12 +7,11 @@ package peer_test
 
 import (
 	"fmt"
+	"github.com/rs/zerolog"
 	"net"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg"
-	testlog "github.com/bitcoin-sv/pulse/internal/tests/log"
 	"github.com/bitcoin-sv/pulse/internal/wire"
 	"github.com/bitcoin-sv/pulse/transports/p2p/peer"
 )
@@ -20,7 +19,7 @@ import (
 // mockRemotePeer creates a basic inbound peer listening on the simnet port for
 // use with Example_peerConnection.  It does not return until the listner is
 // active.
-func mockRemotePeer(lf logging.LoggerFactory) error {
+func mockRemotePeer(log *zerolog.Logger) error {
 	// Configure peer to act as a simnet node that offers no services.
 	peerCfg := &peer.Config{
 		UserAgentName:          "peer",  // User agent name to advertise.
@@ -28,7 +27,7 @@ func mockRemotePeer(lf logging.LoggerFactory) error {
 		ChainParams:            &chaincfg.SimNetParams,
 		TrickleInterval:        time.Second * 10,
 		TstAllowSelfConnection: true,
-		Log:                    lf.NewLogger("remote-peer"),
+		Log:                    log,
 	}
 
 	// Accept connections on the simnet port.
@@ -60,10 +59,8 @@ func Example_newOutboundPeer() {
 	// connecting to a remote peer, however, since this example is executed
 	// and tested, a mock remote peer is needed to listen for the outbound
 	// peer.
-	lf := testlog.NewTestLoggerFactory()
-	// prevents "race detected during execution of test"
-	lf.SetLevel(logging.Off)
-	if err := mockRemotePeer(lf); err != nil {
+	log := zerolog.Nop()
+	if err := mockRemotePeer(&log); err != nil {
 		fmt.Printf("mockRemotePeer: unexpected error %v\n", err)
 		return
 	}
@@ -89,7 +86,7 @@ func Example_newOutboundPeer() {
 			},
 		},
 		TstAllowSelfConnection: true,
-		Log:                    lf.NewLogger("test"),
+		Log:                    &log,
 	}
 	p, err := peer.NewOutboundPeer(peerCfg, "127.0.0.1:18555")
 	if err != nil {

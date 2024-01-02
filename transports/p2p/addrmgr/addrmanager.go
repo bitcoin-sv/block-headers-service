@@ -11,6 +11,7 @@ import (
 	"encoding/base32"
 	"encoding/binary"
 	"fmt"
+	"github.com/rs/zerolog"
 	"io"
 	"math/rand"
 	"net"
@@ -20,7 +21,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/pulse/internal/wire"
 )
@@ -43,7 +43,7 @@ type AddrManager struct {
 	nNew           int
 	lamtx          sync.Mutex
 	localAddresses map[string]*localAddress
-	Log            logging.Logger
+	Log            *zerolog.Logger
 }
 
 type localAddress struct {
@@ -199,7 +199,7 @@ func (a *AddrManager) updateAddress(netAddr, srcAddr *wire.NetAddress) {
 
 	// Enforce max addresses.
 	if len(a.addrNew[bucket]) > newBucketSize {
-		a.Log.Tracef("new bucket is full, expiring old")
+		a.Log.Trace().Msgf("new bucket is full, expiring old")
 		a.expireNew(bucket)
 	}
 
@@ -207,8 +207,7 @@ func (a *AddrManager) updateAddress(netAddr, srcAddr *wire.NetAddress) {
 	ka.refs++
 	a.addrNew[bucket][addr] = ka
 
-	a.Log.Tracef("Added new address %s for a total of %d addresses", addr,
-		a.nTried+a.nNew)
+	a.Log.Trace().Msgf("Added new address %s for a total of %d addresses", addr, a.nTried+a.nNew)
 }
 
 // expireNew makes space in the new buckets by expiring the really bad entries.
@@ -222,7 +221,7 @@ func (a *AddrManager) expireNew(bucket int) {
 	var oldest *KnownAddress
 	for k, v := range a.addrNew[bucket] {
 		if v.isBad() {
-			a.Log.Errorf("expiring bad address %v", k)
+			a.Log.Error().Msgf("expiring bad address %v", k)
 			delete(a.addrNew[bucket], k)
 			v.refs--
 			if v.refs == 0 {
@@ -240,7 +239,7 @@ func (a *AddrManager) expireNew(bucket int) {
 
 	if oldest != nil {
 		key := NetAddressKey(oldest.na)
-		a.Log.Tracef("expiring oldest address %v", key)
+		a.Log.Trace().Msgf("expiring oldest address %v", key)
 
 		delete(a.addrNew[bucket], key)
 		oldest.refs--
@@ -316,7 +315,7 @@ func (a *AddrManager) addressHandler() {
 	dumpAddressTicker := time.NewTicker(dumpAddressInterval)
 	defer dumpAddressTicker.Stop()
 	a.wg.Done()
-	a.Log.Trace("Address handler done")
+	a.Log.Trace().Msg("Address handler done")
 }
 
 // Start begins the core address handler which manages a pool of known
@@ -327,7 +326,7 @@ func (a *AddrManager) Start() {
 		return
 	}
 
-	a.Log.Trace("Starting address manager")
+	a.Log.Trace().Msg("Starting address manager")
 
 	// Start the address ticker to save addresses periodically.
 	a.wg.Add(1)
@@ -337,15 +336,14 @@ func (a *AddrManager) Start() {
 // Stop gracefully shuts down the address manager by stopping the main handler.
 func (a *AddrManager) Stop() {
 	if atomic.AddInt32(&a.shutdown, 1) != 1 {
-		a.Log.Warnf("Address manager is already in the process of " +
-			"shutting down")
+		a.Log.Warn().Msgf("Address manager is already in the process of shutting down")
 	}
 
-	a.Log.Infof("Address manager shutting down")
+	a.Log.Info().Msgf("Address manager shutting down")
 	close(a.quit)
 	a.wg.Wait()
 
-	a.Log.Infof("Address manager stopped")
+	a.Log.Info().Msgf("Address manager stopped")
 }
 
 // AddAddresses adds new addresses to the address manager.  It enforces a max
@@ -417,7 +415,7 @@ func (a *AddrManager) reset() {
 	// fill key with bytes from a good random source.
 	_, err := io.ReadFull(crand.Reader, a.key[:])
 	if err != nil {
-		a.Log.Error(err)
+		a.Log.Error().Msg(err.Error())
 	}
 	for i := range a.addrNew {
 		a.addrNew[i] = make(map[string]*KnownAddress)
@@ -513,8 +511,7 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 			ka := e.Value.(*KnownAddress)
 			randval := a.rand.Intn(large)
 			if float64(randval) < (factor * ka.chance() * float64(large)) {
-				a.Log.Tracef("Selected %v from tried bucket",
-					NetAddressKey(ka.na))
+				a.Log.Trace().Msgf("Selected %v from tried bucket", NetAddressKey(ka.na))
 				return ka
 			}
 			factor *= 1.2
@@ -541,8 +538,7 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 			}
 			randval := a.rand.Intn(large)
 			if float64(randval) < (factor * ka.chance() * float64(large)) {
-				a.Log.Tracef("Selected %v from new bucket",
-					NetAddressKey(ka.na))
+				a.Log.Trace().Msgf("Selected %v from new bucket", NetAddressKey(ka.na))
 				return ka
 			}
 			factor *= 1.2
@@ -677,7 +673,7 @@ func (a *AddrManager) Good(addr *wire.NetAddress) {
 	a.nNew++
 
 	rmkey := NetAddressKey(rmka.na)
-	a.Log.Tracef("Replacing %s with %s in tried", rmkey, addrKey)
+	a.Log.Trace().Msgf("Replacing %s with %s in tried", rmkey, addrKey)
 
 	// We made sure there is space here just above.
 	a.addrNew[newBucket][rmkey] = rmka
@@ -825,11 +821,10 @@ func (a *AddrManager) GetBestLocalAddress(remoteAddr *wire.NetAddress) *wire.Net
 		}
 	}
 	if bestAddress != nil {
-		a.Log.Debugf("Suggesting address %s:%d for %s:%d", bestAddress.IP,
+		a.Log.Debug().Msgf("Suggesting address %s:%d for %s:%d", bestAddress.IP,
 			bestAddress.Port, remoteAddr.IP, remoteAddr.Port)
 	} else {
-		a.Log.Debugf("No worthy address for %s:%d", remoteAddr.IP,
-			remoteAddr.Port)
+		a.Log.Debug().Msgf("No worthy address for %s:%d", remoteAddr.IP, remoteAddr.Port)
 
 		// Send something unroutable if nothing suitable.
 		var ip net.IP
@@ -847,13 +842,14 @@ func (a *AddrManager) GetBestLocalAddress(remoteAddr *wire.NetAddress) *wire.Net
 
 // New returns a new bitcoin address manager.
 // Use Start to begin processing asynchronous address updates.
-func New(lookupFunc func(string) ([]net.IP, error), lf logging.LoggerFactory) *AddrManager {
+func New(lookupFunc func(string) ([]net.IP, error), log *zerolog.Logger) *AddrManager {
+	addrManagerLogger := log.With().Str("p2pModule", "addr-manager").Logger()
 	am := AddrManager{
 		lookupFunc:     lookupFunc,
 		rand:           rand.New(rand.NewSource(time.Now().UnixNano())), //nolint:gosec
 		quit:           make(chan struct{}),
 		localAddresses: make(map[string]*localAddress),
-		Log:            lf.NewLogger("addr-manager"),
+		Log:            &addrManagerLogger,
 	}
 	am.reset()
 	return &am

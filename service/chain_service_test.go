@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/rs/zerolog"
 	"testing"
 	"time"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/pulse/internal/tests/assert"
 	"github.com/bitcoin-sv/pulse/internal/tests/fixtures"
-	testlog "github.com/bitcoin-sv/pulse/internal/tests/log"
 	"github.com/bitcoin-sv/pulse/internal/tests/testrepository"
 	"github.com/bitcoin-sv/pulse/repository"
 )
@@ -356,10 +356,11 @@ func givenOrphanedHeaderToAdd() domains.BlockHeaderSource {
 }
 
 func createChainsService(s serviceSetup) Chains {
+	log := zerolog.Nop()
 	return NewChainsService(
 		s.Repositories,
 		s.Params(),
-		testlog.NewTestLoggerFactory(),
+		&log,
 		DefaultBlockHasher(),
 		newRecordingNotification(),
 	)

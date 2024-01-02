@@ -6,11 +6,11 @@ package p2psync
 
 import (
 	"fmt"
+	"github.com/rs/zerolog"
 	"math"
 	"sync"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/transports/p2p/p2putil"
 )
 
@@ -22,7 +22,7 @@ type blockProgressLogger struct {
 	receivedLogTx     int64
 	lastBlockLogTime  time.Time
 
-	subsystemLogger logging.Logger
+	subsystemLogger *zerolog.Logger
 	progressAction  string
 	sync.Mutex
 }
@@ -32,11 +32,12 @@ type blockProgressLogger struct {
 //
 //	{progressAction} {numProcessed} {blocks|block} in the last {timePeriod}
 //	({numTxs}, height {lastBlockHeight}, {lastBlockTimeStamp})
-func newBlockProgressLogger(progressMessage string, lf logging.LoggerFactory) *blockProgressLogger {
+func newBlockProgressLogger(progressMessage string, log *zerolog.Logger) *blockProgressLogger {
+	blockProcessorLogger := log.With().Str("subsystem", "block-processor").Logger()
 	return &blockProgressLogger{
 		lastBlockLogTime: time.Now(),
 		progressAction:   progressMessage,
-		subsystemLogger:  lf.NewLogger("block-processor"),
+		subsystemLogger:  &blockProcessorLogger,
 	}
 }
 
@@ -90,7 +91,7 @@ func (b *blockProgressLogger) LogBlockHeight(block *p2putil.Block, bestHeight ui
 			bestHeight, progress)
 	}
 
-	b.subsystemLogger.Infof("%s %d %s in %s (%d %s, height %s, %s)",
+	b.subsystemLogger.Info().Msgf("%s %d %s in %s (%d %s, height %s, %s)",
 		b.progressAction, b.receivedLogBlocks, blockStr, tDuration, b.receivedLogTx,
 		txStr, heightStr, block.MsgBlock().Header.Timestamp)
 

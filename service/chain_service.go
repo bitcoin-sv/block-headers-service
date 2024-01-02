@@ -2,11 +2,11 @@ package service
 
 import (
 	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/pulse/repository"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 )
 
 // BlockHasher is an interface which is exposing BlockHash method.
@@ -24,7 +24,7 @@ type Notification interface {
 type chainService struct {
 	*repository.Repositories
 	chainParams  *chaincfg.Params
-	log          logging.Logger
+	log          *zerolog.Logger
 	notification Notification
 	BlockHasher
 }
@@ -33,7 +33,7 @@ type chainService struct {
 type ChainServiceDependencies struct {
 	*repository.Repositories
 	*chaincfg.Params
-	logging.LoggerFactory
+	*zerolog.Logger
 	Notification
 	BlockHasher
 }
@@ -42,14 +42,15 @@ type ChainServiceDependencies struct {
 func NewChainsService(
 	repos *repository.Repositories,
 	params *chaincfg.Params,
-	lf logging.LoggerFactory,
+	log *zerolog.Logger,
 	hasher BlockHasher,
 	notification Notification,
 ) Chains {
+	serviceLogger := log.With().Str("service", "chain").Logger()
 	return &chainService{
 		Repositories: repos,
 		chainParams:  params,
-		log:          lf.NewLogger("Chain"),
+		log:          &serviceLogger,
 		BlockHasher:  hasher,
 		notification: notification,
 	}
@@ -59,7 +60,7 @@ func (cs *chainService) Add(bs domains.BlockHeaderSource) (*domains.BlockHeader,
 	hash := cs.BlockHasher.BlockHash(&bs)
 
 	if cs.ignoreBlockHash(&hash) {
-		cs.log.Warnf("Message rejected - containing forbidden header")
+		cs.log.Warn().Msgf("Message rejected - containing forbidden header")
 		return domains.NewRejectedBlockHeader(hash), BlockRejected.error()
 	}
 
@@ -113,7 +114,7 @@ func (cs *chainService) hasConcurrentHeaderFromLongestChain(h *domains.BlockHead
 // switchChainsStates marking chain connected to given block as longest chain
 // and concurrent part of (currently) "longest chain" as STALE.
 func (cs *chainService) switchChainsStates(h *domains.BlockHeader) error {
-	cs.log.Warnf("Promoting currently stale chain to be LONGEST chain ending on header %s", h.Hash)
+	cs.log.Warn().Msgf("Promoting currently stale chain to be LONGEST chain ending on header %s", h.Hash)
 	headerStaleChain, err := cs.stalePartOfChainOf(h)
 	if err != nil {
 		return ChainUpdateFail.causedBy(&err)

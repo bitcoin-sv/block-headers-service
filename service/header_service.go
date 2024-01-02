@@ -3,12 +3,12 @@ package service
 import (
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog"
 	"math"
 	"time"
 
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/pulse/internal/wire"
@@ -21,17 +21,18 @@ type HeaderService struct {
 	checkpoints []chaincfg.Checkpoint
 	timeSource  config.MedianTimeSource
 	merkleCfg   *config.MerkleRootConfig
-	log         logging.Logger
+	log         *zerolog.Logger
 }
 
 // NewHeaderService creates and returns HeaderService instance.
-func NewHeaderService(repo *repository.Repositories, p2pCfg *config.P2PConfig, merkleCfg *config.MerkleRootConfig, lf logging.LoggerFactory) *HeaderService {
+func NewHeaderService(repo *repository.Repositories, p2pCfg *config.P2PConfig, merkleCfg *config.MerkleRootConfig, log *zerolog.Logger) *HeaderService {
+	headerLogger := log.With().Str("service", "header").Logger()
 	return &HeaderService{
 		repo:        repo,
 		checkpoints: p2pCfg.Checkpoints,
 		timeSource:  p2pCfg.TimeSource,
 		merkleCfg:   merkleCfg,
-		log:         lf.NewLogger("header-service"),
+		log:         &headerLogger,
 	}
 }
 
@@ -44,7 +45,7 @@ func (hs *HeaderService) AddHeader(h domains.BlockHeader, blocksToConfirmFork in
 func (hs *HeaderService) FindPreviousHeader(headerHash string) *domains.BlockHeader {
 	h, err := hs.repo.Headers.GetPreviousHeader(headerHash)
 	if err != nil {
-		hs.log.Error(err)
+		hs.log.Error().Msg(err.Error())
 		return nil
 	}
 	return h

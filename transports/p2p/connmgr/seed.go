@@ -6,12 +6,12 @@ package connmgr
 
 import (
 	"fmt"
+	"github.com/rs/zerolog"
 	mrand "math/rand"
 	"net"
 	"strconv"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg"
 	"github.com/bitcoin-sv/pulse/internal/wire"
 )
@@ -32,7 +32,7 @@ type LookupFunc func(string) ([]net.IP, error)
 
 // SeedFromDNS uses DNS seeding to populate the address manager with peers.
 func SeedFromDNS(chainParams *chaincfg.Params, reqServices wire.ServiceFlag,
-	lookupFn LookupFunc, seedFn OnSeed, log logging.Logger) {
+	lookupFn LookupFunc, seedFn OnSeed, log *zerolog.Logger) {
 
 	for _, dnsseed := range chainParams.DNSSeeds {
 		var host string
@@ -47,12 +47,12 @@ func SeedFromDNS(chainParams *chaincfg.Params, reqServices wire.ServiceFlag,
 
 			seedpeers, err := lookupFn(host)
 			if err != nil {
-				log.Infof("DNS discovery failed on seed %s: %v", host, err)
+				log.Info().Msgf("DNS discovery failed on seed %s: %v", host, err)
 				return
 			}
 			numPeers := len(seedpeers)
 
-			log.Infof("%d addresses found from DNS seed %s", numPeers, host)
+			log.Info().Msgf("%d addresses found from DNS seed %s", numPeers, host)
 
 			if numPeers == 0 {
 				return

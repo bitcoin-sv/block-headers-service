@@ -5,10 +5,9 @@
 package p2p
 
 import (
+	"github.com/rs/zerolog"
 	"os"
 	"os/signal"
-
-	"github.com/bitcoin-sv/pulse/domains/logging"
 )
 
 // shutdownRequestChannel is used to initiate shutdown from one of the
@@ -22,8 +21,8 @@ var interruptSignals = []os.Signal{os.Interrupt}
 // interruptListener listens for OS Signals such as SIGINT (Ctrl+C) and shutdown
 // requests from shutdownRequestChannel.  It returns a channel that is closed
 // when either signal is received.
-func interruptListener(lf logging.LoggerFactory) <-chan struct{} {
-	log := lf.NewLogger("interrupt-listener")
+func interruptListener(log *zerolog.Logger) <-chan struct{} {
+	l := log.With().Str("subservice", "interruptListener").Logger()
 	c := make(chan struct{})
 	go func() {
 		interruptChannel := make(chan os.Signal, 1)
@@ -33,11 +32,10 @@ func interruptListener(lf logging.LoggerFactory) <-chan struct{} {
 		// channel to notify the caller.
 		select {
 		case sig := <-interruptChannel:
-			log.Infof("Received signal (%s).  Shutting down...",
-				sig)
+			l.Info().Msgf("Received signal (%s).  Shutting down...", sig)
 
 		case <-shutdownRequestChannel:
-			log.Info("Shutdown requested.  Shutting down...")
+			l.Info().Msg("Shutdown requested.  Shutting down...")
 		}
 		close(c)
 
@@ -47,12 +45,10 @@ func interruptListener(lf logging.LoggerFactory) <-chan struct{} {
 		for {
 			select {
 			case sig := <-interruptChannel:
-				log.Infof("Received signal (%s).  Already "+
-					"shutting down...", sig)
+				l.Info().Msgf("Received signal (%s).  Already shutting down...", sig)
 
 			case <-shutdownRequestChannel:
-				log.Info("Shutdown requested.  Already " +
-					"shutting down...")
+				l.Info().Msg("Shutdown requested.  Already shutting down...")
 			}
 		}
 	}()

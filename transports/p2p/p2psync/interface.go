@@ -5,12 +5,12 @@
 package p2psync
 
 import (
-	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/pulse/internal/wire"
 	"github.com/bitcoin-sv/pulse/service"
 	"github.com/bitcoin-sv/pulse/transports/p2p/peer"
+	"github.com/rs/zerolog"
 )
 
 // PeerNotifier exposes methods to notify peers of status changes to
@@ -26,9 +26,9 @@ type PeerNotifier interface {
 
 // Config is a configuration struct used to initialize a new SyncManager.
 type Config struct {
-	LoggerFactory logging.LoggerFactory
-	PeerNotifier  PeerNotifier
-	ChainParams   *chaincfg.Params
+	Logger       *zerolog.Logger
+	PeerNotifier PeerNotifier
+	ChainParams  *chaincfg.Params
 
 	DisableCheckpoints bool
 	MaxPeers           int

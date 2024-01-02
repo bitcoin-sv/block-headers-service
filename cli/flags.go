@@ -2,9 +2,9 @@ package cli
 
 import (
 	"fmt"
+	"github.com/bitcoin-sv/pulse/logging"
 	"os"
 
-	"github.com/bitcoin-sv/pulse/app/logger"
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/database"
 	"github.com/bitcoin-sv/pulse/version"
@@ -59,8 +59,7 @@ func initFlags(fs *pflag.FlagSet, cliFlags *cliFlags) {
 }
 
 func parseCliFlags(cli *cliFlags, cfg *config.AppConfig, pulseFlags *pflag.FlagSet) {
-	lf := logger.DefaultLoggerFactory()
-	log := lf.NewLogger("flags")
+	log := logging.GetDefaultLogger().With().Str("service", "flags").Logger()
 
 	if cli.showHelp {
 		pulseFlags.PrintDefaults()
@@ -68,13 +67,13 @@ func parseCliFlags(cli *cliFlags, cfg *config.AppConfig, pulseFlags *pflag.FlagS
 	}
 
 	if cli.showVersion {
-		fmt.Println("pulse", "version", version.String())
+		log.Info().Msgf("pulse version %s", version.String())
 		os.Exit(0)
 	}
 
 	if cli.exportHeaders {
-		if err := database.ExportHeaders(cfg, log); err != nil {
-			fmt.Printf("\nError: %v\n", err)
+		if err := database.ExportHeaders(cfg, &log); err != nil {
+			log.Error().Msgf("error while exporting headers: %v", err.Error())
 			os.Exit(1)
 		}
 		os.Exit(0)
@@ -88,7 +87,7 @@ func parseCliFlags(cli *cliFlags, cfg *config.AppConfig, pulseFlags *pflag.FlagS
 
 		err := viper.SafeWriteConfigAs(configPath)
 		if err != nil {
-			fmt.Printf("error while dumping config: %v", err.Error())
+			log.Error().Msgf("error while dumping config: %v", err.Error())
 		}
 		os.Exit(0)
 	}

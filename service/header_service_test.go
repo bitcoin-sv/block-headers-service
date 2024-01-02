@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/rs/zerolog"
 	"math/big"
 	"testing"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/pulse/internal/tests/assert"
 	"github.com/bitcoin-sv/pulse/internal/tests/fixtures"
-	testlog "github.com/bitcoin-sv/pulse/internal/tests/log"
 	"github.com/bitcoin-sv/pulse/internal/tests/testrepository"
 	"github.com/bitcoin-sv/pulse/repository"
 )
@@ -348,14 +348,14 @@ func TestMerkleRootConfirmations(t *testing.T) {
 }
 
 func setUpServices() *testData {
-	lf := testlog.NewTestLoggerFactory()
+	log := zerolog.Nop()
 	db, _ := fixtures.LongestChain()
 	var array []domains.BlockHeader = db
 	repo := &repository.Repositories{
 		Headers: testrepository.NewHeadersTestRepository(&array),
 	}
 
-	p2pcfg := config.GetDefaultAppConfig(lf).P2P
+	p2pcfg := config.GetDefaultAppConfig(&log).P2P
 	mrconfig := config.MerkleRootConfig{
 		MaxBlockHeightExcess: 6,
 	}
@@ -364,10 +364,10 @@ func setUpServices() *testData {
 		MerkleRoot: &mrconfig,
 	}
 	hs := NewServices(Dept{
-		Repositories:  repo,
-		Peers:         nil,
-		LoggerFactory: lf,
-		Config:        &cfg,
+		Repositories: repo,
+		Peers:        nil,
+		Logger:       &log,
+		Config:       &cfg,
 	})
 
 	return &testData{

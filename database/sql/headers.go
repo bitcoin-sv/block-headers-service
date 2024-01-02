@@ -3,6 +3,7 @@ package sql
 import (
 	"context"
 	"database/sql"
+	"github.com/rs/zerolog"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/repository/dto"
 )
 
@@ -178,11 +178,12 @@ type HeadersDb struct {
 	dbType config.DbType
 	db     *sqlx.DB
 	sqls   map[config.DbType]map[string]string
-	log    logging.Logger
+	log    *zerolog.Logger
 }
 
 // NewHeadersDb will setup and return a new headers store.
-func NewHeadersDb(db *sqlx.DB, dbType config.DbType, lf logging.LoggerFactory) *HeadersDb {
+func NewHeadersDb(db *sqlx.DB, dbType config.DbType, log *zerolog.Logger) *HeadersDb {
+	headerLogger := log.With().Str("subservice", "headers-db").Logger()
 	return &HeadersDb{
 		dbType: dbType,
 		db:     db,
@@ -191,7 +192,7 @@ func NewHeadersDb(db *sqlx.DB, dbType config.DbType, lf logging.LoggerFactory) *
 				insertBH: sqliteInsertHeader,
 			},
 		},
-		log: lf.NewLogger("headers-db"),
+		log: &headerLogger,
 	}
 }
 
@@ -350,7 +351,7 @@ func (h *HeadersDb) GetPreviousHeader(ctx context.Context, hash string) (*dto.Db
 func (h *HeadersDb) GetTip(ctx context.Context) (*dto.DbBlockHeader, error) {
 	var tip []dto.DbBlockHeader
 	if err := h.db.Select(&tip, sqlSelectTip); err != nil {
-		h.log.Error("sql error", err)
+		h.log.Error().Msgf("sql error: %v", err)
 		return nil, errors.Wrap(err, "failed to get tip")
 	}
 	return &tip[0], nil

@@ -3,13 +3,13 @@ package httpserver
 import (
 	"context"
 	"fmt"
+	"github.com/rs/zerolog"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/domains/logging"
 )
 
 // GinEngineOpt represents functions to configure server engine.
@@ -19,12 +19,13 @@ type GinEngineOpt func(*gin.Engine)
 type HttpServer struct {
 	httpServer *http.Server
 	handler    *gin.Engine
-	log        logging.Logger
+	log        *zerolog.Logger
 }
 
 // NewHttpServer creates and returns HttpServer instance.
-func NewHttpServer(cfg *config.HTTPConfig, lf logging.LoggerFactory) *HttpServer {
+func NewHttpServer(cfg *config.HTTPConfig, log *zerolog.Logger) *HttpServer {
 	handler := gin.Default()
+	httpLogger := log.With().Str("subservice", "server").Logger()
 
 	return &HttpServer{
 		httpServer: &http.Server{
@@ -34,7 +35,7 @@ func NewHttpServer(cfg *config.HTTPConfig, lf logging.LoggerFactory) *HttpServer
 			WriteTimeout: time.Duration(cfg.WriteTimeout) * time.Second,
 		},
 		handler: handler,
-		log:     lf.NewLogger("http"),
+		log:     &httpLogger,
 	}
 }
 
@@ -52,7 +53,7 @@ func (s *HttpServer) Start() error {
 
 // ShutdownWithContext is used to stop http server using provided context.
 func (s *HttpServer) ShutdownWithContext(ctx context.Context) error {
-	s.log.Infof("HTTP Server Shutdown")
+	s.log.Info().Msg("HTTP Server Shutdown")
 	return s.httpServer.Shutdown(ctx)
 }
 

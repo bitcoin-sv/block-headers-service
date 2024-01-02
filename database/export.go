@@ -3,13 +3,13 @@ package database
 import (
 	"database/sql"
 	"encoding/csv"
+	"github.com/rs/zerolog"
 	"os"
 	"path/filepath"
 
 	"github.com/jmoiron/sqlx"
 
 	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/domains/logging"
 )
 
 const (
@@ -29,8 +29,8 @@ const (
 	`
 )
 
-func ExportHeaders(cfg *config.AppConfig, log logging.Logger) error {
-	log.Infof("Exporting headers from database to file %s", cfg.Db.PreparedDbFilePath)
+func ExportHeaders(cfg *config.AppConfig, log *zerolog.Logger) error {
+	log.Info().Msgf("Exporting headers from database to file %s", cfg.Db.PreparedDbFilePath)
 
 	tmpHeadersFileName := "headers.csv"
 	tmpHeadersFilePath := filepath.Clean(filepath.Join(os.TempDir(), tmpHeadersFileName))
@@ -50,12 +50,12 @@ func ExportHeaders(cfg *config.AppConfig, log logging.Logger) error {
 	// TODO: Consider querying the database for smaller data chunks to avoid potential performance issues
 	rows, err := queryDatabaseTable(db, log)
 	if err != nil {
-		log.Errorf("Error querying database table: %w", err)
+		log.Error().Msgf("Error querying database table: %w", err)
 		return err
 	}
-	defer func(log logging.Logger) {
+	defer func(log *zerolog.Logger) {
 		if err := rows.Close(); err != nil {
-			log.Errorf("Error closing rows: %w", err)
+			log.Error().Msgf("Error closing rows: %w", err)
 		}
 	}(log)
 
@@ -69,8 +69,8 @@ func ExportHeaders(cfg *config.AppConfig, log logging.Logger) error {
 
 	writer.Flush()
 
-	log.Info("Data exported successfully")
-	log.Info("Compressing exported file")
+	log.Info().Msg("Data exported successfully")
+	log.Info().Msg("Compressing exported file")
 
 	compressedFile, err := os.Create(cfg.Db.PreparedDbFilePath)
 	if err != nil {
@@ -96,15 +96,15 @@ func ExportHeaders(cfg *config.AppConfig, log logging.Logger) error {
 		return err
 	}
 
-	log.Infof("File compressed successfully to %s", cfg.Db.PreparedDbFilePath)
+	log.Info().Msgf("File compressed successfully to %s", cfg.Db.PreparedDbFilePath)
 
 	return nil
 }
 
-func queryDatabaseTable(db *sqlx.DB, log logging.Logger) (*sqlx.Rows, error) {
+func queryDatabaseTable(db *sqlx.DB, log *zerolog.Logger) (*sqlx.Rows, error) {
 	rows, err := db.Queryx(selectHeadersSql)
 	if err != nil {
-		log.Errorf("Failed to query rows: %v", err)
+		log.Error().Msgf("Failed to query rows: %v", err)
 		return nil, err
 	}
 	return rows, nil

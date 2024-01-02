@@ -6,11 +6,11 @@ package addrmgr_test
 
 import (
 	"errors"
+	"github.com/rs/zerolog"
 	"net"
 
 	"testing"
 
-	testlog "github.com/bitcoin-sv/pulse/internal/tests/log"
 	"github.com/bitcoin-sv/pulse/internal/wire"
 	"github.com/bitcoin-sv/pulse/transports/p2p/addrmgr"
 )
@@ -99,8 +99,8 @@ func lookupFunc(host string) ([]net.IP, error) {
 }
 
 func TestStartStop(t *testing.T) {
-	lf := testlog.NewTestLoggerFactory()
-	n := addrmgr.New(lookupFunc, lf)
+	log := zerolog.Nop()
+	n := addrmgr.New(lookupFunc, &log)
 	n.Start()
 	n.Stop()
 }
@@ -142,8 +142,8 @@ func TestAddLocalAddress(t *testing.T) {
 			true,
 		},
 	}
-	lf := testlog.NewTestLoggerFactory()
-	amgr := addrmgr.New(nil, lf)
+	log := zerolog.Nop()
+	amgr := addrmgr.New(nil, &log)
 	for x, test := range tests {
 		result := amgr.AddLocalAddress(&test.address, test.priority)
 		if result == nil && !test.valid {
@@ -160,7 +160,7 @@ func TestAddLocalAddress(t *testing.T) {
 }
 
 func TestGetBestLocalAddress(t *testing.T) {
-	lf := testlog.NewTestLoggerFactory()
+	log := zerolog.Nop()
 	localAddrs := []wire.NetAddress{
 		{IP: net.ParseIP("192.168.0.100")},
 		{IP: net.ParseIP("::1")},
@@ -210,7 +210,7 @@ func TestGetBestLocalAddress(t *testing.T) {
 		*/
 	}
 
-	amgr := addrmgr.New(nil, lf)
+	amgr := addrmgr.New(nil, &log)
 
 	// Test against default when there's no address
 	for x, test := range tests {

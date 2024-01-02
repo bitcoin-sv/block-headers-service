@@ -2,26 +2,27 @@ package notification
 
 import (
 	"errors"
+	"github.com/rs/zerolog"
 	"strings"
 
 	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/domains/logging"
 )
 
 // WebhooksService represents Webhooks service and provide access to repositories.
 type WebhooksService struct {
 	webhooks Webhooks
 	client   WebhookTargetClient
-	log      logging.Logger
+	log      *zerolog.Logger
 	cfg      *config.WebhookConfig
 }
 
 // NewWebhooksService creates and returns WebhooksService instance.
-func NewWebhooksService(repo Webhooks, client WebhookTargetClient, lf logging.LoggerFactory, cfg *config.WebhookConfig) *WebhooksService {
+func NewWebhooksService(repo Webhooks, client WebhookTargetClient, log *zerolog.Logger, cfg *config.WebhookConfig) *WebhooksService {
+	webhhoksLogger := log.With().Str("service", "webhooks").Logger()
 	return &WebhooksService{
 		webhooks: repo,
 		client:   client,
-		log:      lf.NewLogger("webhook"),
+		log:      &webhhoksLogger,
 		cfg:      cfg,
 	}
 }
@@ -62,7 +63,7 @@ func (s *WebhooksService) Notify(event Event) {
 	webhooks, err := s.webhooks.GetAllWebhooks()
 
 	if err != nil {
-		s.log.Errorf("Cannot load webhooks to notify. %v", err)
+		s.log.Error().Msgf("Cannot load webhooks to notify. %v", err)
 		return
 	}
 
@@ -70,11 +71,11 @@ func (s *WebhooksService) Notify(event Event) {
 	for _, webhook := range webhooks {
 		if webhook.Active {
 			if err := webhook.Notify(event, s.client); err != nil {
-				s.log.Warnf("Error during notification of the webhook: %v", err)
+				s.log.Warn().Msgf("Error during notification of the webhook: %v", err)
 			}
 
 			if err := s.webhooks.UpdateWebhook(webhook); err != nil {
-				s.log.Errorf("Error has happened during updating webhook state: %v", err)
+				s.log.Error().Msgf("Error has happened during updating webhook state: %v", err)
 			}
 		}
 	}
