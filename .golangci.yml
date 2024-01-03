@@ -335,6 +335,7 @@ linters:
     - exhaustive
     - sqlclosecheck
     - godot
+    - zerologlint
   disable:
     - gocritic # use this for very opinionated linting
     - whitespace

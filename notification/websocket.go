@@ -2,10 +2,10 @@ package notification
 
 import (
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"time"
 
 	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/centrifugal/centrifuge"
 )
 
@@ -16,16 +16,17 @@ type WebsocketPublisher interface {
 
 type wsChan struct {
 	publisher      WebsocketPublisher
-	log            logging.Logger
+	log            *zerolog.Logger
 	historySize    int
 	historySeconds int
 }
 
 // NewWebsocketChannel create Channel implementation communicating via websocket.
-func NewWebsocketChannel(lf logging.LoggerFactory, publisher WebsocketPublisher, cfg *config.WebsocketConfig) Channel {
+func NewWebsocketChannel(log *zerolog.Logger, publisher WebsocketPublisher, cfg *config.WebsocketConfig) Channel {
+	channelLogger := log.With().Str("subservice", "ws-channel").Logger()
 	return &wsChan{
 		publisher:      publisher,
-		log:            lf.NewLogger("ws-channel"),
+		log:            &channelLogger,
 		historySize:    cfg.HistoryMax,
 		historySeconds: cfg.HistoryTTL,
 	}
@@ -34,12 +35,12 @@ func NewWebsocketChannel(lf logging.LoggerFactory, publisher WebsocketPublisher,
 func (w *wsChan) Notify(event Event) {
 	bytes, err := json.Marshal(event)
 	if err != nil {
-		w.log.Errorf("Error when creating json from event %v: %v", event, err)
+		w.log.Error().Msgf("Error when creating json from event %v: %v", event, err)
 		return
 	}
 
 	if err := w.publishToHeadersChannel(bytes); err != nil {
-		w.log.Errorf("Error when sending event %v to channel: %v", event, err)
+		w.log.Error().Msgf("Error when sending event %v to channel: %v", event, err)
 		return
 	}
 }

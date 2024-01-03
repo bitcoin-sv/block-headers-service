@@ -1,23 +1,23 @@
 package config
 
 import (
+	"github.com/rs/zerolog"
 	"net"
 	"time"
-
-	"github.com/bitcoin-sv/pulse/domains/logging"
 )
 
 // DBSqlite creating config for sqlite db.
 const DBSqlite DbType = "sqlite"
 
-func GetDefaultAppConfig(lf logging.LoggerFactory) *AppConfig {
+func GetDefaultAppConfig(log *zerolog.Logger) *AppConfig {
 	return &AppConfig{
 		Db:         getDbDefaults(),
 		HTTP:       getHttpConfigDefaults(),
 		MerkleRoot: getMerkleRootDefaults(),
 		Websocket:  getWebsocketDefaults(),
 		Webhook:    getWebhookDefaults(),
-		P2P:        getP2PDefaults(lf),
+		P2P:        getP2PDefaults(log),
+		Logging:    getLoggingDefaults(),
 	}
 }
 
@@ -61,16 +61,24 @@ func getWebhookDefaults() *WebhookConfig {
 	}
 }
 
-func getP2PDefaults(lf logging.LoggerFactory) *P2PConfig {
+func getP2PDefaults(log *zerolog.Logger) *P2PConfig {
 	return &P2PConfig{
-		LogLevel:                  "info",
 		BanDuration:               time.Hour * 24,
 		BlocksForForkConfirmation: 10,
 		DefaultConnectTimeout:     30 * time.Second,
 		DisableCheckpoints:        false,
 		Dial:                      net.DialTimeout,
 		Lookup:                    net.LookupIP,
-		TimeSource:                NewMedianTime(lf),
+		TimeSource:                NewMedianTime(log),
 		Checkpoints:               ActiveNetParams.Checkpoints,
+	}
+}
+
+func getLoggingDefaults() *LoggingConfig {
+	return &LoggingConfig{
+		Level:        "debug",
+		Format:       "console",
+		InstanceName: "pulse",
+		LogOrigin:    false,
 	}
 }

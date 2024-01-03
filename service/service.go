@@ -3,7 +3,6 @@ package service
 import (
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/pulse/internal/wire"
@@ -11,6 +10,7 @@ import (
 	"github.com/bitcoin-sv/pulse/repository"
 	"github.com/bitcoin-sv/pulse/transports/http/client"
 	peerpkg "github.com/bitcoin-sv/pulse/transports/p2p/peer"
+	"github.com/rs/zerolog"
 )
 
 // Network is an interface which represents methods required for Network service.
@@ -64,12 +64,12 @@ type Services struct {
 
 // Dept is a struct used to create Services.
 type Dept struct {
-	Peers         map[*peerpkg.Peer]*peerpkg.PeerSyncState
-	Repositories  *repository.Repositories
-	Params        *chaincfg.Params
-	AdminToken    string
-	LoggerFactory logging.LoggerFactory
-	Config        *config.AppConfig
+	Peers        map[*peerpkg.Peer]*peerpkg.PeerSyncState
+	Repositories *repository.Repositories
+	Params       *chaincfg.Params
+	AdminToken   string
+	Logger       *zerolog.Logger
+	Config       *config.AppConfig
 }
 
 // NewServices creates and returns Services instance.
@@ -78,7 +78,7 @@ func NewServices(d Dept) *Services {
 
 	return &Services{
 		Network:  NewNetworkService(d.Peers),
-		Headers:  NewHeaderService(d.Repositories, d.Config.P2P, d.Config.MerkleRoot, d.LoggerFactory),
+		Headers:  NewHeaderService(d.Repositories, d.Config.P2P, d.Config.MerkleRoot, d.Logger),
 		Notifier: notifier,
 		Chains:   newChainService(d, notifier),
 		Tokens:   NewTokenService(d.Repositories, d.AdminToken),
@@ -90,7 +90,7 @@ func newChainService(d Dept, notifier *notification.Notifier) Chains {
 	return NewChainsService(
 		d.Repositories,
 		d.Params,
-		d.LoggerFactory,
+		d.Logger,
 		DefaultBlockHasher(),
 		notifier,
 	)
@@ -100,7 +100,7 @@ func newWebhooks(d Dept) *notification.WebhooksService {
 	return notification.NewWebhooksService(
 		d.Repositories.Webhooks,
 		client.NewWebhookTargetClient(),
-		d.LoggerFactory,
+		d.Logger,
 		d.Config.Webhook,
 	)
 }

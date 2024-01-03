@@ -3,13 +3,13 @@ package access_test
 import (
 	"context"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/internal/tests/assert"
-	testlog "github.com/bitcoin-sv/pulse/internal/tests/log"
 	"github.com/bitcoin-sv/pulse/internal/tests/testpulse"
 
 	"github.com/bitcoin-sv/pulse/domains"
@@ -35,8 +35,8 @@ func TestAccessEndpointWithoutAuthHeader(t *testing.T) {
 // Tests the GET /access endpoint with global auth header.
 func TestAccessEndpointWithGlobalAuthHeader(t *testing.T) {
 	//setup
-	lf := testlog.NewTestLoggerFactory()
-	cfg := config.GetDefaultAppConfig(lf)
+	log := zerolog.Nop()
+	cfg := config.GetDefaultAppConfig(&log)
 	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
@@ -73,8 +73,8 @@ func TestAccessEndpointWithWrongAuthHeader(t *testing.T) {
 // Tests the POST /access endpoint with created auth token.
 func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 	//setup
-	lf := testlog.NewTestLoggerFactory()
-	cfg := config.GetDefaultAppConfig(lf)
+	log := zerolog.Nop()
+	cfg := config.GetDefaultAppConfig(&log)
 	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
@@ -114,8 +114,8 @@ func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 // Tests the DELETE method for the /access endpoint for created auth token.
 func TestDeleteTokenEndpoint(t *testing.T) {
 	//setup
-	lf := testlog.NewTestLoggerFactory()
-	cfg := config.GetDefaultAppConfig(lf)
+	log := zerolog.Nop()
+	cfg := config.GetDefaultAppConfig(&log)
 	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 

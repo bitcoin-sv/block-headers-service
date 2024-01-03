@@ -3,8 +3,8 @@ package websocket
 import (
 	"context"
 	"fmt"
+	"github.com/rs/zerolog"
 
-	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/service"
 	"github.com/centrifugal/centrifuge"
 	"github.com/gin-gonic/gin"
@@ -27,12 +27,13 @@ type server struct {
 	node           *centrifuge.Node
 	isAuthRequired bool
 	tokens         service.Tokens
-	log            logging.Logger
+	log            *zerolog.Logger
 }
 
 // NewServer creates new websocket server.
-func NewServer(lf logging.LoggerFactory, services *service.Services, isAuthenticationOn bool) (Server, error) {
-	node, err := newNode(lf)
+func NewServer(log *zerolog.Logger, services *service.Services, isAuthenticationOn bool) (Server, error) {
+	websocketLogger := log.With().Str("subservice", "websocket-server").Logger()
+	node, err := newNode(&websocketLogger)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +41,7 @@ func NewServer(lf logging.LoggerFactory, services *service.Services, isAuthentic
 		node:           node,
 		isAuthRequired: isAuthenticationOn,
 		tokens:         services.Tokens,
-		log:            lf.NewLogger("Websocket"),
+		log:            &websocketLogger,
 	}
 	return s, nil
 }
@@ -61,7 +62,7 @@ func (s *server) Shutdown() error {
 
 // ShutdownWithContext stoping a server in a provided context.
 func (s *server) ShutdownWithContext(ctx context.Context) error {
-	s.log.Infof("Shutting down a websocket server")
+	s.log.Info().Msgf("Shutting down a websocket server")
 	if err := s.node.Shutdown(ctx); err != nil {
 		return fmt.Errorf("cannot stop websocket server: %w", err)
 	}
@@ -78,8 +79,8 @@ func (s *server) Publisher() Publisher {
 	return s.node
 }
 
-func newNode(lf logging.LoggerFactory) (*centrifuge.Node, error) {
-	lh := newLogHandler(lf)
+func newNode(log *zerolog.Logger) (*centrifuge.Node, error) {
+	lh := newLogHandler(log)
 	return centrifuge.New(centrifuge.Config{
 		Name:       "Pulse",
 		LogLevel:   lh.Level(),
@@ -89,10 +90,10 @@ func newNode(lf logging.LoggerFactory) (*centrifuge.Node, error) {
 
 func (s *server) setupNode() {
 	s.node.OnConnecting(func(ctx context.Context, event centrifuge.ConnectEvent) (centrifuge.ConnectReply, error) {
-		s.log.Info("client connecting")
+		s.log.Info().Msg("client connecting")
 
 		if s.isAuthRequired {
-			s.log.Debugf("client connecting with token: %s", event.Token)
+			s.log.Debug().Msgf("client connecting with token: %s", event.Token)
 			_, err := s.tokens.GetToken(event.Token)
 			if err != nil {
 				return centrifuge.ConnectReply{}, centrifuge.DisconnectInvalidToken
@@ -108,10 +109,10 @@ func (s *server) setupNode() {
 
 	s.node.OnConnect(func(client *centrifuge.Client) {
 		transport := client.Transport()
-		s.log.Infof("user %s connected via %s.", client.UserID(), transport.Name())
+		s.log.Info().Msgf("user %s connected via %s.", client.UserID(), transport.Name())
 
 		client.OnSubscribe(func(e centrifuge.SubscribeEvent, cb centrifuge.SubscribeCallback) {
-			s.log.Infof("user %s subscribes on %s", client.UserID(), e.Channel)
+			s.log.Info().Msgf("user %s subscribes on %s", client.UserID(), e.Channel)
 			cb(centrifuge.SubscribeReply{
 				Options: centrifuge.SubscribeOptions{
 					EnablePositioning: true,
@@ -129,11 +130,11 @@ func (s *server) setupNode() {
 		})
 
 		client.OnUnsubscribe(func(e centrifuge.UnsubscribeEvent) {
-			s.log.Infof("user %s unsubscribed from %s", client.UserID(), e.Channel)
+			s.log.Info().Msgf("user %s unsubscribed from %s", client.UserID(), e.Channel)
 		})
 
 		client.OnDisconnect(func(e centrifuge.DisconnectEvent) {
-			s.log.Infof("user %s disconnected, disconnect: %s", client.UserID(), e.Disconnect)
+			s.log.Info().Msgf("user %s disconnected, disconnect: %s", client.UserID(), e.Disconnect)
 		})
 	})
 }

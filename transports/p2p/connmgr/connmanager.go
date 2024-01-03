@@ -7,12 +7,11 @@ package connmgr
 import (
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog"
 	"net"
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"github.com/bitcoin-sv/pulse/domains/logging"
 )
 
 // maxFailedAttempts is the maximum number of successive failed connection
@@ -120,7 +119,7 @@ type Config struct {
 	// This field will not have any effect if the Listeners field is not
 	// also specified since there couldn't possibly be any accepted
 	// connections in that case.
-	OnAccept func(net.Conn, logging.LoggerFactory)
+	OnAccept func(net.Conn, *zerolog.Logger)
 
 	// TargetOutbound is the number of outbound network connections to
 	// maintain. Defaults to 8.
@@ -132,7 +131,7 @@ type Config struct {
 
 	// OnConnection is a callback that is fired when a new outbound
 	// connection is established.
-	OnConnection func(*ConnReq, net.Conn, logging.LoggerFactory)
+	OnConnection func(*ConnReq, net.Conn, *zerolog.Logger)
 
 	// OnDisconnection is a callback that is fired when an outbound
 	// connection is disconnected.
@@ -145,7 +144,7 @@ type Config struct {
 	// Dial connects to the address on the named network. It cannot be nil.
 	Dial func(net.Addr) (net.Conn, error)
 
-	LoggerFactory logging.LoggerFactory
+	Logger *zerolog.Logger
 }
 
 // registerPending is used to register a pending connection attempt. By
@@ -186,8 +185,7 @@ type ConnManager struct {
 	wg             sync.WaitGroup
 	failedAttempts uint64
 	requests       chan interface{}
-	log            logging.Logger
-	lf             logging.LoggerFactory
+	log            *zerolog.Logger
 	quit           chan struct{}
 }
 
@@ -206,14 +204,14 @@ func (cm *ConnManager) handleFailedConn(c *ConnReq) {
 		if d > maxRetryDuration {
 			d = maxRetryDuration
 		}
-		cm.log.Debugf("Retrying connection to %v in %v", c, d)
+		cm.log.Debug().Msgf("Retrying connection to %v in %v", c, d)
 		time.AfterFunc(d, func() {
 			cm.Connect(c)
 		})
 	} else if cm.cfg.GetNewAddress != nil {
 		cm.failedAttempts++
 		if cm.failedAttempts >= maxFailedAttempts {
-			cm.log.Debugf("Max failed connection attempts reached: [%d] "+
+			cm.log.Debug().Msgf("Max failed connection attempts reached: [%d] "+
 				"-- retrying connection in: %v", maxFailedAttempts,
 				cm.cfg.RetryDuration)
 			time.AfterFunc(cm.cfg.RetryDuration, func() {
@@ -261,10 +259,10 @@ out:
 					if msg.conn != nil {
 						err := msg.conn.Close()
 						if err != nil {
-							cm.log.Info(err)
+							cm.log.Info().Msg(err.Error())
 						}
 					}
-					cm.log.Debugf("Ignoring connection for "+
+					cm.log.Debug().Msgf("Ignoring connection for "+
 						"canceled connreq=%v", connReq)
 					continue
 				}
@@ -272,14 +270,14 @@ out:
 				connReq.updateState(ConnEstablished)
 				connReq.conn = msg.conn
 				conns[connReq.id] = connReq
-				cm.log.Debugf("Connected to %v", connReq)
+				cm.log.Debug().Msgf("Connected to %v", connReq)
 				connReq.retryCount = 0
 				cm.failedAttempts = 0
 
 				delete(pending, connReq.id)
 
 				if cm.cfg.OnConnection != nil {
-					go cm.cfg.OnConnection(connReq, msg.conn, cm.lf)
+					go cm.cfg.OnConnection(connReq, msg.conn, cm.log)
 				}
 
 			case handleDisconnected:
@@ -287,8 +285,7 @@ out:
 				if !ok {
 					connReq, ok = pending[msg.id]
 					if !ok {
-						cm.log.Errorf("Unknown connid=%d",
-							msg.id)
+						cm.log.Error().Msgf("Unknown connid=%d", msg.id)
 						continue
 					}
 
@@ -297,7 +294,7 @@ out:
 					// ignore a later, successful
 					// connection.
 					connReq.updateState(ConnCanceled)
-					cm.log.Debugf("Canceling: %v", connReq)
+					cm.log.Debug().Msgf("Canceling: %v", connReq)
 					delete(pending, msg.id)
 					continue
 
@@ -306,13 +303,13 @@ out:
 				// An existing connection was located, mark as
 				// disconnected and execute disconnection
 				// callback.
-				cm.log.Debugf("Disconnected from %v", connReq)
+				cm.log.Debug().Msgf("Disconnected from %v", connReq)
 				delete(conns, msg.id)
 
 				if connReq.conn != nil {
 					err := connReq.conn.Close()
 					if err != nil {
-						cm.log.Info(err)
+						cm.log.Info().Msg(err.Error())
 					}
 				}
 
@@ -338,8 +335,7 @@ out:
 					connReq.Permanent {
 
 					connReq.updateState(ConnPending)
-					cm.log.Debugf("Reconnecting to %v",
-						connReq)
+					cm.log.Debug().Msgf("Reconnecting to %v", connReq)
 					pending[msg.id] = connReq
 					cm.handleFailedConn(connReq)
 				}
@@ -348,14 +344,12 @@ out:
 				connReq := msg.c
 
 				if _, ok := pending[connReq.id]; !ok {
-					cm.log.Debugf("Ignoring connection for "+
-						"canceled conn req: %v", connReq)
+					cm.log.Debug().Msgf("Ignoring connection for canceled conn req: %v", connReq)
 					continue
 				}
 
 				connReq.updateState(ConnFailing)
-				cm.log.Debugf("Failed to connect to %v: %v",
-					connReq, msg.err)
+				cm.log.Debug().Msgf("Failed to connect to %v: %v", connReq, msg.err)
 				cm.handleFailedConn(connReq)
 			}
 
@@ -365,7 +359,7 @@ out:
 	}
 
 	cm.wg.Done()
-	cm.log.Trace("Connection handler done")
+	cm.log.Trace().Msg("Connection handler done")
 }
 
 // NewConnReq creates a new connection request and connects to the
@@ -420,7 +414,7 @@ func (cm *ConnManager) Connect(c *ConnReq) {
 	// During the time we wait for retry there is a chance that
 	// this connection was already canceled.
 	if c.State() == ConnCanceled {
-		cm.log.Debugf("Ignoring connect for canceled connreq=%v", c)
+		cm.log.Debug().Msgf("Ignoring connect for canceled connreq=%v", c)
 		return
 	}
 
@@ -450,7 +444,7 @@ func (cm *ConnManager) Connect(c *ConnReq) {
 		}
 	}
 
-	cm.log.Debugf("Attempting to connect to %v", c)
+	cm.log.Debug().Msgf("Attempting to connect to %v", c)
 
 	conn, err := cm.cfg.Dial(c.Addr)
 	if err != nil {
@@ -500,21 +494,21 @@ func (cm *ConnManager) Remove(id uint64) {
 // listenHandler accepts incoming connections on a given listener.  It must be
 // run as a goroutine.
 func (cm *ConnManager) listenHandler(listener net.Listener) {
-	cm.log.Infof("Server listening on %s", listener.Addr())
+	cm.log.Info().Msgf("Server listening on %s", listener.Addr())
 	for atomic.LoadInt32(&cm.stop) == 0 {
 		conn, err := listener.Accept()
 		if err != nil {
 			// Only log the error if not forcibly shutting down.
 			if atomic.LoadInt32(&cm.stop) == 0 {
-				cm.log.Errorf("Can't accept connection: %v", err)
+				cm.log.Error().Msgf("Can't accept connection: %v", err)
 			}
 			continue
 		}
-		go cm.cfg.OnAccept(conn, cm.lf)
+		go cm.cfg.OnAccept(conn, cm.log)
 	}
 
 	cm.wg.Done()
-	cm.log.Tracef("Listener handler done for %s", listener.Addr())
+	cm.log.Trace().Msgf("Listener handler done for %s", listener.Addr())
 }
 
 // Start launches the connection manager and begins connecting to the network.
@@ -524,7 +518,7 @@ func (cm *ConnManager) Start() {
 		return
 	}
 
-	cm.log.Trace("Connection manager started")
+	cm.log.Trace().Msg("Connection manager started")
 	cm.wg.Add(1)
 	go cm.connHandler()
 
@@ -550,7 +544,7 @@ func (cm *ConnManager) Wait() {
 // Stop gracefully shuts down the connection manager.
 func (cm *ConnManager) Stop() {
 	if atomic.AddInt32(&cm.stop, 1) != 1 {
-		cm.log.Warnf("Connection manager already stopped")
+		cm.log.Warn().Msg("Connection manager already stopped")
 		return
 	}
 
@@ -563,12 +557,14 @@ func (cm *ConnManager) Stop() {
 	}
 
 	close(cm.quit)
-	cm.log.Trace("Connection manager stopped")
+	cm.log.Trace().Msg("Connection manager stopped")
 }
 
 // New returns a new connection manager.
 // Use Start to start connecting to the network.
 func New(cfg *Config) (*ConnManager, error) {
+	connManagerLogger := cfg.Logger.With().Str("p2pModule", "connection-manager").Logger()
+
 	if cfg.Dial == nil {
 		return nil, ErrDialNil
 	}
@@ -583,8 +579,7 @@ func New(cfg *Config) (*ConnManager, error) {
 		cfg:      *cfg, // Copy so caller can't mutate
 		requests: make(chan interface{}),
 		quit:     make(chan struct{}),
-		log:      cfg.LoggerFactory.NewLogger("connection-manager"),
-		lf:       cfg.LoggerFactory,
+		log:      &connManagerLogger,
 	}
 	return &cm, nil
 }

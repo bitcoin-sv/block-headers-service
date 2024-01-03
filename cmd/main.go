@@ -6,6 +6,8 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"github.com/bitcoin-sv/pulse/logging"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,12 +19,9 @@ import (
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/config/limits"
 	"github.com/bitcoin-sv/pulse/database"
-	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/notification"
 	"github.com/bitcoin-sv/pulse/transports/http/endpoints"
 	"github.com/bitcoin-sv/pulse/transports/websocket"
-
-	"github.com/bitcoin-sv/pulse/app/logger"
 
 	"github.com/bitcoin-sv/pulse/database/sql"
 	"github.com/bitcoin-sv/pulse/internal/wire"
@@ -39,23 +38,26 @@ import (
 // @in header
 // @name Authorization
 func main() {
-	lf, log := createLogger()
+	defaultLog := logging.GetDefaultLogger()
 
-	defaultConfig := config.GetDefaultAppConfig(lf)
+	defaultConfig := config.GetDefaultAppConfig(defaultLog)
 	if err := cli.LoadFlags(defaultConfig); err != nil {
-		log.Errorf("cannot load flags because of error: %v", err)
+		defaultLog.Error().Msgf("cannot load flags because of error: %v", err)
 		os.Exit(1)
 	}
 
-	cfg, err := config.Load(lf, defaultConfig)
+	cfg, log, err := config.Load(defaultConfig)
+	fmt.Println(cfg)
+	fmt.Println(log)
+	fmt.Println(err)
 	if err != nil {
-		log.Errorf("cannot load config because of error: %v", err)
+		log.Error().Msgf("cannot load config because of error: %v", err)
 		os.Exit(1)
 	}
 
 	db, err := database.Init(cfg, log)
 	if err != nil {
-		log.Errorf("cannot setup database because of error: %v", err)
+		log.Error().Msgf("cannot setup database because of error: %v", err)
 		os.Exit(1)
 	}
 
@@ -70,64 +72,61 @@ func main() {
 
 	// Up some limits.
 	if err := limits.SetLimits(); err != nil {
-		log.Criticalf("failed to set limits: %v\n", err)
+		log.Error().Msgf("failed to set limits: %v\n", err)
 		os.Exit(1)
 	}
-
-	logger.SetLevelFromString(lf, cfg.P2P.LogLevel)
-	logger.SetLevelFromString(log, cfg.P2P.LogLevel)
 
 	// Do required one-time initialization on wire
 	wire.SetLimits(config.ExcessiveBlockSize)
 
 	// Show version at startup.
-	log.Infof("Version %s", version.String())
+	log.Info().Msgf("Version %s", version.String())
 
 	peers := make(map[*peerpkg.Peer]*peerpkg.PeerSyncState)
-	headersStore := sql.NewHeadersDb(db, cfg.Db.Type, lf)
+	headersStore := sql.NewHeadersDb(db, cfg.Db.Type, log)
 	repo := repository.NewRepositories(headersStore)
 	hs := service.NewServices(service.Dept{
-		Repositories:  repo,
-		Peers:         peers,
-		Params:        config.ActiveNetParams.Params,
-		AdminToken:    cfg.HTTP.AuthToken,
-		LoggerFactory: lf,
-		Config:        cfg,
+		Repositories: repo,
+		Peers:        peers,
+		Params:       config.ActiveNetParams.Params,
+		AdminToken:   cfg.HTTP.AuthToken,
+		Logger:       log,
+		Config:       cfg,
 	})
-	p2pServer, err := p2p.NewServer(hs, peers, cfg.P2P, lf)
+	p2pServer, err := p2p.NewServer(hs, peers, cfg.P2P, log)
 	if err != nil {
-		log.Errorf("failed to init a new p2p server: %v\n", err)
+		log.Error().Msgf("failed to init a new p2p server: %v\n", err)
 		os.Exit(1)
 	}
 
-	server := httpserver.NewHttpServer(cfg.HTTP, lf)
+	server := httpserver.NewHttpServer(cfg.HTTP, log)
 	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs, cfg.HTTP))
 
-	ws, err := websocket.NewServer(lf, hs, cfg.HTTP.UseAuth)
+	ws, err := websocket.NewServer(log, hs, cfg.HTTP.UseAuth)
 	if err != nil {
-		log.Errorf("failed to init a new websocket server: %v\n", err)
+		log.Error().Msgf("failed to init a new websocket server: %v\n", err)
 		os.Exit(1)
 	}
 	server.ApplyConfiguration(ws.SetupEntrypoint)
 
 	hs.Notifier.AddChannel(hs.Webhooks)
-	hs.Notifier.AddChannel(notification.NewWebsocketChannel(lf, ws.Publisher(), cfg.Websocket))
+	hs.Notifier.AddChannel(notification.NewWebsocketChannel(log, ws.Publisher(), cfg.Websocket))
 
 	go func() {
 		if err := server.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Errorf("cannot start server because of an error: %v", err)
+			log.Error().Msgf("cannot start server because of an error: %v", err)
 			os.Exit(1)
 		}
 	}()
 
 	if err := ws.Start(); err != nil {
-		log.Errorf("cannot start websocket server because of an error: %v", err)
+		log.Error().Msgf("cannot start websocket server because of an error: %v", err)
 		os.Exit(1)
 	}
 
 	go func() {
 		if err := p2pServer.Start(); err != nil {
-			log.Errorf("cannot start p2p server because of an error: %v", err)
+			log.Error().Msgf("cannot start p2p server because of an error: %v", err)
 			os.Exit(1)
 		}
 	}()
@@ -138,20 +137,14 @@ func main() {
 	<-quit
 
 	if err := p2pServer.Shutdown(); err != nil {
-		log.Errorf("failed to stop p2p server: %v", err)
+		log.Error().Msgf("failed to stop p2p server: %v", err)
 	}
 
 	if err := ws.Shutdown(); err != nil {
-		log.Errorf("failed to stop websocket server: %v", err)
+		log.Error().Msgf("failed to stop websocket server: %v", err)
 	}
 
 	if err := server.Shutdown(); err != nil {
-		log.Errorf("failed to stop http server: %v", err)
+		log.Error().Msgf("failed to stop http server: %v", err)
 	}
-}
-
-func createLogger() (logging.LoggerFactory, logging.Logger) {
-	lf := logger.DefaultLoggerFactory()
-	log := lf.NewLogger("main")
-	return lf, log
 }

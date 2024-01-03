@@ -7,14 +7,13 @@ package connmgr
 import (
 	"errors"
 	"fmt"
+	"github.com/bitcoin-sv/pulse/logging"
+	"github.com/rs/zerolog"
 	"io"
 	"net"
 	"sync/atomic"
 	"testing"
 	"time"
-
-	"github.com/bitcoin-sv/pulse/domains/logging"
-	testlog "github.com/bitcoin-sv/pulse/internal/tests/log"
 )
 
 func init() {
@@ -74,15 +73,16 @@ func mockDialer(addr net.Addr) (net.Conn, error) {
 
 // TestNewConfig tests that new ConnManager config is validated as expected.
 func TestNewConfig(t *testing.T) {
-	lf := testlog.NewTestLoggerFactory()
-	lf.SetLevel(logging.Off)
-	_, err := New(&Config{})
+	log := logging.GetDefaultLogger()
+	_, err := New(&Config{
+		Logger: log,
+	})
 	if err == nil {
 		t.Fatalf("New expected error: 'Dial can't be nil', got nil")
 	}
 	_, err = New(&Config{
-		Dial:          mockDialer,
-		LoggerFactory: lf,
+		Dial:   mockDialer,
+		Logger: log,
 	})
 	if err != nil {
 		t.Fatalf("New unexpected error: %v", err)
@@ -94,8 +94,7 @@ func TestNewConfig(t *testing.T) {
 func TestStartStop(t *testing.T) {
 	connected := make(chan *ConnReq)
 	disconnected := make(chan *ConnReq)
-	lf := testlog.NewTestLoggerFactory()
-	lf.SetLevel(logging.Off)
+	log := zerolog.Nop()
 	cmgr, err := New(&Config{
 		TargetOutbound: 1,
 		GetNewAddress: func() (net.Addr, error) {
@@ -105,13 +104,13 @@ func TestStartStop(t *testing.T) {
 			}, nil
 		},
 		Dial: mockDialer,
-		OnConnection: func(c *ConnReq, conn net.Conn, lf logging.LoggerFactory) {
+		OnConnection: func(c *ConnReq, conn net.Conn, log *zerolog.Logger) {
 			connected <- c
 		},
 		OnDisconnection: func(c *ConnReq) {
 			disconnected <- c
 		},
-		LoggerFactory: lf,
+		Logger: &log,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -149,15 +148,14 @@ func TestStartStop(t *testing.T) {
 // requests using Connect are handled and that no other connections are made.
 func TestConnectMode(t *testing.T) {
 	connected := make(chan *ConnReq)
-	lf := testlog.NewTestLoggerFactory()
-	lf.SetLevel(logging.Off)
+	log := zerolog.Nop()
 	cmgr, err := New(&Config{
 		TargetOutbound: 2,
 		Dial:           mockDialer,
-		OnConnection: func(c *ConnReq, conn net.Conn, lf logging.LoggerFactory) {
+		OnConnection: func(c *ConnReq, conn net.Conn, log *zerolog.Logger) {
 			connected <- c
 		},
-		LoggerFactory: lf,
+		Logger: &log,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -198,8 +196,7 @@ func TestConnectMode(t *testing.T) {
 func TestTargetOutbound(t *testing.T) {
 	targetOutbound := uint32(10)
 	connected := make(chan *ConnReq)
-	lf := testlog.NewTestLoggerFactory()
-	lf.SetLevel(logging.Off)
+	log := zerolog.Nop()
 	cmgr, err := New(&Config{
 		TargetOutbound: targetOutbound,
 		Dial:           mockDialer,
@@ -209,10 +206,10 @@ func TestTargetOutbound(t *testing.T) {
 				Port: 18555,
 			}, nil
 		},
-		OnConnection: func(c *ConnReq, conn net.Conn, lf logging.LoggerFactory) {
+		OnConnection: func(c *ConnReq, conn net.Conn, log *zerolog.Logger) {
 			connected <- c
 		},
-		LoggerFactory: lf,
+		Logger: &log,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -238,19 +235,18 @@ func TestTargetOutbound(t *testing.T) {
 func TestRetryPermanent(t *testing.T) {
 	connected := make(chan *ConnReq)
 	disconnected := make(chan *ConnReq)
-	lf := testlog.NewTestLoggerFactory()
-	lf.SetLevel(logging.Off)
+	log := zerolog.Nop()
 	cmgr, err := New(&Config{
 		RetryDuration:  time.Millisecond,
 		TargetOutbound: 1,
 		Dial:           mockDialer,
-		OnConnection: func(c *ConnReq, conn net.Conn, lf logging.LoggerFactory) {
+		OnConnection: func(c *ConnReq, conn net.Conn, log *zerolog.Logger) {
 			connected <- c
 		},
 		OnDisconnection: func(c *ConnReq) {
 			disconnected <- c
 		},
-		LoggerFactory: lf,
+		Logger: &log,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -336,16 +332,15 @@ func TestMaxRetryDuration(t *testing.T) {
 	}
 
 	connected := make(chan *ConnReq)
-	lf := testlog.NewTestLoggerFactory()
-	lf.SetLevel(logging.Off)
+	log := zerolog.Nop()
 	cmgr, err := New(&Config{
 		RetryDuration:  time.Millisecond,
 		TargetOutbound: 1,
 		Dial:           timedDialer,
-		OnConnection: func(c *ConnReq, conn net.Conn, lf logging.LoggerFactory) {
+		OnConnection: func(c *ConnReq, conn net.Conn, log *zerolog.Logger) {
 			connected <- c
 		},
-		LoggerFactory: lf,
+		Logger: &log,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -378,8 +373,7 @@ func TestNetworkFailure(t *testing.T) {
 		atomic.AddUint32(&dials, 1)
 		return nil, errors.New("network down")
 	}
-	lf := testlog.NewTestLoggerFactory()
-	lf.SetLevel(logging.Off)
+	log := zerolog.Nop()
 	cmgr, err := New(&Config{
 		TargetOutbound: 5,
 		RetryDuration:  5 * time.Millisecond,
@@ -390,10 +384,10 @@ func TestNetworkFailure(t *testing.T) {
 				Port: 18555,
 			}, nil
 		},
-		OnConnection: func(c *ConnReq, conn net.Conn, lf logging.LoggerFactory) {
+		OnConnection: func(c *ConnReq, conn net.Conn, log *zerolog.Logger) {
 			t.Fatalf("network failure: got unexpected connection - %v", c.Addr)
 		},
-		LoggerFactory: lf,
+		Logger: &log,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -416,16 +410,15 @@ func TestNetworkFailure(t *testing.T) {
 // the failure.
 func TestStopFailed(t *testing.T) {
 	done := make(chan struct{}, 1)
-	lf := testlog.NewTestLoggerFactory()
-	lf.SetLevel(logging.Off)
+	log := zerolog.Nop()
 	waitDialer := func(addr net.Addr) (net.Conn, error) {
 		done <- struct{}{}
 		time.Sleep(time.Millisecond)
 		return nil, errors.New("network down")
 	}
 	cmgr, err := New(&Config{
-		Dial:          waitDialer,
-		LoggerFactory: lf,
+		Dial:   waitDialer,
+		Logger: &log,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -459,11 +452,10 @@ func TestRemovePendingConnection(t *testing.T) {
 		<-wait
 		return nil, fmt.Errorf("error")
 	}
-	lf := testlog.NewTestLoggerFactory()
-	lf.SetLevel(logging.Off)
+	log := zerolog.Nop()
 	cmgr, err := New(&Config{
-		Dial:          indefiniteDialer,
-		LoggerFactory: lf,
+		Dial:   indefiniteDialer,
+		Logger: &log,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -524,15 +516,14 @@ func TestCancelIgnoreDelayedConnection(t *testing.T) {
 	}
 
 	connected := make(chan *ConnReq)
-	lf := testlog.NewTestLoggerFactory()
-	lf.SetLevel(logging.Off)
+	log := zerolog.Nop()
 	cmgr, err := New(&Config{
 		Dial:          failingDialer,
 		RetryDuration: retryTimeout,
-		OnConnection: func(c *ConnReq, conn net.Conn, lf logging.LoggerFactory) {
+		OnConnection: func(c *ConnReq, conn net.Conn, log *zerolog.Logger) {
 			connected <- c
 		},
-		LoggerFactory: lf,
+		Logger: &log,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)
@@ -653,15 +644,14 @@ func TestListeners(t *testing.T) {
 	listener1 := newMockListener("127.0.0.1:8333")
 	listener2 := newMockListener("127.0.0.1:9333")
 	listeners := []net.Listener{listener1, listener2}
-	lf := testlog.NewTestLoggerFactory()
-	lf.SetLevel(logging.Off)
+	log := zerolog.Nop()
 	cmgr, err := New(&Config{
 		Listeners: listeners,
-		OnAccept: func(conn net.Conn, lf logging.LoggerFactory) {
+		OnAccept: func(conn net.Conn, log *zerolog.Logger) {
 			receivedConns <- conn
 		},
-		Dial:          mockDialer,
-		LoggerFactory: lf,
+		Dial:   mockDialer,
+		Logger: &log,
 	})
 	if err != nil {
 		t.Fatalf("New error: %v", err)

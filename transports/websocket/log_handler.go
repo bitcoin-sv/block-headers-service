@@ -1,55 +1,58 @@
 package websocket
 
 import (
-	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/centrifugal/centrifuge"
+	"github.com/rs/zerolog"
 )
 
 type logHandler struct {
-	logger logging.Logger
-	level  logging.Level
+	logger *zerolog.Logger
+	level  zerolog.Level
 }
 
-func newLogHandler(lf logging.LoggerFactory) *logHandler {
+func newLogHandler(log *zerolog.Logger) *logHandler {
+	websocketLogger := log.With().Str("subservice", "centrifuge").Logger()
 	return &logHandler{
-		logger: lf.NewLogger("centrifuge"),
-		level:  lf.Level(),
+		logger: &websocketLogger,
+		level:  websocketLogger.GetLevel(),
 	}
 }
 
 func (l *logHandler) Level() (level centrifuge.LogLevel) {
 	switch l.level {
-	case logging.Trace:
+	case zerolog.TraceLevel:
 		level = centrifuge.LogLevelTrace
-	case logging.Debug:
+	case zerolog.DebugLevel:
 		level = centrifuge.LogLevelDebug
-	case logging.Info:
+	case zerolog.InfoLevel:
 		level = centrifuge.LogLevelInfo
-	case logging.Warn:
+	case zerolog.WarnLevel:
 		level = centrifuge.LogLevelWarn
-	case logging.Error:
+	case zerolog.ErrorLevel:
 		level = centrifuge.LogLevelError
-	case logging.Critical, logging.Off:
+	case zerolog.FatalLevel, zerolog.NoLevel, zerolog.PanicLevel, zerolog.Disabled:
 		level = centrifuge.LogLevelNone
 	}
 	return level
 }
 
 func (l *logHandler) Log(entry centrifuge.LogEntry) {
-	var log func(format string, params ...interface{})
+	var event *zerolog.Event
 	switch entry.Level {
 	case centrifuge.LogLevelTrace:
-		log = l.logger.Tracef
+		event = l.logger.Trace()
 	case centrifuge.LogLevelDebug:
-		log = l.logger.Debugf
+		event = l.logger.Debug()
 	case centrifuge.LogLevelInfo:
-		log = l.logger.Infof
+		event = l.logger.Info()
 	case centrifuge.LogLevelWarn:
-		log = l.logger.Warnf
+		event = l.logger.Warn()
 	case centrifuge.LogLevelError:
-		log = l.logger.Errorf
+		event = l.logger.Error()
 	case centrifuge.LogLevelNone:
-		log = func(format string, params ...interface{}) {}
+		event = nil
 	}
-	log("%s Context: %v.", entry.Message, entry.Fields)
+	if event != nil {
+		event.Msgf("%s Context: %v.", entry.Message, entry.Fields)
+	}
 }

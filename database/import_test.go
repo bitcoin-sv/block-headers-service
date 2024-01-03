@@ -1,10 +1,10 @@
 package database
 
 import (
+	"github.com/rs/zerolog"
 	"os"
 	"testing"
 
-	"github.com/bitcoin-sv/pulse/app/logger"
 	"github.com/bitcoin-sv/pulse/internal/tests/assert"
 )
 
@@ -23,12 +23,10 @@ func TestImportHeadersFromFile(t *testing.T) {
 	}
 
 	repo := MockHeaders{db: nil}
-	lf := logger.DefaultLoggerFactory()
-	log := lf.NewLogger("import_test")
-	log.Info("TestImportHeadersFromFile")
+	log := zerolog.Nop()
 
 	// when
-	_, err = importHeadersFromFile(&repo, tmpfile, log)
+	_, err = importHeadersFromFile(&repo, tmpfile, &log)
 
 	// then
 	assert.NoError(t, err)

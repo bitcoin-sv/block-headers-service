@@ -2,13 +2,13 @@ package database
 
 import (
 	"fmt"
+	"github.com/rs/zerolog"
 
 	"github.com/jmoiron/sqlx"
 	// use blank import to register sqlite driver.
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/domains/logging"
 )
 
 // DBAdapter defines the interface for a database adapter.
@@ -17,7 +17,9 @@ type DBAdapter interface {
 	DoMigrations(db *sqlx.DB, cfg *config.DbConfig) error
 }
 
-func Init(cfg *config.AppConfig, log logging.Logger) (*sqlx.DB, error) {
+func Init(cfg *config.AppConfig, log *zerolog.Logger) (*sqlx.DB, error) {
+	dbLog := log.With().Str("subservice", "database").Logger()
+
 	db, err := Connect(cfg.Db)
 	if err != nil {
 		return nil, err
@@ -28,7 +30,7 @@ func Init(cfg *config.AppConfig, log logging.Logger) (*sqlx.DB, error) {
 	}
 
 	if cfg.Db.PreparedDb {
-		if err := ImportHeaders(db, cfg, log); err != nil {
+		if err := ImportHeaders(db, cfg, &dbLog); err != nil {
 			return nil, err
 		}
 	}

@@ -27,6 +27,7 @@ type AppConfig struct {
 	Webhook    *WebhookConfig    `mapstructure:"webhook"`
 	Websocket  *WebsocketConfig  `mapstructure:"websocket"`
 	HTTP       *HTTPConfig       `mapstructure:"http"`
+	Logging    *LoggingConfig    `mapstructure:"logging"`
 }
 
 // DbConfig represents a database connection.
@@ -68,13 +69,20 @@ type HTTPConfig struct {
 type P2PConfig struct {
 	BanDuration               time.Duration `mapstructure:"ban_duration" description:"How long to ban misbehaving peers.  Valid time units are {s, m, h}.  Minimum 1 second"`
 	DisableCheckpoints        bool          `mapstructure:"disable_checkpoints" description:"Disable built-in checkpoints.  Don't do this unless you know what you're doing."`
-	LogLevel                  string        `mapstructure:"log_level" description:"Logging level for all subsystems {trace, debug, info, warn, error, critical} -- You may also specify <subsystem>=<level>,<subsystem2>=<level>,... to set the log level for individual subsystems -- Use show to list available subsystems"`
 	BlocksForForkConfirmation int           `mapstructure:"blocks_for_confirmation" description:"Minimum number of blocks to consider a block confirmed"`
 	DefaultConnectTimeout     time.Duration `mapstructure:"default_connect_timeout" description:"The default connection timeout"`
 	Lookup                    func(string) ([]net.IP, error)
 	Dial                      func(string, string, time.Duration) (net.Conn, error)
 	Checkpoints               []chaincfg.Checkpoint
 	TimeSource                MedianTimeSource
+}
+
+// LoggingConfig represents a logging config.
+type LoggingConfig struct {
+	Level        string `mapstructure:"level"`
+	Format       string `mapstructure:"format"`
+	InstanceName string `mapstructure:"instance_name"`
+	LogOrigin    bool   `mapstructure:"origin"`
 }
 
 func (c *AppConfig) WithoutAuthorization() *AppConfig {

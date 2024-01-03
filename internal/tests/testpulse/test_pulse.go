@@ -3,13 +3,12 @@ package testpulse
 import (
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog"
 	"net/http"
 	"os"
 	"testing"
 
 	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/domains/logging"
-	testlog "github.com/bitcoin-sv/pulse/internal/tests/log"
 	"github.com/bitcoin-sv/pulse/internal/tests/testrepository"
 	"github.com/bitcoin-sv/pulse/notification"
 	"github.com/bitcoin-sv/pulse/repository"
@@ -38,7 +37,7 @@ type Cleanup func()
 // TestPulse used to interact with pulse in e2e tests.
 type TestPulse struct {
 	t            *testing.T
-	lf           logging.LoggerFactory
+	log          *zerolog.Logger
 	config       *config.AppConfig
 	services     *service.Services
 	repositories *repository.Repositories
@@ -69,9 +68,9 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	os.Args = []string{""}
 
 	viper.Reset()
-	lf := testlog.NewTestLoggerFactory()
-	defaultConfig := config.GetDefaultAppConfig(lf)
-	cfg, _ := config.Load(lf, defaultConfig)
+	testLog := zerolog.Nop()
+	defaultConfig := config.GetDefaultAppConfig(&testLog)
+	cfg, _, _ := config.Load(defaultConfig)
 
 	for _, opt := range ops {
 		switch opt := opt.(type) {
@@ -90,12 +89,12 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	}
 
 	hs := service.NewServices(service.Dept{
-		Repositories:  repo.ToDomainRepo(),
-		Peers:         nil,
-		Params:        config.ActiveNetParams.Params,
-		AdminToken:    cfg.HTTP.AuthToken,
-		LoggerFactory: lf,
-		Config:        cfg,
+		Repositories: repo.ToDomainRepo(),
+		Peers:        nil,
+		Params:       config.ActiveNetParams.Params,
+		AdminToken:   cfg.HTTP.AuthToken,
+		Logger:       &testLog,
+		Config:       cfg,
 	})
 
 	for _, opt := range ops {
@@ -108,18 +107,18 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	port := cfg.HTTP.Port
 	urlPrefix := "/api/v1"
 	gin.SetMode(gin.TestMode)
-	server := httpserver.NewHttpServer(cfg.HTTP, lf)
+	server := httpserver.NewHttpServer(cfg.HTTP, &testLog)
 	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs, cfg.HTTP))
 	engine := hijackEngine(server)
 
-	ws, err := websocket.NewServer(lf, hs, cfg.HTTP.UseAuth)
+	ws, err := websocket.NewServer(&testLog, hs, cfg.HTTP.UseAuth)
 	if err != nil {
 		t.Fatalf("failed to init a new websocket server: %v\n", err)
 	}
 	server.ApplyConfiguration(ws.SetupEntrypoint)
 
 	hs.Notifier.AddChannel(hs.Webhooks)
-	hs.Notifier.AddChannel(notification.NewWebsocketChannel(lf, ws.Publisher(), cfg.Websocket))
+	hs.Notifier.AddChannel(notification.NewWebsocketChannel(&testLog, ws.Publisher(), cfg.Websocket))
 
 	if err := ws.Start(); err != nil {
 		panic(fmt.Sprintf("cannot start websocket server because of an error: %v", err))
@@ -134,7 +133,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 
 	pulse := &TestPulse{
 		t:            t,
-		lf:           lf,
+		log:          &testLog,
 		config:       cfg,
 		services:     hs,
 		repositories: repo.ToDomainRepo(),

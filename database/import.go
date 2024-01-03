@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog"
 	"io"
 	"math/big"
 	"os"
@@ -13,11 +14,9 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"github.com/bitcoin-sv/pulse/app/logger"
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/database/sql"
 	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/pulse/repository"
 )
@@ -35,15 +34,15 @@ type SQLitePragmaValues struct {
 
 const insertBatchSize = 500
 
-func ImportHeaders(db *sqlx.DB, cfg *config.AppConfig, log logging.Logger) error {
-	log.Info("Import headers from file to the database")
+func ImportHeaders(db *sqlx.DB, cfg *config.AppConfig, log *zerolog.Logger) error {
+	log.Info().Msg("Import headers from file to the database")
 
-	headersRepo := initHeadersRepo(db, cfg)
+	headersRepo := initHeadersRepo(db, cfg, log)
 
 	dbHeadersCount, _ := headersRepo.GetHeadersCount()
 
 	if dbHeadersCount > 0 {
-		log.Infof("skipping preloading database from file, database already contains %d block headers", dbHeadersCount)
+		log.Info().Msgf("skipping preloading database from file, database already contains %d block headers", dbHeadersCount)
 		return nil
 	}
 
@@ -56,9 +55,9 @@ func ImportHeaders(db *sqlx.DB, cfg *config.AppConfig, log logging.Logger) error
 
 		if fileExistsAndIsReadable(tmpHeadersFilePath) {
 			if err := os.Remove(tmpHeadersFilePath); err == nil {
-				log.Infof("Deleted temporary file %s", tmpHeadersFilePath)
+				log.Info().Msgf("Deleted temporary file %s", tmpHeadersFilePath)
 			} else {
-				log.Warnf("Unable to delete temporary file %s", tmpHeadersFilePath)
+				log.Warn().Msgf("Unable to delete temporary file %s", tmpHeadersFilePath)
 			}
 		}
 	}()
@@ -73,7 +72,7 @@ func ImportHeaders(db *sqlx.DB, cfg *config.AppConfig, log logging.Logger) error
 	}
 	defer func() {
 		if err = restoreSQLitePragmas(db, *pragmas); err != nil {
-			log.Error(err)
+			log.Error().Msg(err.Error())
 			os.Exit(1)
 		}
 	}()
@@ -84,7 +83,7 @@ func ImportHeaders(db *sqlx.DB, cfg *config.AppConfig, log logging.Logger) error
 	}
 	defer func() {
 		if err = restoreIndexes(db, droppedIndexes); err != nil {
-			log.Error(err)
+			log.Error().Msg(err.Error())
 			os.Exit(1)
 		}
 	}()
@@ -101,14 +100,13 @@ func ImportHeaders(db *sqlx.DB, cfg *config.AppConfig, log logging.Logger) error
 	return nil
 }
 
-func initHeadersRepo(db *sqlx.DB, cfg *config.AppConfig) *repository.HeaderRepository {
-	lf := logger.DefaultLoggerFactory()
-	headersDb := sql.NewHeadersDb(db, cfg.Db.Type, lf)
+func initHeadersRepo(db *sqlx.DB, cfg *config.AppConfig, log *zerolog.Logger) *repository.HeaderRepository {
+	headersDb := sql.NewHeadersDb(db, cfg.Db.Type, log)
 	headersRepo := repository.NewHeadersRepository(headersDb)
 	return headersRepo
 }
 
-func getHeadersFile(preparedDbFilePath string, log logging.Logger) (*os.File, string, error) {
+func getHeadersFile(preparedDbFilePath string, log *zerolog.Logger) (*os.File, string, error) {
 	currentDir, err := os.Getwd()
 	if err != nil {
 		return nil, "", err
@@ -123,7 +121,7 @@ func getHeadersFile(preparedDbFilePath string, log logging.Logger) (*os.File, st
 	compressedHeadersFilePath := filepath.Clean(filepath.Join(currentDir, preparedDbFilePath))
 	tmpHeadersFilePath := filepath.Clean(filepath.Join(os.TempDir(), tmpHeadersFileName))
 
-	log.Infof("Decompressing file %s to %s", compressedHeadersFilePath, tmpHeadersFilePath)
+	log.Info().Msgf("Decompressing file %s to %s", compressedHeadersFilePath, tmpHeadersFilePath)
 
 	compressedHeadersFile, err := os.Open(compressedHeadersFilePath)
 	if err != nil {
@@ -142,13 +140,13 @@ func getHeadersFile(preparedDbFilePath string, log logging.Logger) (*os.File, st
 		return nil, "", err
 	}
 
-	log.Infof("Decompressed and wrote contents to %s", tmpHeadersFilePath)
+	log.Info().Msgf("Decompressed and wrote contents to %s", tmpHeadersFilePath)
 
 	return tmpHeadersFile, tmpHeadersFilePath, nil
 }
 
-func importHeadersFromFile(repo repository.Headers, inputFile *os.File, log logging.Logger) (int, error) {
-	log.Info("Inserting headers from file to the database")
+func importHeadersFromFile(repo repository.Headers, inputFile *os.File, log *zerolog.Logger) (int, error) {
+	log.Info().Msg("Inserting headers from file to the database")
 
 	// Read from the beginning of the file
 	if _, err := inputFile.Seek(0, 0); err != nil {
@@ -192,7 +190,7 @@ func importHeadersFromFile(repo repository.Headers, inputFile *os.File, log logg
 		}
 	}
 
-	log.Infof("Inserted total of %d rows", rowIndex)
+	log.Info().Msgf("Inserted total of %d rows", rowIndex)
 
 	return rowIndex, nil
 }

@@ -3,11 +3,11 @@ package testpulse
 import (
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog"
 	"strconv"
 	"testing"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/internal/tests/wait"
 	"github.com/bitcoin-sv/pulse/transports/websocket"
 	"github.com/centrifugal/centrifuge-go"
@@ -21,7 +21,7 @@ type Websocket struct {
 // WebsocketPublisher component used in tests to publish on websocket chanel.
 type WebsocketPublisher struct {
 	t         *testing.T
-	log       logging.Logger
+	log       *zerolog.Logger
 	publisher websocket.Publisher
 }
 
@@ -29,14 +29,14 @@ type WebsocketPublisher struct {
 func (w *Websocket) Publisher() *WebsocketPublisher {
 	return &WebsocketPublisher{
 		t:         w.t,
-		log:       w.lf.NewLogger("test-ws-pub"),
+		log:       w.log,
 		publisher: w.ws.Publisher(),
 	}
 }
 
 // Publish sends data to websocket channel.
 func (p *WebsocketPublisher) Publish(channel string, data string) {
-	p.log.Debugf("Trying to publish to channel %s data: %s", channel, data)
+	p.log.Debug().Msgf("Trying to publish to channel %s data: %s", channel, data)
 	_, err := p.publisher.Publish(channel, []byte(data))
 	if err != nil {
 		p.t.Fatalf("Couldn't publish a message")
@@ -46,7 +46,7 @@ func (p *WebsocketPublisher) Publish(channel string, data string) {
 // WebsocketClient component used in tests to subscribe on websocket chanel.
 type WebsocketClient struct {
 	t            *testing.T
-	log          logging.Logger
+	log          *zerolog.Logger
 	client       *centrifuge.Client
 	connected    chan bool
 	disconnected chan centrifuge.DisconnectedEvent
@@ -60,7 +60,7 @@ func (w *Websocket) Client() *WebsocketClient {
 // ClientWithConfig creates WebsocketClient using provided config.
 func (w *Websocket) ClientWithConfig(config centrifuge.Config) *WebsocketClient {
 	client := centrifuge.NewJsonClient("ws://localhost:"+strconv.Itoa(w.port)+"/connection/websocket", config)
-	logger := w.lf.NewLogger("test-ws-client")
+	logger := w.log
 	return &WebsocketClient{
 		t:            w.t,
 		log:          logger,
@@ -77,7 +77,7 @@ func (c *WebsocketClient) Unwrap() *centrifuge.Client {
 
 // Close closes the websocket client.
 func (c *WebsocketClient) Close() {
-	c.log.Debugf("Closing client connection")
+	c.log.Debug().Msgf("Closing client connection")
 	c.Unwrap().Close()
 }
 
@@ -94,7 +94,7 @@ func (c *WebsocketClient) Connect() error {
 // If no error then returned <-chan can be used to listen for messages on websocket channel.
 func (c *WebsocketClient) Subscribe(channel string) (<-chan string, error) {
 	if err := c.Connect(); err != nil {
-		c.log.Errorf("Error when trying to connect %v", err)
+		c.log.Error().Msgf("Error when trying to connect %v", err)
 	}
 
 	sub, subscribed, err := c.subscription(channel)
@@ -132,37 +132,37 @@ func (c *WebsocketClient) configureClient() {
 	client := c.client
 	log := c.log
 	client.OnConnecting(func(e centrifuge.ConnectingEvent) {
-		log.Debugf("OnConnecting -> State: %d (%s)", e.Code, e.Reason)
+		log.Debug().Msgf("OnConnecting -> State: %d (%s)", e.Code, e.Reason)
 	})
 	client.OnConnected(func(e centrifuge.ConnectedEvent) {
-		log.Debugf("OnConnected -> ID %s; data %s", e.ClientID, e.Data)
+		log.Debug().Msgf("OnConnected -> ID %s; data %s", e.ClientID, e.Data)
 		c.connected <- true
 	})
 	client.OnDisconnected(func(e centrifuge.DisconnectedEvent) {
-		log.Debugf("OnDisconnected -> State: %d (%s)", e.Code, e.Reason)
+		log.Debug().Msgf("OnDisconnected -> State: %d (%s)", e.Code, e.Reason)
 		c.disconnected <- e
 	})
 
 	client.OnError(func(e centrifuge.ErrorEvent) {
-		log.Debugf("OnError -> %s", e.Error.Error())
+		log.Debug().Msgf("OnError -> %s", e.Error.Error())
 	})
 
 	client.OnMessage(func(e centrifuge.MessageEvent) {
-		log.Debugf("OnMessage -> %s", string(e.Data))
+		log.Debug().Msgf("OnMessage -> %s", string(e.Data))
 	})
 
 	client.OnSubscribed(func(e centrifuge.ServerSubscribedEvent) {
-		log.Debugf("OnSubscribed -> channel %s: (was recovering: %v, recovered: %v)", e.Channel, e.WasRecovering, e.Recovered)
+		log.Debug().Msgf("OnSubscribed -> channel %s: (was recovering: %v, recovered: %v)", e.Channel, e.WasRecovering, e.Recovered)
 	})
 	client.OnSubscribing(func(e centrifuge.ServerSubscribingEvent) {
-		log.Debugf("OnSubscribing -> channel %s", e.Channel)
+		log.Debug().Msgf("OnSubscribing -> channel %s", e.Channel)
 	})
 	client.OnUnsubscribed(func(e centrifuge.ServerUnsubscribedEvent) {
-		log.Debugf("OnUnsubscribed -> channel %s", e.Channel)
+		log.Debug().Msgf("OnUnsubscribed -> channel %s", e.Channel)
 	})
 
 	client.OnPublication(func(e centrifuge.ServerPublicationEvent) {
-		log.Debugf("OnPublication -> channel %s: data: %s (offset %d)", e.Channel, e.Data, e.Offset)
+		log.Debug().Msgf("OnPublication -> channel %s: data: %s (offset %d)", e.Channel, e.Data, e.Offset)
 	})
 }
 
@@ -173,23 +173,23 @@ func (c *WebsocketClient) subscription(channel string) (*centrifuge.Subscription
 		return nil, nil, err
 	}
 	sub.OnSubscribing(func(e centrifuge.SubscribingEvent) {
-		c.log.Debugf("[sub] OnSubscribing -> channel %s: State: %d (%s)", sub.Channel, e.Code, e.Reason)
+		c.log.Debug().Msgf("[sub] OnSubscribing -> channel %s: State: %d (%s)", sub.Channel, e.Code, e.Reason)
 	})
 	sub.OnSubscribed(func(e centrifuge.SubscribedEvent) {
-		c.log.Debugf("[sub] OnSubscribed -> channel %s: (was recovering: %v, recovered: %v)", sub.Channel, e.WasRecovering, e.Recovered)
+		c.log.Debug().Msgf("[sub] OnSubscribed -> channel %s: (was recovering: %v, recovered: %v)", sub.Channel, e.WasRecovering, e.Recovered)
 		subscribed <- true
 		close(subscribed)
 	})
 	sub.OnUnsubscribed(func(e centrifuge.UnsubscribedEvent) {
-		c.log.Debugf("[sub] OnUnsubscribed -> channel %s: State: %d (%s)", sub.Channel, e.Code, e.Reason)
+		c.log.Debug().Msgf("[sub] OnUnsubscribed -> channel %s: State: %d (%s)", sub.Channel, e.Code, e.Reason)
 	})
 
 	sub.OnError(func(e centrifuge.SubscriptionErrorEvent) {
-		c.log.Debugf("[sub] OnError -> channel %s: %s", sub.Channel, e.Error)
+		c.log.Debug().Msgf("[sub] OnError -> channel %s: %s", sub.Channel, e.Error)
 	})
 
 	sub.OnPublication(func(e centrifuge.PublicationEvent) {
-		c.log.Debugf("[sub] OnPublication -> channel %s: %s (offset %d)", sub.Channel, e.Data, e.Offset)
+		c.log.Debug().Msgf("[sub] OnPublication -> channel %s: %s (offset %d)", sub.Channel, e.Data, e.Offset)
 	})
 
 	return sub, subscribed, err
@@ -198,7 +198,7 @@ func (c *WebsocketClient) subscription(channel string) (*centrifuge.Subscription
 func (c *WebsocketClient) subscribeToPublication(sub *centrifuge.Subscription) <-chan string {
 	receiver := make(chan string, 10)
 	sub.OnPublication(func(e centrifuge.PublicationEvent) {
-		c.log.Debugf("[sub] OnPublication -> channel %s: %s (offset %d)", sub.Channel, e.Data, e.Offset)
+		c.log.Debug().Msgf("[sub] OnPublication -> channel %s: %s (offset %d)", sub.Channel, e.Data, e.Offset)
 		receiver <- string(e.Data)
 	})
 	return receiver

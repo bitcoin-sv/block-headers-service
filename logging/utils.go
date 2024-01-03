@@ -1,11 +1,9 @@
-package logger
+package logging
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
-	"github.com/bitcoin-sv/pulse/domains/logging"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/pulse/internal/wire"
 )
@@ -15,53 +13,6 @@ const (
 	// that will be logged.
 	maxRejectReasonLen = 250
 )
-
-// DefaultLoggerFactory creates default factory with default system tag, level and writing to std out.
-func DefaultLoggerFactory() logging.LoggerFactory {
-	return NewLoggerFactory("HEADERS", logging.Info, os.Stdout)
-}
-
-// SetLevelFromString sets logger level based on string.
-// Defaults to Info if string doesn't match expected level string.
-func SetLevelFromString(target interface{}, level string) {
-	l, _ := ParseLevel(level)
-	SetLevel(target, l)
-}
-
-// SetLevel tries to set a logging level.
-// If target is logging.CurrentLevelSetter then it is setting a logging level and returning true,
-// otherwise returning false.
-func SetLevel(target interface{}, l logging.Level) (ok bool) {
-	t, ok := target.(logging.CurrentLevelSetter)
-	if ok {
-		t.SetLevel(l)
-	}
-	return
-}
-
-// ParseLevel returns a level based on the input string s.  If the input
-// can't be interpreted as a valid log level, the info level and false is
-// returned.
-func ParseLevel(s string) (l logging.Level, ok bool) {
-	switch strings.ToLower(s) {
-	case "trace", "trc":
-		return logging.Trace, true
-	case "debug", "dbg":
-		return logging.Debug, true
-	case "info", "inf":
-		return logging.Info, true
-	case "warn", "wrn":
-		return logging.Warn, true
-	case "error", "err":
-		return logging.Error, true
-	case "critical", "crt":
-		return logging.Critical, true
-	case "off":
-		return logging.Off, true
-	default:
-		return logging.Info, false
-	}
-}
 
 // DirectionString returns string direction.
 func DirectionString(inbound bool) string {
