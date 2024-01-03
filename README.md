@@ -138,11 +138,21 @@ PULSE_HISTORY_MAX=300
 
 ### Installation
 1. Install Go according to the installation instructions here: http://golang.org/doc/install
-2. Clone the repo
+
+There are two options to run Pulse:
+
+a) Clone the repo
+
    ```sh
-   https://github.com/gignative-solutions/ba-p2p-headers.git
-   ```
-    
+  git clone https://github.com/bitcoin-sv/pulse
+   ``` 
+   1. ```go run ./cmd/main.go```
+
+b) Get package from ``pkg.dev.go``
+1. ```go get -u https://pkg.go.dev/github.com/bitcoin-sv/pulse```
+2. ```go build -o pulse```
+3. ```./pulse```
+
 ### Configuration
 In the ```config.go``` is the configuration of the application. By changing variables you can adjust the work of our server
 
