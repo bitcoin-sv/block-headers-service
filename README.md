@@ -10,7 +10,7 @@
 
   <p align="center">
     Go application used to collect and return information about blockchain headers
-</div>
+</p>
 
 ## Table of contents
 <details>
