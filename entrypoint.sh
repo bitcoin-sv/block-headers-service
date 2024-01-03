@@ -2,7 +2,7 @@
 
 export PRELOADED_DB_URL=${PRELOADED_DB_URL:? 'URL to download preloaded db is not set. Exiting.'}
 export PULSE_DB_PREPARED_DB=false
-export PULSE_DB_DB_FILE_PATH=${PULSE_DB_DB_FILE_PATH:-'./data/blockheaders.db'}
+export PULSE_DB_FILE_PATH=${PULSE_DB_FILE_PATH:-'./data/blockheaders.db'}
 export PULSE_DB_PREPARED_DB_FILE_PATH=${PULSE_DB_PREPARED_DB_FILE_PATH:-'./data/blockheaders.csv.gz'}
 preloaded=false
 clean=false
@@ -20,9 +20,9 @@ function about() {
 }
 
 function clean_db() {
-  if [[ -e $PULSE_DB_DB_FILE_PATH ]]; then
+  if [[ -e $PULSE_DB_FILE_PATH ]]; then
     echo "Cleaning existing database"
-    rm $PULSE_DB_DB_FILE_PATH
+    rm $PULSE_DB_FILE_PATH
   fi
   if [[ -e $PULSE_DB_PREPARED_DB_FILE_PATH ]]; then
     echo "Cleaning existing preloaded database archive"
@@ -31,7 +31,7 @@ function clean_db() {
 }
 
 function preload() {
-  if [[ -e $PULSE_DB_DB_FILE_PATH ]]; then
+  if [[ -e $PULSE_DB_FILE_PATH ]]; then
     echo "There is database file. Skipping preloading database."
     echo "If you want to remove this existing database and use preloaded one, then use the '--clean' argument."
     export PULSE_DB_PREPARED_DB=false
