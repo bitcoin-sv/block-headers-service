@@ -37,20 +37,22 @@ func (l *logHandler) Level() (level centrifuge.LogLevel) {
 }
 
 func (l *logHandler) Log(entry centrifuge.LogEntry) {
-	var log func(format string, params ...interface{})
+	var event *zerolog.Event
 	switch entry.Level {
 	case centrifuge.LogLevelTrace:
-		log = l.logger.Trace().Msgf
+		event = l.logger.Trace()
 	case centrifuge.LogLevelDebug:
-		log = l.logger.Debug().Msgf
+		event = l.logger.Debug()
 	case centrifuge.LogLevelInfo:
-		log = l.logger.Info().Msgf
+		event = l.logger.Info()
 	case centrifuge.LogLevelWarn:
-		log = l.logger.Warn().Msgf
+		event = l.logger.Warn()
 	case centrifuge.LogLevelError:
-		log = l.logger.Error().Msgf
+		event = l.logger.Error()
 	case centrifuge.LogLevelNone:
-		log = func(format string, params ...interface{}) {}
+		event = nil
 	}
-	log("%s Context: %v.", entry.Message, entry.Fields)
+	if event != nil {
+		event.Msgf("%s Context: %v.", entry.Message, entry.Fields)
+	}
 }
