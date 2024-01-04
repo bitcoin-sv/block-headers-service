@@ -35,7 +35,7 @@ type DbConfig struct {
 	Type               DbType `mapstructure:"type"`
 	SchemaPath         string `mapstructure:"schema_path"`
 	Dsn                string `mapstructure:"dsn"`
-	FilePath           string `mapstructure:"db_file_path"`
+	FilePath           string `mapstructure:"file_path"`
 	PreparedDb         bool   `mapstructure:"prepared_db"`
 	PreparedDbFilePath string `mapstructure:"prepared_db_file_path"`
 }

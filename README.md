@@ -84,18 +84,18 @@ http://localhost:8080/swagger/index.html
 
 #### Enabled by Default
 
-The default assumes you want to use Authentication. This requires a single environment variable.
+The default assumes you want to use Authentication. This requires a single environment variable.  
 
-`HTTP_SERVER_AUTHTOKEN=replace_me_with_token_you_want_to_use_as_admin_token`
+`HTTP_SERVER_AUTHTOKEN=replace_me_with_token_you_want_to_use_as_admin_token`  
 
-#### Disabling Auth Requirement
+#### Disabling Auth Requirement  
 
-To disable authentication exposing all endpoints openly, set the following environment variable.
-This is available if you prefer to use your own authentication in a separate proxy or similar.
-We do not recommend you expose the server to the internet without authentication,
-as it would then be possible for anyone to prune your headers at will.
+To disable authentication exposing all endpoints openly, set the following environment variable. 
+This is available if you prefer to use your own authentication in a separate proxy or similar. 
+We do not recommend you expose the server to the internet without authentication, 
+as it would then be possible for anyone to prune your headers at will.  
 
-`HTTP_SERVER_USEAUTH=false`
+`HTTP_SERVER_USEAUTH=false`  
 
 #### Authenticate with admin token
 
@@ -107,7 +107,7 @@ Authorization Bearer replace_me_with_token_you_want_to_use_as_admin_token
 
 #### Additional tokens
 
-If you have a need for additional tokens to authenticate in pulse
+If you have a need for additional tokens to authenticate in pulse 
 you can generate such with the following request:
 ```http request
 POST https://{{pulse_url}}/api/v1/access
@@ -139,10 +139,10 @@ Pulse can notify a client via websockets that new header was received and store 
 
 #### Subscribing
 
-Pulse use [centrifugal/centrifuge](https://github.com/centrifugal/centrifuge) to run a server.
+Pulse use [centrifugal/centrifuge](https://github.com/centrifugal/centrifuge) to run a server. 
 Therefore, to integrate you need to choose a client library matching a programming language of your choice.
 
-Example how to subscribe using GO lang library [centrifugal/centrifuge-go](https://github.com/centrifugal/centrifuge-go)
+Example how to subscribe using GO lang library [centrifugal/centrifuge-go](https://github.com/centrifugal/centrifuge-go) 
 can be found in [./examples/ws-subscribe-to-new-headers/](./examples/ws-subscribe-to-new-headers/main.go)
 
 ### Webhooks
@@ -153,7 +153,7 @@ Creating a new webhook is done via POST request
  POST https://{{pulse_url}}/api/v1/webhook
  ```
 
-Data which should be sent in body:
+ Data which should be sent in body:
  ```
 {
   "url": "<server_url>",
@@ -165,10 +165,10 @@ Data which should be sent in body:
 }
  ```
 
-Information:
-- If authorization is enabled this request also requires `Authorization` header
-- url have to include http or https protocol example: `https://test-url.com`
-- requiredAuth is used to define authorization for webhook
+ Information:
+  - If authorization is enabled this request also requires `Authorization` header
+  - url have to include http or https protocol example: `https://test-url.com`
+  - requiredAuth is used to define authorization for webhook
     - type `BEARER` - token will be placed in `Authorization: Bearer {{token}}` header
     - type `CUSTOM_HEADER`  - authorization header will be build from given variables `{{header}}: {{token}}`
 
