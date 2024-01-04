@@ -6,7 +6,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"github.com/bitcoin-sv/pulse/logging"
 	"net/http"
 	"os"
@@ -47,9 +46,6 @@ func main() {
 	}
 
 	cfg, log, err := config.Load(defaultConfig)
-	fmt.Println(cfg)
-	fmt.Println(log)
-	fmt.Println(err)
 	if err != nil {
 		log.Error().Msgf("cannot load config because of error: %v", err)
 		os.Exit(1)
