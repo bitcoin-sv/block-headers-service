@@ -7,13 +7,14 @@ package p2psync
 import (
 	"crypto/rand"
 	"fmt"
-	"github.com/rs/zerolog"
 	"math"
 	"math/big"
 	"net"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/rs/zerolog"
 
 	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg"
@@ -621,9 +622,8 @@ func (sm *SyncManager) requestForNextHeaderBatch(prevHash *chainhash.Hash, peer 
 	}
 }
 
-// TODO: Consider removing this method after finishing devleopment.
 func (sm *SyncManager) logSyncState(height int32) {
-	if math.Mod(float64(height), 1000) == 0 || height > 760000 {
+	if math.Mod(float64(height), 1000) == 0 {
 		sm.log.Info().Msgf("[Manager] Synced height: %d", height)
 	}
 }

@@ -68,6 +68,7 @@ const (
 	CmdCFHeaders    = "cfheaders"
 	CmdCFCheckpt    = "cfcheckpt"
 	CmdProtoconf    = "protoconf"
+	CmdAuthch       = "authch"
 )
 
 // MessageEncoding represents the wire message encoding format to be used.
@@ -184,6 +185,9 @@ func makeEmptyMessage(command string) (Message, error) {
 		msg = &MsgCFCheckpt{}
 
 	case CmdProtoconf:
+		msg = &MsgProtoconf{}
+
+	case CmdAuthch:
 		msg = &MsgProtoconf{}
 
 	default:
