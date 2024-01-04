@@ -19,9 +19,6 @@
     <li>
       <a href="#about-the-project">About The Project</a>
       <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-      <ul>
         <li><a href="#main-functionality">Main Functionality</a></li>
       </ul>
       <ul>
@@ -75,11 +72,6 @@ Database schema below:
 
 ![Alt text](docs/images/headers.png?raw=true "Headers database structure")
 <p align="center"><i>Headers table schema with sqlite database</i></p>
-
-
-#### Built With
-
-* Go 1.19
 
 <!-- GETTING STARTED -->
 ## Getting Started
