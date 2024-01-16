@@ -54,12 +54,13 @@ type Tokens interface {
 
 // Services represents all services in app and provide access to them.
 type Services struct {
-	Network  Network
-	Headers  Headers
-	Chains   Chains
-	Tokens   Tokens
-	Notifier *notification.Notifier
-	Webhooks *notification.WebhooksService
+	Network     Network
+	Headers     Headers
+	Chains      Chains
+	Tokens      Tokens
+	Notifier    *notification.Notifier
+	Webhooks    *notification.WebhooksService
+	EnablePprof bool
 }
 
 // Dept is a struct used to create Services.
