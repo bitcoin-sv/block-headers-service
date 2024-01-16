@@ -25,6 +25,5 @@ func NewHandler(s *service.Services) router.PprofEndpoints {
 			profile.GET("mutex", gin.WrapF(pprof.Handler("mutex").ServeHTTP))
 			profile.GET("threadcreate", gin.WrapF(pprof.Handler("threadcreate").ServeHTTP))
 		}
-
 	})
 }
