@@ -33,7 +33,10 @@ func SetupPulseRoutes(s *service.Services, cfg *config.HTTPConfig) httpserver.Gi
 		tips.NewHandler(s),
 		webhook.NewHandler(s),
 		merkleroots.NewHandler(s),
-		profile.NewHandler(s, cfg.EnablePprof),
+	}
+
+	if cfg.EnablePprof {
+		routes = append(routes, profile.NewHandler(s))
 	}
 
 	apiMiddlewares := toHandlers(auth.NewMiddleware(s, cfg))
