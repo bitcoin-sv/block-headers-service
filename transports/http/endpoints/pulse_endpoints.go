@@ -10,6 +10,7 @@ import (
 	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/headers"
 	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/merkleroots"
 	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/network"
+	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/profile"
 	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/tips"
 	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/webhook"
 	router "github.com/bitcoin-sv/pulse/transports/http/endpoints/routes"
@@ -32,6 +33,7 @@ func SetupPulseRoutes(s *service.Services, cfg *config.HTTPConfig) httpserver.Gi
 		tips.NewHandler(s),
 		webhook.NewHandler(s),
 		merkleroots.NewHandler(s),
+		profile.NewHandler(s, cfg.EnablePprof),
 	}
 
 	apiMiddlewares := toHandlers(auth.NewMiddleware(s, cfg))
@@ -46,6 +48,8 @@ func SetupPulseRoutes(s *service.Services, cfg *config.HTTPConfig) httpserver.Gi
 				r.RegisterEndpoints(rootRouter)
 			case router.ApiEndpoints:
 				r.RegisterApiEndpoints(apiRouter, cfg)
+			case router.PprofEndpoints:
+				r.RegisterPprofEndpoints(rootRouter)
 			default:
 				panic(errors.New("unexpected router endpoints registrar"))
 			}
