@@ -57,3 +57,5 @@ http:
   use_auth: true
   # Authentication token
   auth_token: "mQZQ6WmxURxWz5ch"
+  # Pprof profile
+  enable_pprof: true

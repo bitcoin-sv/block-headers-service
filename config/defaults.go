@@ -1,9 +1,10 @@
 package config
 
 import (
-	"github.com/rs/zerolog"
 	"net"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 // DBSqlite creating config for sqlite db.
@@ -39,6 +40,7 @@ func getHttpConfigDefaults() *HTTPConfig {
 		Port:         8080,
 		UseAuth:      true,
 		AuthToken:    "mQZQ6WmxURxWz5ch",
+		EnablePprof:  true,
 	}
 }
 

@@ -63,6 +63,7 @@ type HTTPConfig struct {
 	Port         int    `mapstructure:"port"`
 	UseAuth      bool   `mapstructure:"use_auth"`
 	AuthToken    string `mapstructure:"auth_token"`
+	EnablePprof  bool   `mapstructure:"enable_pprof"`
 }
 
 // P2PConfig represents a p2p config.
