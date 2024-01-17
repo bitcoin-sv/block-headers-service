@@ -132,9 +132,8 @@ PULSE_HISTORY_MAX=300
 1. Install Go according to the installation instructions here: http://golang.org/doc/install
 2. Clone the repo
    ```sh
-   https://github.com/gignative-solutions/ba-p2p-headers.git
+   https://github.com/bitcoin-sv/pulse.git
    ```
-    
 ### Configuration
 In the ```config.go``` is the configuration of the application. By changing variables you can adjust the work of our server
 
@@ -185,7 +184,13 @@ or with Docker
 ```sh
 docker compose up --build
 ```
-
+#### How to run application on Windows
+To run this application on Windows you need to:
+  1. Have GCC
+  2. Set go environment flag
+      ```sh
+        set CGO_ENABLED=1
+      ```
 ## How to use it
 
 ### Endpoints documentation
