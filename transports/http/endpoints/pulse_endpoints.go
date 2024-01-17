@@ -35,7 +35,7 @@ func SetupPulseRoutes(s *service.Services, cfg *config.HTTPConfig) httpserver.Gi
 		merkleroots.NewHandler(s),
 	}
 
-	if cfg.EnablePprof {
+	if cfg.ProfilingEndpointsEnabled {
 		routes = append(routes, profile.NewHandler(s))
 	}
 

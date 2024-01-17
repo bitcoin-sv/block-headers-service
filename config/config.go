@@ -58,12 +58,12 @@ type WebsocketConfig struct {
 
 // HTTPConfig represents a HTTPConfig config.
 type HTTPConfig struct {
-	ReadTimeout  int    `mapstructure:"read_timeout"`
-	WriteTimeout int    `mapstructure:"write_timeout"`
-	Port         int    `mapstructure:"port"`
-	UseAuth      bool   `mapstructure:"use_auth"`
-	AuthToken    string `mapstructure:"auth_token"`
-	EnablePprof  bool   `mapstructure:"enable_pprof"`
+	ReadTimeout               int    `mapstructure:"read_timeout"`
+	WriteTimeout              int    `mapstructure:"write_timeout"`
+	Port                      int    `mapstructure:"port"`
+	UseAuth                   bool   `mapstructure:"use_auth"`
+	AuthToken                 string `mapstructure:"auth_token"`
+	ProfilingEndpointsEnabled bool   `mapstructure:"debug_profiling"`
 }
 
 // P2PConfig represents a p2p config.

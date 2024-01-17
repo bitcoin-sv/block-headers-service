@@ -35,12 +35,12 @@ func getDbDefaults() *DbConfig {
 
 func getHttpConfigDefaults() *HTTPConfig {
 	return &HTTPConfig{
-		ReadTimeout:  10,
-		WriteTimeout: 10,
-		Port:         8080,
-		UseAuth:      true,
-		AuthToken:    "mQZQ6WmxURxWz5ch",
-		EnablePprof:  true,
+		ReadTimeout:               10,
+		WriteTimeout:              10,
+		Port:                      8080,
+		UseAuth:                   true,
+		AuthToken:                 "mQZQ6WmxURxWz5ch",
+		ProfilingEndpointsEnabled: true,
 	}
 }
 
