@@ -51,8 +51,6 @@ func SetupPulseRoutes(s *service.Services, cfg *config.HTTPConfig) httpserver.Gi
 				r.RegisterEndpoints(rootRouter)
 			case router.ApiEndpoints:
 				r.RegisterApiEndpoints(apiRouter, cfg)
-			case router.PprofEndpoints:
-				r.RegisterPprofEndpoints(rootRouter)
 			default:
 				panic(errors.New("unexpected router endpoints registrar"))
 			}

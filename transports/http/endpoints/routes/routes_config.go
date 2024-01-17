@@ -23,15 +23,6 @@ type ApiEndpoints interface {
 	RegisterApiEndpoints(router *gin.RouterGroup, cfg *config.HTTPConfig)
 }
 
-// PprofEndpointsFunc wrapping type for function to mark it as implementation of PprofEndpoints.
-type PprofEndpointsFunc func(router *gin.RouterGroup)
-
-// PprofEndpoints registrar which will register routes in root context of application.
-type PprofEndpoints interface {
-	// RegisterPprofEndpoints register Pprof endpoints.
-	RegisterPprofEndpoints(router *gin.RouterGroup)
-}
-
 // RegisterEndpoints register root endpoints by registrar RootEndpointsFunc.
 func (f RootEndpointsFunc) RegisterEndpoints(router *gin.RouterGroup) {
 	f(router)
@@ -39,11 +30,6 @@ func (f RootEndpointsFunc) RegisterEndpoints(router *gin.RouterGroup) {
 
 // RegisterApiEndpoints register API endpoints by registrar ApiEndpointsFunc.
 func (f ApiEndpointsFunc) RegisterApiEndpoints(router *gin.RouterGroup) {
-	f(router)
-}
-
-// PprofEndpoints register root endpoints by registrar PprofEndpointsFunc.
-func (f PprofEndpointsFunc) RegisterPprofEndpoints(router *gin.RouterGroup) {
 	f(router)
 }
 
