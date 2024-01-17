@@ -184,7 +184,13 @@ or with Docker
 ```sh
 docker compose up --build
 ```
-
+#### How to run application on Windows
+To run this application on Windows you need to:
+  1. Have GCC
+  2. Set go environment flag
+      ```sh
+        set CGO_ENABLED=1
+      ```
 ## How to use it
 
 ### Endpoints documentation
