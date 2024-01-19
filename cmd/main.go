@@ -6,7 +6,6 @@ package main
 
 import (
 	"errors"
-	"github.com/bitcoin-sv/pulse/logging"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,9 +13,10 @@ import (
 	"runtime/debug"
 	"syscall"
 
+	"github.com/bitcoin-sv/pulse/logging"
+
 	"github.com/bitcoin-sv/pulse/cli"
 	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/config/limits"
 	"github.com/bitcoin-sv/pulse/database"
 	"github.com/bitcoin-sv/pulse/notification"
 	"github.com/bitcoin-sv/pulse/transports/http/endpoints"
@@ -65,12 +65,6 @@ func main() {
 	// bursts.  This value was arrived at with the help of profiling live
 	// usage.
 	debug.SetGCPercent(10)
-
-	// Up some limits.
-	if err := limits.SetLimits(); err != nil {
-		log.Error().Msgf("failed to set limits: %v\n", err)
-		os.Exit(1)
-	}
 
 	// Do required one-time initialization on wire
 	wire.SetLimits(config.ExcessiveBlockSize)
