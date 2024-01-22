@@ -3,7 +3,6 @@ package tips_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"math/big"
 	"net/http"
@@ -127,52 +126,52 @@ func TestGetTipLongest(t *testing.T) {
 	})
 }
 
-func TestPruneTip(t *testing.T) {
-	t.Run("failure when authorization on and empty auth header", func(t *testing.T) {
-		// given
-		pulse, cleanup := testpulse.NewTestPulse(t)
-		defer cleanup()
-		expected_result := struct {
-			code int
-			body []byte
-		}{
-			code: http.StatusUnauthorized,
-			body: []byte("\"empty auth header\""),
-		}
+// func TestPruneTip(t *testing.T) {
+// 	t.Run("failure when authorization on and empty auth header", func(t *testing.T) {
+// 		// given
+// 		pulse, cleanup := testpulse.NewTestPulse(t)
+// 		defer cleanup()
+// 		expected_result := struct {
+// 			code int
+// 			body []byte
+// 		}{
+// 			code: http.StatusUnauthorized,
+// 			body: []byte("\"empty auth header\""),
+// 		}
 
-		// when
-		res := pulse.Api().Call(pruneTip("123"))
+// 		// when
+// 		res := pulse.Api().Call(pruneTip("123"))
 
-		// then
-		assert.Equal(t, res.Code, expected_result.code)
-		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expected_result.body)
-	})
+// 		// then
+// 		assert.Equal(t, res.Code, expected_result.code)
+// 		body, _ := io.ReadAll(res.Body)
+// 		assert.EqualBytes(t, body, expected_result.body)
+// 	})
 
-	t.Run("success", func(t *testing.T) {
-		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
-		defer cleanup()
-		expected_result := struct {
-			code int
-			body string
-		}{
-			code: http.StatusOK,
-			body: "",
-		}
+// 	t.Run("success", func(t *testing.T) {
+// 		// given
+// 		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
+// 		defer cleanup()
+// 		expected_result := struct {
+// 			code int
+// 			body string
+// 		}{
+// 			code: http.StatusOK,
+// 			body: "",
+// 		}
 
-		// when
-		res := pulse.Api().Call(pruneTip("123"))
+// 		// when
+// 		res := pulse.Api().Call(pruneTip("123"))
 
-		// then
-		assert.Equal(t, res.Code, expected_result.code)
+// 		// then
+// 		assert.Equal(t, res.Code, expected_result.code)
 
-		var tip string
-		json.NewDecoder(res.Body).Decode(&tip)
+// 		var tip string
+// 		json.NewDecoder(res.Body).Decode(&tip)
 
-		assert.Equal(t, tip, expected_result.body)
-	})
-}
+// 		assert.Equal(t, tip, expected_result.body)
+// 	})
+// }
 
 func getTips() (req *http.Request, err error) {
 	return http.NewRequestWithContext(
@@ -192,12 +191,12 @@ func getTipLongestChain() (req *http.Request, err error) {
 	)
 }
 
-func pruneTip(hash string) (req *http.Request, err error) {
-	address := fmt.Sprintf("/api/v1/chain/tip/prune/%s", hash)
-	return http.NewRequestWithContext(
-		context.Background(),
-		http.MethodGet,
-		address,
-		nil,
-	)
-}
+// func pruneTip(hash string) (req *http.Request, err error) {
+// 	address := fmt.Sprintf("/api/v1/chain/tip/prune/%s", hash)
+// 	return http.NewRequestWithContext(
+// 		context.Background(),
+// 		http.MethodGet,
+// 		address,
+// 		nil,
+// 	)
+// }

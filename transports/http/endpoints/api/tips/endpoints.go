@@ -1,7 +1,6 @@
 package tips
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -26,7 +25,7 @@ func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup, cfg *config.HTTP
 	{
 		tip.GET("/tip", h.getTips)
 		tip.GET("/tip/longest", h.getTipLongestChain)
-		tip.GET("/tip/prune/:hash", h.pruneTip)
+		// tip.GET("/tip/prune/:hash", h.pruneTip)
 	}
 }
 
@@ -63,24 +62,15 @@ func (h *handler) getTipLongestChain(c *gin.Context) {
 	c.JSON(http.StatusOK, newTipStateResponse(tip))
 }
 
-// PruneTip godoc.
-//
-//	@Summary Prune tip
-//	@Tags tip
-//	@Accept */*
-//	@Produce json
-//	@Success 200 {object} string
-//	@Router /chain/tip/prune/{hash} [get]
-//	@Param hash path string true "Requested Header Hash"
-//	@Security Bearer
-func (h *handler) pruneTip(c *gin.Context) {
-	param := c.Param("hash")
-	fmt.Println(param)
-	tip, err := h.service.GetPruneTip()
+// TO BE IMPLEMENTED
+// func (h *handler) pruneTip(c *gin.Context) {
+// 	param := c.Param("hash")
+// 	fmt.Println(param)
+// 	tip, err := h.service.GetPruneTip()
 
-	if err == nil {
-		c.JSON(http.StatusOK, tip)
-	} else {
-		c.JSON(http.StatusBadRequest, err.Error())
-	}
-}
+// 	if err == nil {
+// 		c.JSON(http.StatusOK, tip)
+// 	} else {
+// 		c.JSON(http.StatusBadRequest, err.Error())
+// 	}
+// }
