@@ -249,7 +249,7 @@ To generate config file with defaults, use the --dump flag, or:
 go run ./cmd/main.go -d
 ```
 
-The default config file path is **project root**, and the default file name is **config.yaml**. This can be overridden by -C flag.
+The default config file path is **program root**, and the default file name is **config.yaml**. This can be overridden by -C flag.
 
 ```bash
 go run ./cmd/main.go -C /my/config.yaml
