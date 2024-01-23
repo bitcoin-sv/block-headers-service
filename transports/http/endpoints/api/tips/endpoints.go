@@ -25,7 +25,6 @@ func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup, cfg *config.HTTP
 	{
 		tip.GET("/tip", h.getTips)
 		tip.GET("/tip/longest", h.getTipLongestChain)
-		// tip.GET("/tip/prune/:hash", h.pruneTip)
 	}
 }
 
@@ -61,16 +60,3 @@ func (h *handler) getTipLongestChain(c *gin.Context) {
 	tip := h.service.GetTip()
 	c.JSON(http.StatusOK, newTipStateResponse(tip))
 }
-
-// TO BE IMPLEMENTED
-// func (h *handler) pruneTip(c *gin.Context) {
-// 	param := c.Param("hash")
-// 	fmt.Println(param)
-// 	tip, err := h.service.GetPruneTip()
-
-// 	if err == nil {
-// 		c.JSON(http.StatusOK, tip)
-// 	} else {
-// 		c.JSON(http.StatusBadRequest, err.Error())
-// 	}
-// }
