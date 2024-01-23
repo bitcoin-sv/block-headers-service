@@ -391,28 +391,6 @@ paths:
       summary: Gets tip of longest chain
       tags:
       - tip
-  /chain/tip/prune/{hash}:
-    get:
-      consumes:
-      - '*/*'
-      parameters:
-      - description: Requested Header Hash
-        in: path
-        name: hash
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-      security:
-      - Bearer: []
-      summary: Prune tip
-      tags:
-      - tip
   /network/peer:
     get:
       consumes:

@@ -435,11 +435,6 @@ func (hs *HeaderService) GetTips() ([]*domains.BlockHeader, error) {
 	return hs.repo.Headers.GetAllTips()
 }
 
-// GetPruneTip used to prune whole fork based on a tip - TO BE IMPLEMENTED.
-func (hs *HeaderService) GetPruneTip() (string, error) {
-	return "", nil
-}
-
 func areAllElementsEqual(slice []*domains.BlockHeader) bool {
 	for _, val := range slice {
 		if val.Hash != slice[0].Hash {
