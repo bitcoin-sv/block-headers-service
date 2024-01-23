@@ -416,42 +416,6 @@
                 }
             }
         },
-        "/chain/tip/prune/{hash}": {
-            "get": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "consumes": [
-                    "*/*"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "tip"
-                ],
-                "summary": "Prune tip",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Requested Header Hash",
-                        "name": "hash",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/network/peer": {
             "get": {
                 "security": [

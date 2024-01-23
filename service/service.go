@@ -37,7 +37,6 @@ type Headers interface {
 	GetCommonAncestor(hashes []string) (*domains.BlockHeader, error)
 	GetHeadersState(hash string) (*domains.BlockHeaderState, error)
 	GetTips() ([]*domains.BlockHeader, error)
-	GetPruneTip() (string, error)
 }
 
 // Chains is an interface which represents methods exposed by Chains Service.
