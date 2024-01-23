@@ -276,44 +276,8 @@ PULSE_HISTORY_MAX=300
 ```
 
 ### Configuration
-In the ```config.go``` is the configuration of the application. By changing variables you can adjust the work of our server
 
-```
-defaultConfigFilename          = "p2p.conf"
-defaultLogLevel                = "info"
-defaultLogDirname              = "logs"
-defaultLogFilename             = "p2p.log"
-defaultMaxPeers                = 125
-defaultMaxPeersPerIP           = 5
-defaultBanDuration             = time.Hour * 24
-defaultConnectTimeout          = time.Second * 30
-defaultTrickleInterval         = peer.DefaultTrickleInterval
-defaultExcessiveBlockSize      = 128000000
-defaultMinSyncPeerNetworkSpeed = 51200
-defaultTargetOutboundPeers     = uint32(8)
-defaultBlocksToConfirmFork     = 10
-```
-
-Settings related to database:
-
-      - DB_DSN=file:/data/blockheaders.db?_foreign_keys=true&pooled=true
-      - DB_SCHEMA_PATH=/migrations
-      - DB_PREPAREDDB=true
-      - DB_PREPAREDDBFILE_PATH="./data/blockheaders.csv.gz"
-
-DSN can be used to change the local database location - this should be a volume mount into the container while SQLite is the only db option, we will support more in future.
-
-DB_SCHEMA_PATH should always be set to /migrations, that's the location within the container where the db migration files are head and will setup the database correctly.
-
-DB_PREPAREDDB is used to define if application should use prepared db.
-
-DB_PREPAREDDBFILE_PATH define path to prepared db.
-
-
-Settings related to admin auth:
-      - HTTP_SERVER_AUTHTOKEN=admin_only_afUMlv5iiDgQtj22O9n5fADeSb
-
-This admin token should be used as a Bearer token in the Authorization header when dynamically creating secure tokens for applications to then use at the POST /api/v1/access endpoint.  
+`Will be updated soon.`
 
 
 <!-- PROJECT LOGO -->
