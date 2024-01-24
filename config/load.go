@@ -50,14 +50,17 @@ func SetDefaults(log *zerolog.Logger) error {
 		viper.SetDefault(key, value)
 	}
 
+	setP2PDefaults(log)
+	envConfig()
+
+	return nil
+}
+
+func setP2PDefaults(log *zerolog.Logger) {
 	Lookup = net.LookupIP
 	Dial = net.DialTimeout
 	TimeSource = NewMedianTime(log)
 	Checkpoints = ActiveNetParams.Checkpoints
-
-	envConfig()
-
-	return nil
 }
 
 func loadFromFile() error {
