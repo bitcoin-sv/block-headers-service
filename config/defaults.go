@@ -1,7 +1,6 @@
 package config
 
 import (
-	"net"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -69,10 +68,6 @@ func getP2PDefaults(log *zerolog.Logger) *P2PConfig {
 		BlocksForForkConfirmation: 10,
 		DefaultConnectTimeout:     30 * time.Second,
 		DisableCheckpoints:        false,
-		Dial:                      net.DialTimeout,
-		Lookup:                    net.LookupIP,
-		TimeSource:                NewMedianTime(log),
-		Checkpoints:               ActiveNetParams.Checkpoints,
 	}
 }
 

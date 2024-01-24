@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/bitcoin-sv/pulse/logging"
 	"github.com/rs/zerolog"
+	"net"
 	"strings"
 	"sync"
 
@@ -21,12 +22,6 @@ func Load(cfg *AppConfig) (*AppConfig, *zerolog.Logger, error) {
 	viperLock.Lock()
 	defer viperLock.Unlock()
 
-	if err := setDefaults(); err != nil {
-		return nil, nil, err
-	}
-
-	envConfig()
-
 	if err := loadFromFile(); err != nil {
 		return nil, nil, err
 	}
@@ -43,7 +38,7 @@ func Load(cfg *AppConfig) (*AppConfig, *zerolog.Logger, error) {
 	return cfg, logger, nil
 }
 
-func setDefaults() error {
+func SetDefaults(log *zerolog.Logger) error {
 	defaultLog := logging.GetDefaultLogger()
 	viper.SetDefault(ConfigFilePathKey, DefaultConfigFilePath)
 
@@ -55,6 +50,13 @@ func setDefaults() error {
 	for key, value := range defaultsMap {
 		viper.SetDefault(key, value)
 	}
+
+	Lookup = net.LookupIP
+	Dial = net.DialTimeout
+	TimeSource = NewMedianTime(log)
+	Checkpoints = ActiveNetParams.Checkpoints
+
+	envConfig()
 
 	return nil
 }

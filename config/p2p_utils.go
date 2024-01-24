@@ -18,7 +18,7 @@ func (c *P2PConfig) BsvdLookup(host string) ([]net.IP, error) {
 		return nil, fmt.Errorf("attempt to resolve tor address %s", host)
 	}
 
-	return c.Lookup(host)
+	return Lookup(host)
 }
 
 // BsvdDial connects to the address on the named network using the appropriate
@@ -31,5 +31,5 @@ func (c *P2PConfig) BsvdDial(addr net.Addr) (net.Conn, error) {
 		return nil, fmt.Errorf("no possibility to use onion addresses: %v", addr)
 	}
 
-	return c.Dial(addr.Network(), addr.String(), c.DefaultConnectTimeout)
+	return Dial(addr.Network(), addr.String(), c.DefaultConnectTimeout)
 }
