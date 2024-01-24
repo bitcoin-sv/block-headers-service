@@ -39,11 +39,10 @@ func Load(cfg *AppConfig) (*AppConfig, *zerolog.Logger, error) {
 }
 
 func SetDefaults(log *zerolog.Logger) error {
-	defaultLog := logging.GetDefaultLogger()
 	viper.SetDefault(ConfigFilePathKey, DefaultConfigFilePath)
 
 	defaultsMap := make(map[string]interface{})
-	if err := mapstructure.Decode(GetDefaultAppConfig(defaultLog), &defaultsMap); err != nil {
+	if err := mapstructure.Decode(GetDefaultAppConfig(), &defaultsMap); err != nil {
 		return err
 	}
 

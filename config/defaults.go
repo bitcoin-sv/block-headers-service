@@ -2,21 +2,19 @@ package config
 
 import (
 	"time"
-
-	"github.com/rs/zerolog"
 )
 
 // DBSqlite creating config for sqlite db.
 const DBSqlite DbType = "sqlite"
 
-func GetDefaultAppConfig(log *zerolog.Logger) *AppConfig {
+func GetDefaultAppConfig() *AppConfig {
 	return &AppConfig{
 		Db:         getDbDefaults(),
 		HTTP:       getHttpConfigDefaults(),
 		MerkleRoot: getMerkleRootDefaults(),
 		Websocket:  getWebsocketDefaults(),
 		Webhook:    getWebhookDefaults(),
-		P2P:        getP2PDefaults(log),
+		P2P:        getP2PDefaults(),
 		Logging:    getLoggingDefaults(),
 	}
 }
@@ -62,7 +60,7 @@ func getWebhookDefaults() *WebhookConfig {
 	}
 }
 
-func getP2PDefaults(log *zerolog.Logger) *P2PConfig {
+func getP2PDefaults() *P2PConfig {
 	return &P2PConfig{
 		BanDuration:               time.Hour * 24,
 		BlocksForForkConfirmation: 10,

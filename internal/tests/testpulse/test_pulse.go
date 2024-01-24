@@ -69,7 +69,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 
 	viper.Reset()
 	testLog := zerolog.Nop()
-	defaultConfig := config.GetDefaultAppConfig(&testLog)
+	defaultConfig := config.GetDefaultAppConfig()
 	cfg, _, _ := config.Load(defaultConfig)
 
 	for _, opt := range ops {

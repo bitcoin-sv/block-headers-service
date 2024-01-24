@@ -43,7 +43,7 @@ func main() {
 		defaultLog.Error().Msgf("cannot set config default values: %v", err)
 	}
 
-	defaultCfg := config.GetDefaultAppConfig(defaultLog)
+	defaultCfg := config.GetDefaultAppConfig()
 
 	if err := cli.LoadFlags(defaultCfg); err != nil {
 		defaultLog.Error().Msgf("cannot load flags because of error: %v", err)
