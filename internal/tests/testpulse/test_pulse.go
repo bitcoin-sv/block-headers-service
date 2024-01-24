@@ -73,7 +73,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 		panic(fmt.Sprintf("cannot set config default values: %v", err))
 	}
 	defaultConfig := config.GetDefaultAppConfig()
-	cfg, _, err := config.Load(defaultConfig)
+	cfg, _, _ := config.Load(defaultConfig)
 
 	for _, opt := range ops {
 		switch opt := opt.(type) {
