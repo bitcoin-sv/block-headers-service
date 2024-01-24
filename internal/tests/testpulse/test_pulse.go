@@ -69,8 +69,11 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 
 	viper.Reset()
 	testLog := zerolog.Nop()
+	if err := config.SetDefaults(&testLog); err != nil {
+		panic(fmt.Sprintf("cannot set config default values: %v", err))
+	}
 	defaultConfig := config.GetDefaultAppConfig()
-	cfg, _, _ := config.Load(defaultConfig)
+	cfg, _, err := config.Load(defaultConfig)
 
 	for _, opt := range ops {
 		switch opt := opt.(type) {
