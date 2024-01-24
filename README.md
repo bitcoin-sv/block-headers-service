@@ -10,7 +10,7 @@
 
   <p align="center">
     Go application used to collect and return information about blockchain headers
-</div>
+</p>
 
 ## Table of contents
 <details>
@@ -21,24 +21,12 @@
       <ul>
         <li><a href="#main-functionality">Main Functionality</a></li>
       </ul>
-      <ul>
-        <li><a href="#current-database-structures">Current database structures</a></li>
-      </ul>
     </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-      <ul>
-        <li><a href="#configuration">Configuration</a></li>
-      </ul>
-      <ul>
-        <li><a href="#run-application">Run application</a></li>
-      </ul>
-    </li>
-    <li>
+<li>
       <a href="#how-to-use-it">How to use it</a>
+<ul>
+        <li><a href="#docker-image">Docker image</a></li>
+      </ul>
       <ul>
         <li><a href="#endpoints-documentation">Endpoints documentation</a></li>
       </ul>
@@ -50,6 +38,17 @@
         <li><a href="#webhooks">Webhooks</a></li>
       </ul>
     </li>
+    <li>
+<a href="#Running-from-source">Running from source</a>
+<ul>
+        <li><a href="#Running-from-source">Run application</a></li>
+      </ul>
+      <ul>
+        <li><a href="#configuration">Configuration</a></li>
+      </ul>
+      
+    </li>
+    
   </ol>
 </details>
 
@@ -64,134 +63,16 @@ Pulse is a go server which connects into BSV P2P network to gather and then serv
 #### Main functionality
 The main functionality of the application is synchornization with peers and collecting all headers. After starting the server, it creates default objects and connects to BSV P2P network. Application has defined checkpoints (specific headers) which are used in synchronization. During this process, server is asking peers for headers (from checkpoint to checkpoint) in batches of 2000. Every header received from peers is saved in memory. After full synchronization, server is changing the operating mode and start to listening for new header. After when new block has been mined, this information should be sended from peers to our server.
 
-#### Current database structures
-We store everything in database and then we calculate any important information related to: confirmations, state etc.
-The only exception is when inserting a new header we check if he has any parent in database and if we don't have any parents 
-we set the "isorphan" flag to true.
-Database schema below:
-
-![Alt text](docs/images/headers.png?raw=true "Headers database structure")
-<p align="center"><i>Headers table schema with sqlite database</i></p>
-
-<!-- GETTING STARTED -->
-## Getting Started
-
-### Config Variables
-
-Default config variables can be overridden by (in this order of importance):
-
-1. Flags (only the ones below)
-2. ENV variables
-3. Config file
-
-#### Flags
-
-Available flags:
-
-```bash
-  -C, --config_file string                       custom config file path
-  -h, --help                                     show help
-  -v, --version                                  show version
-  -d, --dump_config                              dump config to file, specified by config_file (-C) flag
-  -e, --export_headers                           export headers to file
-```
-
-To generate config file with defaults, use the --dump flag, or:
-
-```bash
-go run ./cmd/main.go -d
-```
-
-The default config file path is **project root**, and the default file name is **config.yaml**. This can be overridden by -C flag.
-
-```bash
-go run ./cmd/main.go -C /my/config.yaml
-```
-
-#### Environment variables
-
-To override any config variable with ENV, use the "pulse\_" prefix with mapstructure annotation path with "_" as a delimiter in all uppercase. Example:
-
-Let's take this fragment of AppConfig from `config.example.yaml`:
-
-```yaml
-websocket:
-  # Maximum number of history items
-  history_max: 300
-  # History time-to-live
-  history_ttl: 10
-```
-
-To override history_max in websocket config, use the path with "_" as a path delimiter and pulse\_ as prefix. So:
-
-```bash
-PULSE_HISTORY_MAX=300
-```
-
-### Installation
-1. Install Go according to the installation instructions here: http://golang.org/doc/install
-2. Clone the repo
-   ```sh
-   https://github.com/bitcoin-sv/pulse.git
-   ```
-### Configuration
-In the ```config.go``` is the configuration of the application. By changing variables you can adjust the work of our server
-
-```
-defaultConfigFilename          = "p2p.conf"
-defaultLogLevel                = "info"
-defaultLogDirname              = "logs"
-defaultLogFilename             = "p2p.log"
-defaultMaxPeers                = 125
-defaultMaxPeersPerIP           = 5
-defaultBanDuration             = time.Hour * 24
-defaultConnectTimeout          = time.Second * 30
-defaultTrickleInterval         = peer.DefaultTrickleInterval
-defaultExcessiveBlockSize      = 128000000
-defaultMinSyncPeerNetworkSpeed = 51200
-defaultTargetOutboundPeers     = uint32(8)
-defaultBlocksToConfirmFork     = 10
-```
-
-Settings related to database:
-
-      - DB_DSN=file:/data/blockheaders.db?_foreign_keys=true&pooled=true
-      - DB_SCHEMA_PATH=/migrations
-      - DB_PREPAREDDB=true
-      - DB_PREPAREDDBFILE_PATH="./data/blockheaders.csv.gz"
-
-DSN can be used to change the local database location - this should be a volume mount into the container while SQLite is the only db option, we will support more in future.
-
-DB_SCHEMA_PATH should always be set to /migrations, that's the location within the container where the db migration files are head and will setup the database correctly.
-
-DB_PREPAREDDB is used to define if application should use prepared db.
-
-DB_PREPAREDDBFILE_PATH define path to prepared db.
-
-
-Settings related to admin auth:
-      - HTTP_SERVER_AUTHTOKEN=admin_only_afUMlv5iiDgQtj22O9n5fADeSb
-
-This admin token should be used as a Bearer token in the Authorization header when dynamically creating secure tokens for applications to then use at the POST /api/v1/access endpoint.  
-
-## 
-
-### Run application
-```sh
-go run ./cmd/ .
-```
-or with Docker
-```sh
-docker compose up --build
-```
-#### How to run application on Windows
-To run this application on Windows you need to:
-  1. Have GCC
-  2. Set go environment flag
-      ```sh
-        set CGO_ENABLED=1
-      ```
 ## How to use it
+
+### Docker image
+
+Pull image from docker hub https://hub.docker.com/r/bsvb/pulse
+1. ```docker pull bsvb/pulse```
+
+Starting new instance
+1. ```docker run bsvb/pulse:latest```
+
 
 ### Endpoints documentation
 For endpoints documentation you can visit swagger which is exposed on port 8080 by default.
@@ -319,6 +200,85 @@ This request will delete webhook permanently
 
 #### Refresh webhook
 If the number of failed requests wil exceed `WEBHOOK_MAXTRIES`, webhook will be set to inactive. To refresh webhook you can use this same endpoint as for webhook creation.
+
+### Running from source
+
+1. Install Go according to the installation instructions here: http://golang.org/doc/install
+
+Options to run Pulse:
+
+a) Clone the repo
+
+   ```sh
+  git clone https://github.com/bitcoin-sv/pulse
+   ``` 
+1. ```go run ./cmd/main.go```
+
+Or run app with docker
+1. ```docker compose up --build```
+
+b) Get package from ``pkg.dev.go``
+1. ```go get -u https://pkg.go.dev/github.com/bitcoin-sv/pulse```
+2. ```go build -o pulse```
+3. ```./pulse```
+
+
+### Config Variables
+
+Default config variables can be overridden by (in this order of importance):
+
+1. Flags (only the ones below)
+2. ENV variables
+3. Config file
+
+#### Flags
+
+Available flags:
+
+```bash
+  -C, --config_file string                       custom config file path
+  -h, --help                                     show help
+  -v, --version                                  show version
+  -d, --dump_config                              dump config to file, specified by config_file (-C) flag
+  -e, --export_headers                           export headers to file
+```
+
+To generate config file with defaults, use the --dump flag, or:
+
+```bash
+go run ./cmd/main.go -d
+```
+
+The default config file path is **program root**, and the default file name is **config.yaml**. This can be overridden by -C flag.
+
+```bash
+go run ./cmd/main.go -C /my/config.yaml
+```
+
+#### Environment variables
+
+To override any config variable with ENV, use the "pulse\_" prefix with mapstructure annotation path with "_" as a delimiter in all uppercase. Example:
+
+Let's take this fragment of AppConfig from `config.example.yaml`:
+
+```yaml
+websocket:
+  # Maximum number of history items
+  history_max: 300
+  # History time-to-live
+  history_ttl: 10
+```
+
+To override history_max in websocket config, use the path with "_" as a path delimiter and pulse\_ as prefix. So:
+
+```bash
+PULSE_HISTORY_MAX=300
+```
+
+### Configuration
+
+`Will be updated soon.`
+
 
 <!-- PROJECT LOGO -->
 <br />
