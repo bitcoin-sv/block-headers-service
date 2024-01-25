@@ -283,10 +283,6 @@ To override history_max in websocket config, use the path with "_" as a path del
 PULSE_HISTORY_MAX=300
 ```
 
-### Configuration
-
-`Will be updated soon.`
-
 
 <!-- PROJECT LOGO -->
 <br />
