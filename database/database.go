@@ -2,11 +2,14 @@ package database
 
 import (
 	"fmt"
+
 	"github.com/rs/zerolog"
 
 	"github.com/jmoiron/sqlx"
 	// use blank import to register sqlite driver.
 	_ "github.com/mattn/go-sqlite3"
+	// use blank import to register postgresql driver.
+	_ "github.com/lib/pq"
 
 	"github.com/bitcoin-sv/pulse/config"
 )
@@ -61,9 +64,8 @@ func NewDBAdapter(cfg *config.DbConfig) (DBAdapter, error) {
 	switch cfg.Type {
 	case config.DBSqlite:
 		return &SQLiteAdapter{}, nil
-	// TODO: add adapters for other databases, e.g. PostgreSQL
-	// case "postgresql":
-	//     return &PostgresAdapter{}
+	case config.DBPostgreSql:
+		return &PostgreSqlAdapter{}, nil
 	default:
 		return nil, fmt.Errorf("unsupported database type %s", cfg.Type)
 	}

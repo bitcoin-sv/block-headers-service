@@ -19,6 +19,11 @@ const (
 // DbType database type.
 type DbType string
 
+const (
+	DBSqlite     DbType = "sqlite"
+	DBPostgreSql DbType = "postgres"
+)
+
 // AppConfig returns strongly typed config values.
 type AppConfig struct {
 	Db         *DbConfig         `mapstructure:"db"`
@@ -32,18 +37,31 @@ type AppConfig struct {
 
 // DbConfig represents a database connection.
 type DbConfig struct {
-	// Type is the type of database.
+	// Type is the type of database [sqlite|postgres].
 	Type DbType `mapstructure:"type"`
 	// SchemaPath is the path to the database schema.
 	SchemaPath string `mapstructure:"schema_path"`
-	// Dsn is the data source name.
-	Dsn string `mapstructure:"dsn"`
-	// FilePath is the path to the database file.
-	FilePath string `mapstructure:"file_path"`
 	// PreparedDb is a flag for enabling prepared database.
 	PreparedDb bool `mapstructure:"prepared_db"`
 	// PreparedDbFilePath is the path to the prepared database file.
 	PreparedDbFilePath string `mapstructure:"prepared_db_file_path"`
+
+	Postgres *PostgreSqlConfig `mapstructure:"postgres"`
+	Sqlite   SqliteConfig      `mapstructure:"sqlite"`
+}
+
+type SqliteConfig struct {
+	// FilePath is the path to the database file.
+	FilePath string `mapstructure:"file_path"`
+}
+
+type PostgreSqlConfig struct {
+	Host     string
+	Port     uint16
+	User     string
+	Password string
+	DbName   string
+	Sslmode  string
 }
 
 // MerkleRootConfig represents merkleroots verification config.

@@ -7,9 +7,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// DBSqlite creating config for sqlite db.
-const DBSqlite DbType = "sqlite"
-
 func GetDefaultAppConfig(log *zerolog.Logger) *AppConfig {
 	return &AppConfig{
 		Db:         getDbDefaults(),
@@ -25,11 +22,12 @@ func GetDefaultAppConfig(log *zerolog.Logger) *AppConfig {
 func getDbDefaults() *DbConfig {
 	return &DbConfig{
 		Type:               DBSqlite,
-		FilePath:           "./data/blockheaders.db",
-		Dsn:                "file:./data/blockheaders.db?_foreign_keys=true&pooling=true",
 		SchemaPath:         "./database/migrations",
 		PreparedDb:         false,
 		PreparedDbFilePath: "./data/blockheaders.csv.gz",
+		Sqlite: SqliteConfig{
+			FilePath: "./data/blockheaders.db",
+		},
 	}
 }
 
@@ -81,6 +79,6 @@ func getLoggingDefaults() *LoggingConfig {
 		Level:        "debug",
 		Format:       "console",
 		InstanceName: "pulse",
-		LogOrigin:    false,
+		LogOrigin:    true,
 	}
 }
