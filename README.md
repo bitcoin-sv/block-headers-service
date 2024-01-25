@@ -223,6 +223,14 @@ b) Get package from ``pkg.dev.go``
 3. ```./pulse```
 
 
+## Usage
+
+> Every variable which is used and can be configured is described in [config.example.yaml](config.example.yaml)
+
+### Defaults
+
+If you run Pulse without editing anything, it will use the default configuration from file [defaults.go](/config/defaults.go). It is set up to use _sqlite_ database with enabled authorization (with default auth key) for http server.
+
 ### Config Variables
 
 Default config variables can be overridden by (in this order of importance):
@@ -274,10 +282,6 @@ To override history_max in websocket config, use the path with "_" as a path del
 ```bash
 PULSE_HISTORY_MAX=300
 ```
-
-### Configuration
-
-`Will be updated soon.`
 
 
 <!-- PROJECT LOGO -->
