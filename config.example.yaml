@@ -21,8 +21,6 @@ p2p:
   ban_duration: 24h
   # Disable built-in checkpoints
   disable_checkpoints: false
-  # Logging level for subsystems
-  log_level: info
   # Minimum number of blocks for confirmation
   blocks_for_confirmation: 10
   # Default connection timeout
@@ -59,3 +57,14 @@ http:
   auth_token: "mQZQ6WmxURxWz5ch"
   # Flag for enabling additional endpoits for profiling with use of pprof
   debug_profiling: true
+
+# Logging Configuration
+logging:
+  # Logging level
+  level: debug
+  # Logging format: console/json
+  format: console
+  # Instance name shown as parameter in logs
+  instance_name: pulse
+  # Flag for enabling origin parameter in logs
+  origin: false

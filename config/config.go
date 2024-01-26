@@ -16,6 +16,11 @@ const (
 	ConfigEnvPrefix       = "pulse_"
 )
 
+var Lookup func(string) ([]net.IP, error)
+var Dial func(string, string, time.Duration) (net.Conn, error)
+var Checkpoints []chaincfg.Checkpoint
+var TimeSource MedianTimeSource
+
 // DbType database type.
 type DbType string
 
@@ -110,12 +115,6 @@ type P2PConfig struct {
 	BlocksForForkConfirmation int `mapstructure:"blocks_for_confirmation" description:"Minimum number of blocks to consider a block confirmed"`
 	// DefaultConnectTimeout is the default connection timeout.
 	DefaultConnectTimeout time.Duration `mapstructure:"default_connect_timeout" description:"The default connection timeout"`
-	Lookup                func(string) ([]net.IP, error)
-	Dial                  func(string, string, time.Duration) (net.Conn, error)
-	// Checkpoints is a list of checkpoints.
-	Checkpoints []chaincfg.Checkpoint
-	// TimeSource is the time source.
-	TimeSource MedianTimeSource
 }
 
 // LoggingConfig represents a logging config.

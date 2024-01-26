@@ -29,8 +29,8 @@ func NewHeaderService(repo *repository.Repositories, p2pCfg *config.P2PConfig, m
 	headerLogger := log.With().Str("service", "header").Logger()
 	return &HeaderService{
 		repo:        repo,
-		checkpoints: p2pCfg.Checkpoints,
-		timeSource:  p2pCfg.TimeSource,
+		checkpoints: config.Checkpoints,
+		timeSource:  config.TimeSource,
 		merkleCfg:   merkleCfg,
 		log:         &headerLogger,
 	}
