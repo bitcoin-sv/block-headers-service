@@ -16,6 +16,7 @@ import (
 	"github.com/bitcoin-sv/pulse/cli"
 
 	"github.com/bitcoin-sv/pulse/logging"
+	"github.com/bitcoin-sv/pulse/repository"
 
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/database"
@@ -25,12 +26,13 @@ import (
 
 	"github.com/bitcoin-sv/pulse/database/sql"
 	"github.com/bitcoin-sv/pulse/internal/wire"
-	"github.com/bitcoin-sv/pulse/repository"
 	"github.com/bitcoin-sv/pulse/service"
 	httpserver "github.com/bitcoin-sv/pulse/transports/http/server"
 	"github.com/bitcoin-sv/pulse/transports/p2p"
 	peerpkg "github.com/bitcoin-sv/pulse/transports/p2p/peer"
 	"github.com/bitcoin-sv/pulse/version"
+
+	sqlrepository "github.com/bitcoin-sv/pulse/database/repository"
 )
 
 // nolint: godot
@@ -84,8 +86,14 @@ func main() {
 	log.Info().Msgf("Version %s", version.String())
 
 	peers := make(map[*peerpkg.Peer]*peerpkg.PeerSyncState)
+
 	headersStore := sql.NewHeadersDb(db, cfg.Db.Engine, log)
-	repo := repository.NewRepositories(headersStore)
+	repo := &repository.Repositories{
+		Headers:  sqlrepository.NewHeadersRepository(headersStore),
+		Tokens:   sqlrepository.NewTokensRepository(headersStore),
+		Webhooks: sqlrepository.NewWebhooksRepository(headersStore),
+	}
+
 	hs := service.NewServices(service.Dept{
 		Repositories: repo,
 		Peers:        peers,
