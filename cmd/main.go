@@ -6,6 +6,7 @@ package main
 
 import (
 	"errors"
+	"github.com/bitcoin-sv/pulse/cli"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,7 +16,6 @@ import (
 
 	"github.com/bitcoin-sv/pulse/logging"
 
-	"github.com/bitcoin-sv/pulse/cli"
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/database"
 	"github.com/bitcoin-sv/pulse/notification"
@@ -39,15 +39,20 @@ import (
 func main() {
 	defaultLog := logging.GetDefaultLogger()
 
-	defaultConfig := config.GetDefaultAppConfig(defaultLog)
-	if err := cli.LoadFlags(defaultConfig); err != nil {
+	if err := config.SetDefaults(defaultLog); err != nil {
+		defaultLog.Error().Msgf("cannot set config default values: %v", err)
+	}
+
+	defaultCfg := config.GetDefaultAppConfig()
+
+	if err := cli.LoadFlags(defaultCfg); err != nil {
 		defaultLog.Error().Msgf("cannot load flags because of error: %v", err)
 		os.Exit(1)
 	}
 
-	cfg, log, err := config.Load(defaultConfig)
+	cfg, log, err := config.Load(defaultCfg)
 	if err != nil {
-		log.Error().Msgf("cannot load config because of error: %v", err)
+		defaultLog.Error().Msgf("cannot load config because of error: %v", err)
 		os.Exit(1)
 	}
 

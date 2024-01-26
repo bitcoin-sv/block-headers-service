@@ -355,7 +355,7 @@ func setUpServices() *testData {
 		Headers: testrepository.NewHeadersTestRepository(&array),
 	}
 
-	p2pcfg := config.GetDefaultAppConfig(&log).P2P
+	p2pcfg := config.GetDefaultAppConfig().P2P
 	mrconfig := config.MerkleRootConfig{
 		MaxBlockHeightExcess: 6,
 	}

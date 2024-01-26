@@ -2,11 +2,11 @@ package cli
 
 import (
 	"fmt"
+	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/pulse/database"
 	"github.com/bitcoin-sv/pulse/logging"
 	"os"
 
-	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/database"
 	"github.com/bitcoin-sv/pulse/version"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"

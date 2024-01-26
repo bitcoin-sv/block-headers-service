@@ -1,20 +1,17 @@
 package config
 
 import (
-	"net"
 	"time"
-
-	"github.com/rs/zerolog"
 )
 
-func GetDefaultAppConfig(log *zerolog.Logger) *AppConfig {
+func GetDefaultAppConfig() *AppConfig {
 	return &AppConfig{
 		Db:         getDbDefaults(),
 		HTTP:       getHttpConfigDefaults(),
 		MerkleRoot: getMerkleRootDefaults(),
 		Websocket:  getWebsocketDefaults(),
 		Webhook:    getWebhookDefaults(),
-		P2P:        getP2PDefaults(log),
+		P2P:        getP2PDefaults(),
 		Logging:    getLoggingDefaults(),
 	}
 }
@@ -61,16 +58,12 @@ func getWebhookDefaults() *WebhookConfig {
 	}
 }
 
-func getP2PDefaults(log *zerolog.Logger) *P2PConfig {
+func getP2PDefaults() *P2PConfig {
 	return &P2PConfig{
 		BanDuration:               time.Hour * 24,
 		BlocksForForkConfirmation: 10,
 		DefaultConnectTimeout:     30 * time.Second,
 		DisableCheckpoints:        false,
-		Dial:                      net.DialTimeout,
-		Lookup:                    net.LookupIP,
-		TimeSource:                NewMedianTime(log),
-		Checkpoints:               ActiveNetParams.Checkpoints,
 	}
 }
 

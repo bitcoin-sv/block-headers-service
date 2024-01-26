@@ -3,7 +3,6 @@ package access_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/rs/zerolog"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -35,8 +34,7 @@ func TestAccessEndpointWithoutAuthHeader(t *testing.T) {
 // Tests the GET /access endpoint with global auth header.
 func TestAccessEndpointWithGlobalAuthHeader(t *testing.T) {
 	//setup
-	log := zerolog.Nop()
-	cfg := config.GetDefaultAppConfig(&log)
+	cfg := config.GetDefaultAppConfig()
 	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
@@ -73,8 +71,7 @@ func TestAccessEndpointWithWrongAuthHeader(t *testing.T) {
 // Tests the POST /access endpoint with created auth token.
 func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 	//setup
-	log := zerolog.Nop()
-	cfg := config.GetDefaultAppConfig(&log)
+	cfg := config.GetDefaultAppConfig()
 	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 
@@ -114,8 +111,7 @@ func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 // Tests the DELETE method for the /access endpoint for created auth token.
 func TestDeleteTokenEndpoint(t *testing.T) {
 	//setup
-	log := zerolog.Nop()
-	cfg := config.GetDefaultAppConfig(&log)
+	cfg := config.GetDefaultAppConfig()
 	pulse, cleanup := testpulse.NewTestPulse(t)
 	defer cleanup()
 

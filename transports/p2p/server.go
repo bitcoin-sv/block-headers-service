@@ -1347,7 +1347,7 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 		modifyRebroadcastInv: make(chan interface{}),
 		peerHeightsUpdate:    make(chan updatePeerHeightsMsg),
 		nat:                  nil,
-		timeSource:           p2pCfg.TimeSource,
+		timeSource:           config.TimeSource,
 		wireServices:         wireServices,
 		p2pConfig:            p2pCfg,
 		log:                  log,
@@ -1366,7 +1366,7 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 		BlocksForForkConfirmation: p2pCfg.BlocksForForkConfirmation,
 		Logger:                    log,
 		Services:                  services,
-		Checkpoints:               p2pCfg.Checkpoints,
+		Checkpoints:               config.Checkpoints,
 	}, peers)
 	if err != nil {
 		return nil, err
