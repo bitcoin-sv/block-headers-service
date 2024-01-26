@@ -51,6 +51,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err := cfg.Validate(); err != nil {
+		log.Error().Msgf("provided configuration is invalid: %v", err)
+		os.Exit(1)
+	}
+
 	db, err := database.Init(cfg, log)
 	if err != nil {
 		log.Error().Msgf("cannot setup database because of error: %v", err)

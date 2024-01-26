@@ -1,6 +1,8 @@
 package config
 
 import (
+	"errors"
+	"fmt"
 	"net"
 	"time"
 
@@ -16,14 +18,6 @@ const (
 	ConfigEnvPrefix       = "pulse_"
 )
 
-// DbType database type.
-type DbType string
-
-const (
-	DBSqlite     DbType = "sqlite"
-	DBPostgreSql DbType = "postgres"
-)
-
 // AppConfig returns strongly typed config values.
 type AppConfig struct {
 	Db         *DbConfig         `mapstructure:"db"`
@@ -34,6 +28,14 @@ type AppConfig struct {
 	HTTP       *HTTPConfig       `mapstructure:"http"`
 	Logging    *LoggingConfig    `mapstructure:"logging"`
 }
+
+// DbType database type.
+type DbType string
+
+const (
+	DBSqlite     DbType = "sqlite"
+	DBPostgreSql DbType = "postgres"
+)
 
 // DbConfig represents a database connection.
 type DbConfig struct {
@@ -133,4 +135,35 @@ type LoggingConfig struct {
 func (c *AppConfig) WithoutAuthorization() *AppConfig {
 	c.HTTP.UseAuth = false
 	return c
+}
+
+func (c *AppConfig) Validate() error {
+	if err := c.Db.Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *DbConfig) Validate() error {
+	if c == nil {
+		return errors.New("db: configuration cannot be empty")
+	}
+
+	switch c.Type {
+	case DBSqlite:
+		if len(c.Sqlite.FilePath) == 0 {
+			return fmt.Errorf("db: sqlite configuration cannot be empty wher db type is set to %s", DBSqlite)
+		}
+
+	case DBPostgreSql:
+		if c.Postgres == nil {
+			return fmt.Errorf("db: postgres configuration cannot be empty wher db type is set to %s", DBPostgreSql)
+		}
+
+	default:
+		return errors.New("db: unsupported type")
+	}
+
+	return nil
 }
