@@ -12,18 +12,18 @@ import (
 
 const (
 	sqlInsertWebhook = `
-	INSERT INTO webhooks(url, tokenHeader, token, createdAt)
-	VALUES(:url, :tokenHeader, :token, :createdAt)
+	INSERT INTO webhooks(url, token_header, token, created_at)
+	VALUES(:url, :token_header, :token, :created_at)
 	`
 
 	sqlGetWebhookByUrl = ` 
-	SELECT url, tokenHeader, token, createdAt, lastEmitStatus, lastEmitTimestamp, errorsCount, active
+	SELECT url, token_header, token, created_at, last_emit_status, last_emit_timestamp, errors_count, is_active
 	FROM webhooks
 	WHERE url = ?
 	`
 
 	sqlGetAllWebhooks = `
-	SELECT url, tokenHeader, token, createdAt, lastEmitStatus, lastEmitTimestamp, errorsCount, active
+	SELECT url, token_header, token, created_at, last_emit_status, last_emit_timestamp, errors_count, is_active
 	FROM webhooks
 	`
 
@@ -34,7 +34,7 @@ const (
 
 	sqlUpdateWebhook = `
 	UPDATE webhooks
-	SET lastEmitStatus = ?, lastEmitTimestamp = ?, errorsCount = ?, active = ?
+	SET last_emit_status = ?, last_emit_timestamp = ?, errors_count = ?, is_active = ?
 	WHERE url IN (?)
 	`
 )

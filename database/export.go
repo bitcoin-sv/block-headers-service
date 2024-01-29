@@ -3,9 +3,10 @@ package database
 import (
 	"database/sql"
 	"encoding/csv"
-	"github.com/rs/zerolog"
 	"os"
 	"path/filepath"
+
+	"github.com/rs/zerolog"
 
 	"github.com/jmoiron/sqlx"
 
@@ -22,7 +23,7 @@ const (
 		bits,
 		chainwork,
 		strftime('%s', timestamp) as timestamp,
-		cumulatedWork
+		cumulated_work
 	FROM headers
 	WHERE header_state = 'LONGEST_CHAIN'
 	ORDER BY height asc

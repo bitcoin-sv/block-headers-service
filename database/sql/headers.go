@@ -3,8 +3,9 @@ package sql
 import (
 	"context"
 	"database/sql"
-	"github.com/rs/zerolog"
 	"strings"
+
+	"github.com/rs/zerolog"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -18,8 +19,8 @@ const (
 	insertBH = "insertheader"
 
 	sqliteInsertHeader = `
-	INSERT INTO headers(hash, height, version, merkleroot, nonce, bits, header_state, chainwork, previousblock, timestamp , cumulatedWork)
-	VALUES(:hash, :height, :version, :merkleroot, :nonce, :bits, :header_state, :chainwork, :previousblock, :timestamp, :cumulatedWork)
+	INSERT INTO headers(hash, height, version, merkleroot, nonce, bits, header_state, chainwork, previous_block, timestamp , cumulated_work)
+	VALUES(:hash, :height, :version, :merkleroot, :nonce, :bits, :header_state, :chainwork, :previous_block, :timestamp, :cumulated_work)
 	ON CONFLICT DO NOTHING
 	`
 
@@ -30,40 +31,40 @@ const (
 	`
 
 	sqlHeader = `
-	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, header_state, cumulated_work
 	FROM headers
 	WHERE hash = ?
 	`
 
 	sqlHeaderByHeight = `
-	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, header_state, cumulated_work
 	FROM headers
 	WHERE height = ? AND header_state = ?
 	`
 
 	sqlHeaderByHeightRange = `
-	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, header_state, cumulated_work
 	FROM headers
 	WHERE height BETWEEN ? AND ?
 	`
 
 	sqlLongestChainHeadersFromHeight = `
-	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, header_state, cumulated_work
 	FROM headers
 	WHERE height >= ? AND header_state = 'LONGEST_CHAIN'
 	`
 
 	sqlStaleHeadersFrom = `
-	WITH RECURSIVE recur(hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork) as (
-		select hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
+	WITH RECURSIVE recur(hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, header_state, cumulated_work) as (
+		select hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, header_state, cumulated_work
 		from headers 
 		where hash = ?
 		UNION ALL
-		SELECT h.hash, h.height, h.version, h.merkleroot, h.nonce, h.bits, h.chainwork, h.previousblock, h.timestamp, h.header_state, h.cumulatedWork
+		SELECT h.hash, h.height, h.version, h.merkleroot, h.nonce, h.bits, h.chainwork, h.previous_block, h.timestamp, h.header_state, h.cumulated_work
 		FROM headers h JOIN recur r
-		  ON h.hash = r.previousblock
+		  ON h.hash = r.previous_block
 	)
-	select hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
+	select hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, header_state, cumulated_work
 	from recur
 	where header_state = 'STALE';
 	`
@@ -92,68 +93,68 @@ const (
 		   prev.nonce,
 		   prev.bits,
 		   prev.chainwork,
-		   prev.previousblock,
+		   prev.previous_block,
 		   prev.timestamp,
 		   prev.header_state,
-		   prev.cumulatedWork
+		   prev.cumulated_work
 	FROM headers h,
 		 headers prev
 	WHERE h.hash = ?
-	  AND h.previousblock = prev.hash
+	  AND h.previous_block = prev.hash
   	`
 
 	sqlSelectTip = `
-	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, header_state, cumulated_work
 	FROM headers
 	WHERE height = (SELECT max(height) FROM headers where header_state = 'LONGEST_CHAIN')
 	`
 
 	sqlSelectAncestorOnHeight = `
-    WITH RECURSIVE ancestors(hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, cumulatedWork, level) AS (
-        SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, cumulatedWork, 0 level
+    WITH RECURSIVE ancestors(hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, cumulated_work, level) AS (
+        SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, cumulated_work, 0 level
         FROM headers
         WHERE hash = ?
         UNION ALL
-        SELECT h.hash, h.height, h.version, h.merkleroot, h.nonce, h.bits, h.chainwork, h.previousblock, h.timestamp, h.cumulatedWork, a.level + 1 level
+        SELECT h.hash, h.height, h.version, h.merkleroot, h.nonce, h.bits, h.chainwork, h.previous_block, h.timestamp, h.cumulated_work, a.level + 1 level
         FROM headers h JOIN ancestors a
-          ON h.hash = a.previousblock AND h.height >= ?
+          ON h.hash = a.previous_block AND h.height >= ?
       )
-    SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, cumulatedWork
+    SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, cumulated_work
     FROM ancestors
     WHERE height = ?
     `
 
 	sqlSelectTips = `
 	with mainTip as (
-	select hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
+	select hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, header_state, cumulated_work
 	from headers
 	where header_state = 'LONGEST_CHAIN'
 	order by height desc
 	limit 1
 	)
-	select hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
+	select hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, header_state, cumulated_work
 	from mainTip
 	union
-	select hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, header_state, cumulatedWork
+	select hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, header_state, cumulated_work
 	from headers
 	where header_state != 'LONGEST_CHAIN' and
-			hash not in (select previousblock from headers where header_state != 'LONGEST_CHAIN')
+			hash not in (select previous_block from headers where header_state != 'LONGEST_CHAIN')
 				   `
 
 	sqlChainBetweenTwoHashes = `
-	WITH RECURSIVE ancestors(hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, cumulatedWork, level) AS (
-		SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, cumulatedWork, 0 level
+	WITH RECURSIVE ancestors(hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, cumulated_work, level) AS (
+		SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, cumulated_work, 0 level
 		FROM headers
 		WHERE hash = ?
 		UNION ALL
-		SELECT h.hash, h.height, h.version, h.merkleroot, h.nonce, h.bits, h.chainwork, h.previousblock, h.timestamp, h.cumulatedWork, a.level + 1 level
+		SELECT h.hash, h.height, h.version, h.merkleroot, h.nonce, h.bits, h.chainwork, h.previous_block, h.timestamp, h.cumulated_work, a.level + 1 level
 		FROM headers h JOIN ancestors a
-			ON h.hash = a.previousblock AND h.hash != ?
+			ON h.hash = a.previous_block AND h.hash != ?
 		)
-	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, cumulatedWork
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, cumulated_work
 	FROM ancestors
 	UNION ALL
-	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previousblock, timestamp, cumulatedWork
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, cumulated_work
 	FROM headers
 	WHERE hash = ?
 	`
@@ -175,19 +176,19 @@ const (
 
 // HeadersDb represents a database connection and map of related sql queries.
 type HeadersDb struct {
-	dbType config.DbType
+	dbType config.DbEngine
 	db     *sqlx.DB
-	sqls   map[config.DbType]map[string]string
+	sqls   map[config.DbEngine]map[string]string
 	log    *zerolog.Logger
 }
 
 // NewHeadersDb will setup and return a new headers store.
-func NewHeadersDb(db *sqlx.DB, dbType config.DbType, log *zerolog.Logger) *HeadersDb {
+func NewHeadersDb(db *sqlx.DB, dbType config.DbEngine, log *zerolog.Logger) *HeadersDb {
 	headerLogger := log.With().Str("subservice", "headers-db").Logger()
 	return &HeadersDb{
 		dbType: dbType,
 		db:     db,
-		sqls: map[config.DbType]map[string]string{
+		sqls: map[config.DbEngine]map[string]string{
 			config.DBSqlite: {
 				insertBH: sqliteInsertHeader,
 			},

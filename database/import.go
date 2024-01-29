@@ -4,13 +4,14 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog"
 	"io"
 	"math/big"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/rs/zerolog"
 
 	"github.com/jmoiron/sqlx"
 
@@ -101,7 +102,7 @@ func ImportHeaders(db *sqlx.DB, cfg *config.AppConfig, log *zerolog.Logger) erro
 }
 
 func initHeadersRepo(db *sqlx.DB, cfg *config.AppConfig, log *zerolog.Logger) *repository.HeaderRepository {
-	headersDb := sql.NewHeadersDb(db, cfg.Db.Type, log)
+	headersDb := sql.NewHeadersDb(db, cfg.Db.Engine, log)
 	headersRepo := repository.NewHeadersRepository(headersDb)
 	return headersRepo
 }
