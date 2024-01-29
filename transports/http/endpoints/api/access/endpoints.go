@@ -26,7 +26,7 @@ func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup, cfg *config.HTTP
 	{
 		tokens.GET("", h.getToken)
 		tokens.POST("", auth.RequireAdmin(h.createToken, cfg.UseAuth))
-		tokens.DELETE("/:token", h.revokeToken)
+		tokens.DELETE("/:token", auth.RequireAdmin(h.revokeToken, cfg.UseAuth))
 	}
 }
 
