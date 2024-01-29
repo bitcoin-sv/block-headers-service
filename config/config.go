@@ -23,12 +23,12 @@ var Dial func(string, string, time.Duration) (net.Conn, error)
 var Checkpoints []chaincfg.Checkpoint
 var TimeSource MedianTimeSource
 
-// DbType database type.
-type DbType string
+// DbEngine database engine.
+type DbEngine string
 
 const (
-	DBSqlite     DbType = "sqlite"
-	DBPostgreSql DbType = "postgres"
+	DBSqlite     DbEngine = "sqlite"
+	DBPostgreSql DbEngine = "postgres"
 )
 
 // AppConfig returns strongly typed config values.
@@ -44,8 +44,8 @@ type AppConfig struct {
 
 // DbConfig represents a database connection.
 type DbConfig struct {
-	// Type is the type of database [sqlite|postgres].
-	Type DbType `mapstructure:"type"`
+	// Engine is the engine of database [sqlite|postgres].
+	Engine DbEngine `mapstructure:"engine"`
 	// SchemaPath is the path to the database schema.
 	SchemaPath string `mapstructure:"schema_path"`
 	// PreparedDb is a flag for enabling prepared database.
@@ -149,7 +149,7 @@ func (c *DbConfig) Validate() error {
 		return errors.New("db: configuration cannot be empty")
 	}
 
-	switch c.Type {
+	switch c.Engine {
 	case DBSqlite:
 		if len(c.Sqlite.FilePath) == 0 {
 			return fmt.Errorf("db: sqlite configuration cannot be empty wher db type is set to %s", DBSqlite)

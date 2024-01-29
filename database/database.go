@@ -61,12 +61,12 @@ func DoMigrations(db *sqlx.DB, cfg *config.DbConfig) error {
 
 // NewDBAdapter provides the appropriate database adapter based on the config.
 func NewDBAdapter(cfg *config.DbConfig) (DBAdapter, error) {
-	switch cfg.Type {
+	switch cfg.Engine {
 	case config.DBSqlite:
 		return &SQLiteAdapter{}, nil
 	case config.DBPostgreSql:
 		return &PostgreSqlAdapter{}, nil
 	default:
-		return nil, fmt.Errorf("unsupported database type %s", cfg.Type)
+		return nil, fmt.Errorf("unsupported database engine %s", cfg.Engine)
 	}
 }

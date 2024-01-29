@@ -18,7 +18,7 @@ func GetDefaultAppConfig() *AppConfig {
 
 func getDbDefaults() *DbConfig {
 	return &DbConfig{
-		Type:               DBSqlite,
+		Engine:             DBSqlite,
 		SchemaPath:         "./database/migrations",
 		PreparedDb:         false,
 		PreparedDbFilePath: "./data/blockheaders.csv.gz",

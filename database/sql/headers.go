@@ -176,19 +176,19 @@ const (
 
 // HeadersDb represents a database connection and map of related sql queries.
 type HeadersDb struct {
-	dbType config.DbType
+	dbType config.DbEngine
 	db     *sqlx.DB
-	sqls   map[config.DbType]map[string]string
+	sqls   map[config.DbEngine]map[string]string
 	log    *zerolog.Logger
 }
 
 // NewHeadersDb will setup and return a new headers store.
-func NewHeadersDb(db *sqlx.DB, dbType config.DbType, log *zerolog.Logger) *HeadersDb {
+func NewHeadersDb(db *sqlx.DB, dbType config.DbEngine, log *zerolog.Logger) *HeadersDb {
 	headerLogger := log.With().Str("subservice", "headers-db").Logger()
 	return &HeadersDb{
 		dbType: dbType,
 		db:     db,
-		sqls: map[config.DbType]map[string]string{
+		sqls: map[config.DbEngine]map[string]string{
 			config.DBSqlite: {
 				insertBH: sqliteInsertHeader,
 			},
