@@ -1,11 +1,11 @@
 package auth
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 )
 
 // RequireAdmin adds wrapper to endpoint handler
