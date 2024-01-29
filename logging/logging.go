@@ -1,11 +1,12 @@
 package logging
 
 import (
-	"github.com/rs/zerolog"
-	"go.elastic.co/ecszerolog"
 	"io"
 	"os"
 	"time"
+
+	"github.com/rs/zerolog"
+	"go.elastic.co/ecszerolog"
 )
 
 const (
@@ -70,5 +71,11 @@ func GetDefaultLogger() *zerolog.Logger {
 		Str("application", "pulse-default").
 		Logger()
 
+	return &logger
+}
+
+// SampledLogger returns a logger that samples messages with the rate level.
+func SampledLogger(baseLogger *zerolog.Logger, rate uint32) *zerolog.Logger {
+	logger := baseLogger.Sample(&zerolog.BasicSampler{N: rate}).With().Uint32("sample.rate", rate).Logger()
 	return &logger
 }
