@@ -2,9 +2,9 @@ package database
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math/big"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,6 +14,7 @@ import (
 	"github.com/bitcoin-sv/pulse/database/sql"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/pulse/repository/dto"
+	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
 )
 
@@ -43,7 +44,7 @@ func ImportHeaders(db DbAdapter, cfg *config.AppConfig, log *zerolog.Logger) err
 
 	log.Info().Msgf("Inserted total of %d rows", importCount)
 
-	if err := validateDbConsistency(importCount, hRepository); err != nil {
+	if err := validateDbConsistency(importCount, hRepository, db.GetDBx()); err != nil {
 		return err
 	}
 
@@ -147,9 +148,55 @@ func parseBigInt(s string) *big.Int {
 	return bi
 }
 
-func validateDbConsistency(importCount int, repo *sql.HeadersDb) error {
-	if dbHeadersCount, _ := repo.Count(context.Background()); dbHeadersCount != importCount {
-		return errors.New("database is not consistent with csv file")
+func validateDbConsistency(importCount int, repo *sql.HeadersDb, db *sqlx.DB) error {
+	ctx := context.Background()
+
+	if dbHeadersCount, _ := repo.Count(ctx); dbHeadersCount != importCount {
+		return fmt.Errorf("database is not consistent with csv file, imported %d headers, number of headers in database %d", importCount, dbHeadersCount)
+	}
+
+	if maxHeight, _ := repo.Height(ctx); maxHeight != importCount-1 {
+		return fmt.Errorf("database is not consistent with csv file, current maximum header height (%d) is different from imported headers number -1 (%d)", maxHeight, importCount)
+	}
+
+	if err := validateHeightUniqueness(db); err != nil {
+		return fmt.Errorf("database is not consistent with csv file, %w", err)
+	}
+
+	if err := validateRandomHeadersConsistency(repo, int32(importCount-1)); err != nil {
+		return fmt.Errorf("database is not consistent, %w", err)
+	}
+
+	return nil
+}
+
+func validateHeightUniqueness(db *sqlx.DB) error {
+	tmpIndex := "tmp_height_unique"
+	_, err := db.Exec(fmt.Sprintf("CREATE UNIQUE INDEX %s ON headers (height)", tmpIndex))
+	if err != nil {
+		return fmt.Errorf("height values are not unique(they should be just after import)")
+	} else {
+		db.Exec(fmt.Sprintf("DROP INDEX %s;", tmpIndex))
+	}
+
+	return nil
+}
+
+func validateRandomHeadersConsistency(repo *sql.HeadersDb, maxHeight int32) error {
+	const sampleN = 10
+
+	ctx := context.Background()
+	for i := 0; i < sampleN; i++ {
+		height := rand.Int31n(maxHeight)
+
+		h, _ := repo.GetHeaderByHeight(ctx, height, "LONGEST_CHAIN")
+		next, _ := repo.GetHeaderByHeight(ctx, height+1, "LONGEST_CHAIN")
+
+		if next.PreviousBlock != h.Hash {
+			return fmt.Errorf("block with height %d has different hash (%s) then previousBlockHash value (%s) of block with height %d",
+				h.Height, h.Hash, next.PreviousBlock, next.Height,
+			)
+		}
 	}
 
 	return nil

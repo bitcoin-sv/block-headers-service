@@ -133,7 +133,6 @@ func (a *SQLiteAdapter) ImportHeaders(inputFile *os.File, log *zerolog.Logger) (
 		guard = rowIndex
 	}
 
-	log.Info().Msgf("Inserted total of %d rows", rowIndex)
 	return rowIndex, nil
 }
 

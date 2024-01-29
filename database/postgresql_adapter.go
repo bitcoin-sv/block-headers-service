@@ -113,7 +113,6 @@ func (a *PostgreSqlAdapter) ImportHeaders(inputFile *os.File, log *zerolog.Logge
 		guard = rowIndex
 	}
 
-	log.Info().Msgf("Inserted total of %d rows", rowIndex)
 	return rowIndex, nil
 }
 
