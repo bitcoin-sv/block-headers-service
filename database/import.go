@@ -102,18 +102,20 @@ func dropHeadersFile(tmpHeadersFile *os.File, tmpHeadersFilePath string, log *ze
 }
 
 func parseRecord(record []string, rowIndex int32, previousBlockHash string) dto.DbBlockHeader {
+	hash := parseChainHash(record[0])
 	version := parseInt(record[1])
-	bits := parseInt(record[4])
+	merkleroot := parseChainHash(record[2])
 	nonce := parseInt(record[3])
-	timestamp := parseInt64(record[6])
+	bits := parseInt(record[4])
 	chainWork := parseBigInt(record[5])
+	timestamp := parseInt64(record[6])
 	cumulatedWork := parseBigInt(record[7])
 
 	return dto.DbBlockHeader{
 		Height:        rowIndex,
-		Hash:          parseChainHash(record[0]).String(),
+		Hash:          hash.String(),
 		Version:       int32(version),
-		MerkleRoot:    parseChainHash(record[2]).String(),
+		MerkleRoot:    merkleroot.String(),
 		Timestamp:     time.Unix(timestamp, 0),
 		Bits:          uint32(bits),
 		Nonce:         uint32(nonce),

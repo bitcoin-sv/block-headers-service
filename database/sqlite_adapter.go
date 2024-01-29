@@ -35,7 +35,7 @@ type SQLitePragmaValues struct {
 }
 
 const sqliteDriverName = "sqlite3"
-const sqliteBatchSize = 500_000
+const sqliteBatchSize = 500
 
 func (a *SQLiteAdapter) Connect(cfg *config.DbConfig) error {
 	dsn := fmt.Sprintf("file:%s?_foreign_keys=true&pooling=true", cfg.Sqlite.FilePath)
@@ -68,6 +68,13 @@ func (a *SQLiteAdapter) DoMigrations(cfg *config.DbConfig) error {
 	}
 
 	return nil
+}
+
+func (a *SQLiteAdapter) GetDBx() *sqlx.DB {
+	if a.db == nil {
+		panic("connection to the database has not been established")
+	}
+	return a.db
 }
 
 func (a *SQLiteAdapter) ImportHeaders(inputFile *os.File, log *zerolog.Logger) (int, error) {
@@ -128,10 +135,6 @@ func (a *SQLiteAdapter) ImportHeaders(inputFile *os.File, log *zerolog.Logger) (
 
 	log.Info().Msgf("Inserted total of %d rows", rowIndex)
 	return rowIndex, nil
-}
-
-func (a *SQLiteAdapter) GetDBx() *sqlx.DB {
-	return a.db
 }
 
 func modifySqLitePragmas(db *sqlx.DB) (func() error, error) {
@@ -197,28 +200,34 @@ func (a *SQLiteAdapter) dropTableIndexes(table string) (func() error, error) {
 	return dropIndexes(a.db, &q)
 }
 
-func (a *SQLiteAdapter) insertHeaders(reader *csv.Reader, repo *sql.HeadersDb, size int, previousBlockHash string, rowIndex int) (int, error) {
-	batch := make([]dto.DbBlockHeader, 0, size)
+func (a *SQLiteAdapter) insertHeaders(reader *csv.Reader, repo *sql.HeadersDb, batchSize int, previousBlockHash string, rowIndex int) (lastRowIndex int, err error) {
+	lastRowIndex = rowIndex
+	batch := make([]dto.DbBlockHeader, 0, batchSize)
 
-	for i := 0; i < size; i++ {
-		record, err := reader.Read()
+	for i := 0; i < batchSize; i++ {
+		record, readErr := reader.Read()
 		if err != nil {
-			if errors.Is(err, io.EOF) {
+			if errors.Is(readErr, io.EOF) {
 				break
 			}
-			return 0, fmt.Errorf("error reading record: %v", err)
+			err = fmt.Errorf("error reading record: %v", readErr)
+			return
 		}
 
-		block := parseRecord(record, int32(rowIndex), previousBlockHash)
+		if len(record) == 0 {
+			break
+		}
+
+		block := parseRecord(record, int32(lastRowIndex), previousBlockHash)
 		batch = append(batch, block)
 
 		previousBlockHash = block.Hash
-		rowIndex++
+		lastRowIndex++
 	}
 
-	if err := repo.CreateMultiple(context.Background(), batch); err != nil {
-		return 0, err
+	if err = repo.CreateMultiple(context.Background(), batch); err != nil {
+		return
 	}
 
-	return rowIndex, nil
+	return
 }

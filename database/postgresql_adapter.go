@@ -64,6 +64,9 @@ func (a *PostgreSqlAdapter) DoMigrations(cfg *config.DbConfig) error {
 }
 
 func (a *PostgreSqlAdapter) GetDBx() *sqlx.DB {
+	if a.db == nil {
+		panic("connection to the database has not been established")
+	}
 	return a.db
 }
 
@@ -97,7 +100,7 @@ func (a *PostgreSqlAdapter) ImportHeaders(inputFile *os.File, log *zerolog.Logge
 	guard := 0
 
 	for {
-		rowIndex, err := a.copyHeaders(reader, postgresBatchSize, previousBlockHash, rowIndex)
+		rowIndex, err = a.copyHeaders(reader, postgresBatchSize, previousBlockHash, rowIndex)
 		if err != nil {
 			log.Error().Msg(err.Error())
 			os.Exit(1)
@@ -121,7 +124,6 @@ func (a *PostgreSqlAdapter) dropTableIndexes(table string) (func() error, error)
 
 func (a *PostgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previousBlockHash string, rowIndex int) (lastRowIndex int, err error) {
 	lastRowIndex = rowIndex
-
 	copyQuery := pq.CopyIn(
 		sql.HeadersTableName,
 		/* columns */ "height", "hash", "version", "merkleroot", "timestamp", "bits", "nonce", "header_state", "chainwork", "cumulated_work", "previous_block",
@@ -146,11 +148,15 @@ func (a *PostgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 			}
 
 			err = fmt.Errorf("error reading record: %v", readErr)
+			stmt.Close()
 			return
 		}
 
-		b := parseRecord(record, int32(lastRowIndex), previousBlockHash)
+		if len(record) == 0 {
+			break
+		}
 
+		b := parseRecord(record, int32(lastRowIndex), previousBlockHash)
 		_, execErr := stmt.Exec(
 			b.Height,
 			b.Hash,
