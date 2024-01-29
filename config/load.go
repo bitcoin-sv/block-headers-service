@@ -2,11 +2,12 @@ package config
 
 import (
 	"fmt"
-	"github.com/bitcoin-sv/pulse/logging"
-	"github.com/rs/zerolog"
 	"net"
 	"strings"
 	"sync"
+
+	"github.com/bitcoin-sv/pulse/logging"
+	"github.com/rs/zerolog"
 
 	"os"
 
@@ -35,6 +36,7 @@ func Load(cfg *AppConfig) (*AppConfig, *zerolog.Logger, error) {
 		return nil, nil, err
 	}
 
+	setLogger(logger)
 	return cfg, logger, nil
 }
 
@@ -56,10 +58,10 @@ func SetDefaults(log *zerolog.Logger) error {
 	return nil
 }
 
-func setP2PDefaults(log *zerolog.Logger) {
+func setP2PDefaults(defaultLog *zerolog.Logger) {
+	setLogger(defaultLog)
 	Lookup = net.LookupIP
 	Dial = net.DialTimeout
-	TimeSource = NewMedianTime(log)
 	Checkpoints = ActiveNetParams.Checkpoints
 }
 
@@ -98,4 +100,8 @@ func envConfig() {
 	viper.SetEnvPrefix("pulse")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
+}
+
+func setLogger(log *zerolog.Logger) {
+	TimeSource = NewMedianTime(log)
 }
