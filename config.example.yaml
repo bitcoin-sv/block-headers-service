@@ -2,18 +2,26 @@
 
 # Database Configuration
 db:
-  # Database type (default: sqlite)
-  type: sqlite
+  # Database engine [sqlite|postgres] (default: sqlite)
+  engine: sqlite
   # Path to the database schema
   schema_path: "./database/migrations"
-  # Data Source Name
-  dsn: "file:./data/blockheaders.db?_foreign_keys=true&pooling=true"
-  # Database file path
-  file_path: "./data/blockheaders.db"
   # Whether prepared DB is enabled
   prepared_db: false
   # Path to prepared database file
   prepared_db_file_path: "./data/blockheaders.csv.gz"
+
+  #sqlite engine cofiguration
+  sqlite:
+    file_path: "./data/blockheaders.db"
+  #postgres engine cofiguration, required when engine=postgres
+  postgres:
+    host: "localhost"
+    port: 5432
+    user: "user"
+    password: "password"
+    db_name: "pulse"
+    ssl_mode: "disable" #[disable|enable]
 
 # P2P Configuration
 p2p:
