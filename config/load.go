@@ -36,7 +36,7 @@ func Load(cfg *AppConfig) (*AppConfig, *zerolog.Logger, error) {
 		return nil, nil, err
 	}
 
-	setLogger(logger)
+	setP2PLogger(logger)
 	return cfg, logger, nil
 }
 
@@ -59,7 +59,7 @@ func SetDefaults(log *zerolog.Logger) error {
 }
 
 func setP2PDefaults(defaultLog *zerolog.Logger) {
-	setLogger(defaultLog)
+	setP2PLogger(defaultLog)
 	Lookup = net.LookupIP
 	Dial = net.DialTimeout
 	Checkpoints = ActiveNetParams.Checkpoints
@@ -102,6 +102,6 @@ func envConfig() {
 	viper.AutomaticEnv()
 }
 
-func setLogger(log *zerolog.Logger) {
+func setP2PLogger(log *zerolog.Logger) {
 	TimeSource = NewMedianTime(log)
 }
