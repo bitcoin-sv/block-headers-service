@@ -8,8 +8,6 @@ package p2p
 import (
 	"errors"
 	"fmt"
-	"github.com/bitcoin-sv/pulse/logging"
-	"github.com/rs/zerolog"
 	"net"
 	"runtime"
 	"strconv"
@@ -17,6 +15,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/bitcoin-sv/pulse/logging"
+	"github.com/rs/zerolog"
 
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg"
@@ -60,6 +61,19 @@ var (
 	// ServerAlreadyStarted represents starting error when a p2p server is already started.
 	ServerAlreadyStarted = errors.New("p2p server already started")
 )
+
+type sampledLoggers struct {
+	query     *zerolog.Logger
+	donePeers *zerolog.Logger
+}
+
+// makeSampledLoggers creates special loggers that reduce the number of logs.
+func makeSampledLoggers(baseLogger *zerolog.Logger) sampledLoggers {
+	return sampledLoggers{
+		query:     logging.SampledLogger(baseLogger, 2000),
+		donePeers: logging.SampledLogger(baseLogger, 100),
+	}
+}
 
 // addrMe specifies the server address to send peers.
 var addrMe *wire.NetAddress
@@ -961,7 +975,7 @@ func (s *server) peerHandler() {
 	s.syncManager.Start()
 
 	s.log.Trace().Msg("Starting peer handler")
-
+	sLogger := makeSampledLoggers(s.log)
 	state := &peerState{
 		inboundPeers:    make(map[int32]*serverPeer),
 		persistentPeers: make(map[int32]*serverPeer),
@@ -994,7 +1008,7 @@ out:
 
 		// Disconnected peers.
 		case p := <-s.donePeers:
-			s.log.Info().Msg("[Server] donePeers")
+			sLogger.donePeers.Info().Msg("[Server] donePeers")
 			s.handleDonePeerMsg(state, p)
 
 		// Block accepted in mainchain or orphan, update peer height.
@@ -1013,7 +1027,7 @@ out:
 			s.handleBroadcastMsg(state, &bmsg)
 
 		case qmsg := <-s.query:
-			s.log.Info().Msg("[Server] query")
+			sLogger.query.Info().Msg("[Server] query")
 			s.handleQuery(state, qmsg)
 
 		case <-s.quit:
