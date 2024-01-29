@@ -14,7 +14,7 @@ import (
 func RequireAdmin(handler gin.HandlerFunc, requireAdmin bool) gin.HandlerFunc {
 	if requireAdmin {
 		return func(c *gin.Context) {
-			if err := _validateToken(c); err == nil {
+			if err := validateToken(c); err == nil {
 				handler(c)
 			} else {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, err.Error())
@@ -24,7 +24,7 @@ func RequireAdmin(handler gin.HandlerFunc, requireAdmin bool) gin.HandlerFunc {
 	return handler
 }
 
-func _validateToken(c *gin.Context) error {
+func validateToken(c *gin.Context) error {
 	token, exist := c.Get("token")
 	if !exist {
 		return errors.New("token not found")
