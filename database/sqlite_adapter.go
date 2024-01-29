@@ -17,8 +17,11 @@ import (
 
 type SQLiteAdapter struct{}
 
+const sqliteDriverName = "sqlite3"
+
 func (a *SQLiteAdapter) Connect(cfg *config.DbConfig) (*sqlx.DB, error) {
-	db, err := sqlx.Open("sqlite3", cfg.Dsn)
+	dsn := fmt.Sprintf("file:%s?_foreign_keys=true&pooling=true", cfg.Sqlite.FilePath)
+	db, err := sqlx.Open(sqliteDriverName, dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +36,7 @@ func (a *SQLiteAdapter) DoMigrations(db *sqlx.DB, cfg *config.DbConfig) error {
 	}
 
 	sourceUrl := fmt.Sprintf("file://%s", cfg.SchemaPath)
-	driverName := "sqlite3"
+	driverName := sqliteDriverName
 
 	m, err := migrate.NewWithDatabaseInstance(sourceUrl, driverName, driver)
 	if err != nil {

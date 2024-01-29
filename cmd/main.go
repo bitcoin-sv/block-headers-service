@@ -6,13 +6,14 @@ package main
 
 import (
 	"errors"
-	"github.com/bitcoin-sv/pulse/cli"
 	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
 	"runtime/debug"
 	"syscall"
+
+	"github.com/bitcoin-sv/pulse/cli"
 
 	"github.com/bitcoin-sv/pulse/logging"
 
@@ -56,6 +57,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err := cfg.Validate(); err != nil {
+		log.Error().Msgf("provided configuration is invalid: %v", err)
+		os.Exit(1)
+	}
+
 	db, err := database.Init(cfg, log)
 	if err != nil {
 		log.Error().Msgf("cannot setup database because of error: %v", err)
@@ -78,7 +84,7 @@ func main() {
 	log.Info().Msgf("Version %s", version.String())
 
 	peers := make(map[*peerpkg.Peer]*peerpkg.PeerSyncState)
-	headersStore := sql.NewHeadersDb(db, cfg.Db.Type, log)
+	headersStore := sql.NewHeadersDb(db, cfg.Db.Engine, log)
 	repo := repository.NewRepositories(headersStore)
 	hs := service.NewServices(service.Dept{
 		Repositories: repo,

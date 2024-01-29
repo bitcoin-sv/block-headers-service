@@ -9,13 +9,13 @@ import (
 // DbWebhook represent webhook saved in db.
 type DbWebhook struct {
 	Url               string    `db:"url"`
-	TokenHeader       string    `db:"tokenHeader"`
+	TokenHeader       string    `db:"token_header"`
 	Token             string    `db:"token"`
-	CreatedAt         time.Time `db:"createdAt"`
-	LastEmitStatus    string    `db:"lastEmitStatus"`
-	LastEmitTimestamp time.Time `db:"lastEmitTimestamp"`
-	ErrorsCount       int       `db:"errorsCount"`
-	Active            bool      `db:"active"`
+	CreatedAt         time.Time `db:"created_at"`
+	LastEmitStatus    string    `db:"last_emit_status"`
+	LastEmitTimestamp time.Time `db:"last_emit_timestamp"`
+	ErrorsCount       int       `db:"errors_count"`
+	Active            bool      `db:"is_active"`
 }
 
 // ToWebhook converts DbWebhook to Webhook.

@@ -1,6 +1,8 @@
 package config
 
 import (
+	"errors"
+	"fmt"
 	"net"
 	"time"
 
@@ -21,8 +23,13 @@ var Dial func(string, string, time.Duration) (net.Conn, error)
 var Checkpoints []chaincfg.Checkpoint
 var TimeSource MedianTimeSource
 
-// DbType database type.
-type DbType string
+// DbEngine database engine.
+type DbEngine string
+
+const (
+	DBSqlite     DbEngine = "sqlite"
+	DBPostgreSql DbEngine = "postgres"
+)
 
 // AppConfig returns strongly typed config values.
 type AppConfig struct {
@@ -37,18 +44,31 @@ type AppConfig struct {
 
 // DbConfig represents a database connection.
 type DbConfig struct {
-	// Type is the type of database.
-	Type DbType `mapstructure:"type"`
+	// Engine is the engine of database [sqlite|postgres].
+	Engine DbEngine `mapstructure:"engine"`
 	// SchemaPath is the path to the database schema.
 	SchemaPath string `mapstructure:"schema_path"`
-	// Dsn is the data source name.
-	Dsn string `mapstructure:"dsn"`
-	// FilePath is the path to the database file.
-	FilePath string `mapstructure:"file_path"`
 	// PreparedDb is a flag for enabling prepared database.
 	PreparedDb bool `mapstructure:"prepared_db"`
 	// PreparedDbFilePath is the path to the prepared database file.
 	PreparedDbFilePath string `mapstructure:"prepared_db_file_path"`
+
+	Postgres *PostgreSqlConfig `mapstructure:"postgres"`
+	Sqlite   SqliteConfig      `mapstructure:"sqlite"`
+}
+
+type SqliteConfig struct {
+	// FilePath is the path to the database file.
+	FilePath string `mapstructure:"file_path"`
+}
+
+type PostgreSqlConfig struct {
+	Host     string
+	Port     uint16
+	User     string
+	Password string
+	DbName   string
+	Sslmode  string
 }
 
 // MerkleRootConfig represents merkleroots verification config.
@@ -114,4 +134,35 @@ type LoggingConfig struct {
 func (c *AppConfig) WithoutAuthorization() *AppConfig {
 	c.HTTP.UseAuth = false
 	return c
+}
+
+func (c *AppConfig) Validate() error {
+	if err := c.Db.Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *DbConfig) Validate() error {
+	if c == nil {
+		return errors.New("db: configuration cannot be empty")
+	}
+
+	switch c.Engine {
+	case DBSqlite:
+		if len(c.Sqlite.FilePath) == 0 {
+			return fmt.Errorf("db: sqlite configuration cannot be empty wher db type is set to %s", DBSqlite)
+		}
+
+	case DBPostgreSql:
+		if c.Postgres == nil {
+			return fmt.Errorf("db: postgres configuration cannot be empty wher db type is set to %s", DBPostgreSql)
+		}
+
+	default:
+		return errors.New("db: unsupported type")
+	}
+
+	return nil
 }

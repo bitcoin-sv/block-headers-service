@@ -20,8 +20,8 @@ type DbBlockHeader struct {
 	Nonce         uint32    `db:"nonce"`
 	State         string    `db:"header_state"`
 	Chainwork     string    `db:"chainwork"`
-	CumulatedWork string    `db:"cumulatedWork"`
-	PreviousBlock string    `db:"previousblock"`
+	CumulatedWork string    `db:"cumulated_work"`
+	PreviousBlock string    `db:"previous_block"`
 }
 
 // ToBlockHeader converts work from string to big.Int and return BlockHeader.
