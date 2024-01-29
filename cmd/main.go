@@ -87,7 +87,7 @@ func main() {
 
 	peers := make(map[*peerpkg.Peer]*peerpkg.PeerSyncState)
 
-	headersStore := sql.NewHeadersDb(db, cfg.Db.Engine, log)
+	headersStore := sql.NewHeadersDb(db, log)
 	repo := &repository.Repositories{
 		Headers:  sqlrepository.NewHeadersRepository(headersStore),
 		Tokens:   sqlrepository.NewTokensRepository(headersStore),

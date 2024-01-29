@@ -10,12 +10,13 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 
-	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/bitcoin-sv/pulse/repository/dto"
 )
 
 const (
+	HeadersTableName = "headers"
+
 	sqlInsertHeader = `
 	INSERT INTO headers(hash, height, version, merkleroot, nonce, bits, header_state, chainwork, previous_block, timestamp , cumulated_work)
 	VALUES(:hash, :height, :version, :merkleroot, :nonce, :bits, :header_state, :chainwork, :previous_block, :timestamp, :cumulated_work)
@@ -73,7 +74,7 @@ const (
 	`
 
 	sqlHeadersCount = `
-	SELECT max(RowId) 
+	SELECT COUNT(1)
 	FROM headers;
 	`
 
@@ -174,18 +175,15 @@ const (
 
 // HeadersDb represents a database connection and map of related sql queries.
 type HeadersDb struct {
-	dbType config.DbEngine
-	db     *sqlx.DB
-	log    *zerolog.Logger
+	db  *sqlx.DB
+	log *zerolog.Logger
 }
 
 // NewHeadersDb will setup and return a new headers store.
-func NewHeadersDb(db *sqlx.DB, dbType config.DbEngine, log *zerolog.Logger) *HeadersDb {
+func NewHeadersDb(db *sqlx.DB, log *zerolog.Logger) *HeadersDb {
 	headerLogger := log.With().Str("subservice", "headers-db").Logger()
 	return &HeadersDb{
-		dbType: dbType,
-		db:     db,
-
+		db:  db,
 		log: &headerLogger,
 	}
 }

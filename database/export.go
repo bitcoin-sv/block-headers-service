@@ -36,10 +36,16 @@ func ExportHeaders(cfg *config.AppConfig, log *zerolog.Logger) error {
 	tmpHeadersFileName := "headers.csv"
 	tmpHeadersFilePath := filepath.Clean(filepath.Join(os.TempDir(), tmpHeadersFileName))
 
-	db, err := Connect(cfg.Db)
+	adapter, err := NewDbAdapter(cfg.Db)
 	if err != nil {
 		return err
 	}
+
+	if err = adapter.Connect(cfg.Db); err != nil {
+		return nil
+	}
+
+	db := adapter.GetDBx()
 
 	tmpCsvFile, err := os.Create(tmpHeadersFilePath)
 	if err != nil {

@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/rs/zerolog"
 
@@ -14,53 +15,46 @@ import (
 	"github.com/bitcoin-sv/pulse/config"
 )
 
-// DBAdapter defines the interface for a database adapter.
-type DBAdapter interface {
-	Connect(cfg *config.DbConfig) (*sqlx.DB, error)
-	DoMigrations(db *sqlx.DB, cfg *config.DbConfig) error
+// DbAdapter defines the interface for a database adapter.
+type DbAdapter interface {
+	Connect(cfg *config.DbConfig) error
+	DoMigrations(cfg *config.DbConfig) error
+	ImportHeaders(inputFile *os.File, log *zerolog.Logger) (int, error)
+	GetDBx() *sqlx.DB
+}
+
+type dbIndex struct {
+	name string
+	sql  string
 }
 
 func Init(cfg *config.AppConfig, log *zerolog.Logger) (*sqlx.DB, error) {
 	dbLog := log.With().Str("subservice", "database").Logger()
 
-	db, err := Connect(cfg.Db)
+	adapter, err := NewDbAdapter(cfg.Db)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := DoMigrations(db, cfg.Db); err != nil {
+	if err = adapter.Connect(cfg.Db); err != nil {
+		return nil, err
+	}
+
+	if err := adapter.DoMigrations(cfg.Db); err != nil {
 		return nil, err
 	}
 
 	if cfg.Db.PreparedDb {
-		if err := ImportHeaders(db, cfg, &dbLog); err != nil {
+		if err := ImportHeaders(adapter, cfg, &dbLog); err != nil {
 			return nil, err
 		}
 	}
 
-	return db, nil
+	return adapter.GetDBx(), nil
 }
 
-// Connect to the database using the specified adapter.
-func Connect(cfg *config.DbConfig) (*sqlx.DB, error) {
-	adapter, err := NewDBAdapter(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return adapter.Connect(cfg)
-}
-
-func DoMigrations(db *sqlx.DB, cfg *config.DbConfig) error {
-	adapter, err := NewDBAdapter(cfg)
-	if err != nil {
-		return err
-	}
-
-	return adapter.DoMigrations(db, cfg)
-}
-
-// NewDBAdapter provides the appropriate database adapter based on the config.
-func NewDBAdapter(cfg *config.DbConfig) (DBAdapter, error) {
+// NewDbAdapter provides the appropriate database adapter based on the config.
+func NewDbAdapter(cfg *config.DbConfig) (DbAdapter, error) {
 	switch cfg.Engine {
 	case config.DBSqlite:
 		return &SQLiteAdapter{}, nil
@@ -69,4 +63,57 @@ func NewDBAdapter(cfg *config.DbConfig) (DBAdapter, error) {
 	default:
 		return nil, fmt.Errorf("unsupported database engine %s", cfg.Engine)
 	}
+}
+
+func dropIndexes(db *sqlx.DB, indexQuery *string) (func() error, error) {
+	qr, err := db.Query(*indexQuery)
+	if err != nil {
+		return nil, err
+	}
+	if qr.Err() != nil {
+		return nil, qr.Err()
+	}
+	defer func() {
+		_ = qr.Close()
+	}()
+
+	var dbIndexes []dbIndex
+	for qr.Next() {
+		var indexName, indexSQL string
+		err := qr.Scan(&indexName, &indexSQL)
+		if err != nil {
+			return nil, err
+		}
+
+		dbIndex := dbIndex{
+			name: indexName,
+			sql:  indexSQL,
+		}
+
+		dbIndexes = append(dbIndexes, dbIndex)
+	}
+
+	for _, dbIndex := range dbIndexes {
+		fmt.Printf("Drop Value: %v\n", dbIndex)
+
+		_, err = db.Exec(fmt.Sprintf("DROP INDEX IF EXISTS %s;", dbIndex.name))
+		if err != nil {
+			restoreIndexes(db, dbIndexes)
+			return nil, err
+		}
+	}
+
+	return func() error { return restoreIndexes(db, dbIndexes) }, nil
+}
+
+func restoreIndexes(db *sqlx.DB, dbIndexes []dbIndex) error {
+	for _, dbIndex := range dbIndexes {
+		fmt.Printf("Create Value: %v\n", dbIndex)
+
+		_, err := db.Exec(dbIndex.sql)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
