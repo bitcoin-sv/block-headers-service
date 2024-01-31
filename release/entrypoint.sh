@@ -51,7 +51,7 @@ function start() {
     preload
   fi
 
-  ./pulse
+  ./"${APP_BINARY}"
 }
 
 

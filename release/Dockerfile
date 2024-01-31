@@ -8,13 +8,15 @@ WORKDIR /app
 
 ENV PULSE_DB_SCHEMA_PATH=./migrations
 COPY ./database/migrations $PULSE_DB_SCHEMA_PATH
-COPY ./entrypoint.sh .
+COPY ./release/entrypoint.sh .
 ARG project_name=pulse
-COPY ./$project_name .
-COPY ./artifacts/README.DOCKER.md ./README.md
+ARG repository_owner=bitcoin-sv
+ARG TARGETPLATFORM
+ENV APP_BINARY=${project_name}
+COPY ./dist/$TARGETPLATFORM/$APP_BINARY .
 
 ARG version
-ARG gh_repository=bitcoin-sv/$project_name
+ARG gh_repository=$repository_owner/$project_name
 ARG tag=${version:+v$version}
 ENV VERSION=${version:-develop}
 ENV TAG=${tag:-master}
