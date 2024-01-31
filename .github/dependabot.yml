@@ -10,9 +10,7 @@ updates:
       # Check for npm updates at 9am UTC (5am EST)
       time: "10:00"
     reviewers:
-      - "jadwahab, theflyingcodr"
     assignees:
-      - "jadwahab, theflyingcodr"
     # Labels must be created first
     labels:
       - "update"
