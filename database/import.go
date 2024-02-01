@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math/big"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -163,10 +162,6 @@ func validateDbConsistency(importCount int, repo *sql.HeadersDb, db *sqlx.DB) er
 		return fmt.Errorf("database is not consistent with csv file, %w", err)
 	}
 
-	if err := validateRandomHeadersConsistency(repo, int32(importCount-1)); err != nil {
-		return fmt.Errorf("database is not consistent, %w", err)
-	}
-
 	return nil
 }
 
@@ -178,26 +173,6 @@ func validateHeightUniqueness(db *sqlx.DB) error {
 	} else {
 		if _, err = db.Exec(fmt.Sprintf("DROP INDEX %s;", tmpIndex)); err != nil {
 			return fmt.Errorf("height values are unique buy droping temporary index %s failed", tmpIndex)
-		}
-	}
-
-	return nil
-}
-
-func validateRandomHeadersConsistency(repo *sql.HeadersDb, maxHeight int32) error {
-	const sampleN = 10
-
-	ctx := context.Background()
-	for i := 0; i < sampleN; i++ {
-		height := rand.Int31n(maxHeight)
-
-		h, _ := repo.GetHeaderByHeight(ctx, height, "LONGEST_CHAIN")
-		next, _ := repo.GetHeaderByHeight(ctx, height+1, "LONGEST_CHAIN")
-
-		if next.PreviousBlock != h.Hash {
-			return fmt.Errorf("block with height %d has different hash (%s) then previousBlockHash value (%s) of block with height %d",
-				h.Height, h.Hash, next.PreviousBlock, next.Height,
-			)
 		}
 	}
 
