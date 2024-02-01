@@ -77,38 +77,37 @@ func (a *sqLiteAdapter) getDBx() *sqlx.DB {
 	return a.db
 }
 
-func (a *sqLiteAdapter) importHeaders(inputFile *os.File, log *zerolog.Logger) (int, error) {
+func (a *sqLiteAdapter) importHeaders(inputFile *os.File, log *zerolog.Logger) (affectedRows int, err error) {
 	// prepare db to bulk insterts
 	restorePragmas, err := modifySqLitePragmas(a.db)
 	if err != nil {
-		return 0, err
+		return
 	}
-
 	defer func() {
-		if err = restorePragmas(); err != nil {
-			log.Error().Msg(err.Error())
+		if rErr := restorePragmas(); rErr != nil {
+			err = wrapIfNeeded(err, rErr, "Resoring previous pragmas failed")
 		}
 	}()
 
 	restoreIndexes, err := a.dropTableIndexes(sql.HeadersTableName)
 	if err != nil {
-		return 0, err
+		return
 	}
 	defer func() {
-		if err = restoreIndexes(); err != nil {
-			log.Error().Msg(err.Error())
+		if rErr := restoreIndexes(); rErr != nil {
+			err = wrapIfNeeded(err, rErr, "Resoring indexes failed")
 		}
 	}()
 
 	// Read from the beginning of the file
-	if _, err := inputFile.Seek(0, 0); err != nil {
-		return 0, err
+	if _, err = inputFile.Seek(0, 0); err != nil {
+		return
 	}
 
 	reader := csv.NewReader(inputFile)
 	_, err = reader.Read() // Skipping the column headers line
 	if err != nil {
-		return 0, err
+		return
 	}
 
 	repo := sql.NewHeadersDb(a.db, log)
@@ -120,7 +119,8 @@ func (a *sqLiteAdapter) importHeaders(inputFile *os.File, log *zerolog.Logger) (
 	for {
 		rowIndex, err = a.insertHeaders(reader, repo, sqliteBatchSize, previousBlockHash, rowIndex)
 		if err != nil {
-			return 0, err
+			affectedRows = rowIndex
+			return
 		}
 
 		if guard == rowIndex {
@@ -128,9 +128,10 @@ func (a *sqLiteAdapter) importHeaders(inputFile *os.File, log *zerolog.Logger) (
 		}
 
 		guard = rowIndex
+		affectedRows = rowIndex
 	}
 
-	return rowIndex, nil
+	return
 }
 
 func modifySqLitePragmas(db *sqlx.DB) (func() error, error) {
