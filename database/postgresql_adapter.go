@@ -145,7 +145,7 @@ func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 			}
 
 			err = fmt.Errorf("error reading record: %v", readErr)
-			stmt.Close()
+			_ = stmt.Close()
 			return
 		}
 
@@ -178,7 +178,9 @@ func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 
 	_, err = stmt.Exec()
 	if err != nil {
-		stmt.Close()
+		if closeErr := stmt.Close(); closeErr != nil {
+			err = fmt.Errorf("execution err: %w. Smt close err: %w", err, closeErr)
+		}
 		return
 	}
 
