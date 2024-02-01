@@ -63,7 +63,7 @@ func newDbAdapter(cfg *config.DbConfig) (dbAdapter, error) {
 	}
 }
 
-// dropIndexes removes indexes found by indexQuery. Returns the index restore function if successful
+// dropIndexes removes indexes found by indexQuery. Returns the index restore function if successful.
 func dropIndexes(db *sqlx.DB, indexQuery *string) (func() error, error) {
 	qr, err := db.Query(*indexQuery)
 	if err != nil {
@@ -84,19 +84,19 @@ func dropIndexes(db *sqlx.DB, indexQuery *string) (func() error, error) {
 			return nil, err
 		}
 
-		dbIndex := dbIndex{
+		index := dbIndex{
 			name: indexName,
 			sql:  indexSQL,
 		}
 
-		dbIndexes = append(dbIndexes, dbIndex)
+		dbIndexes = append(dbIndexes, index)
 	}
 
 	dropedIndexes := make([]dbIndex, 0)
-	for _, dbIndex := range dbIndexes {
-		fmt.Printf("Drop Value: %v\n", dbIndex)
+	for _, index := range dbIndexes {
+		fmt.Printf("Drop Value: %v\n", index)
 
-		_, err = db.Exec(fmt.Sprintf("DROP INDEX IF EXISTS %s;", dbIndex.name))
+		_, err = db.Exec(fmt.Sprintf("DROP INDEX IF EXISTS %s;", index.name))
 		if err != nil {
 			if restoreErr := restoreIndexes(db, dropedIndexes); restoreErr != nil {
 				err = fmt.Errorf("%w. Restoring already droped indexes failed: %w", err, restoreErr)
@@ -105,17 +105,17 @@ func dropIndexes(db *sqlx.DB, indexQuery *string) (func() error, error) {
 			return nil, err
 		}
 
-		dropedIndexes = append(dropedIndexes, dbIndex)
+		dropedIndexes = append(dropedIndexes, index)
 	}
 
 	return func() error { return restoreIndexes(db, dbIndexes) }, nil
 }
 
 func restoreIndexes(db *sqlx.DB, dbIndexes []dbIndex) error {
-	for _, dbIndex := range dbIndexes {
-		fmt.Printf("Create Value: %v\n", dbIndex)
+	for _, index := range dbIndexes {
+		fmt.Printf("Create Value: %v\n", index)
 
-		_, err := db.Exec(dbIndex.sql)
+		_, err := db.Exec(index.sql)
 		if err != nil {
 			return err
 		}

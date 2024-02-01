@@ -191,7 +191,7 @@ func restoreSqLitePragmas(db *sqlx.DB, values sqLitePragmaValues) error {
 	return nil
 }
 
-// dropTableIndexes removes indexes from a table. Returns the index restore function if successful
+// dropTableIndexes removes indexes from a table. Returns the index restore function if successful.
 func (a *sqLiteAdapter) dropTableIndexes(table string) (func() error, error) {
 	q := fmt.Sprintf("SELECT name, sql FROM sqlite_master WHERE type='index' AND tbl_name ='%s' AND sql IS NOT NULL;", table)
 	return dropIndexes(a.db, &q)

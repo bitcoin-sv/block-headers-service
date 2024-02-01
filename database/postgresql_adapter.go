@@ -113,7 +113,7 @@ func (a *postgreSqlAdapter) importHeaders(inputFile *os.File, log *zerolog.Logge
 	return rowIndex, nil
 }
 
-// dropTableIndexes removes indexes from a table. Returns the index restore function if successful
+// dropTableIndexes removes indexes from a table. Returns the index restore function if successful.
 func (a *postgreSqlAdapter) dropTableIndexes(table string) (func() error, error) {
 	q := fmt.Sprintf("SELECT indexname, indexdef FROM pg_indexes WHERE tablename ='%s' AND indexname != '%s_pkey' AND indexdef IS NOT NULL;", table, table)
 	return dropIndexes(a.db, &q)
