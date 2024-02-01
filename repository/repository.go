@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"github.com/bitcoin-sv/pulse/database/sql"
 	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/pulse/notification"
@@ -40,13 +39,4 @@ type Repositories struct {
 	Headers  Headers
 	Tokens   Tokens
 	Webhooks notification.Webhooks
-}
-
-// NewRepositories creates and returns Repositories instance.
-func NewRepositories(db *sql.HeadersDb) *Repositories {
-	return &Repositories{
-		Headers:  NewHeadersRepository(db),
-		Tokens:   NewTokensRepository(db),
-		Webhooks: NewWebhooksRepository(db),
-	}
 }

@@ -10,15 +10,14 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 
-	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/bitcoin-sv/pulse/repository/dto"
 )
 
 const (
-	insertBH = "insertheader"
+	HeadersTableName = "headers"
 
-	sqliteInsertHeader = `
+	sqlInsertHeader = `
 	INSERT INTO headers(hash, height, version, merkleroot, nonce, bits, header_state, chainwork, previous_block, timestamp , cumulated_work)
 	VALUES(:hash, :height, :version, :merkleroot, :nonce, :bits, :header_state, :chainwork, :previous_block, :timestamp, :cumulated_work)
 	ON CONFLICT DO NOTHING
@@ -75,7 +74,7 @@ const (
 	`
 
 	sqlHeadersCount = `
-	SELECT max(RowId) 
+	SELECT COUNT(1)
 	FROM headers;
 	`
 
@@ -176,23 +175,15 @@ const (
 
 // HeadersDb represents a database connection and map of related sql queries.
 type HeadersDb struct {
-	dbType config.DbEngine
-	db     *sqlx.DB
-	sqls   map[config.DbEngine]map[string]string
-	log    *zerolog.Logger
+	db  *sqlx.DB
+	log *zerolog.Logger
 }
 
 // NewHeadersDb will setup and return a new headers store.
-func NewHeadersDb(db *sqlx.DB, dbType config.DbEngine, log *zerolog.Logger) *HeadersDb {
+func NewHeadersDb(db *sqlx.DB, log *zerolog.Logger) *HeadersDb {
 	headerLogger := log.With().Str("subservice", "headers-db").Logger()
 	return &HeadersDb{
-		dbType: dbType,
-		db:     db,
-		sqls: map[config.DbEngine]map[string]string{
-			config.DBSqlite: {
-				insertBH: sqliteInsertHeader,
-			},
-		},
+		db:  db,
 		log: &headerLogger,
 	}
 }
@@ -206,7 +197,7 @@ func (h *HeadersDb) Create(ctx context.Context, req dto.DbBlockHeader) error {
 	defer func() {
 		_ = tx.Rollback()
 	}()
-	if _, err := tx.NamedExecContext(ctx, h.sqls[h.dbType][insertBH], req); err != nil {
+	if _, err := tx.NamedExecContext(ctx, sqlInsertHeader, req); err != nil {
 		return errors.Wrap(err, "failed to insert header")
 	}
 	return errors.Wrap(tx.Commit(), "failed to commit tx")
@@ -223,7 +214,7 @@ func (h *HeadersDb) CreateMultiple(ctx context.Context, headers []dto.DbBlockHea
 	}()
 
 	for _, record := range headers {
-		if _, err := tx.NamedExecContext(ctx, h.sqls[h.dbType][insertBH], record); err != nil {
+		if _, err := tx.NamedExecContext(ctx, sqlInsertHeader, record); err != nil {
 			return errors.Wrap(err, "failed to insert header")
 		}
 	}

@@ -63,12 +63,12 @@ type SqliteConfig struct {
 }
 
 type PostgreSqlConfig struct {
-	Host     string
-	Port     uint16
-	User     string
-	Password string
-	DbName   string
-	Sslmode  string
+	Host     string `mapstructure:"host"`
+	Port     uint16 `mapstructure:"port"`
+	User     string `mapstructure:"user"`
+	Password string `mapstructure:"password"`
+	DbName   string `mapstructure:"db_name"`
+	Sslmode  string `mapstructure:"ssl_mode"`
 }
 
 // MerkleRootConfig represents merkleroots verification config.
