@@ -1,5 +1,4 @@
 # Basic dependabot.yml to update gomod
-
 version: 2
 updates:
   - package-ecosystem: "gomod"
@@ -9,8 +8,5 @@ updates:
       interval: "daily"
       # Check for npm updates at 9am UTC (5am EST)
       time: "10:00"
-    reviewers:
-    assignees:
-    # Labels must be created first
     labels:
-      - "update"
+      - "deps"
