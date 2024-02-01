@@ -147,7 +147,9 @@ func modifySqLitePragmas(db *sqlx.DB) (func() error, error) {
 
 	for _, pragma := range pragmas {
 		if _, err := db.Exec(pragma); err != nil {
-			restoreSqLitePragmas(db, *old_pragmas)
+			if rErr := restoreSqLitePragmas(db, *old_pragmas); rErr != nil {
+				err = fmt.Errorf("%w. Resoring previous pragmas failed: %w", err, rErr)
+			}
 			return nil, err
 		}
 	}

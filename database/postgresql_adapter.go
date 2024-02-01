@@ -130,7 +130,7 @@ func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 	if err != nil {
 		return
 	}
-	defer dbTx.Rollback()
+	defer dbTx.Rollback() // nolint
 
 	stmt, err := dbTx.Prepare(copyQuery)
 	if err != nil {
@@ -145,7 +145,7 @@ func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 			}
 
 			err = fmt.Errorf("error reading record: %v", readErr)
-			_ = stmt.Close()
+			_ = stmt.Close() // nolint
 			return
 		}
 
@@ -184,7 +184,7 @@ func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 		return
 	}
 
-	err = stmt.Close()
+	err = stmt.Close() // nolint
 	if err != nil {
 		return
 	}

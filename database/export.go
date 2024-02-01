@@ -42,7 +42,7 @@ func ExportHeaders(cfg *config.AppConfig, log *zerolog.Logger) error {
 	}
 
 	if err = adapter.connect(cfg.Db); err != nil {
-		return nil
+		return err
 	}
 
 	db := adapter.getDBx()
