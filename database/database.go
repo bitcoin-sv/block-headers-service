@@ -63,6 +63,7 @@ func newDbAdapter(cfg *config.DbConfig) (dbAdapter, error) {
 	}
 }
 
+// dropIndexes removes indexes found by indexQuery. Returns the index restore function if successful
 func dropIndexes(db *sqlx.DB, indexQuery *string) (func() error, error) {
 	qr, err := db.Query(*indexQuery)
 	if err != nil {
