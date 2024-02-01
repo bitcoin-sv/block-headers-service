@@ -15,12 +15,11 @@ import (
 	"github.com/bitcoin-sv/pulse/config"
 )
 
-// DbAdapter defines the interface for a database adapter.
-type DbAdapter interface {
-	Connect(cfg *config.DbConfig) error
-	DoMigrations(cfg *config.DbConfig) error
-	ImportHeaders(inputFile *os.File, log *zerolog.Logger) (int, error)
-	GetDBx() *sqlx.DB
+type dbAdapter interface {
+	connect(cfg *config.DbConfig) error
+	doMigrations(cfg *config.DbConfig) error
+	importHeaders(inputFile *os.File, log *zerolog.Logger) (int, error)
+	getDBx() *sqlx.DB
 }
 
 type dbIndex struct {
@@ -31,35 +30,34 @@ type dbIndex struct {
 func Init(cfg *config.AppConfig, log *zerolog.Logger) (*sqlx.DB, error) {
 	dbLog := log.With().Str("subservice", "database").Logger()
 
-	adapter, err := NewDbAdapter(cfg.Db)
+	adapter, err := newDbAdapter(cfg.Db)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = adapter.Connect(cfg.Db); err != nil {
+	if err = adapter.connect(cfg.Db); err != nil {
 		return nil, err
 	}
 
-	if err := adapter.DoMigrations(cfg.Db); err != nil {
+	if err := adapter.doMigrations(cfg.Db); err != nil {
 		return nil, err
 	}
 
 	if cfg.Db.PreparedDb {
-		if err := ImportHeaders(adapter, cfg, &dbLog); err != nil {
+		if err := importHeaders(adapter, cfg, &dbLog); err != nil {
 			return nil, err
 		}
 	}
 
-	return adapter.GetDBx(), nil
+	return adapter.getDBx(), nil
 }
 
-// NewDbAdapter provides the appropriate database adapter based on the config.
-func NewDbAdapter(cfg *config.DbConfig) (DbAdapter, error) {
+func newDbAdapter(cfg *config.DbConfig) (dbAdapter, error) {
 	switch cfg.Engine {
 	case config.DBSqlite:
-		return &SQLiteAdapter{}, nil
+		return &sqLiteAdapter{}, nil
 	case config.DBPostgreSql:
-		return &PostgreSqlAdapter{}, nil
+		return &postgreSqlAdapter{}, nil
 	default:
 		return nil, fmt.Errorf("unsupported database engine %s", cfg.Engine)
 	}
@@ -93,14 +91,20 @@ func dropIndexes(db *sqlx.DB, indexQuery *string) (func() error, error) {
 		dbIndexes = append(dbIndexes, dbIndex)
 	}
 
+	dropedIndexes := make([]dbIndex, 0)
 	for _, dbIndex := range dbIndexes {
 		fmt.Printf("Drop Value: %v\n", dbIndex)
 
 		_, err = db.Exec(fmt.Sprintf("DROP INDEX IF EXISTS %s;", dbIndex.name))
 		if err != nil {
-			restoreIndexes(db, dbIndexes)
+			if restoreErr := restoreIndexes(db, dropedIndexes); restoreErr != nil {
+				err = fmt.Errorf("%w. Restoring already droped indexes failed: %w", err, restoreErr)
+			}
+
 			return nil, err
 		}
+
+		dropedIndexes = append(dropedIndexes, dbIndex)
 	}
 
 	return func() error { return restoreIndexes(db, dbIndexes) }, nil

@@ -21,14 +21,14 @@ import (
 	"github.com/lib/pq"
 )
 
-type PostgreSqlAdapter struct {
+type postgreSqlAdapter struct {
 	db *sqlx.DB
 }
 
 const postgresDriverName = "postgres"
 const postgresBatchSize = 500_000
 
-func (a *PostgreSqlAdapter) Connect(cfg *config.DbConfig) error {
+func (a *postgreSqlAdapter) connect(cfg *config.DbConfig) error {
 	dbCfg := cfg.Postgres
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		dbCfg.Host, dbCfg.Port, dbCfg.User, dbCfg.Password, dbCfg.DbName, dbCfg.Sslmode)
@@ -42,7 +42,7 @@ func (a *PostgreSqlAdapter) Connect(cfg *config.DbConfig) error {
 	return nil
 }
 
-func (a *PostgreSqlAdapter) DoMigrations(cfg *config.DbConfig) error {
+func (a *postgreSqlAdapter) doMigrations(cfg *config.DbConfig) error {
 	driver, err := postgres.WithInstance(a.db.DB, &postgres.Config{})
 	if err != nil {
 		return err
@@ -63,14 +63,14 @@ func (a *PostgreSqlAdapter) DoMigrations(cfg *config.DbConfig) error {
 	return nil
 }
 
-func (a *PostgreSqlAdapter) GetDBx() *sqlx.DB {
+func (a *postgreSqlAdapter) getDBx() *sqlx.DB {
 	if a.db == nil {
 		panic("connection to the database has not been established")
 	}
 	return a.db
 }
 
-func (a *PostgreSqlAdapter) ImportHeaders(inputFile *os.File, log *zerolog.Logger) (int, error) {
+func (a *postgreSqlAdapter) importHeaders(inputFile *os.File, log *zerolog.Logger) (int, error) {
 	// prepare db for bulk insterts
 	restoreIndexes, err := a.dropTableIndexes(sql.HeadersTableName)
 	if err != nil {
@@ -79,7 +79,6 @@ func (a *PostgreSqlAdapter) ImportHeaders(inputFile *os.File, log *zerolog.Logge
 	defer func() {
 		if err = restoreIndexes(); err != nil {
 			log.Error().Msg(err.Error())
-			os.Exit(1)
 		}
 	}()
 
@@ -90,8 +89,7 @@ func (a *PostgreSqlAdapter) ImportHeaders(inputFile *os.File, log *zerolog.Logge
 	reader := csv.NewReader(inputFile)
 	_, err = reader.Read() // Skipping the column headers line
 	if err != nil {
-		log.Error().Msg(err.Error())
-		os.Exit(1)
+		return 0, err
 	}
 
 	// insert headers
@@ -102,8 +100,7 @@ func (a *PostgreSqlAdapter) ImportHeaders(inputFile *os.File, log *zerolog.Logge
 	for {
 		rowIndex, err = a.copyHeaders(reader, postgresBatchSize, previousBlockHash, rowIndex)
 		if err != nil {
-			log.Error().Msg(err.Error())
-			os.Exit(1)
+			return 0, err
 		}
 
 		if guard == rowIndex {
@@ -116,12 +113,13 @@ func (a *PostgreSqlAdapter) ImportHeaders(inputFile *os.File, log *zerolog.Logge
 	return rowIndex, nil
 }
 
-func (a *PostgreSqlAdapter) dropTableIndexes(table string) (func() error, error) {
+// dropTableIndexes removes indexes from a table. Returns the index restore function if successful
+func (a *postgreSqlAdapter) dropTableIndexes(table string) (func() error, error) {
 	q := fmt.Sprintf("SELECT indexname, indexdef FROM pg_indexes WHERE tablename ='%s' AND indexname != '%s_pkey' AND indexdef IS NOT NULL;", table, table)
 	return dropIndexes(a.db, &q)
 }
 
-func (a *PostgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previousBlockHash string, rowIndex int) (lastRowIndex int, err error) {
+func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previousBlockHash string, rowIndex int) (lastRowIndex int, err error) {
 	lastRowIndex = rowIndex
 	copyQuery := pq.CopyIn(
 		sql.HeadersTableName,
@@ -170,7 +168,7 @@ func (a *PostgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 			b.PreviousBlock)
 
 		if execErr != nil {
-			err = fmt.Errorf("error preparing copy statement after %d row: %v", lastRowIndex, readErr)
+			err = fmt.Errorf("error preparing copy statement after %d row: %v", lastRowIndex, execErr)
 			return
 		}
 

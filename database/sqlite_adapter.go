@@ -24,11 +24,11 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type SQLiteAdapter struct {
+type sqLiteAdapter struct {
 	db *sqlx.DB
 }
 
-type SQLitePragmaValues struct {
+type sqLitePragmaValues struct {
 	Synchronous int
 	JournalMode string
 	CacheSize   int
@@ -37,7 +37,7 @@ type SQLitePragmaValues struct {
 const sqliteDriverName = "sqlite3"
 const sqliteBatchSize = 500
 
-func (a *SQLiteAdapter) Connect(cfg *config.DbConfig) error {
+func (a *sqLiteAdapter) connect(cfg *config.DbConfig) error {
 	dsn := fmt.Sprintf("file:%s?_foreign_keys=true&pooling=true", cfg.Sqlite.FilePath)
 	db, err := sqlx.Open(sqliteDriverName, dsn)
 	if err != nil {
@@ -48,7 +48,7 @@ func (a *SQLiteAdapter) Connect(cfg *config.DbConfig) error {
 	return nil
 }
 
-func (a *SQLiteAdapter) DoMigrations(cfg *config.DbConfig) error {
+func (a *sqLiteAdapter) doMigrations(cfg *config.DbConfig) error {
 	driver, err := sqlite3.WithInstance(a.db.DB, &sqlite3.Config{})
 	if err != nil {
 		return err
@@ -70,14 +70,14 @@ func (a *SQLiteAdapter) DoMigrations(cfg *config.DbConfig) error {
 	return nil
 }
 
-func (a *SQLiteAdapter) GetDBx() *sqlx.DB {
+func (a *sqLiteAdapter) getDBx() *sqlx.DB {
 	if a.db == nil {
 		panic("connection to the database has not been established")
 	}
 	return a.db
 }
 
-func (a *SQLiteAdapter) ImportHeaders(inputFile *os.File, log *zerolog.Logger) (int, error) {
+func (a *sqLiteAdapter) importHeaders(inputFile *os.File, log *zerolog.Logger) (int, error) {
 	// prepare db to bulk insterts
 	restorePragmas, err := modifySqLitePragmas(a.db)
 	if err != nil {
@@ -87,7 +87,6 @@ func (a *SQLiteAdapter) ImportHeaders(inputFile *os.File, log *zerolog.Logger) (
 	defer func() {
 		if err = restorePragmas(); err != nil {
 			log.Error().Msg(err.Error())
-			os.Exit(1)
 		}
 	}()
 
@@ -98,7 +97,6 @@ func (a *SQLiteAdapter) ImportHeaders(inputFile *os.File, log *zerolog.Logger) (
 	defer func() {
 		if err = restoreIndexes(); err != nil {
 			log.Error().Msg(err.Error())
-			os.Exit(1)
 		}
 	}()
 
@@ -122,8 +120,7 @@ func (a *SQLiteAdapter) ImportHeaders(inputFile *os.File, log *zerolog.Logger) (
 	for {
 		rowIndex, err = a.insertHeaders(reader, repo, sqliteBatchSize, previousBlockHash, rowIndex)
 		if err != nil {
-			log.Error().Msg(err.Error())
-			os.Exit(1)
+			return 0, err
 		}
 
 		if guard == rowIndex {
@@ -158,8 +155,8 @@ func modifySqLitePragmas(db *sqlx.DB) (func() error, error) {
 	return func() error { return restoreSqLitePragmas(db, *old_pragmas) }, nil
 }
 
-func getSqLitePragmaValues(db *sqlx.DB) (*SQLitePragmaValues, error) {
-	var pragmaValues SQLitePragmaValues
+func getSqLitePragmaValues(db *sqlx.DB) (*sqLitePragmaValues, error) {
+	var pragmaValues sqLitePragmaValues
 
 	pragmaQueries := map[string]interface{}{
 		"synchronous":  &pragmaValues.Synchronous,
@@ -178,7 +175,7 @@ func getSqLitePragmaValues(db *sqlx.DB) (*SQLitePragmaValues, error) {
 	return &pragmaValues, nil
 }
 
-func restoreSqLitePragmas(db *sqlx.DB, values SQLitePragmaValues) error {
+func restoreSqLitePragmas(db *sqlx.DB, values sqLitePragmaValues) error {
 	pragmas := []string{
 		fmt.Sprintf("PRAGMA synchronous = %d;", values.Synchronous),
 		fmt.Sprintf("PRAGMA journal_mode = %s;", values.JournalMode),
@@ -194,12 +191,13 @@ func restoreSqLitePragmas(db *sqlx.DB, values SQLitePragmaValues) error {
 	return nil
 }
 
-func (a *SQLiteAdapter) dropTableIndexes(table string) (func() error, error) {
+// dropTableIndexes removes indexes from a table. Returns the index restore function if successful
+func (a *sqLiteAdapter) dropTableIndexes(table string) (func() error, error) {
 	q := fmt.Sprintf("SELECT name, sql FROM sqlite_master WHERE type='index' AND tbl_name ='%s' AND sql IS NOT NULL;", table)
 	return dropIndexes(a.db, &q)
 }
 
-func (a *SQLiteAdapter) insertHeaders(reader *csv.Reader, repo *sql.HeadersDb, batchSize int, previousBlockHash string, rowIndex int) (lastRowIndex int, err error) {
+func (a *sqLiteAdapter) insertHeaders(reader *csv.Reader, repo *sql.HeadersDb, batchSize int, previousBlockHash string, rowIndex int) (lastRowIndex int, err error) {
 	lastRowIndex = rowIndex
 	batch := make([]dto.DbBlockHeader, 0, batchSize)
 
