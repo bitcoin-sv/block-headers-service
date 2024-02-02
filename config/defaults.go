@@ -13,6 +13,7 @@ func GetDefaultAppConfig() *AppConfig {
 		Webhook:    getWebhookDefaults(),
 		P2P:        getP2PDefaults(),
 		Logging:    getLoggingDefaults(),
+		Metrics:    getMetricsDefaults(),
 	}
 }
 
@@ -73,5 +74,11 @@ func getLoggingDefaults() *LoggingConfig {
 		Format:       "console",
 		InstanceName: "pulse",
 		LogOrigin:    true,
+	}
+}
+
+func getMetricsDefaults() *MetricsConfig {
+	return &MetricsConfig{
+		Enabled: true,
 	}
 }

@@ -40,6 +40,7 @@ type AppConfig struct {
 	Websocket  *WebsocketConfig  `mapstructure:"websocket"`
 	HTTP       *HTTPConfig       `mapstructure:"http"`
 	Logging    *LoggingConfig    `mapstructure:"logging"`
+	Metrics    *MetricsConfig    `mapstructure:"metrics"`
 }
 
 // DbConfig represents a database connection.
@@ -129,6 +130,12 @@ type LoggingConfig struct {
 	InstanceName string `mapstructure:"instance_name"`
 	// LogOrigin is a flag for enabling log origin.
 	LogOrigin bool `mapstructure:"origin"`
+}
+
+// MetricsConfig represents a metrics config.
+type MetricsConfig struct {
+	// Enabled is a flag for enabling metrics.
+	Enabled bool `mapstructure:"enabled"`
 }
 
 func (c *AppConfig) WithoutAuthorization() *AppConfig {
