@@ -10,6 +10,7 @@ dist/
 data/blockheaders.bck.db
 data/blockheaders.db-journal
 data/blockheaders.csv
+data/sql
 
 
 *.db*
