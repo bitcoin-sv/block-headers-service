@@ -24,6 +24,7 @@ require (
 	github.com/dchest/uniuri v1.2.0
 	github.com/kinbiko/jsonassert v1.1.1
 	github.com/lib/pq v1.10.9
+	github.com/prometheus/client_golang v1.18.0
 )
 
 require (
@@ -39,7 +40,6 @@ require (
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
-	github.com/prometheus/client_golang v1.18.0 // indirect
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.45.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
