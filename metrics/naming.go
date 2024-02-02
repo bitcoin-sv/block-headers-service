@@ -1,7 +1,7 @@
 package metrics
 
 const serviceName = "pulse"
-const requestMetricBaseName = "requests"
+const requestsMetricBaseName = "requests"
 
 func metricName(name string) string {
 	return serviceName + "_" + name
