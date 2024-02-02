@@ -5,16 +5,20 @@ import (
 )
 
 type Metrics struct {
-	registry     *prometheus.Registry
+	gatherer     prometheus.Gatherer
+	registerer   prometheus.Registerer
 	httpRequests *RequestMetrics
 }
 
 func newMetrics() *Metrics {
-	reg := prometheus.NewRegistry()
+	registry := prometheus.NewRegistry()
+	constLabels := prometheus.Labels{"app": appName}
+	registererWithLabels := prometheus.WrapRegistererWith(constLabels, registry)
 
 	m := &Metrics{
-		registry:     reg,
-		httpRequests: registerRequestMetrics(reg),
+		gatherer:     registry,
+		registerer:   registererWithLabels,
+		httpRequests: registerRequestMetrics(registererWithLabels),
 	}
 
 	return m

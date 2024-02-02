@@ -12,7 +12,7 @@ type RequestMetrics struct {
 	requestDuration *prometheus.HistogramVec
 }
 
-func registerRequestMetrics(reg *prometheus.Registry) *RequestMetrics {
+func registerRequestMetrics(reg prometheus.Registerer) *RequestMetrics {
 	requestsTotal := registerCounterVec(reg, requestsMetricBaseName, []string{"method", "path", "status", "classification"})
 	requestDuration := registerDurationHistogram(reg, requestsMetricBaseName, []string{"method", "path"})
 
@@ -42,12 +42,21 @@ func (r *RequestTracker) Start() {
 }
 
 func (r *RequestTracker) End(status int) {
-	if status == 404 {
-		// This is a safeguard against attacks where the server is flooded with requests having unique paths,
-		// which would lead to the creation of a large number of metrics
-		r.path = "UNKNOWN_PATH"
-	}
-	r.metrics.requestsTotal.WithLabelValues(r.method, r.path, fmt.Sprint(status), requestClassification(status)).Inc()
+	r.writeCounter(status, r.path)
+	r.writeDuration()
+}
+
+func (r *RequestTracker) EndWithNoRoute() {
+	// This is a safeguard against attacks where the server is flooded with requests having unique paths,
+	// which would lead to the creation of a large number of metrics
+	r.writeCounter(404, "UNKNOWN_ROUTE")
+}
+
+func (r *RequestTracker) writeCounter(status int, path string) {
+	r.metrics.requestsTotal.WithLabelValues(r.method, path, fmt.Sprint(status), requestClassification(status)).Inc()
+}
+
+func (r *RequestTracker) writeDuration() {
 	r.metrics.requestDuration.WithLabelValues(r.method, r.path).Observe(time.Since(r.startTime).Seconds())
 }
 

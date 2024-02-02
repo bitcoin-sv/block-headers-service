@@ -1,10 +1,10 @@
 package metrics
 
-const serviceName = "pulse"
+const appName = "pulse"
 const requestsMetricBaseName = "requests"
 
 func metricName(name string) string {
-	return serviceName + "_" + name
+	return "bux_" + name
 }
 
 func counterName(name string) string {
