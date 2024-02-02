@@ -19,9 +19,9 @@ func Register(ginEngine *gin.Engine) {
 	if metrics, enabled := Get(); enabled {
 		ginEngine.Use(requestMetricsMiddleware())
 
-		rootGroup := ginEngine.Group("/metrics")
+		metricsGroup := ginEngine.Group("/metrics")
 
 		httpHandler := promhttp.HandlerFor(metrics.registry, promhttp.HandlerOpts{Registry: metrics.registry})
-		rootGroup.GET("", gin.WrapH(httpHandler))
+		metricsGroup.GET("", gin.WrapH(httpHandler))
 	}
 }
