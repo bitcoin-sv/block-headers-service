@@ -13,8 +13,8 @@ type RequestMetrics struct {
 }
 
 func registerRequestMetrics(reg *prometheus.Registry) *RequestMetrics {
-	requestsTotal := registerCounterVec(reg, requestMetricBaseName, []string{"method", "path", "status", "classification"})
-	requestDuration := registerDurationHistogram(reg, requestMetricBaseName, []string{"method", "path"})
+	requestsTotal := registerCounterVec(reg, requestsMetricBaseName, []string{"method", "path", "status", "classification"})
+	requestDuration := registerDurationHistogram(reg, requestsMetricBaseName, []string{"method", "path"})
 
 	return &RequestMetrics{
 		requestsTotal:   requestsTotal,

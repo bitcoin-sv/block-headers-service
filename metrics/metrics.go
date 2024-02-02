@@ -4,8 +4,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-var LabelName = "key"
-
 type Metrics struct {
 	registry     *prometheus.Registry
 	httpRequests *RequestMetrics

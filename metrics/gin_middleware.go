@@ -10,7 +10,7 @@ func requestMetricsMiddleware() gin.HandlerFunc {
 			tracker := metrics.httpRequests.Track(c.Request.Method, c.Request.URL.Path)
 			tracker.Start()
 			defer func() {
-				// note that the status code will be correct only if another middleware doesn't change the status code;
+				// note that the status code will be correct only if higher middleware doesn't change the status code;
 				// order of middlewares matters
 				tracker.End(c.Writer.Status())
 			}()
