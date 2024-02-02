@@ -79,6 +79,6 @@ func getLoggingDefaults() *LoggingConfig {
 
 func getMetricsDefaults() *MetricsConfig {
 	return &MetricsConfig{
-		Enabled: true,
+		Enabled: false,
 	}
 }
