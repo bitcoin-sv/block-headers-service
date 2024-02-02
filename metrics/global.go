@@ -19,9 +19,14 @@ func Register(ginEngine *gin.Engine) {
 	if metrics, enabled := Get(); enabled {
 		ginEngine.Use(requestMetricsMiddleware())
 
+		ginEngine.NoRoute(func(c *gin.Context) {
+			//this is needed to distinguish no-route 404 from other 404s
+			c.Set(notFoundContextKey, true)
+		})
+
 		metricsGroup := ginEngine.Group("/metrics")
 
-		httpHandler := promhttp.HandlerFor(metrics.registry, promhttp.HandlerOpts{Registry: metrics.registry})
+		httpHandler := promhttp.HandlerFor(metrics.gatherer, promhttp.HandlerOpts{Registry: metrics.registerer})
 		metricsGroup.GET("", gin.WrapH(httpHandler))
 	}
 }
