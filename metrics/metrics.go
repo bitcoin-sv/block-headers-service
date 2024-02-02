@@ -13,11 +13,6 @@ type Metrics struct {
 
 func newMetrics() *Metrics {
 	reg := prometheus.NewRegistry()
-	// reg.MustRegister(
-	// 	collectors.NewGoCollector(
-	// 		collectors.WithGoCollectorRuntimeMetrics(),
-	// 	),
-	// )
 
 	m := &Metrics{
 		registry:     reg,
