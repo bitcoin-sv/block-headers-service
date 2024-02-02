@@ -1,16 +1,7 @@
 package metrics
 
 const appName = "pulse"
-const requestsMetricBaseName = "requests"
 
-func metricName(name string) string {
-	return "bux_" + name
-}
-
-func counterName(name string) string {
-	return metricName(name) + "_total"
-}
-
-func durationSecName(name string) string {
-	return metricName(name) + "_duration_seconds"
-}
+const requestMetricBaseName = "http_request"
+const requestCounterName = requestMetricBaseName + "_total"
+const requestDurationSecName = requestMetricBaseName + "_duration_seconds"

@@ -2,11 +2,11 @@ package metrics
 
 import "github.com/prometheus/client_golang/prometheus"
 
-func registerCounterVec(reg prometheus.Registerer, baseName string, labels []string) *prometheus.CounterVec {
+func registerCounterVec(reg prometheus.Registerer, name string, labels []string) *prometheus.CounterVec {
 	c := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: counterName(baseName),
-			Help: "Count of " + baseName,
+			Name: name,
+			Help: "Count of " + name,
 		},
 		labels,
 	)
@@ -14,11 +14,11 @@ func registerCounterVec(reg prometheus.Registerer, baseName string, labels []str
 	return c
 }
 
-func registerDurationHistogram(reg prometheus.Registerer, baseName string, labels []string) *prometheus.HistogramVec {
+func registerDurationHistogram(reg prometheus.Registerer, name string, labels []string) *prometheus.HistogramVec {
 	h := prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    durationSecName(baseName),
-			Help:    "Duration histogram of " + baseName,
+			Name:    name,
+			Help:    "Duration histogram of " + name,
 			Buckets: prometheus.DefBuckets,
 		},
 		labels,
