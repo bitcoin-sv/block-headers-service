@@ -178,5 +178,5 @@ func (c *DbConfig) Validate() error {
 
 func fileExists(filePath string) bool {
 	_, err := os.Stat(filePath)
-	return os.IsNotExist(err)
+	return !os.IsNotExist(err)
 }
