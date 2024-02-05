@@ -2,14 +2,15 @@ package cli
 
 import (
 	"fmt"
+	"os"
+
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+
 	"github.com/bitcoin-sv/pulse/config"
 	"github.com/bitcoin-sv/pulse/database"
 	"github.com/bitcoin-sv/pulse/logging"
-	"os"
-
 	"github.com/bitcoin-sv/pulse/version"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 )
 
 type cliFlags struct {
@@ -34,7 +35,7 @@ func LoadFlags(cfg *config.AppConfig) error {
 		os.Exit(1)
 	}
 
-	err = viper.BindPFlags(pulseFlags)
+	err = viper.BindPFlag(config.ConfigFilePathKey, pulseFlags.Lookup(config.ConfigFilePathKey))
 	if err != nil {
 		fmt.Printf("error while binding flags: %v", err.Error())
 		os.Exit(1)
