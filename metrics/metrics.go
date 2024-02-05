@@ -8,6 +8,7 @@ type Metrics struct {
 	gatherer     prometheus.Gatherer
 	registerer   prometheus.Registerer
 	httpRequests *RequestMetrics
+	latestBlock  *latestBlockMetrics
 }
 
 func newMetrics() *Metrics {
@@ -19,6 +20,7 @@ func newMetrics() *Metrics {
 		gatherer:     registry,
 		registerer:   registererWithLabels,
 		httpRequests: registerRequestMetrics(registererWithLabels),
+		latestBlock:  registerLatestBlockMetrics(registererWithLabels),
 	}
 
 	return m
