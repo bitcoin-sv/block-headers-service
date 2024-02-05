@@ -14,6 +14,18 @@ func registerCounterVec(reg prometheus.Registerer, name string, labels []string)
 	return c
 }
 
+func registerGaugeVec(reg prometheus.Registerer, name string, labels []string) *prometheus.GaugeVec {
+	g := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: name,
+			Help: "Gauge of " + name,
+		},
+		labels,
+	)
+	reg.MustRegister(g)
+	return g
+}
+
 func registerDurationHistogram(reg prometheus.Registerer, name string, labels []string) *prometheus.HistogramVec {
 	h := prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
