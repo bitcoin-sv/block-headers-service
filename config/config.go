@@ -162,12 +162,12 @@ func (c *DbConfig) Validate() error {
 	switch c.Engine {
 	case DBSqlite:
 		if len(c.Sqlite.FilePath) == 0 {
-			return fmt.Errorf("db: sqlite configuration cannot be empty wher db type is set to %s", DBSqlite)
+			return fmt.Errorf("db: sqlite configuration cannot be empty where db type is set to %s", DBSqlite)
 		}
 
 	case DBPostgreSql:
 		if c.Postgres == nil {
-			return fmt.Errorf("db: postgres configuration cannot be empty wher db type is set to %s", DBPostgreSql)
+			return fmt.Errorf("db: postgres configuration cannot be empty where db type is set to %s", DBPostgreSql)
 		}
 
 	default:
