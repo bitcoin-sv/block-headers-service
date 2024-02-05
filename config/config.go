@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os"
 	"time"
 
 	"github.com/bitcoin-sv/pulse/internal/chaincfg"
@@ -149,15 +150,24 @@ func (c *DbConfig) Validate() error {
 		return errors.New("db: configuration cannot be empty")
 	}
 
+	if c.PreparedDb {
+		if c.PreparedDbFilePath == "" {
+			return errors.New("headers import: prepared database file path cannot be empty when prepared database is enabled")
+		}
+		if !fileExists(c.PreparedDbFilePath) {
+			return fmt.Errorf("headers import: prepared database file does not exist at path %s", c.PreparedDbFilePath)
+		}
+	}
+
 	switch c.Engine {
 	case DBSqlite:
 		if len(c.Sqlite.FilePath) == 0 {
-			return fmt.Errorf("db: sqlite configuration cannot be empty wher db type is set to %s", DBSqlite)
+			return fmt.Errorf("db: sqlite configuration cannot be empty where db type is set to %s", DBSqlite)
 		}
 
 	case DBPostgreSql:
 		if c.Postgres == nil {
-			return fmt.Errorf("db: postgres configuration cannot be empty wher db type is set to %s", DBPostgreSql)
+			return fmt.Errorf("db: postgres configuration cannot be empty where db type is set to %s", DBPostgreSql)
 		}
 
 	default:
@@ -165,4 +175,9 @@ func (c *DbConfig) Validate() error {
 	}
 
 	return nil
+}
+
+func fileExists(filePath string) bool {
+	_, err := os.Stat(filePath)
+	return !os.IsNotExist(err)
 }
