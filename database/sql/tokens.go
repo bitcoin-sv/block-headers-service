@@ -24,7 +24,7 @@ const (
 
 	sqlDeleteToken = `
 	DELETE FROM tokens
-	WHERE token = ?
+	WHERE token = :token
 	`
 )
 
@@ -66,14 +66,9 @@ func (h *HeadersDb) DeleteToken(ctx context.Context, token string) error {
 		_ = tx.Rollback()
 	}()
 
-	stmt, err := h.db.Prepare(sqlDeleteToken)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close() //nolint:all
-
-	if _, err = stmt.Exec(token); err != nil {
+	if _, err = tx.NamedExecContext(ctx, h.db.Rebind(sqlDeleteToken), map[string]interface{}{"token": token}); err != nil {
 		return errors.Wrap(err, "failed to delete token")
 	}
+
 	return errors.Wrap(tx.Commit(), "failed to commit tx")
 }

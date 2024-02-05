@@ -29,7 +29,7 @@ const (
 
 	sqlDeleteWebhookByUrl = `
 	DELETE FROM webhooks
-	WHERE url = ?
+	WHERE url = :url
 	`
 
 	sqlUpdateWebhook = `
@@ -86,15 +86,12 @@ func (h *HeadersDb) DeleteWebhookByUrl(ctx context.Context, url string) error {
 		_ = tx.Rollback()
 	}()
 
-	stmt, err := h.db.Prepare(sqlDeleteWebhookByUrl)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close() //nolint:all
+	params := map[string]interface{}{"url": url}
 
-	if _, err = stmt.Exec(url); err != nil {
+	if _, err = tx.NamedExecContext(ctx, h.db.Rebind(sqlDeleteWebhookByUrl), params); err != nil {
 		return errors.Wrap(err, "failed to delete webhook")
 	}
+
 	return errors.Wrap(tx.Commit(), "failed to commit tx")
 }
 
