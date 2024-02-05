@@ -150,12 +150,13 @@ func (c *DbConfig) Validate() error {
 		return errors.New("db: configuration cannot be empty")
 	}
 
-	if c.PreparedDb && c.PreparedDbFilePath == "" {
-		return errors.New("headers import: prepared database file path cannot be empty when using prepared database is enabled")
-	}
-
-	if c.PreparedDb && !fileExists(c.PreparedDbFilePath) {
-		return fmt.Errorf("headers import: prepared database file does not exist at path %s", c.PreparedDbFilePath)
+	if c.PreparedDb {
+		if c.PreparedDbFilePath == "" {
+			return errors.New("headers import: prepared database file path cannot be empty when prepared database is enabled")
+		}
+		if !fileExists(c.PreparedDbFilePath) {
+			return fmt.Errorf("headers import: prepared database file does not exist at path %s", c.PreparedDbFilePath)
+		}
 	}
 
 	switch c.Engine {
