@@ -197,7 +197,7 @@ func validateHashColumn(db *sqlx.DB) error {
 	}
 
 	if count != 0 {
-		return fmt.Errorf("%d is ivalid numer of rows with hash eq %s", count, chainhash.Hash{}.String())
+		return fmt.Errorf("%d is ivalid number of rows with hash eq %s", count, chainhash.Hash{}.String())
 	}
 
 	return nil
@@ -212,7 +212,7 @@ func validatePrevHashColumn(db *sqlx.DB) error {
 	}
 
 	if count != 1 {
-		return fmt.Errorf("%d is ivalid numer of rows with previous_block eq %s", count, chainhash.Hash{}.String())
+		return fmt.Errorf("%d is ivalid number of rows with previous_block eq %s", count, chainhash.Hash{}.String())
 	}
 
 	return nil
