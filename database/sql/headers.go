@@ -374,10 +374,11 @@ func (h *HeadersDb) GetChainBetweenTwoHashes(low string, high string) ([]*dto.Db
 	return bh, nil
 }
 
+// GetMerkleRootsConfirmations returns confirmation of merkle roots inclusion in the longest chain.
 func (h *HeadersDb) GetMerkleRootsConfirmations(
 	request []domains.MerkleRootConfirmationRequestItem,
 ) ([]*dto.DbMerkleRootConfirmation, error) {
-	var confirmations []*dto.DbMerkleRootConfirmation
+	confirmations := make([]*dto.DbMerkleRootConfirmation, 0)
 	tipHeight, err := h.getChainTipHeight()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get chain tip height")
