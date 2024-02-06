@@ -117,7 +117,7 @@ func (a *sqLiteAdapter) importHeaders(inputFile *os.File, log *zerolog.Logger) (
 	guard := 0
 
 	for {
-		rowIndex, err = a.insertHeaders(reader, repo, sqliteBatchSize, previousBlockHash, rowIndex)
+		rowIndex, previousBlockHash, err = a.insertHeaders(reader, repo, sqliteBatchSize, previousBlockHash, rowIndex)
 		if err != nil {
 			affectedRows = rowIndex
 			return
@@ -200,8 +200,9 @@ func (a *sqLiteAdapter) dropTableIndexes(table string) (func() error, error) {
 	return dropIndexes(a.db, &q)
 }
 
-func (a *sqLiteAdapter) insertHeaders(reader *csv.Reader, repo *sql.HeadersDb, batchSize int, previousBlockHash string, rowIndex int) (lastRowIndex int, err error) {
+func (a *sqLiteAdapter) insertHeaders(reader *csv.Reader, repo *sql.HeadersDb, batchSize int, previousBlockHash string, rowIndex int) (lastRowIndex int, lastBlockHash string, err error) {
 	lastRowIndex = rowIndex
+	lastBlockHash = previousBlockHash
 	batch := make([]dto.DbBlockHeader, 0, batchSize)
 
 	for i := 0; i < batchSize; i++ {
@@ -218,10 +219,10 @@ func (a *sqLiteAdapter) insertHeaders(reader *csv.Reader, repo *sql.HeadersDb, b
 			break
 		}
 
-		block := parseRecord(record, int32(lastRowIndex), previousBlockHash)
+		block := parseRecord(record, int32(lastRowIndex), lastBlockHash)
 		batch = append(batch, block)
 
-		previousBlockHash = block.Hash
+		lastBlockHash = block.Hash
 		lastRowIndex++
 	}
 
