@@ -3,7 +3,6 @@ package sql
 import (
 	"context"
 	"database/sql"
-	"strings"
 
 	"github.com/rs/zerolog"
 
@@ -158,19 +157,9 @@ const (
 	WHERE hash = ?
 	`
 
-	sqlMerkleRootsConfirmationsQuery = `
-	WITH merkles(merkleroot, blockheight) AS (VALUES :merkles:),
-		 tip(height) AS (SELECT MAX(height) FROM headers WHERE headers.header_state = 'LONGEST_CHAIN')
-	SELECT
-		m.merkleroot AS merkleroot, 
-		m.blockheight AS blockheight,
-		h.hash AS hash, 
-		t.height AS tipheight
-	FROM merkles m 
-	LEFT JOIN tip t
-	LEFT JOIN headers h
-	ON m.merkleroot = h.merkleroot AND m.blockheight = h.height AND h.header_state = 'LONGEST_CHAIN'
-	`
+	sqlTipOfChainHeight = `SELECT MAX(height) FROM headers WHERE header_state = 'LONGEST_CHAIN'`
+
+	sqlVerifyHash = `SELECT hash FROM headers WHERE merkleroot = $1 AND height = $2 AND header_state = 'LONGEST_CHAIN'`
 )
 
 // HeadersDb represents a database connection and map of related sql queries.
@@ -385,28 +374,50 @@ func (h *HeadersDb) GetChainBetweenTwoHashes(low string, high string) ([]*dto.Db
 	return bh, nil
 }
 
-// GetMerkleRootsConfirmations returns a confirmation of whether the given merkle roots are included in the longest chain.
 func (h *HeadersDb) GetMerkleRootsConfirmations(
 	request []domains.MerkleRootConfirmationRequestItem,
 ) ([]*dto.DbMerkleRootConfirmation, error) {
-	var bh []*dto.DbMerkleRootConfirmation
+	var confirmations []*dto.DbMerkleRootConfirmation
+	tipHeight, err := h.getChainTipHeight()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get chain tip height")
+	}
 
-	params := strings.Repeat("(?, ?),", len(request))
-	params = params[:len(params)-1]
-
-	query := strings.Replace(sqlMerkleRootsConfirmationsQuery, ":merkles:", params, 1)
-
-	queryParams := make([]interface{}, 0)
 	for _, item := range request {
-		queryParams = append(queryParams, item.MerkleRoot)
-		queryParams = append(queryParams, item.BlockHeight)
+		confirmation, err := h.getMerkleRootConfirmation(item, tipHeight)
+		if err != nil {
+			continue
+		}
+		confirmations = append(confirmations, confirmation)
 	}
 
-	if err := h.db.Select(&bh, h.db.Rebind(query), queryParams...); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return []*dto.DbMerkleRootConfirmation{}, nil
-		}
-		return nil, errors.Wrapf(err, "failed to get headers by given merkleroots")
+	return confirmations, nil
+}
+
+func (h *HeadersDb) getChainTipHeight() (int32, error) {
+	var tipHeight int32
+	err := h.db.Get(&tipHeight, sqlTipOfChainHeight)
+	return tipHeight, err
+}
+
+func (h *HeadersDb) getMerkleRootConfirmation(item domains.MerkleRootConfirmationRequestItem, tipHeight int32) (*dto.DbMerkleRootConfirmation, error) {
+	confirmation := &dto.DbMerkleRootConfirmation{
+		MerkleRoot:  item.MerkleRoot,
+		BlockHeight: item.BlockHeight,
+		TipHeight:   tipHeight,
 	}
-	return bh, nil
+
+	var hash sql.NullString
+	err := h.db.Get(&hash, sqlVerifyHash, item.MerkleRoot, item.BlockHeight)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+		} else {
+			return nil, err
+		}
+	} else {
+		confirmation.Hash = hash
+	}
+
+	return confirmation, nil
 }
