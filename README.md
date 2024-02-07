@@ -1,3 +1,6 @@
+!!! do not merge !!!!
+
+
 [![Release](https://img.shields.io/github/release-pre/libsv/pulse.svg?logo=github&style=flat&v=1)](https://github.com/libsv/pulse/releases)
 [![Build Status](https://img.shields.io/github/workflow/status/libsv/pulse/go?logo=github&v=3)](https://github.com/libsv/pulse/actions)
 [![Report](https://goreportcard.com/badge/github.com/libsv/pulse?style=flat&v=1)](https://goreportcard.com/report/github.com/libsv/pulse)
