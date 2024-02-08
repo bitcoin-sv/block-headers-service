@@ -95,6 +95,10 @@ func (cs *chainService) Add(bs domains.BlockHeaderSource) (*domains.BlockHeader,
 
 	h, err = cs.insert(h)
 	if err != nil {
+		if errors.Is(err, customErrs.NewUniqueViolationError()) {
+			return h, nil
+		}
+
 		return nil, err
 	}
 
@@ -191,7 +195,7 @@ func (cs *chainService) insert(h *domains.BlockHeader) (*domains.BlockHeader, er
 	if err != nil {
 		if errors.Is(err, customErrs.NewUniqueViolationError()) {
 			cs.log.Warn().Msgf("Header %s already exists in the repository", h.Hash)
-			return h, nil
+			return h, err
 		}
 
 		return h, HeaderSaveFail.causedBy(&err)

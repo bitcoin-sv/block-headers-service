@@ -17,8 +17,6 @@ import (
 )
 
 const (
-	sqlite3DriverName           = "sqlite3"
-	postgresDriverName          = "postgres"
 	postgresUniqueViolationCode = "23505"
 )
 
@@ -195,7 +193,7 @@ func (h *HeadersDb) Create(ctx context.Context, req dto.DbBlockHeader) error {
 		_ = tx.Rollback()
 	}()
 	if _, err := tx.NamedExecContext(ctx, sqlInsertHeader, req); err != nil {
-		if h.isUniqueViolation(err) {
+		if isUniqueViolation(err) {
 			return customErrs.NewUniqueViolationError()
 		}
 
@@ -205,16 +203,13 @@ func (h *HeadersDb) Create(ctx context.Context, req dto.DbBlockHeader) error {
 	return errors.Wrap(tx.Commit(), "failed to commit tx")
 }
 
-func (h *HeadersDb) isUniqueViolation(err error) bool {
-	switch h.db.DriverName() {
-	case postgresDriverName:
-		if pqErr, ok := err.(*pq.Error); ok {
-			return pqErr.Code == postgresUniqueViolationCode
-		}
-	case sqlite3DriverName:
-		if sqliteErr, ok := err.(sqlite3.Error); ok {
-			return sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique || sqliteErr.ExtendedCode == sqlite3.ErrConstraintPrimaryKey
-		}
+func isUniqueViolation(err error) bool {
+	switch err := err.(type) {
+	case *pq.Error:
+		return err.Code == postgresUniqueViolationCode
+	case sqlite3.Error:
+
+		return err.ExtendedCode == sqlite3.ErrConstraintUnique || err.ExtendedCode == sqlite3.ErrConstraintPrimaryKey
 	}
 	return false
 }
