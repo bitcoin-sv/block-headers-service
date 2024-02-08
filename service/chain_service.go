@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/bitcoin-sv/pulse/domains"
+	customErrs "github.com/bitcoin-sv/pulse/errors"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/pulse/metrics"
@@ -188,6 +189,11 @@ func (cs *chainService) previousHeader(bs *domains.BlockHeaderSource) (*domains.
 func (cs *chainService) insert(h *domains.BlockHeader) (*domains.BlockHeader, error) {
 	err := cs.Repositories.Headers.AddHeaderToDatabase(*h)
 	if err != nil {
+		if errors.Is(err, customErrs.NewUniqueViolationError()) {
+			cs.log.Warn().Msgf("Header %s already exists in the repository", h.Hash)
+			return h, nil
+		}
+
 		return h, HeaderSaveFail.causedBy(&err)
 	}
 	return h, nil

@@ -4,13 +4,22 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/lib/pq"
+	"github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 
 	"github.com/bitcoin-sv/pulse/domains"
+	customErrs "github.com/bitcoin-sv/pulse/errors"
 	"github.com/bitcoin-sv/pulse/repository/dto"
+)
+
+const (
+	sqlite3DriverName           = "sqlite3"
+	postgresDriverName          = "postgres"
+	postgresUniqueViolationCode = "23505"
 )
 
 const (
@@ -19,7 +28,6 @@ const (
 	sqlInsertHeader = `
 	INSERT INTO headers(hash, height, version, merkleroot, nonce, bits, header_state, chainwork, previous_block, timestamp , cumulated_work)
 	VALUES(:hash, :height, :version, :merkleroot, :nonce, :bits, :header_state, :chainwork, :previous_block, :timestamp, :cumulated_work)
-	ON CONFLICT DO NOTHING
 	`
 
 	sqlUpdateState = `
@@ -187,9 +195,28 @@ func (h *HeadersDb) Create(ctx context.Context, req dto.DbBlockHeader) error {
 		_ = tx.Rollback()
 	}()
 	if _, err := tx.NamedExecContext(ctx, sqlInsertHeader, req); err != nil {
+		if h.isUniqueViolation(err) {
+			return customErrs.NewUniqueViolationError()
+		}
+
 		return errors.Wrap(err, "failed to insert header")
 	}
+
 	return errors.Wrap(tx.Commit(), "failed to commit tx")
+}
+
+func (h *HeadersDb) isUniqueViolation(err error) bool {
+	switch h.db.DriverName() {
+	case postgresDriverName:
+		if pqErr, ok := err.(*pq.Error); ok {
+			return pqErr.Code == postgresUniqueViolationCode
+		}
+	case sqlite3DriverName:
+		if sqliteErr, ok := err.(sqlite3.Error); ok {
+			return sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique || sqliteErr.ExtendedCode == sqlite3.ErrConstraintPrimaryKey
+		}
+	}
+	return false
 }
 
 // CreateMultiple method will add multiple new records into db.

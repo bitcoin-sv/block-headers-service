@@ -20,6 +20,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/bitcoin-sv/pulse/config"
+	customErrs "github.com/bitcoin-sv/pulse/errors"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/pulse/internal/wire"
@@ -1343,7 +1344,7 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 	}
 
 	initErr := services.Headers.InsertGenesisHeaderInDatabase()
-	if initErr != nil {
+	if initErr != nil && !errors.Is(initErr, customErrs.NewUniqueViolationError()) {
 		return nil, initErr
 	}
 
