@@ -11,7 +11,6 @@ func (e *UniqueViolationError) Error() string {
 	return e.Message
 }
 
-// Implementing this method allows your UniqueViolationError to work with errors.Is.
 func (e *UniqueViolationError) Is(target error) bool {
 	_, ok := target.(*UniqueViolationError)
 	return ok
