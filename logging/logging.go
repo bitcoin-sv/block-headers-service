@@ -38,16 +38,12 @@ func CreateLogger(instanceName, format, level string, logOrigin bool) (*zerolog.
 	if logOrigin {
 		logger = ecszerolog.New(writer, logLevel, origin).
 			With().
-			Timestamp().
 			Str("application", instanceName).
-			Str("service", "bux-server").
 			Logger()
 	} else {
 		logger = ecszerolog.New(writer, logLevel).
 			With().
-			Timestamp().
 			Str("application", instanceName).
-			Str("service", "bux-server").
 			Logger()
 	}
 
@@ -66,7 +62,6 @@ func GetDefaultLogger() *zerolog.Logger {
 	}
 	logger := ecszerolog.New(writer, ecszerolog.Level(zerolog.DebugLevel)).
 		With().
-		Timestamp().
 		Caller().
 		Str("application", "pulse-default").
 		Logger()
