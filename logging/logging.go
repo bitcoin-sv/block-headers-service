@@ -63,7 +63,7 @@ func GetDefaultLogger() *zerolog.Logger {
 	logger := ecszerolog.New(writer, ecszerolog.Level(zerolog.DebugLevel)).
 		With().
 		Caller().
-		Str("application", "pulse-default").
+		Str("application", "block-headers-service-default").
 		Logger()
 
 	return &logger

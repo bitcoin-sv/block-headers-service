@@ -1,10 +1,10 @@
-package testpulse
+package testbhs
 
-import "github.com/bitcoin-sv/pulse/domains"
+import "github.com/bitcoin-sv/block-headers-service/domains"
 
-// When exposes functions to easy testing operations that can happen in pulse.
+// When exposes functions to easy testing operations that can happen in block headers service.
 type When struct {
-	*TestPulse
+	*TestBHS
 }
 
 // NewHeaderReceived simulates sending new header to application.

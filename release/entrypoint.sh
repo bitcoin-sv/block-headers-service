@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
 export PRELOADED_DB_URL=${PRELOADED_DB_URL:? 'URL to download preloaded db is not set. Exiting.'}
-export PULSE_DB_PREPARED_DB=false
-export PULSE_DB_FILE_PATH=${PULSE_DB_FILE_PATH:-'./data/blockheaders.db'}
-export PULSE_DB_PREPARED_DB_FILE_PATH=${PULSE_DB_PREPARED_DB_FILE_PATH:-'./data/blockheaders.csv.gz'}
+export BHS_DB_PREPARED_DB=false
+export BHS_DB_FILE_PATH=${BHS_DB_FILE_PATH:-'./data/blockheaders.db'}
+export BHS_DB_PREPARED_DB_FILE_PATH=${BHS_DB_PREPARED_DB_FILE_PATH:-'./data/blockheaders.csv.gz'}
 preloaded=false
 clean=false
 
 function about() {
     echo "Usage [OPTIONS]
 
-    Starts the pulse application
+    Starts the block-headers-service application
 
     Options:
       --preloaded   Load preloaded database if it isn't already loaded
@@ -20,25 +20,25 @@ function about() {
 }
 
 function clean_db() {
-  if [[ -e $PULSE_DB_FILE_PATH ]]; then
+  if [[ -e $BHS_DB_FILE_PATH ]]; then
     echo "Cleaning existing database"
-    rm $PULSE_DB_FILE_PATH
+    rm $BHS_DB_FILE_PATH
   fi
-  if [[ -e $PULSE_DB_PREPARED_DB_FILE_PATH ]]; then
+  if [[ -e $BHS_DB_PREPARED_DB_FILE_PATH ]]; then
     echo "Cleaning existing preloaded database archive"
-    rm $PULSE_DB_PREPARED_DB_FILE_PATH
+    rm $BHS_DB_PREPARED_DB_FILE_PATH
   fi
 }
 
 function preload() {
-  if [[ -e $PULSE_DB_FILE_PATH ]]; then
+  if [[ -e $BHS_DB_FILE_PATH ]]; then
     echo "There is database file. Skipping preloading database."
     echo "If you want to remove this existing database and use preloaded one, then use the '--clean' argument."
-    export PULSE_DB_PREPARED_DB=false
+    export BHS_DB_PREPARED_DB=false
   else
     echo "Downloading preloaded database ..."
-    wget -nc -O $PULSE_DB_PREPARED_DB_FILE_PATH $PRELOADED_DB_URL
-    export PULSE_DB_PREPARED_DB=true
+    wget -nc -O $BHS_DB_PREPARED_DB_FILE_PATH $PRELOADED_DB_URL
+    export BHS_DB_PREPARED_DB=true
   fi
 }
 

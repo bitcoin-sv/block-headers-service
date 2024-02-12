@@ -3,9 +3,9 @@ package testrepository
 import (
 	"errors"
 
-	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
-	"github.com/bitcoin-sv/pulse/internal/tests/fixtures"
+	"github.com/bitcoin-sv/block-headers-service/domains"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/fixtures"
 )
 
 // HeaderTestRepository in memory HeadersRepository representation for unit testing.

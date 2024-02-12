@@ -20,7 +20,7 @@ db:
     port: 5432
     user: "user"
     password: "password"
-    db_name: "pulse"
+    db_name: "bhs"
     ssl_mode: "disable" #[disable|enable]
 
 # P2P Configuration
@@ -73,7 +73,7 @@ logging:
   # Logging format: console/json
   format: console
   # Instance name shown as parameter in logs
-  instance_name: pulse
+  instance_name: block-header-service
   # Flag for enabling origin parameter in logs
   origin: false
 

@@ -1,6 +1,6 @@
 package metrics
 
-const appName = "pulse"
+const appName = "block-header-service"
 
 const requestMetricBaseName = "http_request"
 const requestCounterName = requestMetricBaseName + "_total"

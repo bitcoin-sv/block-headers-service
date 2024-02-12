@@ -1,4 +1,4 @@
-module github.com/bitcoin-sv/pulse
+module github.com/bitcoin-sv/block-headers-service
 
 go 1.21.5
 

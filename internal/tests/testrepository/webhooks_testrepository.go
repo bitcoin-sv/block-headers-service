@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bitcoin-sv/pulse/notification"
+	"github.com/bitcoin-sv/block-headers-service/notification"
 )
 
 // WebhooksTestRepository in memory WebhooksRepository representation for unit testing.

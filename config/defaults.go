@@ -72,7 +72,7 @@ func getLoggingDefaults() *LoggingConfig {
 	return &LoggingConfig{
 		Level:        "debug",
 		Format:       "console",
-		InstanceName: "pulse",
+		InstanceName: "block-headers-service",
 		LogOrigin:    true,
 	}
 }

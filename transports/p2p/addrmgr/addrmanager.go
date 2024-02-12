@@ -11,7 +11,6 @@ import (
 	"encoding/base32"
 	"encoding/binary"
 	"fmt"
-	"github.com/rs/zerolog"
 	"io"
 	"math/rand"
 	"net"
@@ -21,8 +20,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
-	"github.com/bitcoin-sv/pulse/internal/wire"
+	"github.com/rs/zerolog"
+
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 )
 
 // AddrManager provides a concurrency safe address manager for caching potential

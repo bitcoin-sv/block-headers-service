@@ -7,8 +7,8 @@ package chaincfg
 import (
 	"time"
 
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
-	"github.com/bitcoin-sv/pulse/internal/wire"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 )
 
 // genesisCoinbaseTx is the coinbase transaction for the genesis blocks for

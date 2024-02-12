@@ -5,11 +5,11 @@
 package p2psync
 
 import (
-	"github.com/bitcoin-sv/pulse/internal/chaincfg"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
-	"github.com/bitcoin-sv/pulse/internal/wire"
-	"github.com/bitcoin-sv/pulse/service"
-	"github.com/bitcoin-sv/pulse/transports/p2p/peer"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/internal/wire"
+	"github.com/bitcoin-sv/block-headers-service/service"
+	"github.com/bitcoin-sv/block-headers-service/transports/p2p/peer"
 	"github.com/rs/zerolog"
 )
 

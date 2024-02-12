@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/bitcoin-sv/pulse/internal/tests/assert"
-	"github.com/bitcoin-sv/pulse/internal/tests/fixtures"
-	"github.com/bitcoin-sv/pulse/internal/tests/testpulse"
-	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/tips"
+	"github.com/bitcoin-sv/block-headers-service/domains"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/fixtures"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/testbhs"
+	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/tips"
 )
 
 var expected_tip = tips.TipStateResponse{
@@ -34,7 +34,7 @@ var expected_tip = tips.TipStateResponse{
 func TestGetTips(t *testing.T) {
 	t.Run("failure when authorization on and empty auth header", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t)
+		bhs, cleanup := testbhs.NewTestBHS(t)
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -45,7 +45,7 @@ func TestGetTips(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getTips())
+		res := bhs.Api().Call(getTips())
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)
@@ -55,7 +55,7 @@ func TestGetTips(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
+		bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -66,7 +66,7 @@ func TestGetTips(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getTips())
+		res := bhs.Api().Call(getTips())
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)
@@ -82,7 +82,7 @@ func TestGetTips(t *testing.T) {
 func TestGetTipLongest(t *testing.T) {
 	t.Run("failure when authorization on and empty auth header", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t)
+		bhs, cleanup := testbhs.NewTestBHS(t)
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -93,7 +93,7 @@ func TestGetTipLongest(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getTipLongestChain())
+		res := bhs.Api().Call(getTipLongestChain())
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)
@@ -103,7 +103,7 @@ func TestGetTipLongest(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
+		bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -114,7 +114,7 @@ func TestGetTipLongest(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getTipLongestChain())
+		res := bhs.Api().Call(getTipLongestChain())
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)

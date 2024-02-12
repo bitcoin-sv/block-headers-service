@@ -16,20 +16,20 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/logging"
+	"github.com/bitcoin-sv/block-headers-service/logging"
 	"github.com/rs/zerolog"
 
-	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
-	"github.com/bitcoin-sv/pulse/internal/wire"
-	"github.com/bitcoin-sv/pulse/service"
-	"github.com/bitcoin-sv/pulse/transports/p2p/addrmgr"
-	"github.com/bitcoin-sv/pulse/transports/p2p/connmgr"
-	"github.com/bitcoin-sv/pulse/transports/p2p/p2psync"
-	"github.com/bitcoin-sv/pulse/transports/p2p/p2putil"
-	"github.com/bitcoin-sv/pulse/transports/p2p/peer"
-	peerpkg "github.com/bitcoin-sv/pulse/transports/p2p/peer"
+	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/internal/wire"
+	"github.com/bitcoin-sv/block-headers-service/service"
+	"github.com/bitcoin-sv/block-headers-service/transports/p2p/addrmgr"
+	"github.com/bitcoin-sv/block-headers-service/transports/p2p/connmgr"
+	"github.com/bitcoin-sv/block-headers-service/transports/p2p/p2psync"
+	"github.com/bitcoin-sv/block-headers-service/transports/p2p/p2putil"
+	"github.com/bitcoin-sv/block-headers-service/transports/p2p/peer"
+	peerpkg "github.com/bitcoin-sv/block-headers-service/transports/p2p/peer"
 	"github.com/kr/pretty"
 )
 
@@ -49,7 +49,7 @@ const (
 
 	// userAgentName is the user agent name and is used to help identify
 	// ourselves to other bitcoin peers.
-	userAgentName = "/Pulse"
+	userAgentName = "/block-headers-service"
 
 	// userAgentVersion is the user agent version and is used to help
 	// identify ourselves to other bitcoin peers.

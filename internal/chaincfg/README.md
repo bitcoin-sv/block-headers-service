@@ -24,8 +24,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/bitcoin-sv/pulse/p2putil"
-	"github.com/bitcoin-sv/pulse/chaincfg"
+	"github.com/bitcoin-sv/block-headers-service/p2putil"
+	"github.com/bitcoin-sv/block-headers-service/chaincfg"
 )
 
 var testnet = flag.Bool("testnet", false, "operate on the testnet Bitcoin network")

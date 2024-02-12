@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bitcoin-sv/pulse/logging"
+	"github.com/bitcoin-sv/block-headers-service/logging"
 	"github.com/rs/zerolog"
 
 	"os"
@@ -97,7 +97,7 @@ func unmarshallToAppConfig(appConfig *AppConfig) error {
 }
 
 func envConfig() {
-	viper.SetEnvPrefix("pulse")
+	viper.SetEnvPrefix("bhs")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 }

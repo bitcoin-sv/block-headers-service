@@ -1,21 +1,22 @@
-package testpulse
+package testbhs
 
 import (
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog"
 	"strconv"
 	"testing"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/internal/tests/wait"
-	"github.com/bitcoin-sv/pulse/transports/websocket"
+	"github.com/rs/zerolog"
+
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/wait"
+	"github.com/bitcoin-sv/block-headers-service/transports/websocket"
 	"github.com/centrifugal/centrifuge-go"
 )
 
-// Websocket exposes functions to easy testing of pulse websocket communication.
+// Websocket exposes functions to easy testing of block headers service websocket communication.
 type Websocket struct {
-	*TestPulse
+	*TestBHS
 }
 
 // WebsocketPublisher component used in tests to publish on websocket chanel.

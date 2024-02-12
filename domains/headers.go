@@ -4,8 +4,8 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/internal/chaincfg"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 )
 
 // HeaderState enum representing header state.
@@ -55,7 +55,7 @@ type MerkleRootConfirmationState string
 const (
 	// Confirmed state occurs when Merkle Root is found in the longest chain.
 	Confirmed MerkleRootConfirmationState = "CONFIRMED"
-	// UnableToVerify state occurs when Pulse is behind in synchronization with the longest chain.
+	// UnableToVerify state occurs when Block Headers Service is behind in synchronization with the longest chain.
 	UnableToVerify MerkleRootConfirmationState = "UNABLE_TO_VERIFY"
 	// Invalid state occurs when Merkle Root is not found in the longest chain.
 	Invalid MerkleRootConfirmationState = "INVALID"

@@ -7,13 +7,14 @@ package peer_test
 
 import (
 	"fmt"
-	"github.com/rs/zerolog"
 	"net"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/internal/chaincfg"
-	"github.com/bitcoin-sv/pulse/internal/wire"
-	"github.com/bitcoin-sv/pulse/transports/p2p/peer"
+	"github.com/rs/zerolog"
+
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
+	"github.com/bitcoin-sv/block-headers-service/internal/wire"
+	"github.com/bitcoin-sv/block-headers-service/transports/p2p/peer"
 )
 
 // mockRemotePeer creates a basic inbound peer listening on the simnet port for

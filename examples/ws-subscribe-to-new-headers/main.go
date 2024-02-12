@@ -12,7 +12,7 @@ import (
 func main() {
 
 	client := centrifuge.NewJsonClient("ws://localhost:8080/connection/websocket", centrifuge.Config{
-		// Uncomment and adjust value if pulse has authentication turned on
+		// Uncomment and adjust value if block headersservice has authentication turned on
 		Token: "mQZQ6WmxURxWz5ch",
 	})
 	defer client.Close()
@@ -43,7 +43,7 @@ func main() {
 		log.Println(err)
 	}
 
-	// Run some example of console to give some possibility to play around with websocket connection to pulse
+	// Run some example of console to give some possibility to play around with websocket connection to block headers service
 	quit := make(chan bool, 1)
 
 	go handleUserInput(client, sub, quit)
@@ -127,8 +127,8 @@ Use following commands:
 	#status - show status of connection and subscription
 	#subscribe - subscribe to new header events
 	#unsubscribe - unsubscribe to new header events
-	#connect - connect to pulse via websocket
-	#disconnect - connect from pulse via websocket
+	#connect - connect to block headers service via websocket
+	#disconnect - connect from block headers service via websocket
 	#close - close example
 
 `)

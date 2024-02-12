@@ -1,17 +1,18 @@
 package service
 
 import (
-	"github.com/rs/zerolog"
 	"testing"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
-	"github.com/bitcoin-sv/pulse/internal/tests/assert"
-	"github.com/bitcoin-sv/pulse/internal/tests/fixtures"
-	"github.com/bitcoin-sv/pulse/internal/tests/testrepository"
-	"github.com/bitcoin-sv/pulse/repository"
+	"github.com/rs/zerolog"
+
+	"github.com/bitcoin-sv/block-headers-service/domains"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/fixtures"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/testrepository"
+	"github.com/bitcoin-sv/block-headers-service/repository"
 )
 
 func TestRejectBlockHeader(t *testing.T) {

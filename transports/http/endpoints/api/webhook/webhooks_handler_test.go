@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/bitcoin-sv/pulse/internal/tests/testpulse"
-	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/webhook"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/testbhs"
+	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/webhook"
 )
 
 var webhookUrl = "http://localhost:8080/api/v1/webhook/notify"
@@ -26,11 +26,11 @@ var preparedWebhook = webhook.WebhookRequest{
 // TestCreateWebhookEndpoint tests the webhook registration.
 func TestCreateWebhookEndpoint(t *testing.T) {
 	//setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithApiAuthorizationDisabled())
+	bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithApiAuthorizationDisabled())
 	defer cleanup()
 
 	//when
-	res := pulse.Api().Call(createWebhook())
+	res := bhs.Api().Call(createWebhook())
 
 	//then
 	if res.Code != http.StatusOK {
@@ -41,11 +41,11 @@ func TestCreateWebhookEndpoint(t *testing.T) {
 // TestMultipleIdenticalWebhooks tests creating mutltiple webhooks with this same Url.
 func TestMultipleIdenticalWebhooks(t *testing.T) {
 	//setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithApiAuthorizationDisabled())
+	bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithApiAuthorizationDisabled())
 	defer cleanup()
 
 	//when
-	res := pulse.Api().Call(createWebhook())
+	res := bhs.Api().Call(createWebhook())
 
 	//then
 	if res.Code != http.StatusOK {
@@ -53,7 +53,7 @@ func TestMultipleIdenticalWebhooks(t *testing.T) {
 	}
 
 	//when
-	res2 := pulse.Api().Call(createWebhook())
+	res2 := bhs.Api().Call(createWebhook())
 
 	if res2.Code != http.StatusOK {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusOK, res2.Code)
@@ -70,18 +70,18 @@ func TestMultipleIdenticalWebhooks(t *testing.T) {
 // TestRevokeWebhookEndpoint tests the webhook revocation.
 func TestRevokeWebhookEndpoint(t *testing.T) {
 	//setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithApiAuthorizationDisabled())
+	bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithApiAuthorizationDisabled())
 	defer cleanup()
 
 	//when
-	res := pulse.Api().Call(createWebhook())
+	res := bhs.Api().Call(createWebhook())
 
 	//then
 	if res.Code != http.StatusOK {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusOK, res.Code)
 	}
 
-	res2 := pulse.Api().Call(revokeWebhook(webhookUrl))
+	res2 := bhs.Api().Call(revokeWebhook(webhookUrl))
 
 	if res2.Code != http.StatusOK {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusOK, res2.Code)

@@ -4,6 +4,6 @@ ENV GOPATH=/
 COPY ./ ./
 
 RUN go mod download
-RUN go build -o pulse ./cmd/
+RUN go build -o block-headers-service ./cmd/
 
-CMD ["./pulse"]
+CMD ["./block-headers-service"]

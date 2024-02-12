@@ -2,10 +2,11 @@ package notification
 
 import (
 	"errors"
-	"github.com/rs/zerolog"
 	"strings"
 
-	"github.com/bitcoin-sv/pulse/config"
+	"github.com/rs/zerolog"
+
+	"github.com/bitcoin-sv/block-headers-service/config"
 )
 
 // WebhooksService represents Webhooks service and provide access to repositories.

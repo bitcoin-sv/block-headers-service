@@ -3,13 +3,14 @@ package httpserver
 import (
 	"context"
 	"fmt"
-	"github.com/rs/zerolog"
 	"net/http"
 	"time"
 
+	"github.com/rs/zerolog"
+
 	"github.com/gin-gonic/gin"
 
-	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/block-headers-service/config"
 )
 
 // GinEngineOpt represents functions to configure server engine.

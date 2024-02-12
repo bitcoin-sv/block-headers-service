@@ -1,13 +1,13 @@
 package testrepository
 
 import (
-	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/bitcoin-sv/pulse/internal/tests/fixtures"
-	"github.com/bitcoin-sv/pulse/notification"
-	"github.com/bitcoin-sv/pulse/repository"
+	"github.com/bitcoin-sv/block-headers-service/domains"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/fixtures"
+	"github.com/bitcoin-sv/block-headers-service/notification"
+	"github.com/bitcoin-sv/block-headers-service/repository"
 )
 
-// TestRepositories is a struct used for testing pulse repositories.
+// TestRepositories is a struct used for testing block headers service repositories.
 type TestRepositories struct {
 	Headers  *HeaderTestRepository
 	Tokens   *TokensTestRepository
@@ -33,7 +33,7 @@ func NewCleanTestRepositories() TestRepositories {
 	}
 }
 
-// ToDomainRepo creates a domain repository.Repositories struct to comply with pulse structs.
+// ToDomainRepo creates a domain repository.Repositories struct to comply with block headers service structs.
 func (t *TestRepositories) ToDomainRepo() *repository.Repositories {
 	return &repository.Repositories{
 		Headers:  t.Headers,

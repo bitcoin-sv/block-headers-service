@@ -1,10 +1,11 @@
 package websocket
 
 import (
-	"github.com/bitcoin-sv/pulse/logging"
 	"testing"
 
-	"github.com/bitcoin-sv/pulse/internal/tests/assert"
+	"github.com/bitcoin-sv/block-headers-service/logging"
+
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
 	"github.com/centrifugal/centrifuge"
 	"github.com/rs/zerolog"
 )

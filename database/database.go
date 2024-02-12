@@ -12,7 +12,7 @@ import (
 	// use blank import to register postgresql driver.
 	_ "github.com/lib/pq"
 
-	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/block-headers-service/config"
 )
 
 type dbAdapter interface {

@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/bitcoin-sv/pulse/repository"
+	"github.com/bitcoin-sv/block-headers-service/domains"
+	"github.com/bitcoin-sv/block-headers-service/repository"
 	"github.com/dchest/uniuri"
 )
 

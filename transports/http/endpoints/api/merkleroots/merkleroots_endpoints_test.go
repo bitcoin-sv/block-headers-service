@@ -8,16 +8,16 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg"
-	"github.com/bitcoin-sv/pulse/internal/tests/assert"
-	"github.com/bitcoin-sv/pulse/internal/tests/testpulse"
-	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/merkleroots"
+	"github.com/bitcoin-sv/block-headers-service/domains"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/testbhs"
+	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/merkleroots"
 )
 
 func TestReturnSuccessFromVerify(t *testing.T) {
 	// setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
+	bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{
 		{
@@ -44,7 +44,7 @@ func TestReturnSuccessFromVerify(t *testing.T) {
 	}
 
 	// when
-	res := pulse.Api().Call(verify(query))
+	res := bhs.Api().Call(verify(query))
 
 	// then
 	assert.Equal(t, res.Code, expected_result.code)
@@ -64,7 +64,7 @@ func TestReturnSuccessFromVerify(t *testing.T) {
 
 func TestReturnFailureFromVerifyWhenAuthorizationIsTurnedOnAndCalledWithoutToken(t *testing.T) {
 	// setup
-	pulse, cleanup := testpulse.NewTestPulse(t)
+	bhs, cleanup := testbhs.NewTestBHS(t)
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{}
 	expected_result := struct {
@@ -76,7 +76,7 @@ func TestReturnFailureFromVerifyWhenAuthorizationIsTurnedOnAndCalledWithoutToken
 	}
 
 	// when
-	res := pulse.Api().Call(verify(query))
+	res := bhs.Api().Call(verify(query))
 
 	// then
 	assert.Equal(t, res.Code, expected_result.code)
@@ -91,7 +91,7 @@ func TestReturnFailureFromVerifyWhenAuthorizationIsTurnedOnAndCalledWithoutToken
 
 func TestReturnInvalidFromVerify(t *testing.T) {
 	// setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
+	bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{
 		{
@@ -138,7 +138,7 @@ func TestReturnInvalidFromVerify(t *testing.T) {
 	}
 
 	// when
-	res := pulse.Api().Call(verify(query))
+	res := bhs.Api().Call(verify(query))
 
 	// then
 	assert.Equal(t, res.Code, expected_result.code)
@@ -158,7 +158,7 @@ func TestReturnInvalidFromVerify(t *testing.T) {
 
 func TestReturnPartialSuccessFromVerify(t *testing.T) {
 	// setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
+	bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{
 		{
@@ -195,7 +195,7 @@ func TestReturnPartialSuccessFromVerify(t *testing.T) {
 	}
 
 	// when
-	res := pulse.Api().Call(verify(query))
+	res := bhs.Api().Call(verify(query))
 
 	// then
 	assert.Equal(t, res.Code, expected_result.code)
@@ -215,7 +215,7 @@ func TestReturnPartialSuccessFromVerify(t *testing.T) {
 
 func TestReturnBadRequestErrorFromVerifyWhenGivenEmtpyArray(t *testing.T) {
 	// setup
-	pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
+	bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{}
 	expected_result := struct {
@@ -227,7 +227,7 @@ func TestReturnBadRequestErrorFromVerifyWhenGivenEmtpyArray(t *testing.T) {
 	}
 
 	// when
-	res := pulse.Api().Call(verify(query))
+	res := bhs.Api().Call(verify(query))
 
 	// then
 	assert.Equal(t, res.Code, expected_result.code)

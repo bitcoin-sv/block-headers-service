@@ -2,9 +2,10 @@ package domains
 
 import (
 	"fmt"
-	"github.com/bitcoin-sv/pulse/internal/tests/assert"
 	"math/big"
 	"testing"
+
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
 )
 
 func TestChainWork(t *testing.T) {

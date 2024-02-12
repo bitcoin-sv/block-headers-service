@@ -7,10 +7,10 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/database"
-	"github.com/bitcoin-sv/pulse/logging"
-	"github.com/bitcoin-sv/pulse/version"
+	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/bitcoin-sv/block-headers-service/database"
+	"github.com/bitcoin-sv/block-headers-service/logging"
+	"github.com/bitcoin-sv/block-headers-service/version"
 )
 
 type cliFlags struct {
@@ -26,22 +26,22 @@ func LoadFlags(cfg *config.AppConfig) error {
 	}
 
 	cli := &cliFlags{}
-	pulseFlags := pflag.NewFlagSet("pulseFlags", pflag.ContinueOnError)
+	bhsFlags := pflag.NewFlagSet("bhsFlags", pflag.ContinueOnError)
 
-	initFlags(pulseFlags, cli)
-	err := pulseFlags.Parse(os.Args[1:])
+	initFlags(bhsFlags, cli)
+	err := bhsFlags.Parse(os.Args[1:])
 	if err != nil {
 		fmt.Printf("error while parsing flags: %v", err.Error())
 		os.Exit(1)
 	}
 
-	err = viper.BindPFlag(config.ConfigFilePathKey, pulseFlags.Lookup(config.ConfigFilePathKey))
+	err = viper.BindPFlag(config.ConfigFilePathKey, bhsFlags.Lookup(config.ConfigFilePathKey))
 	if err != nil {
 		fmt.Printf("error while binding flags: %v", err.Error())
 		os.Exit(1)
 	}
 
-	parseCliFlags(cli, cfg, pulseFlags)
+	parseCliFlags(cli, cfg, bhsFlags)
 
 	return nil
 }
@@ -59,16 +59,16 @@ func initFlags(fs *pflag.FlagSet, cliFlags *cliFlags) {
 	fs.BoolVarP(&cliFlags.dumpConfig, "dump_config", "d", false, "dump config to file, specified by config_file flag")
 }
 
-func parseCliFlags(cli *cliFlags, cfg *config.AppConfig, pulseFlags *pflag.FlagSet) {
+func parseCliFlags(cli *cliFlags, cfg *config.AppConfig, bhsFlags *pflag.FlagSet) {
 	log := logging.GetDefaultLogger().With().Str("service", "flags").Logger()
 
 	if cli.showHelp {
-		pulseFlags.PrintDefaults()
+		bhsFlags.PrintDefaults()
 		os.Exit(0)
 	}
 
 	if cli.showVersion {
-		log.Info().Msgf("pulse version %s", version.String())
+		log.Info().Msgf("block headers service version %s", version.String())
 		os.Exit(0)
 	}
 

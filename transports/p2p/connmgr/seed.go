@@ -6,14 +6,15 @@ package connmgr
 
 import (
 	"fmt"
-	"github.com/rs/zerolog"
 	mrand "math/rand"
 	"net"
 	"strconv"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/internal/chaincfg"
-	"github.com/bitcoin-sv/pulse/internal/wire"
+	"github.com/rs/zerolog"
+
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
+	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 )
 
 const (
