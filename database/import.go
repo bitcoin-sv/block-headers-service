@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 	"os"
@@ -162,6 +163,14 @@ func validateDbConsistency(importCount int, repo *sql.HeadersDb, db *sqlx.DB) er
 		return fmt.Errorf("database is not consistent with csv file, %w", err)
 	}
 
+	if err := validateHashColumn(db); err != nil {
+		return fmt.Errorf("database is not consistent with csv file, %w", err)
+	}
+
+	if err := validatePrevHashColumn(db); err != nil {
+		return fmt.Errorf("database is not consistent with csv file, %w", err)
+	}
+
 	return nil
 }
 
@@ -169,11 +178,41 @@ func validateHeightUniqueness(db *sqlx.DB) error {
 	tmpIndex := "tmp_height_unique"
 	_, err := db.Exec(fmt.Sprintf("CREATE UNIQUE INDEX %s ON headers (height)", tmpIndex))
 	if err != nil {
-		return fmt.Errorf("height values are not unique(they should be just after import)")
+		return errors.New("height values are not unique(they should be just after import)")
 	} else {
 		if _, err = db.Exec(fmt.Sprintf("DROP INDEX %s;", tmpIndex)); err != nil {
 			return fmt.Errorf("height values are unique buy droping temporary index %s failed", tmpIndex)
 		}
+	}
+
+	return nil
+}
+
+func validateHashColumn(db *sqlx.DB) error {
+	countQuery := fmt.Sprintf("SELECT COUNT(1) FROM %s WHERE hash = '%s'", sql.HeadersTableName, chainhash.Hash{}.String())
+	var count int
+
+	if err := db.Get(&count, countQuery); err != nil {
+		return fmt.Errorf("cannot validate hash column: %w", err)
+	}
+
+	if count != 0 {
+		return fmt.Errorf("%d is ivalid number of rows with hash eq %s", count, chainhash.Hash{}.String())
+	}
+
+	return nil
+}
+
+func validatePrevHashColumn(db *sqlx.DB) error {
+	countQuery := fmt.Sprintf("SELECT COUNT(1) FROM %s WHERE previous_block = '%s'", sql.HeadersTableName, chainhash.Hash{}.String())
+	var count int
+
+	if err := db.Get(&count, countQuery); err != nil {
+		return fmt.Errorf("cannot validate previous_block column: %w", err)
+	}
+
+	if count != 1 {
+		return fmt.Errorf("%d is ivalid number of rows with previous_block eq %s", count, chainhash.Hash{}.String())
 	}
 
 	return nil

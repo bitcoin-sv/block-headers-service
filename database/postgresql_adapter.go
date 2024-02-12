@@ -98,7 +98,7 @@ func (a *postgreSqlAdapter) importHeaders(inputFile *os.File, log *zerolog.Logge
 	guard := 0
 
 	for {
-		rowIndex, err = a.copyHeaders(reader, postgresBatchSize, previousBlockHash, rowIndex)
+		rowIndex, previousBlockHash, err = a.copyHeaders(reader, postgresBatchSize, previousBlockHash, rowIndex)
 		if err != nil {
 			affectedRows = rowIndex
 			return
@@ -121,8 +121,9 @@ func (a *postgreSqlAdapter) dropTableIndexes(table string) (func() error, error)
 	return dropIndexes(a.db, &q)
 }
 
-func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previousBlockHash string, rowIndex int) (lastRowIndex int, err error) {
+func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previousBlockHash string, rowIndex int) (lastRowIndex int, lastBlockHash string, err error) {
 	lastRowIndex = rowIndex
+	lastBlockHash = previousBlockHash
 	copyQuery := pq.CopyIn(
 		sql.HeadersTableName,
 		/* columns */ "height", "hash", "version", "merkleroot", "timestamp", "bits", "nonce", "header_state", "chainwork", "cumulated_work", "previous_block",
@@ -155,7 +156,7 @@ func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 			break
 		}
 
-		b := parseRecord(record, int32(lastRowIndex), previousBlockHash)
+		b := parseRecord(record, int32(lastRowIndex), lastBlockHash)
 		_, execErr := stmt.Exec(
 			b.Height,
 			b.Hash,
@@ -174,7 +175,7 @@ func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 			return
 		}
 
-		previousBlockHash = b.Hash
+		lastBlockHash = b.Hash
 		lastRowIndex++
 	}
 

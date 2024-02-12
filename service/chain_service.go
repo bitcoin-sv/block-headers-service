@@ -4,6 +4,7 @@ import (
 	"github.com/bitcoin-sv/pulse/domains"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg"
 	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/pulse/metrics"
 	"github.com/bitcoin-sv/pulse/repository"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -96,6 +97,7 @@ func (cs *chainService) Add(bs domains.BlockHeaderSource) (*domains.BlockHeader,
 		return nil, err
 	}
 
+	metrics.SetLatestBlock(h.Height, h.Timestamp, h.State.String())
 	cs.notification.Notify(domains.HeaderAdded(h))
 	return h, err
 }

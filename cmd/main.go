@@ -14,6 +14,7 @@ import (
 	"syscall"
 
 	"github.com/bitcoin-sv/pulse/cli"
+	"github.com/bitcoin-sv/pulse/metrics"
 
 	"github.com/bitcoin-sv/pulse/logging"
 	"github.com/bitcoin-sv/pulse/repository"
@@ -64,6 +65,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if cfg.Metrics.Enabled {
+		log.Info().Msg("metrics enabled")
+		metrics.EnableMetrics()
+	}
+
 	db, err := database.Init(cfg, log)
 	if err != nil {
 		log.Error().Msgf("cannot setup database because of error: %v", err)
@@ -109,6 +115,9 @@ func main() {
 	}
 
 	server := httpserver.NewHttpServer(cfg.HTTP, log)
+
+	server.ApplyConfiguration(metrics.Register)
+
 	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs, cfg.HTTP))
 
 	ws, err := websocket.NewServer(log, hs, cfg.HTTP.UseAuth)
