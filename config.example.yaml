@@ -76,3 +76,7 @@ logging:
   instance_name: pulse
   # Flag for enabling origin parameter in logs
   origin: false
+
+# Prometheus metrics configuration
+metrics:
+  enabled: false
