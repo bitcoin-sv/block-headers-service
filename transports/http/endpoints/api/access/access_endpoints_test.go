@@ -9,7 +9,7 @@ import (
 
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
-	"github.com/bitcoin-sv/block-headers-service/internal/tests/testbhs"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/testapp"
 
 	"github.com/bitcoin-sv/block-headers-service/domains"
 )
@@ -19,7 +19,7 @@ const EmptyToken = ""
 // Tests the GET /access endpoint without authorization header.
 func TestAccessEndpointWithoutAuthHeader(t *testing.T) {
 	//setup
-	bhs, cleanup := testbhs.NewTestBHS(t)
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
 	//when
@@ -35,7 +35,7 @@ func TestAccessEndpointWithoutAuthHeader(t *testing.T) {
 func TestAccessEndpointWithGlobalAuthHeader(t *testing.T) {
 	//setup
 	cfg := config.GetDefaultAppConfig()
-	bhs, cleanup := testbhs.NewTestBHS(t)
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
 	//given
@@ -57,7 +57,7 @@ func TestAccessEndpointWithGlobalAuthHeader(t *testing.T) {
 // Tests the GET /access endpoint with wrong header.
 func TestAccessEndpointWithWrongAuthHeader(t *testing.T) {
 	//setup
-	bhs, cleanup := testbhs.NewTestBHS(t)
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
 	//when
@@ -72,7 +72,7 @@ func TestAccessEndpointWithWrongAuthHeader(t *testing.T) {
 func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 	//setup
 	cfg := config.GetDefaultAppConfig()
-	bhs, cleanup := testbhs.NewTestBHS(t)
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
 	//when
@@ -112,7 +112,7 @@ func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 func TestDeleteTokenEndpoint(t *testing.T) {
 	//setup
 	cfg := config.GetDefaultAppConfig()
-	bhs, cleanup := testbhs.NewTestBHS(t)
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
 	//when

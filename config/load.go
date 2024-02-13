@@ -97,7 +97,7 @@ func unmarshallToAppConfig(appConfig *AppConfig) error {
 }
 
 func envConfig() {
-	viper.SetEnvPrefix("bhs")
+	viper.SetEnvPrefix(ConfigEnvPrefix)
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/fixtures"
-	"github.com/bitcoin-sv/block-headers-service/internal/tests/testbhs"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/testapp"
 	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/tips"
 )
 
@@ -34,7 +34,7 @@ var expected_tip = tips.TipStateResponse{
 func TestGetTips(t *testing.T) {
 	t.Run("failure when authorization on and empty auth header", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t)
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -55,7 +55,7 @@ func TestGetTips(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -82,7 +82,7 @@ func TestGetTips(t *testing.T) {
 func TestGetTipLongest(t *testing.T) {
 	t.Run("failure when authorization on and empty auth header", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t)
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -103,7 +103,7 @@ func TestGetTipLongest(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int

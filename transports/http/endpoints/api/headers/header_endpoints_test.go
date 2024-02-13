@@ -13,7 +13,7 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/fixtures"
-	"github.com/bitcoin-sv/block-headers-service/internal/tests/testbhs"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/testapp"
 	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/headers"
 )
 
@@ -31,7 +31,7 @@ var expected_obj = headers.BlockHeaderResponse{
 func TestGetHeaderByHash(t *testing.T) {
 	t.Run("failure when authorization on and empty auth header", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t)
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -52,7 +52,7 @@ func TestGetHeaderByHash(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -76,7 +76,7 @@ func TestGetHeaderByHash(t *testing.T) {
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -99,7 +99,7 @@ func TestGetHeaderByHash(t *testing.T) {
 func TestGetHeaderByHeight(t *testing.T) {
 	t.Run("failure when authorization on and empty auth header", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t)
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -120,7 +120,7 @@ func TestGetHeaderByHeight(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -144,7 +144,7 @@ func TestGetHeaderByHeight(t *testing.T) {
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -167,7 +167,7 @@ func TestGetHeaderByHeight(t *testing.T) {
 func TestGetHeaderAncestorsByHash(t *testing.T) {
 	t.Run("failure when authorization on and empty auth header", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t)
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -188,7 +188,7 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -212,7 +212,7 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -235,7 +235,7 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 func TestGetCommonAncestor(t *testing.T) {
 	t.Run("failure when authorization on and empty auth header", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t)
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -256,7 +256,7 @@ func TestGetCommonAncestor(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		genesis := domains.CreateGenesisHeaderBlock()
 		expected_response := headers.BlockHeaderResponse{
@@ -291,7 +291,7 @@ func TestGetCommonAncestor(t *testing.T) {
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -314,7 +314,7 @@ func TestGetCommonAncestor(t *testing.T) {
 func TestGetHeadersState(t *testing.T) {
 	t.Run("failure when authorization on and empty auth header", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t)
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -335,7 +335,7 @@ func TestGetHeadersState(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_response := headers.BlockHeaderStateResponse{
 			Header:    expected_obj,
@@ -365,7 +365,7 @@ func TestGetHeadersState(t *testing.T) {
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int

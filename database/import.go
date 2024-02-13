@@ -61,7 +61,7 @@ func getHeadersFile(preparedDbFilePath string, log *zerolog.Logger) (*os.File, s
 		return nil, "", fmt.Errorf("file %s does not exist or is not readable", preparedDbFilePath)
 	}
 
-	const tmpHeadersFileName = "bhs-blockheaders.csv"
+	tmpHeadersFileName := fmt.Sprintf("%d-blockheaders.csv", time.Now().Unix())
 
 	compressedHeadersFilePath := filepath.Clean(filepath.Join(currentDir, preparedDbFilePath))
 	tmpHeadersFilePath := filepath.Clean(filepath.Join(os.TempDir(), tmpHeadersFileName))

@@ -1,4 +1,4 @@
-package testbhs
+package testapp
 
 import (
 	"errors"
@@ -32,11 +32,11 @@ type ConfigOpt func(*config.AppConfig)
 // RepoOpt represents functions to configure test repositories.
 type RepoOpt func(*testrepository.TestRepositories)
 
-// Cleanup represents function that is used to clean up TestBHS app.
+// Cleanup represents function that is used to clean up Test Block Headers Service app.
 type Cleanup func()
 
-// TestBHS used to interact with block headers service in e2e tests.
-type TestBHS struct {
+// TestBlockHeaderService used to interact with block headers service in e2e tests.
+type TestBlockHeaderService struct {
 	t            *testing.T
 	log          *zerolog.Logger
 	config       *config.AppConfig
@@ -49,22 +49,22 @@ type TestBHS struct {
 }
 
 // Api Provides test access to block headers service API.
-func (p *TestBHS) Api() *Api {
-	return &Api{TestBHS: p}
+func (p *TestBlockHeaderService) Api() *Api {
+	return &Api{TestBlockHeaderService: p}
 }
 
 // Websocket Provides test access to block headers service websocket.
-func (p *TestBHS) Websocket() *Websocket {
-	return &Websocket{TestBHS: p}
+func (p *TestBlockHeaderService) Websocket() *Websocket {
+	return &Websocket{TestBlockHeaderService: p}
 }
 
 // When Provides test access to block headers service service operations.
-func (p *TestBHS) When() *When {
-	return &When{TestBHS: p}
+func (p *TestBlockHeaderService) When() *When {
+	return &When{TestBlockHeaderService: p}
 }
 
-// NewTestBHS Start block headers service for testing reason.
-func NewTestBHS(t *testing.T, ops ...bhsOpt) (*TestBHS, Cleanup) {
+// NewTestBlockHeaderService Start block headers service for testing reason.
+func NewTestBlockHeaderService(t *testing.T, ops ...bhsOpt) (*TestBlockHeaderService, Cleanup) {
 	//override arguments otherwise all flags provided to go test command will be parsed by LoadConfig
 	os.Args = []string{""}
 
@@ -112,7 +112,7 @@ func NewTestBHS(t *testing.T, ops ...bhsOpt) (*TestBHS, Cleanup) {
 	urlPrefix := "/api/v1"
 	gin.SetMode(gin.TestMode)
 	server := httpserver.NewHttpServer(cfg.HTTP, &testLog)
-	server.ApplyConfiguration(endpoints.SetupBHSRoutes(hs, cfg.HTTP))
+	server.ApplyConfiguration(endpoints.SetupRoutes(hs, cfg.HTTP))
 	engine := hijackEngine(server)
 
 	ws, err := websocket.NewServer(&testLog, hs, cfg.HTTP.UseAuth)
@@ -135,7 +135,7 @@ func NewTestBHS(t *testing.T, ops ...bhsOpt) (*TestBHS, Cleanup) {
 		}
 	}()
 
-	bhs := &TestBHS{
+	bhs := &TestBlockHeaderService{
 		t:            t,
 		log:          &testLog,
 		config:       cfg,

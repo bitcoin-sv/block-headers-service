@@ -118,7 +118,7 @@ func main() {
 
 	server.ApplyConfiguration(metrics.Register)
 
-	server.ApplyConfiguration(endpoints.SetupBHSRoutes(hs, cfg.HTTP))
+	server.ApplyConfiguration(endpoints.SetupRoutes(hs, cfg.HTTP))
 
 	ws, err := websocket.NewServer(log, hs, cfg.HTTP.UseAuth)
 	if err != nil {

@@ -20,10 +20,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// SetupBHSRoutes main point where we're registering endpoints registrars (handlers that will register endpoints in gin engine)
+// SetupRoutes main point where we're registering endpoints registrars (handlers that will register endpoints in gin engine)
 //
 //	and middlewares. It's returning function that can be used to setup engine of httpserver.HttpServer
-func SetupBHSRoutes(s *service.Services, cfg *config.HTTPConfig) httpserver.GinEngineOpt {
+func SetupRoutes(s *service.Services, cfg *config.HTTPConfig) httpserver.GinEngineOpt {
 	routes := []interface{}{
 		status.NewHandler(s),
 		swagger.NewHandler(s, "/api/v1"),
@@ -52,7 +52,7 @@ func SetupBHSRoutes(s *service.Services, cfg *config.HTTPConfig) httpserver.GinE
 			case router.ApiEndpoints:
 				r.RegisterApiEndpoints(apiRouter, cfg)
 			default:
-				panic(errors.New("unexpected router endpoints registrar"))
+				panic(errors.New("unexpected router endpoints registration"))
 			}
 		}
 	}

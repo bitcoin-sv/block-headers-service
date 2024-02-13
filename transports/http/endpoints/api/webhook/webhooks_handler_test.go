@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/bitcoin-sv/block-headers-service/internal/tests/testbhs"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/testapp"
 	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/webhook"
 )
 
@@ -26,7 +26,7 @@ var preparedWebhook = webhook.WebhookRequest{
 // TestCreateWebhookEndpoint tests the webhook registration.
 func TestCreateWebhookEndpoint(t *testing.T) {
 	//setup
-	bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithApiAuthorizationDisabled())
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithApiAuthorizationDisabled())
 	defer cleanup()
 
 	//when
@@ -41,7 +41,7 @@ func TestCreateWebhookEndpoint(t *testing.T) {
 // TestMultipleIdenticalWebhooks tests creating mutltiple webhooks with this same Url.
 func TestMultipleIdenticalWebhooks(t *testing.T) {
 	//setup
-	bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithApiAuthorizationDisabled())
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithApiAuthorizationDisabled())
 	defer cleanup()
 
 	//when
@@ -70,7 +70,7 @@ func TestMultipleIdenticalWebhooks(t *testing.T) {
 // TestRevokeWebhookEndpoint tests the webhook revocation.
 func TestRevokeWebhookEndpoint(t *testing.T) {
 	//setup
-	bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithApiAuthorizationDisabled())
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithApiAuthorizationDisabled())
 	defer cleanup()
 
 	//when

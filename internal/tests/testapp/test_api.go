@@ -1,4 +1,4 @@
-package testbhs
+package testapp
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 
 // Api exposes functions to easy testing of block headers service endpoints.
 type Api struct {
-	*TestBHS
+	*TestBlockHeaderService
 }
 
 // Call Send request to block headers service api

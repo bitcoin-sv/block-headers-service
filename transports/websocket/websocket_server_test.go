@@ -5,14 +5,14 @@ import (
 	"time"
 
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
-	"github.com/bitcoin-sv/block-headers-service/internal/tests/testbhs"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/testapp"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/wait"
 	"github.com/centrifugal/centrifuge-go"
 )
 
 func TestWebsocketCommunicationWithoutAuthentication(t *testing.T) {
 	//setup
-	p, cleanup := testbhs.NewTestBHS(t, testbhs.WithApiAuthorizationDisabled())
+	p, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithApiAuthorizationDisabled())
 	defer cleanup()
 
 	//given
@@ -38,7 +38,7 @@ func TestWebsocketCommunicationWithoutAuthentication(t *testing.T) {
 
 func TestWebsocketCommunicationWithAuthentication(t *testing.T) {
 	//setup
-	p, cleanup := testbhs.NewTestBHS(t)
+	p, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
 	//given
@@ -56,7 +56,7 @@ func TestWebsocketCommunicationWithAuthentication(t *testing.T) {
 
 func TestWebsocketCommunicationWithInvalidAuthentication(t *testing.T) {
 	//setup
-	p, cleanup := testbhs.NewTestBHS(t)
+	p, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
 	//given

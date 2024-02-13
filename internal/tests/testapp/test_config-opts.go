@@ -1,4 +1,4 @@
-package testbhs
+package testapp
 
 import (
 	"github.com/bitcoin-sv/block-headers-service/config"

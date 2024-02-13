@@ -11,13 +11,13 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
-	"github.com/bitcoin-sv/block-headers-service/internal/tests/testbhs"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/testapp"
 	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/merkleroots"
 )
 
 func TestReturnSuccessFromVerify(t *testing.T) {
 	// setup
-	bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{
 		{
@@ -64,7 +64,7 @@ func TestReturnSuccessFromVerify(t *testing.T) {
 
 func TestReturnFailureFromVerifyWhenAuthorizationIsTurnedOnAndCalledWithoutToken(t *testing.T) {
 	// setup
-	bhs, cleanup := testbhs.NewTestBHS(t)
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{}
 	expected_result := struct {
@@ -91,7 +91,7 @@ func TestReturnFailureFromVerifyWhenAuthorizationIsTurnedOnAndCalledWithoutToken
 
 func TestReturnInvalidFromVerify(t *testing.T) {
 	// setup
-	bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{
 		{
@@ -158,7 +158,7 @@ func TestReturnInvalidFromVerify(t *testing.T) {
 
 func TestReturnPartialSuccessFromVerify(t *testing.T) {
 	// setup
-	bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{
 		{
@@ -215,7 +215,7 @@ func TestReturnPartialSuccessFromVerify(t *testing.T) {
 
 func TestReturnBadRequestErrorFromVerifyWhenGivenEmtpyArray(t *testing.T) {
 	// setup
-	bhs, cleanup := testbhs.NewTestBHS(t, testbhs.WithLongestChain(), testbhs.WithApiAuthorizationDisabled())
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{}
 	expected_result := struct {

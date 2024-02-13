@@ -1,4 +1,4 @@
-package testbhs
+package testapp
 
 import (
 	"errors"
@@ -16,7 +16,7 @@ import (
 
 // Websocket exposes functions to easy testing of block headers service websocket communication.
 type Websocket struct {
-	*TestBHS
+	*TestBlockHeaderService
 }
 
 // WebsocketPublisher component used in tests to publish on websocket chanel.

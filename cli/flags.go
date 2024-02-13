@@ -26,22 +26,22 @@ func LoadFlags(cfg *config.AppConfig) error {
 	}
 
 	cli := &cliFlags{}
-	bhsFlags := pflag.NewFlagSet("bhsFlags", pflag.ContinueOnError)
+	appFlags := pflag.NewFlagSet("appFlags", pflag.ContinueOnError)
 
-	initFlags(bhsFlags, cli)
-	err := bhsFlags.Parse(os.Args[1:])
+	initFlags(appFlags, cli)
+	err := appFlags.Parse(os.Args[1:])
 	if err != nil {
 		fmt.Printf("error while parsing flags: %v", err.Error())
 		os.Exit(1)
 	}
 
-	err = viper.BindPFlag(config.ConfigFilePathKey, bhsFlags.Lookup(config.ConfigFilePathKey))
+	err = viper.BindPFlag(config.ConfigFilePathKey, appFlags.Lookup(config.ConfigFilePathKey))
 	if err != nil {
 		fmt.Printf("error while binding flags: %v", err.Error())
 		os.Exit(1)
 	}
 
-	parseCliFlags(cli, cfg, bhsFlags)
+	parseCliFlags(cli, cfg, appFlags)
 
 	return nil
 }
@@ -59,11 +59,11 @@ func initFlags(fs *pflag.FlagSet, cliFlags *cliFlags) {
 	fs.BoolVarP(&cliFlags.dumpConfig, "dump_config", "d", false, "dump config to file, specified by config_file flag")
 }
 
-func parseCliFlags(cli *cliFlags, cfg *config.AppConfig, bhsFlags *pflag.FlagSet) {
+func parseCliFlags(cli *cliFlags, cfg *config.AppConfig, appFlags *pflag.FlagSet) {
 	log := logging.GetDefaultLogger().With().Str("service", "flags").Logger()
 
 	if cli.showHelp {
-		bhsFlags.PrintDefaults()
+		appFlags.PrintDefaults()
 		os.Exit(0)
 	}
 

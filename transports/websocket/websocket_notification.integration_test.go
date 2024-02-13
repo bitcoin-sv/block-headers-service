@@ -6,14 +6,14 @@ import (
 
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/fixtures"
-	"github.com/bitcoin-sv/block-headers-service/internal/tests/testbhs"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/testapp"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/wait"
 	"github.com/kinbiko/jsonassert"
 )
 
 func TestShouldNotifyWebsocketAboutNewHeader(t *testing.T) {
 	//setup
-	p, cleanup := testbhs.NewTestBHS(t, testbhs.WithApiAuthorizationDisabled())
+	p, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithApiAuthorizationDisabled())
 	defer cleanup()
 
 	//given

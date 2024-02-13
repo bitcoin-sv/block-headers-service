@@ -16,7 +16,7 @@ const (
 	Version               = "v0.6.0"
 	ConfigFilePathKey     = "config_file"
 	DefaultConfigFilePath = "config.yaml"
-	ConfigEnvPrefix       = "bhs_"
+	ConfigEnvPrefix       = "bhs"
 )
 
 var Lookup func(string) ([]net.IP, error)

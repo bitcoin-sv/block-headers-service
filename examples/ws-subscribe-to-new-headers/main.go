@@ -12,7 +12,7 @@ import (
 func main() {
 
 	client := centrifuge.NewJsonClient("ws://localhost:8080/connection/websocket", centrifuge.Config{
-		// Uncomment and adjust value if block headersservice has authentication turned on
+		// Uncomment and adjust value if block headers service has authentication turned on
 		Token: "mQZQ6WmxURxWz5ch",
 	})
 	defer client.Close()
