@@ -1,4 +1,4 @@
-# Block Headers Service: Bitcoin Headers Client
+# Block Headers Service
 
 -----------------------------------------------------
 
