@@ -10,7 +10,7 @@ dist/
 data/blockheaders.bck.db
 data/blockheaders.db-journal
 data/*-blockheaders.csv
-congig.yaml
+config.yaml
 
 
 *.db*
