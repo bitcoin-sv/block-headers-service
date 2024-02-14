@@ -2,10 +2,11 @@ package notification
 
 import (
 	"encoding/json"
-	"github.com/rs/zerolog"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/config"
+	"github.com/rs/zerolog"
+
+	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/centrifugal/centrifuge"
 )
 

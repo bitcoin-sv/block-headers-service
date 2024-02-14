@@ -7,7 +7,7 @@ package addrmgr
 import (
 	"time"
 
-	"github.com/bitcoin-sv/pulse/internal/wire"
+	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 )
 
 // KnownAddress tracks information about a known network address that is used

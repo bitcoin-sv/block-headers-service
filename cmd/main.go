@@ -13,27 +13,27 @@ import (
 	"runtime/debug"
 	"syscall"
 
-	"github.com/bitcoin-sv/pulse/cli"
-	"github.com/bitcoin-sv/pulse/metrics"
+	"github.com/bitcoin-sv/block-headers-service/cli"
+	"github.com/bitcoin-sv/block-headers-service/metrics"
 
-	"github.com/bitcoin-sv/pulse/logging"
-	"github.com/bitcoin-sv/pulse/repository"
+	"github.com/bitcoin-sv/block-headers-service/logging"
+	"github.com/bitcoin-sv/block-headers-service/repository"
 
-	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/database"
-	"github.com/bitcoin-sv/pulse/notification"
-	"github.com/bitcoin-sv/pulse/transports/http/endpoints"
-	"github.com/bitcoin-sv/pulse/transports/websocket"
+	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/bitcoin-sv/block-headers-service/database"
+	"github.com/bitcoin-sv/block-headers-service/notification"
+	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints"
+	"github.com/bitcoin-sv/block-headers-service/transports/websocket"
 
-	"github.com/bitcoin-sv/pulse/database/sql"
-	"github.com/bitcoin-sv/pulse/internal/wire"
-	"github.com/bitcoin-sv/pulse/service"
-	httpserver "github.com/bitcoin-sv/pulse/transports/http/server"
-	"github.com/bitcoin-sv/pulse/transports/p2p"
-	peerpkg "github.com/bitcoin-sv/pulse/transports/p2p/peer"
-	"github.com/bitcoin-sv/pulse/version"
+	"github.com/bitcoin-sv/block-headers-service/database/sql"
+	"github.com/bitcoin-sv/block-headers-service/internal/wire"
+	"github.com/bitcoin-sv/block-headers-service/service"
+	httpserver "github.com/bitcoin-sv/block-headers-service/transports/http/server"
+	"github.com/bitcoin-sv/block-headers-service/transports/p2p"
+	peerpkg "github.com/bitcoin-sv/block-headers-service/transports/p2p/peer"
+	"github.com/bitcoin-sv/block-headers-service/version"
 
-	sqlrepository "github.com/bitcoin-sv/pulse/database/repository"
+	sqlrepository "github.com/bitcoin-sv/block-headers-service/database/repository"
 )
 
 // nolint: godot
@@ -118,7 +118,7 @@ func main() {
 
 	server.ApplyConfiguration(metrics.Register)
 
-	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs, cfg.HTTP))
+	server.ApplyConfiguration(endpoints.SetupRoutes(hs, cfg.HTTP))
 
 	ws, err := websocket.NewServer(log, hs, cfg.HTTP.UseAuth)
 	if err != nil {

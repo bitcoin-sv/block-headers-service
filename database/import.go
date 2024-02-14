@@ -10,10 +10,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/database/sql"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
-	"github.com/bitcoin-sv/pulse/repository/dto"
+	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/bitcoin-sv/block-headers-service/database/sql"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/repository/dto"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
 )
@@ -61,7 +61,7 @@ func getHeadersFile(preparedDbFilePath string, log *zerolog.Logger) (*os.File, s
 		return nil, "", fmt.Errorf("file %s does not exist or is not readable", preparedDbFilePath)
 	}
 
-	const tmpHeadersFileName = "pulse-blockheaders.csv"
+	tmpHeadersFileName := fmt.Sprintf("%d-blockheaders.csv", time.Now().Unix())
 
 	compressedHeadersFilePath := filepath.Clean(filepath.Join(currentDir, preparedDbFilePath))
 	tmpHeadersFilePath := filepath.Clean(filepath.Join(os.TempDir(), tmpHeadersFileName))

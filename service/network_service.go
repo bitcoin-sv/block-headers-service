@@ -1,7 +1,7 @@
 package service
 
 import (
-	peerpkg "github.com/bitcoin-sv/pulse/transports/p2p/peer"
+	peerpkg "github.com/bitcoin-sv/block-headers-service/transports/p2p/peer"
 )
 
 // NetworkService represents Network service and provide access to repositories.

@@ -10,7 +10,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"github.com/bitcoin-sv/pulse/config"
+	"github.com/bitcoin-sv/block-headers-service/config"
 )
 
 const (

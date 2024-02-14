@@ -3,16 +3,17 @@ package service
 import (
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog"
 	"math"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
-	"github.com/bitcoin-sv/pulse/internal/wire"
-	"github.com/bitcoin-sv/pulse/repository"
+	"github.com/rs/zerolog"
+
+	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/bitcoin-sv/block-headers-service/domains"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/internal/wire"
+	"github.com/bitcoin-sv/block-headers-service/repository"
 )
 
 // HeaderService represents Header service and provide access to repositories.

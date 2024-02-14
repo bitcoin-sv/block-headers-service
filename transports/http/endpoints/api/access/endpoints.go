@@ -3,10 +3,10 @@ package access
 import (
 	"net/http"
 
-	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/service"
-	"github.com/bitcoin-sv/pulse/transports/http/auth"
-	router "github.com/bitcoin-sv/pulse/transports/http/endpoints/routes"
+	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/bitcoin-sv/block-headers-service/service"
+	"github.com/bitcoin-sv/block-headers-service/transports/http/auth"
+	router "github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/routes"
 
 	"github.com/gin-gonic/gin"
 )

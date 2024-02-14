@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	"github.com/bitcoin-sv/pulse/notification"
+	"github.com/bitcoin-sv/block-headers-service/notification"
 )
 
 // DbWebhook represent webhook saved in db.

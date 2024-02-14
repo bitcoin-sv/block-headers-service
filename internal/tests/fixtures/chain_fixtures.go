@@ -1,8 +1,8 @@
 package fixtures
 
 import (
-	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/domains"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 )
 
 // StartingChain creates mocked chain entries containing only Genesis Block.

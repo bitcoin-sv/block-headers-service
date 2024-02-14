@@ -7,7 +7,7 @@ package wire
 import (
 	"io"
 
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 )
 
 // MsgGetCFCheckpt is a request for filter headers at evenly spaced intervals

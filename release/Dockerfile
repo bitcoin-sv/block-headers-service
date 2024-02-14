@@ -6,10 +6,10 @@ RUN apt-get update && apt-get install -y wget
 
 WORKDIR /app
 
-ENV PULSE_DB_SCHEMA_PATH=./migrations
-COPY ./database/migrations $PULSE_DB_SCHEMA_PATH
+ENV BHS_DB_SCHEMA_PATH=./migrations
+COPY ./database/migrations $BHS_DB_SCHEMA_PATH
 COPY ./release/entrypoint.sh .
-ARG project_name=pulse
+ARG project_name=block-header-service
 ARG repository_owner=bitcoin-sv
 ARG TARGETPLATFORM
 ENV APP_BINARY=${project_name}

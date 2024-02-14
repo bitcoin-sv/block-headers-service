@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
-	"github.com/bitcoin-sv/pulse/notification"
+	"github.com/bitcoin-sv/block-headers-service/domains"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/notification"
 )
 
 // Headers is a interface which represents methods performed on header table in defined storage.

@@ -3,9 +3,10 @@ package websocket
 import (
 	"context"
 	"fmt"
+
 	"github.com/rs/zerolog"
 
-	"github.com/bitcoin-sv/pulse/service"
+	"github.com/bitcoin-sv/block-headers-service/service"
 	"github.com/centrifugal/centrifuge"
 	"github.com/gin-gonic/gin"
 )
@@ -82,7 +83,7 @@ func (s *server) Publisher() Publisher {
 func newNode(log *zerolog.Logger) (*centrifuge.Node, error) {
 	lh := newLogHandler(log)
 	return centrifuge.New(centrifuge.Config{
-		Name:       "Pulse",
+		Name:       "Block-Headers-Service",
 		LogLevel:   lh.Level(),
 		LogHandler: lh.Log,
 	})

@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/repository/dto"
+	"github.com/bitcoin-sv/block-headers-service/repository/dto"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )

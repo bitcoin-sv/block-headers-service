@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/bitcoin-sv/pulse/internal/chaincfg"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 )
 
 // ActiveNetParams is a pointer to the parameters specific to the

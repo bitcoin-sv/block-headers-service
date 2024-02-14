@@ -6,12 +6,13 @@ package p2psync
 
 import (
 	"fmt"
-	"github.com/rs/zerolog"
 	"math"
 	"sync"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/transports/p2p/p2putil"
+	"github.com/rs/zerolog"
+
+	"github.com/bitcoin-sv/block-headers-service/transports/p2p/p2putil"
 )
 
 // blockProgressLogger provides periodic logging for other services in order

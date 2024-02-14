@@ -1,17 +1,17 @@
-package testpulse
+package testapp
 
 import (
 	"net/http"
 	"net/http/httptest"
 )
 
-// Api exposes functions to easy testing of pulse endpoints.
+// Api exposes functions to easy testing of block headers service endpoints.
 type Api struct {
-	*TestPulse
+	*TestBlockHeaderService
 }
 
-// Call Send request to pulse api
-// req is a Http request that should be made against pulse server
+// Call Send request to block headers service api
+// req is a Http request that should be made against block headers service server
 // errors can be used to provide a way to call this method with the result of http.NewRequest
 //
 // Example 1:

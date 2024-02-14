@@ -5,8 +5,8 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/domains"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 )
 
 // DbBlockHeader represent header saved in db.

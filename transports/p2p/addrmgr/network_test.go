@@ -8,8 +8,8 @@ import (
 	"net"
 	"testing"
 
-	"github.com/bitcoin-sv/pulse/internal/wire"
-	"github.com/bitcoin-sv/pulse/transports/p2p/addrmgr"
+	"github.com/bitcoin-sv/block-headers-service/internal/wire"
+	"github.com/bitcoin-sv/block-headers-service/transports/p2p/addrmgr"
 )
 
 // TestIPTypes ensures the various functions which determine the type of an IP

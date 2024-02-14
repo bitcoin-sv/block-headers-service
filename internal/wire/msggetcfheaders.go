@@ -7,7 +7,7 @@ package wire
 import (
 	"io"
 
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 )
 
 // MsgGetCFHeaders is a message similar to MsgGetHeaders, but for committed

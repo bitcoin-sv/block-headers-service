@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
-	"github.com/bitcoin-sv/pulse/internal/wire"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 )
 
 const (

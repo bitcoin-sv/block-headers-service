@@ -7,9 +7,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/database/sql"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/bitcoin-sv/block-headers-service/database/sql"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/golang-migrate/migrate/v4"
 	postgres "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/rs/zerolog"

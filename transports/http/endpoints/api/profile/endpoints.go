@@ -3,8 +3,8 @@ package profile
 import (
 	"net/http/pprof"
 
-	"github.com/bitcoin-sv/pulse/service"
-	router "github.com/bitcoin-sv/pulse/transports/http/endpoints/routes"
+	"github.com/bitcoin-sv/block-headers-service/service"
+	router "github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/routes"
 	"github.com/gin-gonic/gin"
 )
 

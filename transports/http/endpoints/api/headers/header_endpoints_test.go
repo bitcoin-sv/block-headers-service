@@ -10,11 +10,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/bitcoin-sv/pulse/internal/tests/assert"
-	"github.com/bitcoin-sv/pulse/internal/tests/fixtures"
-	"github.com/bitcoin-sv/pulse/internal/tests/testpulse"
-	"github.com/bitcoin-sv/pulse/transports/http/endpoints/api/headers"
+	"github.com/bitcoin-sv/block-headers-service/domains"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/fixtures"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/testapp"
+	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/headers"
 )
 
 var expected_obj = headers.BlockHeaderResponse{
@@ -31,7 +31,7 @@ var expected_obj = headers.BlockHeaderResponse{
 func TestGetHeaderByHash(t *testing.T) {
 	t.Run("failure when authorization on and empty auth header", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t)
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -42,7 +42,7 @@ func TestGetHeaderByHash(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getHeaderByHash("123"))
+		res := bhs.Api().Call(getHeaderByHash("123"))
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)
@@ -52,7 +52,7 @@ func TestGetHeaderByHash(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -63,7 +63,7 @@ func TestGetHeaderByHash(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getHeaderByHash(fixtures.HashHeight1.String()))
+		res := bhs.Api().Call(getHeaderByHash(fixtures.HashHeight1.String()))
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)
@@ -76,7 +76,7 @@ func TestGetHeaderByHash(t *testing.T) {
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -87,7 +87,7 @@ func TestGetHeaderByHash(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getHeaderByHash("123"))
+		res := bhs.Api().Call(getHeaderByHash("123"))
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)
@@ -99,7 +99,7 @@ func TestGetHeaderByHash(t *testing.T) {
 func TestGetHeaderByHeight(t *testing.T) {
 	t.Run("failure when authorization on and empty auth header", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t)
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -110,7 +110,7 @@ func TestGetHeaderByHeight(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getHeaderByHeight(123, 1))
+		res := bhs.Api().Call(getHeaderByHeight(123, 1))
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)
@@ -120,7 +120,7 @@ func TestGetHeaderByHeight(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -131,7 +131,7 @@ func TestGetHeaderByHeight(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getHeaderByHeight(1, 1))
+		res := bhs.Api().Call(getHeaderByHeight(1, 1))
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)
@@ -144,7 +144,7 @@ func TestGetHeaderByHeight(t *testing.T) {
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -155,7 +155,7 @@ func TestGetHeaderByHeight(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getHeaderByHeight(123, 1))
+		res := bhs.Api().Call(getHeaderByHeight(123, 1))
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)
@@ -167,7 +167,7 @@ func TestGetHeaderByHeight(t *testing.T) {
 func TestGetHeaderAncestorsByHash(t *testing.T) {
 	t.Run("failure when authorization on and empty auth header", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t)
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -178,7 +178,7 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getHeaderAncestorsByHash("123", "1234"))
+		res := bhs.Api().Call(getHeaderAncestorsByHash("123", "1234"))
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)
@@ -188,7 +188,7 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -199,7 +199,7 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getHeaderAncestorsByHash(fixtures.HashHeight2.String(), fixtures.HashHeight1.String()))
+		res := bhs.Api().Call(getHeaderAncestorsByHash(fixtures.HashHeight2.String(), fixtures.HashHeight1.String()))
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)
@@ -212,7 +212,7 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -223,7 +223,7 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getHeaderAncestorsByHash("123", "1234"))
+		res := bhs.Api().Call(getHeaderAncestorsByHash("123", "1234"))
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)
@@ -235,7 +235,7 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 func TestGetCommonAncestor(t *testing.T) {
 	t.Run("failure when authorization on and empty auth header", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t)
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -246,7 +246,7 @@ func TestGetCommonAncestor(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getCommonAncestors([]string{"123", "1234"}))
+		res := bhs.Api().Call(getCommonAncestors([]string{"123", "1234"}))
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)
@@ -256,7 +256,7 @@ func TestGetCommonAncestor(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		genesis := domains.CreateGenesisHeaderBlock()
 		expected_response := headers.BlockHeaderResponse{
@@ -278,7 +278,7 @@ func TestGetCommonAncestor(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getCommonAncestors([]string{fixtures.HashHeight2.String(), fixtures.HashHeight1.String()}))
+		res := bhs.Api().Call(getCommonAncestors([]string{fixtures.HashHeight2.String(), fixtures.HashHeight1.String()}))
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)
@@ -291,7 +291,7 @@ func TestGetCommonAncestor(t *testing.T) {
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -302,7 +302,7 @@ func TestGetCommonAncestor(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getCommonAncestors([]string{"123", "1234"}))
+		res := bhs.Api().Call(getCommonAncestors([]string{"123", "1234"}))
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)
@@ -314,7 +314,7 @@ func TestGetCommonAncestor(t *testing.T) {
 func TestGetHeadersState(t *testing.T) {
 	t.Run("failure when authorization on and empty auth header", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t)
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -325,7 +325,7 @@ func TestGetHeadersState(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getHeadersState("123"))
+		res := bhs.Api().Call(getHeadersState("123"))
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)
@@ -335,7 +335,7 @@ func TestGetHeadersState(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_response := headers.BlockHeaderStateResponse{
 			Header:    expected_obj,
@@ -352,7 +352,7 @@ func TestGetHeadersState(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getHeadersState(fixtures.HashHeight1.String()))
+		res := bhs.Api().Call(getHeadersState(fixtures.HashHeight1.String()))
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)
@@ -365,7 +365,7 @@ func TestGetHeadersState(t *testing.T) {
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		pulse, cleanup := testpulse.NewTestPulse(t, testpulse.WithLongestChain(), testpulse.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
 		expected_result := struct {
 			code int
@@ -376,7 +376,7 @@ func TestGetHeadersState(t *testing.T) {
 		}
 
 		// when
-		res := pulse.Api().Call(getHeadersState("123"))
+		res := bhs.Api().Call(getHeadersState("123"))
 
 		// then
 		assert.Equal(t, res.Code, expected_result.code)

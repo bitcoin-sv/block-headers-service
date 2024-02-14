@@ -2,9 +2,10 @@ package service
 
 import (
 	"bytes"
-	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
-	"github.com/bitcoin-sv/pulse/internal/wire"
+
+	"github.com/bitcoin-sv/block-headers-service/domains"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 )
 
 // MaxBlockHeaderPayload is the maximum number of bytes a block header can be.

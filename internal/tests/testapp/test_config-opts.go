@@ -1,11 +1,11 @@
-package testpulse
+package testapp
 
 import (
-	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/internal/tests/testrepository"
+	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/testrepository"
 )
 
-// WithApiAuthorizationDisabled allows to not use authorization in Pulse.
+// WithApiAuthorizationDisabled allows to not use authorization in Block Headers Service.
 func WithApiAuthorizationDisabled() ConfigOpt {
 	return func(c *config.AppConfig) {
 		c.WithoutAuthorization()

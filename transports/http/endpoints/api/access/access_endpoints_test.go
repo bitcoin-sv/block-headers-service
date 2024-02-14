@@ -7,11 +7,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/internal/tests/assert"
-	"github.com/bitcoin-sv/pulse/internal/tests/testpulse"
+	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/testapp"
 
-	"github.com/bitcoin-sv/pulse/domains"
+	"github.com/bitcoin-sv/block-headers-service/domains"
 )
 
 const EmptyToken = ""
@@ -19,11 +19,11 @@ const EmptyToken = ""
 // Tests the GET /access endpoint without authorization header.
 func TestAccessEndpointWithoutAuthHeader(t *testing.T) {
 	//setup
-	pulse, cleanup := testpulse.NewTestPulse(t)
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
 	//when
-	res := pulse.Api().Call(getTokenInfo(EmptyToken))
+	res := bhs.Api().Call(getTokenInfo(EmptyToken))
 
 	//then
 	if res.Code != http.StatusUnauthorized {
@@ -35,14 +35,14 @@ func TestAccessEndpointWithoutAuthHeader(t *testing.T) {
 func TestAccessEndpointWithGlobalAuthHeader(t *testing.T) {
 	//setup
 	cfg := config.GetDefaultAppConfig()
-	pulse, cleanup := testpulse.NewTestPulse(t)
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
 	//given
 	authToken := cfg.HTTP.AuthToken
 
 	//when
-	res := pulse.Api().Call(getTokenInfo(authToken))
+	res := bhs.Api().Call(getTokenInfo(authToken))
 
 	if res.Code != http.StatusOK {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusOK, res.Code)
@@ -57,11 +57,11 @@ func TestAccessEndpointWithGlobalAuthHeader(t *testing.T) {
 // Tests the GET /access endpoint with wrong header.
 func TestAccessEndpointWithWrongAuthHeader(t *testing.T) {
 	//setup
-	pulse, cleanup := testpulse.NewTestPulse(t)
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
 	//when
-	res := pulse.Api().Call(getTokenInfo("wrong_token"))
+	res := bhs.Api().Call(getTokenInfo("wrong_token"))
 
 	if res.Code != http.StatusUnauthorized {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusUnauthorized, res.Code)
@@ -72,11 +72,11 @@ func TestAccessEndpointWithWrongAuthHeader(t *testing.T) {
 func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 	//setup
 	cfg := config.GetDefaultAppConfig()
-	pulse, cleanup := testpulse.NewTestPulse(t)
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
 	//when
-	res := pulse.Api().Call(createToken(cfg.HTTP.AuthToken))
+	res := bhs.Api().Call(createToken(cfg.HTTP.AuthToken))
 
 	//then
 	if res.Code != http.StatusOK {
@@ -91,7 +91,7 @@ func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 	token := body.Token
 
 	//when
-	res = pulse.Api().Call(getTokenInfo(token))
+	res = bhs.Api().Call(getTokenInfo(token))
 
 	//then
 	if res.Code != http.StatusOK {
@@ -112,11 +112,11 @@ func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
 func TestDeleteTokenEndpoint(t *testing.T) {
 	//setup
 	cfg := config.GetDefaultAppConfig()
-	pulse, cleanup := testpulse.NewTestPulse(t)
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
 	//when
-	res := pulse.Api().Call(createToken(cfg.HTTP.AuthToken))
+	res := bhs.Api().Call(createToken(cfg.HTTP.AuthToken))
 
 	//then
 	if res.Code != http.StatusOK {
@@ -131,7 +131,7 @@ func TestDeleteTokenEndpoint(t *testing.T) {
 	}
 
 	//when
-	res = pulse.Api().Call(deleteToken(cfg.HTTP.AuthToken, body.Token))
+	res = bhs.Api().Call(deleteToken(cfg.HTTP.AuthToken, body.Token))
 
 	if res.Code != http.StatusOK {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusOK, res.Code)

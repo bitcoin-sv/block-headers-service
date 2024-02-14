@@ -1,26 +1,27 @@
-package testpulse
+package testapp
 
 import (
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog"
 	"net/http"
 	"os"
 	"testing"
 
-	"github.com/bitcoin-sv/pulse/config"
-	"github.com/bitcoin-sv/pulse/internal/tests/testrepository"
-	"github.com/bitcoin-sv/pulse/notification"
-	"github.com/bitcoin-sv/pulse/repository"
-	"github.com/bitcoin-sv/pulse/service"
-	"github.com/bitcoin-sv/pulse/transports/http/endpoints"
-	httpserver "github.com/bitcoin-sv/pulse/transports/http/server"
-	"github.com/bitcoin-sv/pulse/transports/websocket"
+	"github.com/rs/zerolog"
+
+	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/testrepository"
+	"github.com/bitcoin-sv/block-headers-service/notification"
+	"github.com/bitcoin-sv/block-headers-service/repository"
+	"github.com/bitcoin-sv/block-headers-service/service"
+	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints"
+	httpserver "github.com/bitcoin-sv/block-headers-service/transports/http/server"
+	"github.com/bitcoin-sv/block-headers-service/transports/websocket"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 )
 
-type pulseOpt interface{}
+type bhsOpt interface{}
 
 // ServicesOpt represents functions to configure test services.
 type ServicesOpt func(*service.Services)
@@ -31,11 +32,11 @@ type ConfigOpt func(*config.AppConfig)
 // RepoOpt represents functions to configure test repositories.
 type RepoOpt func(*testrepository.TestRepositories)
 
-// Cleanup represents function that is used to clean up TestPulse app.
+// Cleanup represents function that is used to clean up Test Block Headers Service app.
 type Cleanup func()
 
-// TestPulse used to interact with pulse in e2e tests.
-type TestPulse struct {
+// TestBlockHeaderService used to interact with block headers service in e2e tests.
+type TestBlockHeaderService struct {
 	t            *testing.T
 	log          *zerolog.Logger
 	config       *config.AppConfig
@@ -47,23 +48,23 @@ type TestPulse struct {
 	urlPrefix    string
 }
 
-// Api Provides test access to pulse API.
-func (p *TestPulse) Api() *Api {
-	return &Api{TestPulse: p}
+// Api Provides test access to block headers service API.
+func (p *TestBlockHeaderService) Api() *Api {
+	return &Api{TestBlockHeaderService: p}
 }
 
-// Websocket Provides test access to pulse websocket.
-func (p *TestPulse) Websocket() *Websocket {
-	return &Websocket{TestPulse: p}
+// Websocket Provides test access to block headers service websocket.
+func (p *TestBlockHeaderService) Websocket() *Websocket {
+	return &Websocket{TestBlockHeaderService: p}
 }
 
-// When Provides test access to pulse service operations.
-func (p *TestPulse) When() *When {
-	return &When{TestPulse: p}
+// When Provides test access to block headers service service operations.
+func (p *TestBlockHeaderService) When() *When {
+	return &When{TestBlockHeaderService: p}
 }
 
-// NewTestPulse Start pulse for testing reason.
-func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
+// NewTestBlockHeaderService Start block headers service for testing reason.
+func NewTestBlockHeaderService(t *testing.T, ops ...bhsOpt) (*TestBlockHeaderService, Cleanup) {
 	//override arguments otherwise all flags provided to go test command will be parsed by LoadConfig
 	os.Args = []string{""}
 
@@ -111,7 +112,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 	urlPrefix := "/api/v1"
 	gin.SetMode(gin.TestMode)
 	server := httpserver.NewHttpServer(cfg.HTTP, &testLog)
-	server.ApplyConfiguration(endpoints.SetupPulseRoutes(hs, cfg.HTTP))
+	server.ApplyConfiguration(endpoints.SetupRoutes(hs, cfg.HTTP))
 	engine := hijackEngine(server)
 
 	ws, err := websocket.NewServer(&testLog, hs, cfg.HTTP.UseAuth)
@@ -134,7 +135,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 		}
 	}()
 
-	pulse := &TestPulse{
+	bhs := &TestBlockHeaderService{
 		t:            t,
 		log:          &testLog,
 		config:       cfg,
@@ -156,7 +157,7 @@ func NewTestPulse(t *testing.T, ops ...pulseOpt) (*TestPulse, Cleanup) {
 		}
 	}
 
-	return pulse, cleanup
+	return bhs, cleanup
 }
 
 func hijackEngine(server *httpserver.HttpServer) *gin.Engine {

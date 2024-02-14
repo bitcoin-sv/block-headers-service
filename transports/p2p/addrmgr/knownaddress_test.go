@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/internal/wire"
-	"github.com/bitcoin-sv/pulse/transports/p2p/addrmgr"
+	"github.com/bitcoin-sv/block-headers-service/internal/wire"
+	"github.com/bitcoin-sv/block-headers-service/transports/p2p/addrmgr"
 )
 
 func TestChance(t *testing.T) {

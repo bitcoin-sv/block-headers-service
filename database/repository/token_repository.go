@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 
-	"github.com/bitcoin-sv/pulse/database/sql"
-	"github.com/bitcoin-sv/pulse/domains"
-	dto "github.com/bitcoin-sv/pulse/repository/dto"
+	"github.com/bitcoin-sv/block-headers-service/database/sql"
+	"github.com/bitcoin-sv/block-headers-service/domains"
+	dto "github.com/bitcoin-sv/block-headers-service/repository/dto"
 )
 
 // TokenRepository provide access to repositories and implements methods for token.

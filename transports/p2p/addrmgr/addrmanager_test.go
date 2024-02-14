@@ -6,13 +6,14 @@ package addrmgr_test
 
 import (
 	"errors"
-	"github.com/rs/zerolog"
 	"net"
+
+	"github.com/rs/zerolog"
 
 	"testing"
 
-	"github.com/bitcoin-sv/pulse/internal/wire"
-	"github.com/bitcoin-sv/pulse/transports/p2p/addrmgr"
+	"github.com/bitcoin-sv/block-headers-service/internal/wire"
+	"github.com/bitcoin-sv/block-headers-service/transports/p2p/addrmgr"
 )
 
 // naTest is used to describe a test to be performed against the NetAddressKey

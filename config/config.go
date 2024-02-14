@@ -7,16 +7,16 @@ import (
 	"os"
 	"time"
 
-	"github.com/bitcoin-sv/pulse/internal/chaincfg"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 )
 
 const (
-	ApplicationName       = "pulse"
+	ApplicationName       = "Block Headers Service"
 	APIVersion            = "v1"
 	Version               = "v0.6.0"
 	ConfigFilePathKey     = "config_file"
 	DefaultConfigFilePath = "config.yaml"
-	ConfigEnvPrefix       = "pulse_"
+	ConfigEnvPrefix       = "bhs"
 )
 
 var Lookup func(string) ([]net.IP, error)

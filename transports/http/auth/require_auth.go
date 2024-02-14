@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/bitcoin-sv/pulse/domains"
+	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/gin-gonic/gin"
 )
 

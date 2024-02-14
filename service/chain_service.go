@@ -1,11 +1,11 @@
 package service
 
 import (
-	"github.com/bitcoin-sv/pulse/domains"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg"
-	"github.com/bitcoin-sv/pulse/internal/chaincfg/chainhash"
-	"github.com/bitcoin-sv/pulse/metrics"
-	"github.com/bitcoin-sv/pulse/repository"
+	"github.com/bitcoin-sv/block-headers-service/domains"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/metrics"
+	"github.com/bitcoin-sv/block-headers-service/repository"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )

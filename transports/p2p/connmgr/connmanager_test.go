@@ -7,13 +7,14 @@ package connmgr
 import (
 	"errors"
 	"fmt"
-	"github.com/bitcoin-sv/pulse/logging"
-	"github.com/rs/zerolog"
 	"io"
 	"net"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/bitcoin-sv/block-headers-service/logging"
+	"github.com/rs/zerolog"
 )
 
 func init() {

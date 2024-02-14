@@ -5,16 +5,16 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/bitcoin-sv/pulse/internal/tests/testpulse"
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/testapp"
 )
 
 func TestReturnSuccessFromStatus(t *testing.T) {
 	//setup
-	pulse, cleanup := testpulse.NewTestPulse(t)
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
 	//when
-	res := pulse.Api().Call(getStatus())
+	res := bhs.Api().Call(getStatus())
 
 	//then
 	if res.Code != http.StatusOK {
@@ -24,11 +24,11 @@ func TestReturnSuccessFromStatus(t *testing.T) {
 
 func TestReturnSuccessFromStatusWhenAuthorizationIsTurnedOnAndCalledWithoutToken(t *testing.T) {
 	//setup
-	pulse, cleanup := testpulse.NewTestPulse(t)
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
 	//when
-	res := pulse.Api().Call(getStatus())
+	res := bhs.Api().Call(getStatus())
 
 	//then
 	if res.Code != http.StatusOK {
