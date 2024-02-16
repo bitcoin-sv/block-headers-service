@@ -25,8 +25,13 @@ type HttpServer struct {
 
 // NewHttpServer creates and returns HttpServer instance.
 func NewHttpServer(cfg *config.HTTPConfig, log *zerolog.Logger) *HttpServer {
-	handler := gin.Default()
-	httpLogger := log.With().Str("subservice", "server").Logger()
+	ginLogger := log.With().Str("subservice", "gin").Logger()
+	setGinGlobals(cfg, &ginLogger)
+
+	handler := gin.New()
+	handler.Use(ginLoggerMiddleware(&ginLogger), gin.Recovery())
+
+	serverLogger := log.With().Str("subservice", "server").Logger()
 
 	return &HttpServer{
 		httpServer: &http.Server{
@@ -36,7 +41,7 @@ func NewHttpServer(cfg *config.HTTPConfig, log *zerolog.Logger) *HttpServer {
 			WriteTimeout: time.Duration(cfg.WriteTimeout) * time.Second,
 		},
 		handler: handler,
-		log:     &httpLogger,
+		log:     &serverLogger,
 	}
 }
 

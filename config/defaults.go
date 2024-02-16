@@ -37,6 +37,7 @@ func getHttpConfigDefaults() *HTTPConfig {
 		UseAuth:                   true,
 		AuthToken:                 "mQZQ6WmxURxWz5ch",
 		ProfilingEndpointsEnabled: true,
+		ReleaseMode:               false,
 	}
 }
 
