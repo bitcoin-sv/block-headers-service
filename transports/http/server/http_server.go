@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/bitcoin-sv/block-headers-service/logging"
 )
 
 // GinEngineOpt represents functions to configure server engine.
@@ -25,8 +26,17 @@ type HttpServer struct {
 
 // NewHttpServer creates and returns HttpServer instance.
 func NewHttpServer(cfg *config.HTTPConfig, log *zerolog.Logger) *HttpServer {
-	handler := gin.Default()
-	httpLogger := log.With().Str("subservice", "server").Logger()
+	if log.GetLevel() > zerolog.DebugLevel {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	ginLogger := log.With().Str("subservice", "gin").Logger()
+	logging.SetGinWriters(&ginLogger)
+
+	handler := gin.New()
+	handler.Use(logging.GinMiddleware(&ginLogger), gin.Recovery())
+
+	serverLogger := log.With().Str("subservice", "server").Logger()
 
 	return &HttpServer{
 		httpServer: &http.Server{
@@ -36,7 +46,7 @@ func NewHttpServer(cfg *config.HTTPConfig, log *zerolog.Logger) *HttpServer {
 			WriteTimeout: time.Duration(cfg.WriteTimeout) * time.Second,
 		},
 		handler: handler,
-		log:     &httpLogger,
+		log:     &serverLogger,
 	}
 }
 
