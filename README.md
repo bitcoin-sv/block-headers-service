@@ -8,9 +8,11 @@
 
 <h1 id="top" align="center">Block Headers Service</h1>
 
-  <p align="center">
-    Go application used to collect and return information about blockchain headers
+<p align="center">
+  Go application used to collect and return information about blockchain headers
 </p>
+
+<h4 id="top" align="center">Formerly known as "Pulse"</h1>
 
 ## Table of contents
 <details>
