@@ -6,7 +6,8 @@
 [![Donate](https://img.shields.io/badge/donate-bitcoin-ff9900.svg?logo=bitcoin&style=flat&v=3)](https://gobitcoinsv.com/#sponsor)
 <br />
 
-<h1 id="top" align="center">Block Headers Service (formerly Pulse)</h1>
+<h1 id="top" align="center">Block Headers Service</h1>
+<h3 id="top" align="center">formerly Pulse</h1>
 
   <p align="center">
     Go application used to collect and return information about blockchain headers
