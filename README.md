@@ -12,9 +12,7 @@
   Go application used to collect and return information about blockchain headers
 </p>
 
-<p align="center">
-  Formerly known as Pulse
-</p>
+<h5 id="top" align="center">Formerly known as "Pulse"</h1>
 
 ## Table of contents
 <details>
