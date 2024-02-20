@@ -107,8 +107,8 @@ type HTTPConfig struct {
 	AuthToken string `mapstructure:"auth_token"`
 	// ProfilingEndpointsEnabled is a flag for enabling additional endpoits for profiling with use of pprof.
 	ProfilingEndpointsEnabled bool `mapstructure:"debug_profiling"`
-	// ReleaseMode is a flag for enabling gin.SetMode(gin.ReleaseMode)
-	ReleaseMode bool `mapstructure:"release_mode"`
+	// GinReleaseMode is a flag for enabling gin.SetMode(gin.GinReleaseMode)
+	GinReleaseMode bool `mapstructure:"gin_release_mode"`
 }
 
 // P2PConfig represents a p2p config.

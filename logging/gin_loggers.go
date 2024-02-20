@@ -1,32 +1,22 @@
-package httpserver
+package logging
 
 import (
 	"time"
 
-	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 )
 
-func setGinGlobals(cfg *config.HTTPConfig, log *zerolog.Logger) {
-	if cfg.ReleaseMode {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
-	// Make GIN to use our logger for debugPrint, recovery messages and every other events when it uses fmt.Fprint(DefaultWriter/DefaultErrorWriter, ...)
-	// https://github.com/gin-gonic/gin/issues/1877#issuecomment-552637900
+// SetGinWriters sets GIN to use zerolog logger for debugPrint, recovery messages
+// and every other events when it uses fmt.Fprint(DefaultWriter/DefaultErrorWriter, ...)
+// https://github.com/gin-gonic/gin/issues/1877#issuecomment-552637900
+func SetGinWriters(log *zerolog.Logger) {
 	gin.DefaultWriter = newGinLogsWriter(log, ginDefaultWriterLevel(log))
 	gin.DefaultErrorWriter = newGinLogsWriter(log, zerolog.ErrorLevel)
 }
 
-func ginDefaultWriterLevel(log *zerolog.Logger) zerolog.Level {
-	if gin.Mode() == gin.DebugMode && log.GetLevel() == zerolog.DebugLevel {
-		return zerolog.DebugLevel
-	}
-	return zerolog.InfoLevel
-}
-
-func ginLoggerMiddleware(log *zerolog.Logger) gin.HandlerFunc {
+// GinMiddleware returns a middleware that logs requests using zerolog.
+func GinMiddleware(log *zerolog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		path := c.Request.URL.Path
@@ -57,6 +47,13 @@ func ginLoggerMiddleware(log *zerolog.Logger) gin.HandlerFunc {
 				Msg("[GIN] Request")
 		}
 	}
+}
+
+func ginDefaultWriterLevel(log *zerolog.Logger) zerolog.Level {
+	if gin.Mode() == gin.DebugMode && log.GetLevel() == zerolog.DebugLevel {
+		return zerolog.DebugLevel
+	}
+	return zerolog.InfoLevel
 }
 
 func logWithRequestParams(base *zerolog.Event, params *gin.LogFormatterParams) *zerolog.Event {
