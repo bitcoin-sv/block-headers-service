@@ -26,7 +26,7 @@ type HttpServer struct {
 
 // NewHttpServer creates and returns HttpServer instance.
 func NewHttpServer(cfg *config.HTTPConfig, log *zerolog.Logger) *HttpServer {
-	if cfg.GinReleaseMode {
+	if log.GetLevel() > zerolog.DebugLevel {
 		gin.SetMode(gin.ReleaseMode)
 	}
 

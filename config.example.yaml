@@ -76,8 +76,6 @@ logging:
   instance_name: block-header-service
   # Flag for enabling origin parameter in logs
   origin: false
-  # Release mode for Gin web framework should be enabled in "production"
-  gin_release_mode: false
 
 # Prometheus metrics configuration
 metrics:

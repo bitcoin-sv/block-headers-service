@@ -11,7 +11,7 @@ import (
 // and every other events when it uses fmt.Fprint(DefaultWriter/DefaultErrorWriter, ...)
 // https://github.com/gin-gonic/gin/issues/1877#issuecomment-552637900
 func SetGinWriters(log *zerolog.Logger) {
-	gin.DefaultWriter = newGinLogsWriter(log, ginDefaultWriterLevel(log))
+	gin.DefaultWriter = newGinLogsWriter(log, zerolog.DebugLevel)
 	gin.DefaultErrorWriter = newGinLogsWriter(log, zerolog.ErrorLevel)
 }
 
@@ -47,13 +47,6 @@ func GinMiddleware(log *zerolog.Logger) gin.HandlerFunc {
 				Msg("[GIN] Request")
 		}
 	}
-}
-
-func ginDefaultWriterLevel(log *zerolog.Logger) zerolog.Level {
-	if gin.Mode() == gin.DebugMode && log.GetLevel() == zerolog.DebugLevel {
-		return zerolog.DebugLevel
-	}
-	return zerolog.InfoLevel
 }
 
 func logWithRequestParams(base *zerolog.Event, params *gin.LogFormatterParams) *zerolog.Event {
