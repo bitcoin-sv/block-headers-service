@@ -7,10 +7,9 @@
 <br />
 
 <h1 id="top" align="center">Block Headers Service</h1>
-<h4 id="top" align="center">Formerly known as Pulse</h1>
 
-  <p align="center">
-    Go application used to collect and return information about blockchain headers
+<p align="center">
+  Go application used to collect and return information about blockchain headers. Formerly known as Pulse.
 </p>
 
 ## Table of contents
