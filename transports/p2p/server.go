@@ -193,7 +193,6 @@ func (ps *peerState) forAllPeers(closure func(sp *serverPeer)) {
 type server struct {
 	started       int32
 	shutdown      int32
-	shutdownSched int32
 	startupTime   int64
 
 	chainParams          *chaincfg.Params
