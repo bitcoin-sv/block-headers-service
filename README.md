@@ -2,8 +2,6 @@
 [![Build Status](https://img.shields.io/github/workflow/status/bitcoin-sv/block-headers-service/go?logo=github&v=3)](https://github.com/bitcoin-sv/block-headers-service/actions)
 [![Report](https://goreportcard.com/badge/github.com/bitcoin-sv/block-headers-service?style=flat&v=1)](https://goreportcard.com/report/github.com/bitcoin-sv/block-headers-service)
 [![Go](https://img.shields.io/github/go-mod/go-version/bitcoin-sv/block-headers-service?v=1)](https://golang.org/)
-[![Sponsor](https://img.shields.io/badge/sponsor-bitcoin-sv-181717.svg?logo=github&style=flat&v=3)](https://github.com/sponsors/bitcoin-sv)
-[![Donate](https://img.shields.io/badge/donate-bitcoin-ff9900.svg?logo=bitcoin&style=flat&v=3)](https://gobitcoinsv.com/#sponsor)
 <br />
 
 <h1 id="top" align="center">Block Headers Service</h1>
