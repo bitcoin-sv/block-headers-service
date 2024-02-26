@@ -20,7 +20,7 @@ const (
 		merkleroot,
 		nonce,
 		bits,
-		strftime('%s', timestamp) as timestamp,
+		strftime('%s', timestamp) as timestamp
 	FROM headers
 	WHERE header_state = 'LONGEST_CHAIN'
 	ORDER BY height asc
