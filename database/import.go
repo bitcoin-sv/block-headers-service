@@ -12,8 +12,10 @@ import (
 
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/database/sql"
+	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/repository/dto"
+	"github.com/bitcoin-sv/block-headers-service/service"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
 )
@@ -102,28 +104,49 @@ func dropHeadersFile(tmpHeadersFile *os.File, tmpHeadersFilePath string, log *ze
 	}
 }
 
-func parseRecord(record []string, rowIndex int32, previousBlockHash string) dto.DbBlockHeader {
-	hash := parseChainHash(record[0])
-	version := parseInt(record[1])
-	merkleroot := parseChainHash(record[2])
-	nonce := parseInt(record[3])
-	bits := parseInt(record[4])
-	chainWork := parseBigInt(record[5])
-	timestamp := parseInt64(record[6])
-	cumulatedWork := parseBigInt(record[7])
+func PrepareRecord(record []string, previousBlockHash string, bh service.BlockHasher, cumulatedChainWork string, rowIndex int) dto.DbBlockHeader {
+	parsedRow := parseRecordToBlockHeadersSource(record, previousBlockHash)
+	cumulatedChainWorkBigInt := parseBigInt(cumulatedChainWork)
+	rowIndexInt32 := int32(rowIndex)
+	preparedRecord := calculateFields(bh, parsedRow, cumulatedChainWorkBigInt, rowIndexInt32)
+	return preparedRecord
+}
+
+func parseRecordToBlockHeadersSource(record []string, previousBlockHash string) domains.BlockHeaderSource {
+	version := parseInt(record[0])
+	merkleroot := parseChainHash(record[1])
+	nonce := parseInt(record[2])
+	bits := parseInt(record[3])
+	timestamp := parseInt64(record[4])
+	prevBlockHash := parseChainHash(previousBlockHash)
+
+	return domains.BlockHeaderSource{
+		Version:    int32(version),
+		PrevBlock:  *prevBlockHash,
+		MerkleRoot: *merkleroot,
+		Timestamp:  time.Unix(timestamp, 0),
+		Bits:       uint32(bits),
+		Nonce:      uint32(nonce),
+	}
+}
+
+func calculateFields(bh service.BlockHasher, dbblock domains.BlockHeaderSource, cumulatedChainWork *big.Int, rowIndex int32) dto.DbBlockHeader {
+	blockhash := bh.BlockHash(&dbblock)
+	chainWork := domains.CalculateWork(dbblock.Bits).BigInt()
+	cumulatedChainWork.Add(cumulatedChainWork, chainWork)
 
 	return dto.DbBlockHeader{
 		Height:        rowIndex,
-		Hash:          hash.String(),
-		Version:       int32(version),
-		MerkleRoot:    merkleroot.String(),
-		Timestamp:     time.Unix(timestamp, 0),
-		Bits:          uint32(bits),
-		Nonce:         uint32(nonce),
+		Hash:          blockhash.String(),
+		Version:       dbblock.Version,
+		MerkleRoot:    dbblock.MerkleRoot.String(),
+		Timestamp:     dbblock.Timestamp,
+		Bits:          dbblock.Bits,
+		Nonce:         dbblock.Nonce,
 		State:         "LONGEST_CHAIN",
 		Chainwork:     chainWork.String(),
-		CumulatedWork: cumulatedWork.String(),
-		PreviousBlock: previousBlockHash,
+		CumulatedWork: cumulatedChainWork.String(),
+		PreviousBlock: dbblock.PrevBlock.String(),
 	}
 }
 

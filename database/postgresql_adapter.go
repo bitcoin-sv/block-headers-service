@@ -10,6 +10,7 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/database/sql"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/service"
 	"github.com/golang-migrate/migrate/v4"
 	postgres "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/rs/zerolog"
@@ -94,11 +95,12 @@ func (a *postgreSqlAdapter) importHeaders(inputFile *os.File, log *zerolog.Logge
 
 	// insert headers
 	previousBlockHash := chainhash.Hash{}.String()
+	var cumulatedChainWork string
 	rowIndex := 0
 	guard := 0
 
 	for {
-		rowIndex, previousBlockHash, err = a.copyHeaders(reader, postgresBatchSize, previousBlockHash, rowIndex)
+		rowIndex, previousBlockHash, cumulatedChainWork, err = a.copyHeaders(reader, postgresBatchSize, previousBlockHash, cumulatedChainWork, rowIndex)
 		if err != nil {
 			affectedRows = rowIndex
 			return
@@ -121,7 +123,7 @@ func (a *postgreSqlAdapter) dropTableIndexes(table string) (func() error, error)
 	return dropIndexes(a.db, &q)
 }
 
-func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previousBlockHash string, rowIndex int) (lastRowIndex int, lastBlockHash string, err error) {
+func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previousBlockHash string, cumulatedLastBlockChainWork string, rowIndex int) (lastRowIndex int, lastBlockHash string, cumulatedChainWork string, err error) {
 	lastRowIndex = rowIndex
 	lastBlockHash = previousBlockHash
 	copyQuery := pq.CopyIn(
@@ -140,6 +142,8 @@ func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 		return
 	}
 
+	bh := service.DefaultBlockHasher()
+	cumulatedChainWork = cumulatedLastBlockChainWork
 	for i := 0; i < batchSize; i++ {
 		record, readErr := reader.Read()
 		if readErr != nil {
@@ -156,7 +160,7 @@ func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 			break
 		}
 
-		b := parseRecord(record, int32(lastRowIndex), lastBlockHash)
+		b := PrepareRecord(record, lastBlockHash, bh, cumulatedChainWork, lastRowIndex)
 		_, execErr := stmt.Exec(
 			b.Height,
 			b.Hash,
@@ -175,6 +179,7 @@ func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 			return
 		}
 
+		cumulatedChainWork = b.CumulatedWork
 		lastBlockHash = b.Hash
 		lastRowIndex++
 	}

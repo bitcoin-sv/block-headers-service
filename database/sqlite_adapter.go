@@ -12,6 +12,7 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/database/sql"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/repository/dto"
+	"github.com/bitcoin-sv/block-headers-service/service"
 	"github.com/golang-migrate/migrate/v4"
 	sqlite3 "github.com/golang-migrate/migrate/v4/database/sqlite3"
 	"github.com/rs/zerolog"
@@ -113,11 +114,12 @@ func (a *sqLiteAdapter) importHeaders(inputFile *os.File, log *zerolog.Logger) (
 	repo := sql.NewHeadersDb(a.db, log)
 
 	previousBlockHash := chainhash.Hash{}.String()
+	var cumulatedChainWork string
 	rowIndex := 0
 	guard := 0
 
 	for {
-		rowIndex, previousBlockHash, err = a.insertHeaders(reader, repo, sqliteBatchSize, previousBlockHash, rowIndex)
+		rowIndex, previousBlockHash, cumulatedChainWork, err = a.insertHeaders(reader, repo, sqliteBatchSize, previousBlockHash, cumulatedChainWork, rowIndex)
 		if err != nil {
 			affectedRows = rowIndex
 			return
@@ -200,10 +202,12 @@ func (a *sqLiteAdapter) dropTableIndexes(table string) (func() error, error) {
 	return dropIndexes(a.db, &q)
 }
 
-func (a *sqLiteAdapter) insertHeaders(reader *csv.Reader, repo *sql.HeadersDb, batchSize int, previousBlockHash string, rowIndex int) (lastRowIndex int, lastBlockHash string, err error) {
+func (a *sqLiteAdapter) insertHeaders(reader *csv.Reader, repo *sql.HeadersDb, batchSize int, previousBlockHash string, cumulatedLastBlockChainWork string, rowIndex int) (lastRowIndex int, lastBlockHash string, cumulatedChainwork string, err error) {
 	lastRowIndex = rowIndex
 	lastBlockHash = previousBlockHash
 	batch := make([]dto.DbBlockHeader, 0, batchSize)
+	cumulatedChainwork = cumulatedLastBlockChainWork
+	bh := service.DefaultBlockHasher()
 
 	for i := 0; i < batchSize; i++ {
 		record, readErr := reader.Read()
@@ -219,9 +223,10 @@ func (a *sqLiteAdapter) insertHeaders(reader *csv.Reader, repo *sql.HeadersDb, b
 			break
 		}
 
-		block := parseRecord(record, int32(lastRowIndex), lastBlockHash)
+		block := PrepareRecord(record, lastBlockHash, bh, cumulatedChainwork, lastRowIndex)
 		batch = append(batch, block)
 
+		cumulatedChainwork = block.CumulatedWork
 		lastBlockHash = block.Hash
 		lastRowIndex++
 	}

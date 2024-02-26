@@ -16,14 +16,11 @@ import (
 const (
 	selectHeadersSql = `
 	SELECT
-		hash,
 		version,
 		merkleroot,
 		nonce,
 		bits,
-		chainwork,
 		strftime('%s', timestamp) as timestamp,
-		cumulated_work
 	FROM headers
 	WHERE header_state = 'LONGEST_CHAIN'
 	ORDER BY height asc
