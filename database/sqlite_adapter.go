@@ -222,8 +222,12 @@ func (a *sqLiteAdapter) insertHeaders(reader *csv.Reader, repo *sql.HeadersDb, b
 		if len(record) == 0 {
 			break
 		}
-
-		block := PrepareRecord(record, lastBlockHash, bh, cumulatedChainwork, lastRowIndex)
+		var block dto.DbBlockHeader
+		block, err = PrepareRecord(record, lastBlockHash, bh, cumulatedChainwork, lastRowIndex)
+		if err != nil {
+			fmt.Printf("Error while preparing record: %v", err.Error())
+			os.Exit(1)
+		}
 		batch = append(batch, block)
 
 		cumulatedChainwork = block.CumulatedWork

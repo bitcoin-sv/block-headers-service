@@ -12,7 +12,7 @@ import (
 type testCase struct {
 	blockRecord        [][]string
 	previousBlockHash  string
-	blockhasher        service.BlockHasher
+	blockHasher        service.BlockHasher
 	cumulatedChainWork string
 	rowIndex           int
 	numberOfBlocks     int
@@ -48,15 +48,17 @@ func TestPrepareRecordGenesisBlock(t *testing.T) {
 	testCase := testCase{
 		blockRecord:        testCSVGenesisRecord,
 		previousBlockHash:  "0000000000000000000000000000000000000000000000000000000000000000",
-		blockhasher:        service.DefaultBlockHasher(),
+		blockHasher:        service.DefaultBlockHasher(),
 		cumulatedChainWork: "0",
 		rowIndex:           0,
 		numberOfBlocks:     1,
-
-		expected: testOutputGenesisBlock,
+		expected:           testOutputGenesisBlock,
 	}
-
-	testCase.actual = PrepareRecord(testCase.blockRecord[0], testCase.previousBlockHash, testCase.blockhasher, testCase.cumulatedChainWork, testCase.rowIndex)
+	var err error
+	testCase.actual, err = PrepareRecord(testCase.blockRecord[0], testCase.previousBlockHash, testCase.blockHasher, testCase.cumulatedChainWork, testCase.rowIndex)
+	if err != nil {
+		t.Errorf("Error while preparing record: %v", err)
+	}
 	assert.Equal[dto.DbBlockHeader](t, testCase.actual, testCase.expected)
 }
 
@@ -94,18 +96,20 @@ func TestPrepareRecordTenBlocksBesideTheFork(t *testing.T) {
 	testCase := testCase{
 		blockRecord:        testCSVTenRecords,
 		previousBlockHash:  "000000000000000001f34f5eb45827af756e757498039f43ff6f7585c97f4d16",
-		blockhasher:        service.DefaultBlockHasher(),
+		blockHasher:        service.DefaultBlockHasher(),
 		cumulatedChainWork: "255327261802219463033558368",
 		rowIndex:           556761,
 		numberOfBlocks:     10,
-
-		expected: testCaseOutputTenBlocks,
+		expected:           testCaseOutputTenBlocks,
 	}
 
 	var calculatedBlocks = []dto.DbBlockHeader{}
 
 	for i := 0; i < testCase.numberOfBlocks; i++ {
-		block := PrepareRecord(testCase.blockRecord[i], testCase.previousBlockHash, testCase.blockhasher, testCase.cumulatedChainWork, testCase.rowIndex)
+		block, err := PrepareRecord(testCase.blockRecord[i], testCase.previousBlockHash, testCase.blockHasher, testCase.cumulatedChainWork, testCase.rowIndex)
+		if err != nil {
+			t.Errorf("Error while preparing record: %v", err)
+		}
 		calculatedBlocks = append(calculatedBlocks, block)
 		testCase.previousBlockHash = block.Hash
 		testCase.cumulatedChainWork = block.CumulatedWork
@@ -142,14 +146,16 @@ func TestPrepareRecordNewerBlock(t *testing.T) {
 	testCase := testCase{
 		blockRecord:        testCSVNewerBlock,
 		previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
-		blockhasher:        service.DefaultBlockHasher(),
+		blockHasher:        service.DefaultBlockHasher(),
 		cumulatedChainWork: "409554438998846785912755332",
 		rowIndex:           833233,
 		numberOfBlocks:     1,
-
-		expected: testOutputGenesisBlock,
+		expected:           testOutputGenesisBlock,
 	}
-
-	testCase.actual = PrepareRecord(testCase.blockRecord[0], testCase.previousBlockHash, testCase.blockhasher, testCase.cumulatedChainWork, testCase.rowIndex)
+	var err error
+	testCase.actual, err = PrepareRecord(testCase.blockRecord[0], testCase.previousBlockHash, testCase.blockHasher, testCase.cumulatedChainWork, testCase.rowIndex)
+	if err != nil {
+		t.Errorf("Error while preparing record: %v", err)
+	}
 	assert.Equal[dto.DbBlockHeader](t, testCase.actual, testCase.expected)
 }

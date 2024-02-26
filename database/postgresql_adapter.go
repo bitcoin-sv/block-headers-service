@@ -10,6 +10,7 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/database/sql"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
+	"github.com/bitcoin-sv/block-headers-service/repository/dto"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	"github.com/golang-migrate/migrate/v4"
 	postgres "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -159,8 +160,13 @@ func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 		if len(record) == 0 {
 			break
 		}
+		var b dto.DbBlockHeader
+		b, err = PrepareRecord(record, lastBlockHash, bh, cumulatedChainWork, lastRowIndex)
+		if err != nil {
+			fmt.Printf("Error while preparing record: %v", err.Error())
+			os.Exit(1)
+		}
 
-		b := PrepareRecord(record, lastBlockHash, bh, cumulatedChainWork, lastRowIndex)
 		_, execErr := stmt.Exec(
 			b.Height,
 			b.Hash,

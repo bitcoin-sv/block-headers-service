@@ -104,21 +104,42 @@ func dropHeadersFile(tmpHeadersFile *os.File, tmpHeadersFilePath string, log *ze
 	}
 }
 
-func PrepareRecord(record []string, previousBlockHash string, bh service.BlockHasher, cumulatedChainWork string, rowIndex int) dto.DbBlockHeader {
-	parsedRow := parseRecordToBlockHeadersSource(record, previousBlockHash)
+func PrepareRecord(record []string, previousBlockHash string, bh service.BlockHasher, cumulatedChainWork string, rowIndex int) (dto.DbBlockHeader, error) {
+	parsedRow, err := parseRecordToBlockHeadersSource(record, previousBlockHash)
+	if err != nil {
+		return dto.DbBlockHeader{}, err
+	}
 	cumulatedChainWorkBigInt := parseBigInt(cumulatedChainWork)
 	rowIndexInt32 := int32(rowIndex)
 	preparedRecord := calculateFields(bh, parsedRow, cumulatedChainWorkBigInt, rowIndexInt32)
-	return preparedRecord
+	return preparedRecord, nil
 }
 
-func parseRecordToBlockHeadersSource(record []string, previousBlockHash string) domains.BlockHeaderSource {
-	version := parseInt(record[0])
-	merkleroot := parseChainHash(record[1])
-	nonce := parseInt(record[2])
-	bits := parseInt(record[3])
-	timestamp := parseInt64(record[4])
-	prevBlockHash := parseChainHash(previousBlockHash)
+func parseRecordToBlockHeadersSource(record []string, previousBlockHash string) (domains.BlockHeaderSource, error) {
+	version, err := parseInt(record[0])
+	if err != nil {
+		return domains.BlockHeaderSource{}, err
+	}
+	merkleroot, err := parseChainHash(record[1])
+	if err != nil {
+		return domains.BlockHeaderSource{}, err
+	}
+	nonce, err := parseInt(record[2])
+	if err != nil {
+		return domains.BlockHeaderSource{}, err
+	}
+	bits, err := parseInt(record[3])
+	if err != nil {
+		return domains.BlockHeaderSource{}, err
+	}
+	timestamp, err := parseInt64(record[4])
+	if err != nil {
+		return domains.BlockHeaderSource{}, err
+	}
+	prevBlockHash, err := parseChainHash(previousBlockHash)
+	if err != nil {
+		return domains.BlockHeaderSource{}, err
+	}
 
 	return domains.BlockHeaderSource{
 		Version:    int32(version),
@@ -127,42 +148,42 @@ func parseRecordToBlockHeadersSource(record []string, previousBlockHash string) 
 		Timestamp:  time.Unix(timestamp, 0),
 		Bits:       uint32(bits),
 		Nonce:      uint32(nonce),
-	}
+	}, nil
 }
 
-func calculateFields(bh service.BlockHasher, dbblock domains.BlockHeaderSource, cumulatedChainWork *big.Int, rowIndex int32) dto.DbBlockHeader {
-	blockhash := bh.BlockHash(&dbblock)
-	chainWork := domains.CalculateWork(dbblock.Bits).BigInt()
+func calculateFields(bh service.BlockHasher, dbBlock domains.BlockHeaderSource, cumulatedChainWork *big.Int, rowIndex int32) dto.DbBlockHeader {
+	blockhash := bh.BlockHash(&dbBlock)
+	chainWork := domains.CalculateWork(dbBlock.Bits).BigInt()
 	cumulatedChainWork.Add(cumulatedChainWork, chainWork)
 
 	return dto.DbBlockHeader{
 		Height:        rowIndex,
 		Hash:          blockhash.String(),
-		Version:       dbblock.Version,
-		MerkleRoot:    dbblock.MerkleRoot.String(),
-		Timestamp:     dbblock.Timestamp,
-		Bits:          dbblock.Bits,
-		Nonce:         dbblock.Nonce,
+		Version:       dbBlock.Version,
+		MerkleRoot:    dbBlock.MerkleRoot.String(),
+		Timestamp:     dbBlock.Timestamp,
+		Bits:          dbBlock.Bits,
+		Nonce:         dbBlock.Nonce,
 		State:         "LONGEST_CHAIN",
 		Chainwork:     chainWork.String(),
 		CumulatedWork: cumulatedChainWork.String(),
-		PreviousBlock: dbblock.PrevBlock.String(),
+		PreviousBlock: dbBlock.PrevBlock.String(),
 	}
 }
 
-func parseInt(s string) int {
-	val, _ := strconv.Atoi(s)
-	return val
+func parseInt(s string) (int, error) {
+	val, err := strconv.Atoi(s)
+	return val, err
 }
 
-func parseInt64(s string) int64 {
-	val, _ := strconv.ParseInt(s, 10, 64)
-	return val
+func parseInt64(s string) (int64, error) {
+	val, err := strconv.ParseInt(s, 10, 64)
+	return val, err
 }
 
-func parseChainHash(s string) *chainhash.Hash {
-	hash, _ := chainhash.NewHashFromStr(s)
-	return hash
+func parseChainHash(s string) (*chainhash.Hash, error) {
+	hash, err := chainhash.NewHashFromStr(s)
+	return hash, err
 }
 
 func parseBigInt(s string) *big.Int {
