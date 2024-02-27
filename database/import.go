@@ -116,6 +116,9 @@ func PrepareRecord(record []string, previousBlockHash string, bh service.BlockHa
 }
 
 func parseRecordToBlockHeadersSource(record []string, previousBlockHash string) (domains.BlockHeaderSource, error) {
+	if len(record) != 5 {
+		return domains.BlockHeaderSource{}, fmt.Errorf("invalid record length: expected 5 elements, got %d", len(record))
+	}
 	version, err := parseInt(record[0])
 	if err != nil {
 		return domains.BlockHeaderSource{}, err
