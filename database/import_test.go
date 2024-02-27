@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -21,22 +22,25 @@ type testCase struct {
 }
 
 var timeLayout = "2006-01-02 15:04:05-07:00"
+var localTimezone, _ = time.LoadLocation("Local")
 
 // TestPrepareRecordGenesisBlock tests the preparation (parsing and calculation of values) for genesis block,
 // checking if the result is valid as expected.
 func TestPrepareRecordGenesisBlock(t *testing.T) {
 
-	testCSVGenesisRecord := [][]string{
+	testCSVRecord := [][]string{
 		{"1", "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b", "2083236893", "486604799", "1231006505"},
 	}
 
-	timeForGenesisBlock, _ := time.Parse(timeLayout, "2009-01-03 19:15:05+01:00")
+	blockTimestamp, _ := time.Parse(timeLayout, "2009-01-03 19:15:05+01:00")
+	localTime := blockTimestamp.In(localTimezone)
+
 	testOutputGenesisBlock := dto.DbBlockHeader{
 		Height:        0,
 		Hash:          "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f",
 		Version:       1,
 		MerkleRoot:    "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b",
-		Timestamp:     timeForGenesisBlock,
+		Timestamp:     localTime,
 		Bits:          486604799,
 		Nonce:         2083236893,
 		State:         "LONGEST_CHAIN",
@@ -46,7 +50,7 @@ func TestPrepareRecordGenesisBlock(t *testing.T) {
 	}
 
 	testCase := testCase{
-		blockRecord:        testCSVGenesisRecord,
+		blockRecord:        testCSVRecord,
 		previousBlockHash:  "0000000000000000000000000000000000000000000000000000000000000000",
 		blockHasher:        service.DefaultBlockHasher(),
 		cumulatedChainWork: "0",
@@ -65,7 +69,7 @@ func TestPrepareRecordGenesisBlock(t *testing.T) {
 // TestPrepareRecordTenBlocksBesideTheFork tests the preparation (parsing and calculation of values) for chain of ten blocks beside fork,
 // checking if the result is valid as expected.
 func TestPrepareRecordTenBlocksBesideTheFork(t *testing.T) {
-	testCSVTenRecords := [][]string{
+	testCSVRecords := [][]string{
 		{"536870912", "0fb7334d7fc33e3284cc47e6682ea19d478716576fc02431977ee856d8a11a7a", "4179160797", "402791861", "1542300873"},
 		{"536870912", "334693eb277aa554d2c606041b97f03ba8689e8da373229375f5e5a1bbe5b5e3", "365081954", "402791587", "1542301036"},
 		{"536870912", "559b5d64cb554ba90f33b4047941dd4b9797600ed46b63c8d1cd71888b8c6565", "483339668", "402792728", "1542301708"},
@@ -78,13 +82,14 @@ func TestPrepareRecordTenBlocksBesideTheFork(t *testing.T) {
 		{"536870912", "17e0aefc0154e0a3cdc4a837c66d9c0e0f0e4a44a703fd6e654e8cbc62c0b28f", "4081063765", "402796026", "1542307497"},
 	}
 
-	timestampFor556770Block, _ := time.Parse(timeLayout, "2018-11-15 19:44:57+01:00")
+	blockTimestamp, _ := time.Parse(timeLayout, "2018-11-15 19:44:57+01:00")
+	localTime := blockTimestamp.In(localTimezone)
 	testCaseOutputTenBlocks := dto.DbBlockHeader{
 		Height:        556770,
 		Hash:          "00000000000000000005569f09a80c66c8ebf514fdd1c03e803799c2420a4f5a",
 		Version:       536870912,
 		MerkleRoot:    "17e0aefc0154e0a3cdc4a837c66d9c0e0f0e4a44a703fd6e654e8cbc62c0b28f",
-		Timestamp:     timestampFor556770Block,
+		Timestamp:     localTime,
 		Bits:          402796026,
 		Nonce:         4081063765,
 		State:         "LONGEST_CHAIN",
@@ -94,7 +99,7 @@ func TestPrepareRecordTenBlocksBesideTheFork(t *testing.T) {
 	}
 
 	testCase := testCase{
-		blockRecord:        testCSVTenRecords,
+		blockRecord:        testCSVRecords,
 		previousBlockHash:  "000000000000000001f34f5eb45827af756e757498039f43ff6f7585c97f4d16",
 		blockHasher:        service.DefaultBlockHasher(),
 		cumulatedChainWork: "255327261802219463033558368",
@@ -124,17 +129,18 @@ func TestPrepareRecordTenBlocksBesideTheFork(t *testing.T) {
 // checking if the result is valid as expected.
 func TestPrepareRecordNewerBlock(t *testing.T) {
 
-	testCSVNewerBlock := [][]string{
+	testCSVRecord := [][]string{
 		{"536870912", "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885", "3035389718", "403300437", "1708954423"},
 	}
 
-	timeForGenesisBlock, _ := time.Parse(timeLayout, "2024-02-26 14:33:43+01:00")
+	blockTimestamp, _ := time.Parse(timeLayout, "2024-02-26 14:33:43+01:00")
+	localTime := blockTimestamp.In(localTimezone)
 	testOutputGenesisBlock := dto.DbBlockHeader{
 		Height:        833233,
 		Hash:          "00000000000000000676a9b9cdb44820a04c780ca152737124e36341b6c4cdd2",
 		Version:       536870912,
 		MerkleRoot:    "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885",
-		Timestamp:     timeForGenesisBlock,
+		Timestamp:     localTime,
 		Bits:          403300437,
 		Nonce:         3035389718,
 		State:         "LONGEST_CHAIN",
@@ -144,7 +150,7 @@ func TestPrepareRecordNewerBlock(t *testing.T) {
 	}
 
 	testCase := testCase{
-		blockRecord:        testCSVNewerBlock,
+		blockRecord:        testCSVRecord,
 		previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
 		blockHasher:        service.DefaultBlockHasher(),
 		cumulatedChainWork: "409554438998846785912755332",
@@ -158,4 +164,134 @@ func TestPrepareRecordNewerBlock(t *testing.T) {
 		t.Errorf("Error while preparing record: %v", err)
 	}
 	assert.Equal[dto.DbBlockHeader](t, testCase.actual, testCase.expected)
+}
+
+func TestPrepareRecordLongMerkleRootError(t *testing.T) {
+
+	testCSVRecord := [][]string{
+		{"536870912", "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885a", "3035389718", "403300437", "1708954423"},
+	}
+	expectedErrorMessage := "max hash string length is 64 bytes"
+
+	testCase := testCase{
+		blockRecord:        testCSVRecord,
+		previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
+		blockHasher:        service.DefaultBlockHasher(),
+		cumulatedChainWork: "409554438998846785912755332",
+		rowIndex:           833233,
+		numberOfBlocks:     1,
+	}
+	var err error
+	testCase.actual, err = PrepareRecord(testCase.blockRecord[0], testCase.previousBlockHash, testCase.blockHasher, testCase.cumulatedChainWork, testCase.rowIndex)
+
+	assert.IsError(t, err, expectedErrorMessage)
+}
+
+func TestPrepareCharInVersionError(t *testing.T) {
+
+	version := "536870912a"
+	testCSVRecord := [][]string{
+		{version, "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885", "3035389718", "403300437", "1708954423"},
+	}
+	expectedErrorMessage := fmt.Sprintf("strconv.Atoi: parsing \"%s\": invalid syntax", version)
+
+	testCase := testCase{
+		blockRecord:        testCSVRecord,
+		previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
+		blockHasher:        service.DefaultBlockHasher(),
+		cumulatedChainWork: "409554438998846785912755332",
+		rowIndex:           833233,
+		numberOfBlocks:     1,
+	}
+	var err error
+	testCase.actual, err = PrepareRecord(testCase.blockRecord[0], testCase.previousBlockHash, testCase.blockHasher, testCase.cumulatedChainWork, testCase.rowIndex)
+
+	assert.IsError(t, err, expectedErrorMessage)
+}
+
+func TestPrepareCharInNonceError(t *testing.T) {
+
+	nonce := "3035389718a"
+	testCSVRecord := [][]string{
+		{"536870912", "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885", nonce, "403300437", "1708954423"},
+	}
+	expectedErrorMessage := fmt.Sprintf("strconv.Atoi: parsing \"%s\": invalid syntax", nonce)
+
+	testCase := testCase{
+		blockRecord:        testCSVRecord,
+		previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
+		blockHasher:        service.DefaultBlockHasher(),
+		cumulatedChainWork: "409554438998846785912755332",
+		rowIndex:           833233,
+		numberOfBlocks:     1,
+	}
+
+	_, err := PrepareRecord(testCase.blockRecord[0], testCase.previousBlockHash, testCase.blockHasher, testCase.cumulatedChainWork, testCase.rowIndex)
+
+	assert.IsError(t, err, expectedErrorMessage)
+}
+
+func TestPrepareCharInBitsError(t *testing.T) {
+
+	bits := "403300437a"
+	testCSVRecord := [][]string{
+		{"536870912", "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885", "3035389718", bits, "1708954423"},
+	}
+	expectedErrorMessage := fmt.Sprintf("strconv.Atoi: parsing \"%s\": invalid syntax", bits)
+
+	testCase := testCase{
+		blockRecord:        testCSVRecord,
+		previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
+		blockHasher:        service.DefaultBlockHasher(),
+		cumulatedChainWork: "409554438998846785912755332",
+		rowIndex:           833233,
+		numberOfBlocks:     1,
+	}
+
+	_, err := PrepareRecord(testCase.blockRecord[0], testCase.previousBlockHash, testCase.blockHasher, testCase.cumulatedChainWork, testCase.rowIndex)
+
+	assert.IsError(t, err, expectedErrorMessage)
+}
+
+func TestPrepareCharInTimestampError(t *testing.T) {
+
+	timestamp := "1708954423a"
+	testCSVRecord := [][]string{
+		{"536870912", "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885", "3035389718", "403300437", timestamp},
+	}
+	expectedErrorMessage := fmt.Sprintf("strconv.ParseInt: parsing \"%s\": invalid syntax", timestamp)
+
+	testCase := testCase{
+		blockRecord:        testCSVRecord,
+		previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
+		blockHasher:        service.DefaultBlockHasher(),
+		cumulatedChainWork: "409554438998846785912755332",
+		rowIndex:           833233,
+		numberOfBlocks:     1,
+	}
+
+	_, err := PrepareRecord(testCase.blockRecord[0], testCase.previousBlockHash, testCase.blockHasher, testCase.cumulatedChainWork, testCase.rowIndex)
+
+	assert.IsError(t, err, expectedErrorMessage)
+}
+
+func TestPrepareWrongArgumentCountError(t *testing.T) {
+
+	testCSVRecord := [][]string{
+		{"536870912", "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885", "3035389718", "403300437"},
+	}
+	expectedErrorMessage := fmt.Sprintf("invalid record length: expected 5 elements, got %d", len(testCSVRecord[0]))
+
+	testCase := testCase{
+		blockRecord:        testCSVRecord,
+		previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
+		blockHasher:        service.DefaultBlockHasher(),
+		cumulatedChainWork: "409554438998846785912755332",
+		rowIndex:           833233,
+		numberOfBlocks:     1,
+	}
+
+	_, err := PrepareRecord(testCase.blockRecord[0], testCase.previousBlockHash, testCase.blockHasher, testCase.cumulatedChainWork, testCase.rowIndex)
+
+	assert.IsError(t, err, expectedErrorMessage)
 }
