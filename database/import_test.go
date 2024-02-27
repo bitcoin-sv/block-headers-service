@@ -49,7 +49,7 @@ func TestPrepareRecordGenesisBlock(t *testing.T) {
 		PreviousBlock: "0000000000000000000000000000000000000000000000000000000000000000",
 	}
 
-	testCase := testCase{
+	newTestCase := testCase{
 		blockRecord:        testCSVRecord,
 		previousBlockHash:  "0000000000000000000000000000000000000000000000000000000000000000",
 		blockHasher:        service.DefaultBlockHasher(),
@@ -59,11 +59,11 @@ func TestPrepareRecordGenesisBlock(t *testing.T) {
 		expected:           testOutputGenesisBlock,
 	}
 	var err error
-	testCase.actual, err = PrepareRecord(testCase.blockRecord[0], testCase.previousBlockHash, testCase.blockHasher, testCase.cumulatedChainWork, testCase.rowIndex)
+	newTestCase.actual, err = PrepareRecord(newTestCase.blockRecord[0], newTestCase.previousBlockHash, newTestCase.blockHasher, newTestCase.cumulatedChainWork, newTestCase.rowIndex)
 	if err != nil {
 		t.Errorf("Error while preparing record: %v", err)
 	}
-	assert.Equal[dto.DbBlockHeader](t, testCase.actual, testCase.expected)
+	assert.Equal[dto.DbBlockHeader](t, newTestCase.actual, newTestCase.expected)
 }
 
 // TestPrepareRecordTenBlocksBesideTheFork tests the preparation (parsing and calculation of values) for chain of ten blocks beside fork,
@@ -98,7 +98,7 @@ func TestPrepareRecordTenBlocksBesideTheFork(t *testing.T) {
 		PreviousBlock: "0000000000000000005013e7cc2889ada8b01f24dfc325d1398be82197fc623b",
 	}
 
-	testCase := testCase{
+	newTestCase := testCase{
 		blockRecord:        testCSVRecords,
 		previousBlockHash:  "000000000000000001f34f5eb45827af756e757498039f43ff6f7585c97f4d16",
 		blockHasher:        service.DefaultBlockHasher(),
@@ -110,19 +110,19 @@ func TestPrepareRecordTenBlocksBesideTheFork(t *testing.T) {
 
 	var calculatedBlocks = []dto.DbBlockHeader{}
 
-	for i := 0; i < testCase.numberOfBlocks; i++ {
-		block, err := PrepareRecord(testCase.blockRecord[i], testCase.previousBlockHash, testCase.blockHasher, testCase.cumulatedChainWork, testCase.rowIndex)
+	for i := 0; i < newTestCase.numberOfBlocks; i++ {
+		block, err := PrepareRecord(newTestCase.blockRecord[i], newTestCase.previousBlockHash, newTestCase.blockHasher, newTestCase.cumulatedChainWork, newTestCase.rowIndex)
 		if err != nil {
 			t.Errorf("Error while preparing record: %v", err)
 		}
 		calculatedBlocks = append(calculatedBlocks, block)
-		testCase.previousBlockHash = block.Hash
-		testCase.cumulatedChainWork = block.CumulatedWork
-		testCase.rowIndex++
+		newTestCase.previousBlockHash = block.Hash
+		newTestCase.cumulatedChainWork = block.CumulatedWork
+		newTestCase.rowIndex++
 	}
 
-	testCase.actual = calculatedBlocks[testCase.numberOfBlocks-1]
-	assert.Equal[dto.DbBlockHeader](t, testCase.actual, testCase.expected)
+	newTestCase.actual = calculatedBlocks[newTestCase.numberOfBlocks-1]
+	assert.Equal[dto.DbBlockHeader](t, newTestCase.actual, newTestCase.expected)
 }
 
 // TestPrepareRecordNewerBlock tests the preparation (parsing and calculation of values) for newer (833233) block,
@@ -149,7 +149,7 @@ func TestPrepareRecordNewerBlock(t *testing.T) {
 		PreviousBlock: "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
 	}
 
-	testCase := testCase{
+	newTestCase := testCase{
 		blockRecord:        testCSVRecord,
 		previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
 		blockHasher:        service.DefaultBlockHasher(),
@@ -159,11 +159,11 @@ func TestPrepareRecordNewerBlock(t *testing.T) {
 		expected:           testOutputGenesisBlock,
 	}
 	var err error
-	testCase.actual, err = PrepareRecord(testCase.blockRecord[0], testCase.previousBlockHash, testCase.blockHasher, testCase.cumulatedChainWork, testCase.rowIndex)
+	newTestCase.actual, err = PrepareRecord(newTestCase.blockRecord[0], newTestCase.previousBlockHash, newTestCase.blockHasher, newTestCase.cumulatedChainWork, newTestCase.rowIndex)
 	if err != nil {
 		t.Errorf("Error while preparing record: %v", err)
 	}
-	assert.Equal[dto.DbBlockHeader](t, testCase.actual, testCase.expected)
+	assert.Equal[dto.DbBlockHeader](t, newTestCase.actual, newTestCase.expected)
 }
 
 func TestPrepareRecordLongMerkleRootError(t *testing.T) {
@@ -173,7 +173,7 @@ func TestPrepareRecordLongMerkleRootError(t *testing.T) {
 	}
 	expectedErrorMessage := "max hash string length is 64 bytes"
 
-	testCase := testCase{
+	newTestCase := testCase{
 		blockRecord:        testCSVRecord,
 		previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
 		blockHasher:        service.DefaultBlockHasher(),
@@ -182,7 +182,7 @@ func TestPrepareRecordLongMerkleRootError(t *testing.T) {
 		numberOfBlocks:     1,
 	}
 	var err error
-	testCase.actual, err = PrepareRecord(testCase.blockRecord[0], testCase.previousBlockHash, testCase.blockHasher, testCase.cumulatedChainWork, testCase.rowIndex)
+	newTestCase.actual, err = PrepareRecord(newTestCase.blockRecord[0], newTestCase.previousBlockHash, newTestCase.blockHasher, newTestCase.cumulatedChainWork, newTestCase.rowIndex)
 
 	assert.IsError(t, err, expectedErrorMessage)
 }
@@ -195,7 +195,7 @@ func TestPrepareCharInVersionError(t *testing.T) {
 	}
 	expectedErrorMessage := fmt.Sprintf("strconv.Atoi: parsing \"%s\": invalid syntax", version)
 
-	testCase := testCase{
+	newTestCase := testCase{
 		blockRecord:        testCSVRecord,
 		previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
 		blockHasher:        service.DefaultBlockHasher(),
@@ -204,7 +204,7 @@ func TestPrepareCharInVersionError(t *testing.T) {
 		numberOfBlocks:     1,
 	}
 	var err error
-	testCase.actual, err = PrepareRecord(testCase.blockRecord[0], testCase.previousBlockHash, testCase.blockHasher, testCase.cumulatedChainWork, testCase.rowIndex)
+	newTestCase.actual, err = PrepareRecord(newTestCase.blockRecord[0], newTestCase.previousBlockHash, newTestCase.blockHasher, newTestCase.cumulatedChainWork, newTestCase.rowIndex)
 
 	assert.IsError(t, err, expectedErrorMessage)
 }
@@ -217,7 +217,7 @@ func TestPrepareCharInNonceError(t *testing.T) {
 	}
 	expectedErrorMessage := fmt.Sprintf("strconv.Atoi: parsing \"%s\": invalid syntax", nonce)
 
-	testCase := testCase{
+	newTestCase := testCase{
 		blockRecord:        testCSVRecord,
 		previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
 		blockHasher:        service.DefaultBlockHasher(),
@@ -226,7 +226,7 @@ func TestPrepareCharInNonceError(t *testing.T) {
 		numberOfBlocks:     1,
 	}
 
-	_, err := PrepareRecord(testCase.blockRecord[0], testCase.previousBlockHash, testCase.blockHasher, testCase.cumulatedChainWork, testCase.rowIndex)
+	_, err := PrepareRecord(newTestCase.blockRecord[0], newTestCase.previousBlockHash, newTestCase.blockHasher, newTestCase.cumulatedChainWork, newTestCase.rowIndex)
 
 	assert.IsError(t, err, expectedErrorMessage)
 }
@@ -239,7 +239,7 @@ func TestPrepareCharInBitsError(t *testing.T) {
 	}
 	expectedErrorMessage := fmt.Sprintf("strconv.Atoi: parsing \"%s\": invalid syntax", bits)
 
-	testCase := testCase{
+	newTestCase := testCase{
 		blockRecord:        testCSVRecord,
 		previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
 		blockHasher:        service.DefaultBlockHasher(),
@@ -248,7 +248,7 @@ func TestPrepareCharInBitsError(t *testing.T) {
 		numberOfBlocks:     1,
 	}
 
-	_, err := PrepareRecord(testCase.blockRecord[0], testCase.previousBlockHash, testCase.blockHasher, testCase.cumulatedChainWork, testCase.rowIndex)
+	_, err := PrepareRecord(newTestCase.blockRecord[0], newTestCase.previousBlockHash, newTestCase.blockHasher, newTestCase.cumulatedChainWork, newTestCase.rowIndex)
 
 	assert.IsError(t, err, expectedErrorMessage)
 }
@@ -261,7 +261,7 @@ func TestPrepareCharInTimestampError(t *testing.T) {
 	}
 	expectedErrorMessage := fmt.Sprintf("strconv.ParseInt: parsing \"%s\": invalid syntax", timestamp)
 
-	testCase := testCase{
+	newTestCase := testCase{
 		blockRecord:        testCSVRecord,
 		previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
 		blockHasher:        service.DefaultBlockHasher(),
@@ -270,7 +270,7 @@ func TestPrepareCharInTimestampError(t *testing.T) {
 		numberOfBlocks:     1,
 	}
 
-	_, err := PrepareRecord(testCase.blockRecord[0], testCase.previousBlockHash, testCase.blockHasher, testCase.cumulatedChainWork, testCase.rowIndex)
+	_, err := PrepareRecord(newTestCase.blockRecord[0], newTestCase.previousBlockHash, newTestCase.blockHasher, newTestCase.cumulatedChainWork, newTestCase.rowIndex)
 
 	assert.IsError(t, err, expectedErrorMessage)
 }
@@ -282,7 +282,7 @@ func TestPrepareWrongArgumentCountError(t *testing.T) {
 	}
 	expectedErrorMessage := fmt.Sprintf("invalid record length: expected 5 elements, got %d", len(testCSVRecord[0]))
 
-	testCase := testCase{
+	newTestCase := testCase{
 		blockRecord:        testCSVRecord,
 		previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
 		blockHasher:        service.DefaultBlockHasher(),
@@ -291,7 +291,7 @@ func TestPrepareWrongArgumentCountError(t *testing.T) {
 		numberOfBlocks:     1,
 	}
 
-	_, err := PrepareRecord(testCase.blockRecord[0], testCase.previousBlockHash, testCase.blockHasher, testCase.cumulatedChainWork, testCase.rowIndex)
+	_, err := PrepareRecord(newTestCase.blockRecord[0], newTestCase.previousBlockHash, newTestCase.blockHasher, newTestCase.cumulatedChainWork, newTestCase.rowIndex)
 
 	assert.IsError(t, err, expectedErrorMessage)
 }
