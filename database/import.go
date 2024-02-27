@@ -119,7 +119,7 @@ func parseRecordToBlockHeadersSource(record []string, previousBlockHash string) 
 	if len(record) != 5 {
 		return domains.BlockHeaderSource{}, fmt.Errorf("invalid record length: expected 5 elements, got %d", len(record))
 	}
-	version, err := parseInt(record[0])
+	version, err := strconv.ParseInt(record[0], 10, 32)
 	if err != nil {
 		return domains.BlockHeaderSource{}, err
 	}
@@ -127,15 +127,15 @@ func parseRecordToBlockHeadersSource(record []string, previousBlockHash string) 
 	if err != nil {
 		return domains.BlockHeaderSource{}, err
 	}
-	nonce, err := parseInt(record[2])
+	nonce, err := strconv.ParseUint(record[2], 10, 32)
 	if err != nil {
 		return domains.BlockHeaderSource{}, err
 	}
-	bits, err := parseInt(record[3])
+	bits, err := strconv.ParseUint(record[3], 10, 32)
 	if err != nil {
 		return domains.BlockHeaderSource{}, err
 	}
-	timestamp, err := parseInt64(record[4])
+	timestamp, err := strconv.ParseInt(record[4], 10, 64)
 	if err != nil {
 		return domains.BlockHeaderSource{}, err
 	}
@@ -172,16 +172,6 @@ func calculateFields(bh service.BlockHasher, dbBlock domains.BlockHeaderSource, 
 		CumulatedWork: cumulatedChainWork.String(),
 		PreviousBlock: dbBlock.PrevBlock.String(),
 	}
-}
-
-func parseInt(s string) (int, error) {
-	val, err := strconv.Atoi(s)
-	return val, err
-}
-
-func parseInt64(s string) (int64, error) {
-	val, err := strconv.ParseInt(s, 10, 64)
-	return val, err
 }
 
 func parseChainHash(s string) (*chainhash.Hash, error) {
@@ -244,7 +234,7 @@ func validateHashColumn(db *sqlx.DB) error {
 	}
 
 	if count != 0 {
-		return fmt.Errorf("%d is ivalid number of rows with hash eq %s", count, chainhash.Hash{}.String())
+		return fmt.Errorf("%d is invalid number of rows with hash eq %s", count, chainhash.Hash{}.String())
 	}
 
 	return nil
@@ -259,8 +249,10 @@ func validatePrevHashColumn(db *sqlx.DB) error {
 	}
 
 	if count != 1 {
-		return fmt.Errorf("%d is ivalid number of rows with previous_block eq %s", count, chainhash.Hash{}.String())
+		return fmt.Errorf("%d is invalid number of rows with previous_block eq %s", count, chainhash.Hash{}.String())
 	}
 
 	return nil
 }
+
+
