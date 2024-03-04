@@ -160,11 +160,10 @@ func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 		if len(record) == 0 {
 			break
 		}
-		var b dto.DbBlockHeader
+		var b *dto.DbBlockHeader
 		b, err = PrepareRecord(record, lastBlockHash, bh, cumulatedChainWork, lastRowIndex)
 		if err != nil {
-			fmt.Printf("Error while preparing record: %v", err.Error())
-			os.Exit(1)
+			return 
 		}
 
 		_, execErr := stmt.Exec(

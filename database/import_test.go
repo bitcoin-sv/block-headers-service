@@ -135,7 +135,7 @@ func TestPrepareRecordHappyPath(t *testing.T) {
 			if err != nil {
 				t.Errorf("Error while preparing record: %v", err)
 			}
-			result = append(result, block)
+			result = append(result, *block)
 			tc.data.previousBlockHash = block.Hash
 			tc.data.cumulatedChainWork = block.CumulatedWork
 			tc.data.rowIndex++
@@ -312,7 +312,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 
 	for _, tc := range testCases {
 		result, err := PrepareRecord(tc.data.blockRecord[0], tc.data.previousBlockHash, tc.data.blockHasher, tc.data.cumulatedChainWork, tc.data.rowIndex)
-		assert.Equal[dto.DbBlockHeader](t, result, tc.expected)
+		assert.Equal[dto.DbBlockHeader](t, *result, tc.expected)
 		assert.IsError(t, err, tc.expectedErrorMessage)
 	}
 }

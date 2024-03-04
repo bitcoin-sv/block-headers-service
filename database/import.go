@@ -20,6 +20,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
+const (
+	rowsInCSVDatabaseFile = 5
+)
+
 func importHeaders(db dbAdapter, cfg *config.AppConfig, log *zerolog.Logger) error {
 	log.Info().Msg("Import headers from file to the database")
 
@@ -104,63 +108,63 @@ func dropHeadersFile(tmpHeadersFile *os.File, tmpHeadersFilePath string, log *ze
 	}
 }
 
-func PrepareRecord(record []string, previousBlockHash string, bh service.BlockHasher, cumulatedChainWork string, rowIndex int) (dto.DbBlockHeader, error) {
+func PrepareRecord(record []string, previousBlockHash string, bh service.BlockHasher, cumulatedChainWork string, rowIndex int) (*dto.DbBlockHeader, error) {
 	parsedRow, err := parseRecordToBlockHeadersSource(record, previousBlockHash)
 	if err != nil {
-		return dto.DbBlockHeader{}, err
+		return nil, err
 	}
-	cumulatedChainWorkBigInt := parseBigInt(cumulatedChainWork)
-	rowIndexInt32 := int32(rowIndex)
-	preparedRecord := calculateFields(bh, parsedRow, cumulatedChainWorkBigInt, rowIndexInt32)
+	preparedRecord := calculateFields(bh, parsedRow, cumulatedChainWork, rowIndex)
 	return preparedRecord, nil
 }
 
-func parseRecordToBlockHeadersSource(record []string, previousBlockHash string) (domains.BlockHeaderSource, error) {
-	if len(record) != 5 {
-		return domains.BlockHeaderSource{}, fmt.Errorf("invalid record length: expected 5 elements, got %d", len(record))
+func parseRecordToBlockHeadersSource(record []string, previousBlockHash string) (*domains.BlockHeaderSource, error) {
+	if len(record) != rowsInCSVDatabaseFile {
+		return nil, fmt.Errorf("invalid record length: expected %d elements, got %d", rowsInCSVDatabaseFile, len(record))
 	}
 	version, err := strconv.ParseInt(record[0], 10, 32)
 	if err != nil {
-		return domains.BlockHeaderSource{}, err
+		return nil, err
 	}
 	merkleroot, err := parseChainHash(record[1])
 	if err != nil {
-		return domains.BlockHeaderSource{}, err
+		return nil, err
 	}
 	nonce, err := strconv.ParseUint(record[2], 10, 32)
 	if err != nil {
-		return domains.BlockHeaderSource{}, err
+		return nil, err
 	}
 	bits, err := strconv.ParseUint(record[3], 10, 32)
 	if err != nil {
-		return domains.BlockHeaderSource{}, err
+		return nil, err
 	}
 	timestamp, err := strconv.ParseInt(record[4], 10, 64)
 	if err != nil {
-		return domains.BlockHeaderSource{}, err
+		return nil, err
 	}
 	prevBlockHash, err := parseChainHash(previousBlockHash)
 	if err != nil {
-		return domains.BlockHeaderSource{}, err
+		return nil, err
 	}
 
-	return domains.BlockHeaderSource{
+	blockHeader := domains.BlockHeaderSource{
 		Version:    int32(version),
 		PrevBlock:  *prevBlockHash,
 		MerkleRoot: *merkleroot,
 		Timestamp:  time.Unix(timestamp, 0),
 		Bits:       uint32(bits),
 		Nonce:      uint32(nonce),
-	}, nil
+	}
+	return &blockHeader, nil
 }
 
-func calculateFields(bh service.BlockHasher, dbBlock domains.BlockHeaderSource, cumulatedChainWork *big.Int, rowIndex int32) dto.DbBlockHeader {
-	blockhash := bh.BlockHash(&dbBlock)
+func calculateFields(bh service.BlockHasher, dbBlock *domains.BlockHeaderSource, cumulatedChainWork string, rowIndex int) *dto.DbBlockHeader {
+	blockhash := bh.BlockHash(dbBlock)
 	chainWork := domains.CalculateWork(dbBlock.Bits).BigInt()
-	cumulatedChainWork.Add(cumulatedChainWork, chainWork)
+	cumulatedChainWorkBigInt := parseBigInt(cumulatedChainWork)
+	cumulatedChainWorkBigInt.Add(cumulatedChainWorkBigInt, chainWork)
 
-	return dto.DbBlockHeader{
-		Height:        rowIndex,
+	dbBlockHeader := dto.DbBlockHeader{
+		Height:        int32(rowIndex),
 		Hash:          blockhash.String(),
 		Version:       dbBlock.Version,
 		MerkleRoot:    dbBlock.MerkleRoot.String(),
@@ -169,9 +173,10 @@ func calculateFields(bh service.BlockHasher, dbBlock domains.BlockHeaderSource, 
 		Nonce:         dbBlock.Nonce,
 		State:         "LONGEST_CHAIN",
 		Chainwork:     chainWork.String(),
-		CumulatedWork: cumulatedChainWork.String(),
+		CumulatedWork: cumulatedChainWorkBigInt.String(),
 		PreviousBlock: dbBlock.PrevBlock.String(),
 	}
+	return &dbBlockHeader
 }
 
 func parseChainHash(s string) (*chainhash.Hash, error) {
@@ -254,5 +259,3 @@ func validatePrevHashColumn(db *sqlx.DB) error {
 
 	return nil
 }
-
-
