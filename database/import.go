@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	rowsInCSVDatabaseFile = 5
+	numberOfColumnsInCSVDatabaseFile = 5
 )
 
 func importHeaders(db dbAdapter, cfg *config.AppConfig, log *zerolog.Logger) error {
@@ -118,8 +118,8 @@ func PrepareRecord(record []string, previousBlockHash string, bh service.BlockHa
 }
 
 func parseRecordToBlockHeadersSource(record []string, previousBlockHash string) (*domains.BlockHeaderSource, error) {
-	if len(record) != rowsInCSVDatabaseFile {
-		return nil, fmt.Errorf("invalid record length: expected %d elements, got %d", rowsInCSVDatabaseFile, len(record))
+	if len(record) != numberOfColumnsInCSVDatabaseFile {
+		return nil, fmt.Errorf("invalid record length: expected %d elements, got %d", numberOfColumnsInCSVDatabaseFile, len(record))
 	}
 	version, err := strconv.ParseInt(record[0], 10, 32)
 	if err != nil {
