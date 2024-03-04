@@ -13,7 +13,7 @@ type testCase struct {
 	testID               int
 	name                 string
 	data                 testCaseData
-	expected             dto.DbBlockHeader
+	expectedBlock        *dto.DbBlockHeader
 	expectedErrorMessage string
 }
 
@@ -44,7 +44,7 @@ func TestPrepareRecordHappyPath(t *testing.T) {
 				rowIndex:           0,
 				numberOfBlocks:     1,
 			},
-			expected: dto.DbBlockHeader{
+			expectedBlock: &dto.DbBlockHeader{
 				Height:        0,
 				Hash:          "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f",
 				Version:       1,
@@ -82,7 +82,7 @@ func TestPrepareRecordHappyPath(t *testing.T) {
 				rowIndex:           556761,
 				numberOfBlocks:     10,
 			},
-			expected: dto.DbBlockHeader{
+			expectedBlock: &dto.DbBlockHeader{
 				Height:        556770,
 				Hash:          "00000000000000000005569f09a80c66c8ebf514fdd1c03e803799c2420a4f5a",
 				Version:       536870912,
@@ -110,7 +110,7 @@ func TestPrepareRecordHappyPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expected: dto.DbBlockHeader{
+			expectedBlock: &dto.DbBlockHeader{
 				Height:        833233,
 				Hash:          "00000000000000000676a9b9cdb44820a04c780ca152737124e36341b6c4cdd2",
 				Version:       536870912,
@@ -140,7 +140,7 @@ func TestPrepareRecordHappyPath(t *testing.T) {
 			tc.data.cumulatedChainWork = block.CumulatedWork
 			tc.data.rowIndex++
 		}
-		assert.Equal[dto.DbBlockHeader](t, result[tc.data.numberOfBlocks-1], tc.expected)
+		assert.Equal[dto.DbBlockHeader](t, result[tc.data.numberOfBlocks-1], *tc.expectedBlock)
 		assert.NoError(t, err)
 	}
 }
@@ -161,7 +161,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expected:             dto.DbBlockHeader{},
+			expectedBlock:        nil,
 			expectedErrorMessage: "strconv.ParseInt: parsing \"2147483648\": value out of range",
 		},
 		{
@@ -177,7 +177,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expected:             dto.DbBlockHeader{},
+			expectedBlock:        nil,
 			expectedErrorMessage: "strconv.ParseUint: parsing \"4294967296\": value out of range",
 		},
 		{
@@ -193,7 +193,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expected:             dto.DbBlockHeader{},
+			expectedBlock:        nil,
 			expectedErrorMessage: "strconv.ParseUint: parsing \"4294967296\": value out of range",
 		},
 		{
@@ -209,7 +209,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expected:             dto.DbBlockHeader{},
+			expectedBlock:        nil,
 			expectedErrorMessage: "invalid record length: expected 5 elements, got 4",
 		},
 		{
@@ -225,7 +225,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expected:             dto.DbBlockHeader{},
+			expectedBlock:        nil,
 			expectedErrorMessage: "invalid record length: expected 5 elements, got 6",
 		},
 		{
@@ -241,7 +241,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expected:             dto.DbBlockHeader{},
+			expectedBlock:        nil,
 			expectedErrorMessage: "strconv.ParseInt: parsing \"536870912a\": invalid syntax",
 		},
 		{
@@ -257,7 +257,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expected:             dto.DbBlockHeader{},
+			expectedBlock:        nil,
 			expectedErrorMessage: "strconv.ParseUint: parsing \"3035389718a\": invalid syntax",
 		},
 		{
@@ -273,7 +273,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expected:             dto.DbBlockHeader{},
+			expectedBlock:        nil,
 			expectedErrorMessage: "strconv.ParseUint: parsing \"403300437a\": invalid syntax",
 		},
 		{
@@ -289,7 +289,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expected:             dto.DbBlockHeader{},
+			expectedBlock:        nil,
 			expectedErrorMessage: "strconv.ParseInt: parsing \"1708954423a\": invalid syntax",
 		},
 		{
@@ -305,14 +305,14 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expected:             dto.DbBlockHeader{},
+			expectedBlock:        nil,
 			expectedErrorMessage: "max hash string length is 64 bytes",
 		},
 	}
 
 	for _, tc := range testCases {
 		result, err := PrepareRecord(tc.data.blockRecord[0], tc.data.previousBlockHash, tc.data.blockHasher, tc.data.cumulatedChainWork, tc.data.rowIndex)
-		assert.Equal[dto.DbBlockHeader](t, *result, tc.expected)
+		assert.Equal[*dto.DbBlockHeader](t, result, tc.expectedBlock)
 		assert.IsError(t, err, tc.expectedErrorMessage)
 	}
 }
