@@ -192,9 +192,31 @@ type ConnManager struct {
 	log      *zerolog.Logger
 	quit     chan struct{}
 
-	globalFailedAttempts uint64
-	failedAttempts       map[string]uint16
-	failedAttemptsMutex  sync.RWMutex
+	globalFailedAttempts      uint64
+	globalFailedAttemptsMutex sync.RWMutex
+	failedAttempts            map[string]uint16
+	failedAttemptsMutex       sync.RWMutex
+}
+
+func (cm *ConnManager) incGlobalFailedAttempts() {
+	cm.globalFailedAttemptsMutex.Lock()
+	defer cm.globalFailedAttemptsMutex.Unlock()
+
+	cm.globalFailedAttempts++
+}
+
+func (cm *ConnManager) resetGlobalFailedAttempts() {
+	cm.globalFailedAttemptsMutex.Lock()
+	defer cm.globalFailedAttemptsMutex.Unlock()
+
+	cm.globalFailedAttempts = 0
+}
+
+func (cm *ConnManager) getGlobalFailedAttempts() uint64 {
+	cm.globalFailedAttemptsMutex.RLock()
+	defer cm.globalFailedAttemptsMutex.RUnlock()
+
+	return cm.globalFailedAttempts
 }
 
 func (cm *ConnManager) incAddrConnAttempt(addr string) {
@@ -238,8 +260,8 @@ func (cm *ConnManager) handleFailedConn(c *ConnReq) {
 				return
 			}
 		} else {
-			cm.globalFailedAttempts++
-			if cm.globalFailedAttempts >= maxFailedAttempts {
+			cm.incGlobalFailedAttempts()
+			if cm.getGlobalFailedAttempts() >= maxFailedAttempts {
 				cm.log.Debug().Msgf("Max failed connection attempts reached: [%d] "+
 					"-- retrying connection in: %v", maxFailedAttempts,
 					cm.cfg.RetryDuration)
@@ -301,7 +323,7 @@ out:
 				conns[connReq.id] = connReq
 				cm.log.Debug().Msgf("Connected to %v", connReq)
 				connReq.retryCount = 0
-				cm.globalFailedAttempts = 0
+				cm.resetGlobalFailedAttempts()
 				if connReq.Addr != nil && connReq.Addr.String() != "" {
 					cm.failedAttempts[connReq.Addr.String()] = 0
 				}
