@@ -6,7 +6,6 @@ import (
 
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
 	"github.com/bitcoin-sv/block-headers-service/repository/dto"
-	"github.com/bitcoin-sv/block-headers-service/service"
 )
 
 type testCase struct {
@@ -20,7 +19,6 @@ type testCase struct {
 type testCaseData struct {
 	blockRecord        [][]string
 	previousBlockHash  string
-	blockHasher        service.BlockHasher
 	cumulatedChainWork string
 	rowIndex           int
 	numberOfBlocks     int
@@ -39,7 +37,6 @@ func TestPrepareRecordHappyPath(t *testing.T) {
 					{"1", "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b", "2083236893", "486604799", "1231006505"},
 				},
 				previousBlockHash:  "0000000000000000000000000000000000000000000000000000000000000000",
-				blockHasher:        service.DefaultBlockHasher(),
 				cumulatedChainWork: "0",
 				rowIndex:           0,
 				numberOfBlocks:     1,
@@ -77,7 +74,6 @@ func TestPrepareRecordHappyPath(t *testing.T) {
 					{"536870912", "17e0aefc0154e0a3cdc4a837c66d9c0e0f0e4a44a703fd6e654e8cbc62c0b28f", "4081063765", "402796026", "1542307497"},
 				},
 				previousBlockHash:  "000000000000000001f34f5eb45827af756e757498039f43ff6f7585c97f4d16",
-				blockHasher:        service.DefaultBlockHasher(),
 				cumulatedChainWork: "255327261802219463033558368",
 				rowIndex:           556761,
 				numberOfBlocks:     10,
@@ -105,7 +101,6 @@ func TestPrepareRecordHappyPath(t *testing.T) {
 					{"536870912", "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885", "3035389718", "403300437", "1708954423"},
 				},
 				previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
-				blockHasher:        service.DefaultBlockHasher(),
 				cumulatedChainWork: "409554438998846785912755332",
 				rowIndex:           833233,
 				numberOfBlocks:     1,
@@ -131,7 +126,7 @@ func TestPrepareRecordHappyPath(t *testing.T) {
 		var result = []dto.DbBlockHeader{}
 		var err error
 		for i := 0; i < tc.data.numberOfBlocks; i++ {
-			block, err := PrepareRecord(tc.data.blockRecord[i], tc.data.previousBlockHash, tc.data.blockHasher, tc.data.cumulatedChainWork, tc.data.rowIndex)
+			block, err := PrepareRecord(tc.data.blockRecord[i], tc.data.previousBlockHash, tc.data.cumulatedChainWork, tc.data.rowIndex)
 			if err != nil {
 				t.Errorf("Error while preparing record: %v", err)
 			}
@@ -156,7 +151,6 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 					{"2147483648", "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885", "3035389718", "403300437", "1708954423"},
 				},
 				previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
-				blockHasher:        service.DefaultBlockHasher(),
 				cumulatedChainWork: "409554438998846785912755332",
 				rowIndex:           833233,
 				numberOfBlocks:     1,
@@ -172,7 +166,6 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 					{"2147483646", "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885", "4294967296", "403300437", "1708954423"},
 				},
 				previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
-				blockHasher:        service.DefaultBlockHasher(),
 				cumulatedChainWork: "409554438998846785912755332",
 				rowIndex:           833233,
 				numberOfBlocks:     1,
@@ -188,7 +181,6 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 					{"2147483646", "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885", "3035389718", "4294967296", "1708954423"},
 				},
 				previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
-				blockHasher:        service.DefaultBlockHasher(),
 				cumulatedChainWork: "409554438998846785912755332",
 				rowIndex:           833233,
 				numberOfBlocks:     1,
@@ -204,7 +196,6 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 					{"536870912", "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885", "3035389718", "403300437"},
 				},
 				previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
-				blockHasher:        service.DefaultBlockHasher(),
 				cumulatedChainWork: "409554438998846785912755332",
 				rowIndex:           833233,
 				numberOfBlocks:     1,
@@ -220,7 +211,6 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 					{"536870912", "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885", "3035389718", "403300437", "403300437", "403300437"},
 				},
 				previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
-				blockHasher:        service.DefaultBlockHasher(),
 				cumulatedChainWork: "409554438998846785912755332",
 				rowIndex:           833233,
 				numberOfBlocks:     1,
@@ -236,7 +226,6 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 					{"536870912a", "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885", "3035389718", "403300437", "1708954423"},
 				},
 				previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
-				blockHasher:        service.DefaultBlockHasher(),
 				cumulatedChainWork: "409554438998846785912755332",
 				rowIndex:           833233,
 				numberOfBlocks:     1,
@@ -252,7 +241,6 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 					{"536870912", "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885", "3035389718a", "403300437", "1708954423"},
 				},
 				previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
-				blockHasher:        service.DefaultBlockHasher(),
 				cumulatedChainWork: "409554438998846785912755332",
 				rowIndex:           833233,
 				numberOfBlocks:     1,
@@ -268,7 +256,6 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 					{"536870912", "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885", "3035389718", "403300437a", "1708954423"},
 				},
 				previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
-				blockHasher:        service.DefaultBlockHasher(),
 				cumulatedChainWork: "409554438998846785912755332",
 				rowIndex:           833233,
 				numberOfBlocks:     1,
@@ -284,7 +271,6 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 					{"536870912", "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885", "3035389718", "403300437", "1708954423a"},
 				},
 				previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
-				blockHasher:        service.DefaultBlockHasher(),
 				cumulatedChainWork: "409554438998846785912755332",
 				rowIndex:           833233,
 				numberOfBlocks:     1,
@@ -300,7 +286,6 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 					{"536870912", "e9446d4ebeb301aeb5a2f375ac062bf3581269d783362cf066f08bbe6040a885a", "3035389718", "403300437", "1708954423a"},
 				},
 				previousBlockHash:  "0000000000000000031817e0b646350cac1b8770d6cba60717e86185cadb15cc",
-				blockHasher:        service.DefaultBlockHasher(),
 				cumulatedChainWork: "409554438998846785912755332",
 				rowIndex:           833233,
 				numberOfBlocks:     1,
@@ -311,7 +296,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		result, err := PrepareRecord(tc.data.blockRecord[0], tc.data.previousBlockHash, tc.data.blockHasher, tc.data.cumulatedChainWork, tc.data.rowIndex)
+		result, err := PrepareRecord(tc.data.blockRecord[0], tc.data.previousBlockHash, tc.data.cumulatedChainWork, tc.data.rowIndex)
 		assert.Equal[*dto.DbBlockHeader](t, result, tc.expectedBlock)
 		assert.IsError(t, err, tc.expectedErrorMessage)
 	}

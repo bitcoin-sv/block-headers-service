@@ -12,7 +12,6 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/database/sql"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/repository/dto"
-	"github.com/bitcoin-sv/block-headers-service/service"
 	"github.com/golang-migrate/migrate/v4"
 	sqlite3 "github.com/golang-migrate/migrate/v4/database/sqlite3"
 	"github.com/rs/zerolog"
@@ -207,7 +206,6 @@ func (a *sqLiteAdapter) insertHeaders(reader *csv.Reader, repo *sql.HeadersDb, b
 	lastBlockHash = previousBlockHash
 	batch := make([]dto.DbBlockHeader, 0, batchSize)
 	cumulatedChainwork = cumulatedLastBlockChainWork
-	bh := service.DefaultBlockHasher()
 
 	for i := 0; i < batchSize; i++ {
 		record, readErr := reader.Read()
@@ -223,7 +221,7 @@ func (a *sqLiteAdapter) insertHeaders(reader *csv.Reader, repo *sql.HeadersDb, b
 			break
 		}
 		var block *dto.DbBlockHeader
-		block, err = PrepareRecord(record, lastBlockHash, bh, cumulatedChainwork, lastRowIndex)
+		block, err = PrepareRecord(record, lastBlockHash, cumulatedChainwork, lastRowIndex)
 		if err != nil {
 			return
 		}

@@ -11,7 +11,6 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/database/sql"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/repository/dto"
-	"github.com/bitcoin-sv/block-headers-service/service"
 	"github.com/golang-migrate/migrate/v4"
 	postgres "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/rs/zerolog"
@@ -143,7 +142,6 @@ func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 		return
 	}
 
-	bh := service.DefaultBlockHasher()
 	cumulatedChainWork = cumulatedLastBlockChainWork
 	for i := 0; i < batchSize; i++ {
 		record, readErr := reader.Read()
@@ -161,9 +159,9 @@ func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 			break
 		}
 		var b *dto.DbBlockHeader
-		b, err = PrepareRecord(record, lastBlockHash, bh, cumulatedChainWork, lastRowIndex)
+		b, err = PrepareRecord(record, lastBlockHash, cumulatedChainWork, lastRowIndex)
 		if err != nil {
-			return 
+			return
 		}
 
 		_, execErr := stmt.Exec(

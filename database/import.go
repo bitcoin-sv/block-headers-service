@@ -108,12 +108,12 @@ func dropHeadersFile(tmpHeadersFile *os.File, tmpHeadersFilePath string, log *ze
 	}
 }
 
-func PrepareRecord(record []string, previousBlockHash string, bh service.BlockHasher, cumulatedChainWork string, rowIndex int) (*dto.DbBlockHeader, error) {
+func PrepareRecord(record []string, previousBlockHash string, cumulatedChainWork string, rowIndex int) (*dto.DbBlockHeader, error) {
 	parsedRow, err := parseRecordToBlockHeadersSource(record, previousBlockHash)
 	if err != nil {
 		return nil, err
 	}
-	preparedRecord := calculateFields(bh, parsedRow, cumulatedChainWork, rowIndex)
+	preparedRecord := calculateFields(parsedRow, cumulatedChainWork, rowIndex)
 	return preparedRecord, nil
 }
 
@@ -157,7 +157,8 @@ func parseRecordToBlockHeadersSource(record []string, previousBlockHash string) 
 	return &blockHeader, nil
 }
 
-func calculateFields(bh service.BlockHasher, dbBlock *domains.BlockHeaderSource, cumulatedChainWork string, rowIndex int) *dto.DbBlockHeader {
+func calculateFields(dbBlock *domains.BlockHeaderSource, cumulatedChainWork string, rowIndex int) *dto.DbBlockHeader {
+	bh := service.DefaultBlockHasher()
 	blockhash := bh.BlockHash(dbBlock)
 	chainWork := domains.CalculateWork(dbBlock.Bits).BigInt()
 	cumulatedChainWorkBigInt := parseBigInt(cumulatedChainWork)
