@@ -159,7 +159,7 @@ func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 			break
 		}
 		var b *dto.DbBlockHeader
-		b, err = PrepareRecord(record, lastBlockHash, cumulatedChainWork, lastRowIndex)
+		b, err = prepareRecord(record, lastBlockHash, cumulatedChainWork, lastRowIndex)
 		if err != nil {
 			return
 		}

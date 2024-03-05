@@ -208,12 +208,13 @@ func (a *sqLiteAdapter) insertHeaders(reader *csv.Reader, repo *sql.HeadersDb, b
 	cumulatedChainwork = cumulatedLastBlockChainWork
 
 	for i := 0; i < batchSize; i++ {
-		record, readErr := reader.Read()
+		var record []string
+		record, err = reader.Read()
 		if err != nil {
-			if errors.Is(readErr, io.EOF) {
+			if errors.Is(err, io.EOF) {
 				break
 			}
-			err = fmt.Errorf("error reading record: %v", readErr)
+			err = fmt.Errorf("error reading record: %v", err)
 			return
 		}
 
@@ -221,7 +222,7 @@ func (a *sqLiteAdapter) insertHeaders(reader *csv.Reader, repo *sql.HeadersDb, b
 			break
 		}
 		var block *dto.DbBlockHeader
-		block, err = PrepareRecord(record, lastBlockHash, cumulatedChainwork, lastRowIndex)
+		block, err = prepareRecord(record, lastBlockHash, cumulatedChainwork, lastRowIndex)
 		if err != nil {
 			return
 		}

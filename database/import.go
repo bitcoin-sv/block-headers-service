@@ -108,10 +108,10 @@ func dropHeadersFile(tmpHeadersFile *os.File, tmpHeadersFilePath string, log *ze
 	}
 }
 
-func PrepareRecord(record []string, previousBlockHash string, cumulatedChainWork string, rowIndex int) (*dto.DbBlockHeader, error) {
+func prepareRecord(record []string, previousBlockHash string, cumulatedChainWork string, rowIndex int) (*dto.DbBlockHeader, error) {
 	parsedRow, err := parseRecordToBlockHeadersSource(record, previousBlockHash)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error while parsing values from block on height %d: %w", rowIndex, err)
 	}
 	preparedRecord := calculateFields(parsedRow, cumulatedChainWork, rowIndex)
 	return preparedRecord, nil
@@ -123,27 +123,27 @@ func parseRecordToBlockHeadersSource(record []string, previousBlockHash string) 
 	}
 	version, err := strconv.ParseInt(record[0], 10, 32)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot parse version: %w", err)
 	}
 	merkleroot, err := parseChainHash(record[1])
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot parse merkleroot: %w", err)
 	}
 	nonce, err := strconv.ParseUint(record[2], 10, 32)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot parse nonce: %w", err)
 	}
 	bits, err := strconv.ParseUint(record[3], 10, 32)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot parse bits: %w", err)
 	}
 	timestamp, err := strconv.ParseInt(record[4], 10, 64)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot parse timestamp: %w", err)
 	}
 	prevBlockHash, err := parseChainHash(previousBlockHash)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot parse previous block hash: %w", err)
 	}
 
 	blockHeader := domains.BlockHeaderSource{
@@ -214,6 +214,10 @@ func validateDbConsistency(importCount int, repo *sql.HeadersDb, db *sqlx.DB) er
 		return fmt.Errorf("database is not consistent with csv file, %w", err)
 	}
 
+	if err := validateNewestCheckpointBlock(db); err != nil {
+		return fmt.Errorf("database is not consistent with csv file, %w", err)
+	}
+
 	return nil
 }
 
@@ -258,5 +262,19 @@ func validatePrevHashColumn(db *sqlx.DB) error {
 		return fmt.Errorf("%d is invalid number of rows with previous_block eq %s", count, chainhash.Hash{}.String())
 	}
 
+	return nil
+}
+
+func validateNewestCheckpointBlock(db *sqlx.DB) error {
+	newestCheckpointBlock := config.Checkpoints[len(config.Checkpoints)-1]
+	newestCheckpointBlockQuery := fmt.Sprintf("SELECT hash FROM %s WHERE height = %d", sql.HeadersTableName, newestCheckpointBlock.Height)
+	var hashResult string
+	err := db.Get(&hashResult, newestCheckpointBlockQuery)
+	if err != nil {
+		return fmt.Errorf("newest checkpoint block with height \"%d\" is not present in the database", newestCheckpointBlock.Height)
+	}
+	if newestCheckpointBlock.Hash.String() != hashResult {
+		return fmt.Errorf("newest checkpoint block has different hash \"%s\" than hash \"%s\" of block in database with the same height (%d)", newestCheckpointBlock.Hash.String(), hashResult, newestCheckpointBlock.Height)
+	}
 	return nil
 }

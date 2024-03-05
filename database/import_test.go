@@ -123,20 +123,22 @@ func TestPrepareRecordHappyPath(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		var result = []dto.DbBlockHeader{}
-		var err error
-		for i := 0; i < tc.data.numberOfBlocks; i++ {
-			block, err := PrepareRecord(tc.data.blockRecord[i], tc.data.previousBlockHash, tc.data.cumulatedChainWork, tc.data.rowIndex)
-			if err != nil {
-				t.Errorf("Error while preparing record: %v", err)
+		t.Run(tc.name, func(t *testing.T) {
+			var result = []dto.DbBlockHeader{}
+			var err error
+			for i := 0; i < tc.data.numberOfBlocks; i++ {
+				block, err := prepareRecord(tc.data.blockRecord[i], tc.data.previousBlockHash, tc.data.cumulatedChainWork, tc.data.rowIndex)
+				if err != nil {
+					t.Errorf("Error while preparing record: %v", err)
+				}
+				result = append(result, *block)
+				tc.data.previousBlockHash = block.Hash
+				tc.data.cumulatedChainWork = block.CumulatedWork
+				tc.data.rowIndex++
 			}
-			result = append(result, *block)
-			tc.data.previousBlockHash = block.Hash
-			tc.data.cumulatedChainWork = block.CumulatedWork
-			tc.data.rowIndex++
-		}
-		assert.Equal[dto.DbBlockHeader](t, result[tc.data.numberOfBlocks-1], *tc.expectedBlock)
-		assert.NoError(t, err)
+			assert.Equal[dto.DbBlockHeader](t, result[tc.data.numberOfBlocks-1], *tc.expectedBlock)
+			assert.NoError(t, err)
+		})
 	}
 }
 
@@ -155,8 +157,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expectedBlock:        nil,
-			expectedErrorMessage: "strconv.ParseInt: parsing \"2147483648\": value out of range",
+			expectedErrorMessage: "error while parsing values from block on height 833233: cannot parse version: strconv.ParseInt: parsing \"2147483648\": value out of range",
 		},
 		{
 			testID: 2,
@@ -170,8 +171,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expectedBlock:        nil,
-			expectedErrorMessage: "strconv.ParseUint: parsing \"4294967296\": value out of range",
+			expectedErrorMessage: "error while parsing values from block on height 833233: cannot parse nonce: strconv.ParseUint: parsing \"4294967296\": value out of range",
 		},
 		{
 			testID: 3,
@@ -185,8 +185,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expectedBlock:        nil,
-			expectedErrorMessage: "strconv.ParseUint: parsing \"4294967296\": value out of range",
+			expectedErrorMessage: "error while parsing values from block on height 833233: cannot parse bits: strconv.ParseUint: parsing \"4294967296\": value out of range",
 		},
 		{
 			testID: 4,
@@ -200,8 +199,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expectedBlock:        nil,
-			expectedErrorMessage: "invalid record length: expected 5 elements, got 4",
+			expectedErrorMessage: "error while parsing values from block on height 833233: invalid record length: expected 5 elements, got 4",
 		},
 		{
 			testID: 5,
@@ -215,8 +213,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expectedBlock:        nil,
-			expectedErrorMessage: "invalid record length: expected 5 elements, got 6",
+			expectedErrorMessage: "error while parsing values from block on height 833233: invalid record length: expected 5 elements, got 6",
 		},
 		{
 			testID: 6,
@@ -230,8 +227,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expectedBlock:        nil,
-			expectedErrorMessage: "strconv.ParseInt: parsing \"536870912a\": invalid syntax",
+			expectedErrorMessage: "error while parsing values from block on height 833233: cannot parse version: strconv.ParseInt: parsing \"536870912a\": invalid syntax",
 		},
 		{
 			testID: 7,
@@ -246,7 +242,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				numberOfBlocks:     1,
 			},
 			expectedBlock:        nil,
-			expectedErrorMessage: "strconv.ParseUint: parsing \"3035389718a\": invalid syntax",
+			expectedErrorMessage: "error while parsing values from block on height 833233: cannot parse nonce: strconv.ParseUint: parsing \"3035389718a\": invalid syntax",
 		},
 		{
 			testID: 8,
@@ -260,8 +256,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expectedBlock:        nil,
-			expectedErrorMessage: "strconv.ParseUint: parsing \"403300437a\": invalid syntax",
+			expectedErrorMessage: "error while parsing values from block on height 833233: cannot parse bits: strconv.ParseUint: parsing \"403300437a\": invalid syntax",
 		},
 		{
 			testID: 9,
@@ -275,8 +270,7 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expectedBlock:        nil,
-			expectedErrorMessage: "strconv.ParseInt: parsing \"1708954423a\": invalid syntax",
+			expectedErrorMessage: "error while parsing values from block on height 833233: cannot parse timestamp: strconv.ParseInt: parsing \"1708954423a\": invalid syntax",
 		},
 		{
 			testID: 10,
@@ -290,15 +284,16 @@ func TestPrepareRecordErrorPath(t *testing.T) {
 				rowIndex:           833233,
 				numberOfBlocks:     1,
 			},
-			expectedBlock:        nil,
-			expectedErrorMessage: "max hash string length is 64 bytes",
+			expectedErrorMessage: "error while parsing values from block on height 833233: cannot parse merkleroot: max hash string length is 64 bytes",
 		},
 	}
 
 	for _, tc := range testCases {
-		result, err := PrepareRecord(tc.data.blockRecord[0], tc.data.previousBlockHash, tc.data.cumulatedChainWork, tc.data.rowIndex)
-		assert.Equal[*dto.DbBlockHeader](t, result, tc.expectedBlock)
-		assert.IsError(t, err, tc.expectedErrorMessage)
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := prepareRecord(tc.data.blockRecord[0], tc.data.previousBlockHash, tc.data.cumulatedChainWork, tc.data.rowIndex)
+			assert.Equal[*dto.DbBlockHeader](t, result, nil)
+			assert.IsError(t, err, tc.expectedErrorMessage)
+		})
 	}
 }
 
