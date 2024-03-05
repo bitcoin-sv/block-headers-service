@@ -194,35 +194,22 @@ type ConnManager struct {
 	quit     chan struct{}
 
 	globalFailedAttempts uint64
-	failedAttempts       map[string]*failedAttempts
+	failedAttempts       map[string]uint16
 	failedAttemptsMutex  sync.RWMutex
-}
-
-type failedAttempts struct {
-	count   uint16
-	banTime time.Duration
 }
 
 func (cm *ConnManager) incAddrConnAttempt(addr string) {
 	cm.failedAttemptsMutex.Lock()
 	defer cm.failedAttemptsMutex.Unlock()
 
-	if _, ok := cm.failedAttempts[addr]; !ok {
-		cm.failedAttempts[addr] = &failedAttempts{}
-	}
-	cm.failedAttempts[addr].count++
+	cm.failedAttempts[addr]++
 }
 
 func (cm *ConnManager) getAddrConnAttempt(addr string) uint16 {
 	cm.failedAttemptsMutex.RLock()
 	defer cm.failedAttemptsMutex.RUnlock()
 
-	if _, ok := cm.failedAttempts[addr]; !ok {
-		return 0
-	}
-
-	c := cm.failedAttempts[addr].count
-	return c
+	return cm.failedAttempts[addr]
 }
 
 // handleFailedConn handles a connection failed due to a disconnect or any
@@ -317,7 +304,7 @@ out:
 				connReq.retryCount = 0
 				cm.globalFailedAttempts = 0
 				if connReq.Addr != nil && connReq.Addr.String() != "" {
-					cm.failedAttempts[connReq.Addr.String()] = &failedAttempts{}
+					cm.failedAttempts[connReq.Addr.String()] = 0
 				}
 
 				delete(pending, connReq.id)
@@ -626,7 +613,7 @@ func New(cfg *Config) (*ConnManager, error) {
 		requests:       make(chan interface{}),
 		quit:           make(chan struct{}),
 		log:            &connManagerLogger,
-		failedAttempts: make(map[string]*failedAttempts),
+		failedAttempts: make(map[string]uint16),
 	}
 	return &cm, nil
 }
