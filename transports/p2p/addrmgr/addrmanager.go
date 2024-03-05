@@ -136,9 +136,9 @@ const (
 	// will share with a call to AddressCache.
 	getAddrPercent = 23
 
-	// defaultBantime is the default amount of time for which to ban
+	// banTime is the default amount of time for which to ban
 	// a peer that we cannot connect to.
-	defaultBanTime = time.Hour * 24
+	banTime = time.Hour * 24
 )
 
 // updateAddress is a helper function to either update an address already known
@@ -229,9 +229,16 @@ func (a *AddrManager) updateAddress(netAddr, srcAddr *wire.NetAddress) {
 
 // BanAddress creates a ban for defaultBanTime for a peer that we cannot connect to.
 func (a *AddrManager) BanAddress(addr string) {
-	a.addrBanned[addr] = time.Now().Add(defaultBanTime)
+	banTimeUntil := time.Now().Add(banTime)
+	a.addrBanned[addr] = banTimeUntil
 
-	// remove from addrTried buckets
+	a.removeAddrFromTried(addr)
+	a.removeAddrFromNew(addr)
+
+	a.Log.Warn().Msgf("Address %s banned until %s!", addr, banTimeUntil.Format(time.RFC1123))
+}
+
+func (a *AddrManager) removeAddrFromTried(addr string) {
 	for _, bucket := range a.addrTried {
 		for e := bucket.Front(); e != nil; e = e.Next() {
 			ka := e.Value.(*KnownAddress)
@@ -245,8 +252,9 @@ func (a *AddrManager) BanAddress(addr string) {
 			}
 		}
 	}
+}
 
-	// remove from addrNew buckets
+func (a *AddrManager) removeAddrFromNew(addr string) {
 	for i, bucket := range a.addrNew {
 		for k, v := range bucket {
 			if k == addr {
@@ -259,8 +267,6 @@ func (a *AddrManager) BanAddress(addr string) {
 			}
 		}
 	}
-
-	a.Log.Warn().Msgf("Address %s banned!", addr)
 }
 
 // expireNew makes space in the new buckets by expiring the really bad entries.

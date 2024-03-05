@@ -186,9 +186,8 @@ type ConnManager struct {
 	start        int32
 	stop         int32
 
-	cfg Config
-	wg  sync.WaitGroup
-	// failedAttempts uint64
+	cfg      Config
+	wg       sync.WaitGroup
 	requests chan interface{}
 	log      *zerolog.Logger
 	quit     chan struct{}
