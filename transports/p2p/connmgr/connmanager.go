@@ -265,7 +265,7 @@ func (cm *ConnManager) handleFailedConn(c *ConnReq) {
 }
 
 // registerFailedConnectionTo registers failed connection when
-// the connection request has an address
+// the connection request has an address.
 func (cm *ConnManager) registerFailedConnectionTo(c *ConnReq) {
 	cm.incAddrConnAttempt(c.Addr.String())
 	if cm.isAddressConnectionAttemptsExceeded(c.Addr.String()) {
@@ -275,7 +275,7 @@ func (cm *ConnManager) registerFailedConnectionTo(c *ConnReq) {
 }
 
 // registerFailedConnection registers failed connection when
-// the connection request doesn't have an address
+// the connection request doesn't have an address.
 func (cm *ConnManager) registerFailedConnection() {
 	cm.incGlobalFailedAttempts()
 	if cm.isGlobalConnectionAttemptsExceeded() {
