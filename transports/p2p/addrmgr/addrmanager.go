@@ -229,6 +229,9 @@ func (a *AddrManager) updateAddress(netAddr, srcAddr *wire.NetAddress) {
 
 // BanAddress creates a ban for defaultBanTime for a peer that we cannot connect to.
 func (a *AddrManager) BanAddress(addr string) {
+	a.mtx.Lock()
+	defer a.mtx.Unlock()
+
 	banTimeUntil := time.Now().Add(banTime)
 	a.addrBanned[addr] = banTimeUntil
 

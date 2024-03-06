@@ -192,31 +192,23 @@ type ConnManager struct {
 	log      *zerolog.Logger
 	quit     chan struct{}
 
-	globalFailedAttempts      uint64
-	globalFailedAttemptsMutex sync.RWMutex
-	failedAttempts            map[string]uint16
-	failedAttemptsMutex       sync.RWMutex
+	globalFailedAttempts uint64
+	failedAttempts       map[string]uint16
+	failedAttemptsMutex  sync.RWMutex
 }
 
 func (cm *ConnManager) incGlobalFailedAttempts() {
-	cm.globalFailedAttemptsMutex.Lock()
-	defer cm.globalFailedAttemptsMutex.Unlock()
+	cm.failedAttemptsMutex.Lock()
+	defer cm.failedAttemptsMutex.Unlock()
 
 	cm.globalFailedAttempts++
 }
 
-func (cm *ConnManager) resetGlobalFailedAttempts() {
-	cm.globalFailedAttemptsMutex.Lock()
-	defer cm.globalFailedAttemptsMutex.Unlock()
+func (cm *ConnManager) isGlobalConnectionAttemptsExceeded() bool {
+	cm.failedAttemptsMutex.RLock()
+	defer cm.failedAttemptsMutex.RUnlock()
 
-	cm.globalFailedAttempts = 0
-}
-
-func (cm *ConnManager) getGlobalFailedAttempts() uint64 {
-	cm.globalFailedAttemptsMutex.RLock()
-	defer cm.globalFailedAttemptsMutex.RUnlock()
-
-	return cm.globalFailedAttempts
+	return cm.globalFailedAttempts >= maxFailedAttempts
 }
 
 func (cm *ConnManager) incAddrConnAttempt(addr string) {
@@ -226,11 +218,21 @@ func (cm *ConnManager) incAddrConnAttempt(addr string) {
 	cm.failedAttempts[addr]++
 }
 
-func (cm *ConnManager) getAddrConnAttempt(addr string) uint16 {
+func (cm *ConnManager) isAddressConnectionAttemptsExceeded(addr string) bool {
 	cm.failedAttemptsMutex.RLock()
 	defer cm.failedAttemptsMutex.RUnlock()
 
-	return cm.failedAttempts[addr]
+	return cm.failedAttempts[addr] >= maxFailedAttempts
+}
+
+func (cm *ConnManager) resetFailedAttempts(connReq *ConnReq) {
+	cm.failedAttemptsMutex.Lock()
+	defer cm.failedAttemptsMutex.Unlock()
+
+	cm.globalFailedAttempts = 0
+	if connReq.Addr != nil && connReq.Addr.String() != "" {
+		cm.failedAttempts[connReq.Addr.String()] = 0
+	}
 }
 
 // handleFailedConn handles a connection failed due to a disconnect or any
@@ -254,24 +256,36 @@ func (cm *ConnManager) handleFailedConn(c *ConnReq) {
 		})
 	} else if cm.cfg.GetNewAddress != nil {
 		if c.Addr != nil && c.Addr.String() != "" && cm.cfg.BanAddress != nil {
-			cm.incAddrConnAttempt(c.Addr.String())
-			if cm.getAddrConnAttempt(c.Addr.String()) >= maxFailedAttempts {
-				cm.cfg.BanAddress(c.Addr.String())
-				return
-			}
+			cm.registerFailedConnectionTo(c)
 		} else {
-			cm.incGlobalFailedAttempts()
-			if cm.getGlobalFailedAttempts() >= maxFailedAttempts {
-				cm.log.Debug().Msgf("Max failed connection attempts reached: [%d] "+
-					"-- retrying connection in: %v", maxFailedAttempts,
-					cm.cfg.RetryDuration)
-				time.AfterFunc(cm.cfg.RetryDuration, func() {
-					cm.NewConnReq()
-				})
-				return
-			}
+			cm.registerFailedConnection()
 		}
 		go cm.NewConnReq()
+	}
+}
+
+// registerFailedConnectionTo registers failed connection when
+// the connection request has an address
+func (cm *ConnManager) registerFailedConnectionTo(c *ConnReq) {
+	cm.incAddrConnAttempt(c.Addr.String())
+	if cm.isAddressConnectionAttemptsExceeded(c.Addr.String()) {
+		cm.cfg.BanAddress(c.Addr.String())
+		return
+	}
+}
+
+// registerFailedConnection registers failed connection when
+// the connection request doesn't have an address
+func (cm *ConnManager) registerFailedConnection() {
+	cm.incGlobalFailedAttempts()
+	if cm.isGlobalConnectionAttemptsExceeded() {
+		cm.log.Debug().Msgf("Max failed connection attempts reached: [%d] "+
+			"-- retrying connection in: %v", maxFailedAttempts,
+			cm.cfg.RetryDuration)
+		time.AfterFunc(cm.cfg.RetryDuration, func() {
+			cm.NewConnReq()
+		})
+		return
 	}
 }
 
@@ -323,10 +337,7 @@ out:
 				conns[connReq.id] = connReq
 				cm.log.Debug().Msgf("Connected to %v", connReq)
 				connReq.retryCount = 0
-				cm.resetGlobalFailedAttempts()
-				if connReq.Addr != nil && connReq.Addr.String() != "" {
-					cm.failedAttempts[connReq.Addr.String()] = 0
-				}
+				cm.resetFailedAttempts(connReq)
 
 				delete(pending, connReq.id)
 
