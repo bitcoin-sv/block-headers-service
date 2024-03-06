@@ -260,7 +260,6 @@ func (cm *ConnManager) handleFailedConn(c *ConnReq) {
 		} else {
 			cm.registerFailedConnection()
 		}
-		go cm.NewConnReq()
 	}
 }
 
@@ -272,6 +271,7 @@ func (cm *ConnManager) registerFailedConnectionTo(c *ConnReq) {
 		cm.cfg.BanAddress(c.Addr.String())
 		return
 	}
+	go cm.NewConnReq()
 }
 
 // registerFailedConnection registers failed connection when
@@ -287,6 +287,7 @@ func (cm *ConnManager) registerFailedConnection() {
 		})
 		return
 	}
+	go cm.NewConnReq()
 }
 
 // connHandler handles all connection related requests.  It must be run as a
