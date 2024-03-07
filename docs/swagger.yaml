@@ -25,6 +25,56 @@ definitions:
       token:
         type: string
     type: object
+  headers.BlockHeaderResponse:
+    properties:
+      creationTimestamp:
+        type: integer
+      difficultyTarget:
+        type: integer
+      hash:
+        type: string
+      merkleRoot:
+        type: string
+      nonce:
+        type: integer
+      prevBlockHash:
+        type: string
+      version:
+        type: integer
+      work:
+        type: string
+    type: object
+  headers.BlockHeaderStateResponse:
+    properties:
+      chainWork:
+        type: string
+      header:
+        $ref: '#/definitions/headers.BlockHeaderResponse'
+      height:
+        type: integer
+      state:
+        type: string
+    type: object
+  merkleroots.MerkleRootConfirmation:
+    properties:
+      blockHash:
+        type: string
+      blockHeight:
+        type: integer
+      confirmation:
+        $ref: '#/definitions/domains.MerkleRootConfirmationState'
+      merkleRoot:
+        type: string
+    type: object
+  merkleroots.MerkleRootsConfirmationsResponse:
+    properties:
+      confirmationState:
+        $ref: '#/definitions/domains.MerkleRootConfirmationState'
+      confirmations:
+        items:
+          $ref: '#/definitions/merkleroots.MerkleRootConfirmation'
+        type: array
+    type: object
   notification.Webhook:
     properties:
       active:
@@ -40,7 +90,7 @@ definitions:
       url:
         type: string
     type: object
-  transports_http_endpoints_api_headers.BlockHeaderResponse:
+  tips.TipResponse:
     properties:
       creationTimestamp:
         type: integer
@@ -59,68 +109,18 @@ definitions:
       work:
         type: string
     type: object
-  transports_http_endpoints_api_headers.BlockHeaderStateResponse:
+  tips.TipStateResponse:
     properties:
       chainWork:
         type: string
       header:
-        $ref: '#/definitions/transports_http_endpoints_api_headers.BlockHeaderResponse'
+        $ref: '#/definitions/tips.TipResponse'
       height:
         type: integer
       state:
         type: string
     type: object
-  transports_http_endpoints_api_merkleroots.MerkleRootConfirmation:
-    properties:
-      blockHash:
-        type: string
-      blockHeight:
-        type: integer
-      confirmation:
-        $ref: '#/definitions/domains.MerkleRootConfirmationState'
-      merkleRoot:
-        type: string
-    type: object
-  transports_http_endpoints_api_merkleroots.MerkleRootsConfirmationsResponse:
-    properties:
-      confirmationState:
-        $ref: '#/definitions/domains.MerkleRootConfirmationState'
-      confirmations:
-        items:
-          $ref: '#/definitions/transports_http_endpoints_api_merkleroots.MerkleRootConfirmation'
-        type: array
-    type: object
-  transports_http_endpoints_api_tips.TipResponse:
-    properties:
-      creationTimestamp:
-        type: integer
-      difficultyTarget:
-        type: integer
-      hash:
-        type: string
-      merkleRoot:
-        type: string
-      nonce:
-        type: integer
-      prevBlockHash:
-        type: string
-      version:
-        type: integer
-      work:
-        type: string
-    type: object
-  transports_http_endpoints_api_tips.TipStateResponse:
-    properties:
-      chainWork:
-        type: string
-      header:
-        $ref: '#/definitions/transports_http_endpoints_api_tips.TipResponse'
-      height:
-        type: integer
-      state:
-        type: string
-    type: object
-  transports_http_endpoints_api_webhook.RequiredAuth:
+  webhook.RequiredAuth:
     properties:
       header:
         type: string
@@ -129,10 +129,10 @@ definitions:
       type:
         type: string
     type: object
-  transports_http_endpoints_api_webhook.WebhookRequest:
+  webhook.WebhookRequest:
     properties:
       requiredAuth:
-        $ref: '#/definitions/transports_http_endpoints_api_webhook.RequiredAuth'
+        $ref: '#/definitions/webhook.RequiredAuth'
       url:
         type: string
     type: object
@@ -218,7 +218,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/transports_http_endpoints_api_headers.BlockHeaderResponse'
+            $ref: '#/definitions/headers.BlockHeaderResponse'
       security:
       - Bearer: []
       summary: Gets header by hash
@@ -246,7 +246,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/transports_http_endpoints_api_headers.BlockHeaderResponse'
+              $ref: '#/definitions/headers.BlockHeaderResponse'
             type: array
       security:
       - Bearer: []
@@ -274,7 +274,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/transports_http_endpoints_api_headers.BlockHeaderResponse'
+              $ref: '#/definitions/headers.BlockHeaderResponse'
             type: array
       security:
       - Bearer: []
@@ -300,7 +300,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/transports_http_endpoints_api_headers.BlockHeaderResponse'
+            $ref: '#/definitions/headers.BlockHeaderResponse'
       security:
       - Bearer: []
       summary: Gets common ancestors
@@ -322,7 +322,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/transports_http_endpoints_api_headers.BlockHeaderStateResponse'
+            $ref: '#/definitions/headers.BlockHeaderStateResponse'
       security:
       - Bearer: []
       summary: Gets header state
@@ -348,7 +348,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/transports_http_endpoints_api_merkleroots.MerkleRootsConfirmationsResponse'
+              $ref: '#/definitions/merkleroots.MerkleRootsConfirmationsResponse'
             type: array
       security:
       - Bearer: []
@@ -367,7 +367,7 @@ paths:
           schema:
             items:
               items:
-                $ref: '#/definitions/transports_http_endpoints_api_tips.TipStateResponse'
+                $ref: '#/definitions/tips.TipStateResponse'
               type: array
             type: array
       security:
@@ -385,7 +385,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/transports_http_endpoints_api_tips.TipStateResponse'
+            $ref: '#/definitions/tips.TipStateResponse'
       security:
       - Bearer: []
       summary: Gets tip of longest chain
@@ -471,7 +471,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/transports_http_endpoints_api_webhook.WebhookRequest'
+          $ref: '#/definitions/webhook.WebhookRequest'
       produces:
       - application/json
       responses:

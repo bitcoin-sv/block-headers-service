@@ -158,7 +158,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/transports_http_endpoints_api_headers.BlockHeaderResponse"
+                                "$ref": "#/definitions/headers.BlockHeaderResponse"
                             }
                         }
                     }
@@ -200,7 +200,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/transports_http_endpoints_api_headers.BlockHeaderResponse"
+                            "$ref": "#/definitions/headers.BlockHeaderResponse"
                         }
                     }
                 }
@@ -236,7 +236,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/transports_http_endpoints_api_headers.BlockHeaderStateResponse"
+                            "$ref": "#/definitions/headers.BlockHeaderStateResponse"
                         }
                     }
                 }
@@ -272,7 +272,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/transports_http_endpoints_api_headers.BlockHeaderResponse"
+                            "$ref": "#/definitions/headers.BlockHeaderResponse"
                         }
                     }
                 }
@@ -317,7 +317,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/transports_http_endpoints_api_headers.BlockHeaderResponse"
+                                "$ref": "#/definitions/headers.BlockHeaderResponse"
                             }
                         }
                     }
@@ -361,7 +361,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/transports_http_endpoints_api_merkleroots.MerkleRootsConfirmationsResponse"
+                                "$ref": "#/definitions/merkleroots.MerkleRootsConfirmationsResponse"
                             }
                         }
                     }
@@ -393,7 +393,7 @@ const docTemplate = `{
                             "items": {
                                 "type": "array",
                                 "items": {
-                                    "$ref": "#/definitions/transports_http_endpoints_api_tips.TipStateResponse"
+                                    "$ref": "#/definitions/tips.TipStateResponse"
                                 }
                             }
                         }
@@ -422,7 +422,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/transports_http_endpoints_api_tips.TipStateResponse"
+                            "$ref": "#/definitions/tips.TipStateResponse"
                         }
                     }
                 }
@@ -537,7 +537,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/transports_http_endpoints_api_webhook.WebhookRequest"
+                            "$ref": "#/definitions/webhook.WebhookRequest"
                         }
                     }
                 ],
@@ -622,6 +622,83 @@ const docTemplate = `{
                 }
             }
         },
+        "headers.BlockHeaderResponse": {
+            "type": "object",
+            "properties": {
+                "creationTimestamp": {
+                    "type": "integer"
+                },
+                "difficultyTarget": {
+                    "type": "integer"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "merkleRoot": {
+                    "type": "string"
+                },
+                "nonce": {
+                    "type": "integer"
+                },
+                "prevBlockHash": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                },
+                "work": {
+                    "type": "string"
+                }
+            }
+        },
+        "headers.BlockHeaderStateResponse": {
+            "type": "object",
+            "properties": {
+                "chainWork": {
+                    "type": "string"
+                },
+                "header": {
+                    "$ref": "#/definitions/headers.BlockHeaderResponse"
+                },
+                "height": {
+                    "type": "integer"
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "merkleroots.MerkleRootConfirmation": {
+            "type": "object",
+            "properties": {
+                "blockHash": {
+                    "type": "string"
+                },
+                "blockHeight": {
+                    "type": "integer"
+                },
+                "confirmation": {
+                    "$ref": "#/definitions/domains.MerkleRootConfirmationState"
+                },
+                "merkleRoot": {
+                    "type": "string"
+                }
+            }
+        },
+        "merkleroots.MerkleRootsConfirmationsResponse": {
+            "type": "object",
+            "properties": {
+                "confirmationState": {
+                    "$ref": "#/definitions/domains.MerkleRootConfirmationState"
+                },
+                "confirmations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/merkleroots.MerkleRootConfirmation"
+                    }
+                }
+            }
+        },
         "notification.Webhook": {
             "type": "object",
             "properties": {
@@ -645,7 +722,7 @@ const docTemplate = `{
                 }
             }
         },
-        "transports_http_endpoints_api_headers.BlockHeaderResponse": {
+        "tips.TipResponse": {
             "type": "object",
             "properties": {
                 "creationTimestamp": {
@@ -674,14 +751,14 @@ const docTemplate = `{
                 }
             }
         },
-        "transports_http_endpoints_api_headers.BlockHeaderStateResponse": {
+        "tips.TipStateResponse": {
             "type": "object",
             "properties": {
                 "chainWork": {
                     "type": "string"
                 },
                 "header": {
-                    "$ref": "#/definitions/transports_http_endpoints_api_headers.BlockHeaderResponse"
+                    "$ref": "#/definitions/tips.TipResponse"
                 },
                 "height": {
                     "type": "integer"
@@ -691,84 +768,7 @@ const docTemplate = `{
                 }
             }
         },
-        "transports_http_endpoints_api_merkleroots.MerkleRootConfirmation": {
-            "type": "object",
-            "properties": {
-                "blockHash": {
-                    "type": "string"
-                },
-                "blockHeight": {
-                    "type": "integer"
-                },
-                "confirmation": {
-                    "$ref": "#/definitions/domains.MerkleRootConfirmationState"
-                },
-                "merkleRoot": {
-                    "type": "string"
-                }
-            }
-        },
-        "transports_http_endpoints_api_merkleroots.MerkleRootsConfirmationsResponse": {
-            "type": "object",
-            "properties": {
-                "confirmationState": {
-                    "$ref": "#/definitions/domains.MerkleRootConfirmationState"
-                },
-                "confirmations": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/transports_http_endpoints_api_merkleroots.MerkleRootConfirmation"
-                    }
-                }
-            }
-        },
-        "transports_http_endpoints_api_tips.TipResponse": {
-            "type": "object",
-            "properties": {
-                "creationTimestamp": {
-                    "type": "integer"
-                },
-                "difficultyTarget": {
-                    "type": "integer"
-                },
-                "hash": {
-                    "type": "string"
-                },
-                "merkleRoot": {
-                    "type": "string"
-                },
-                "nonce": {
-                    "type": "integer"
-                },
-                "prevBlockHash": {
-                    "type": "string"
-                },
-                "version": {
-                    "type": "integer"
-                },
-                "work": {
-                    "type": "string"
-                }
-            }
-        },
-        "transports_http_endpoints_api_tips.TipStateResponse": {
-            "type": "object",
-            "properties": {
-                "chainWork": {
-                    "type": "string"
-                },
-                "header": {
-                    "$ref": "#/definitions/transports_http_endpoints_api_tips.TipResponse"
-                },
-                "height": {
-                    "type": "integer"
-                },
-                "state": {
-                    "type": "string"
-                }
-            }
-        },
-        "transports_http_endpoints_api_webhook.RequiredAuth": {
+        "webhook.RequiredAuth": {
             "type": "object",
             "properties": {
                 "header": {
@@ -782,11 +782,11 @@ const docTemplate = `{
                 }
             }
         },
-        "transports_http_endpoints_api_webhook.WebhookRequest": {
+        "webhook.WebhookRequest": {
             "type": "object",
             "properties": {
                 "requiredAuth": {
-                    "$ref": "#/definitions/transports_http_endpoints_api_webhook.RequiredAuth"
+                    "$ref": "#/definitions/webhook.RequiredAuth"
                 },
                 "url": {
                     "type": "string"
