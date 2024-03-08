@@ -70,11 +70,6 @@ func (cs *chainService) Add(bs domains.BlockHeaderSource) (*domains.BlockHeader,
 		return nil, HeaderCreationFail.causedBy(&err)
 	}
 
-	currentTip, err := cs.Headers.GetTip()
-	if err == nil && h.Height < currentTip.Height {
-		return nil, HeaderAlreadyPresent.causedBy(nil)
-	}
-
 	isConcurrentChain := cs.hasConcurrentHeaderFromLongestChain(h)
 
 	if isConcurrentChain {
@@ -100,6 +95,11 @@ func (cs *chainService) Add(bs domains.BlockHeaderSource) (*domains.BlockHeader,
 	h, err = cs.insert(h)
 	if err != nil {
 		return nil, err
+	}
+
+	currentTip, errTip := cs.Headers.GetTip()
+	if errTip == nil && h.IsLongestChain() && h.Height < currentTip.Height {
+		return h, err
 	}
 
 	metrics.SetLatestBlock(h.Height, h.Timestamp, h.State.String())
@@ -252,9 +252,6 @@ const (
 
 	// HeaderSaveFail error code representing situation when saving header in the repository failed.
 	HeaderSaveFail AddBlockErrorCode = "HeaderSaveFail"
-
-	// HeaderAlreadyPresent error code representing situation when header is already in the repository.
-	HeaderAlreadyPresent AddBlockErrorCode = "HeaderAlreadyPresent"
 )
 
 func (e *AddBlockError) Error() string {
