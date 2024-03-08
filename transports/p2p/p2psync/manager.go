@@ -531,6 +531,10 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 	for _, blockHeader := range msg.Headers {
 		h, addErr := sm.Services.Chains.Add(domains.BlockHeaderSource(*blockHeader))
 
+		if service.HeaderAlreadyPresent.Is(addErr) {
+			continue
+		}
+
 		if service.BlockRejected.Is(addErr) {
 			sm.peerNotifier.BanPeer(peer)
 			peer.Disconnect()

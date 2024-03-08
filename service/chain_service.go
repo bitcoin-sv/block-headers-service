@@ -18,7 +18,7 @@ type BlockHasher interface {
 
 // Notification is "port" through which chain service can notify clients about important events.
 type Notification interface {
-	//Notify notifies about new header stored.
+	// Notify notifies about new header stored.
 	Notify(any)
 }
 
@@ -68,6 +68,11 @@ func (cs *chainService) Add(bs domains.BlockHeaderSource) (*domains.BlockHeader,
 	h, err := cs.createHeader(&hash, &bs)
 	if err != nil {
 		return nil, HeaderCreationFail.causedBy(&err)
+	}
+
+	currentTip, err := cs.Headers.GetTip()
+	if err == nil && h.Height < currentTip.Height {
+		return nil, HeaderAlreadyPresent.causedBy(nil)
 	}
 
 	isConcurrentChain := cs.hasConcurrentHeaderFromLongestChain(h)
@@ -236,17 +241,20 @@ type AddBlockError struct {
 type AddBlockErrorCode string
 
 const (
-	//BlockRejected error code representing situation when block is on the blacklist.
+	// BlockRejected error code representing situation when block is on the blacklist.
 	BlockRejected AddBlockErrorCode = "BlockRejected"
 
-	//HeaderCreationFail error code representing situation when block cannot be created from source.
+	// HeaderCreationFail error code representing situation when block cannot be created from source.
 	HeaderCreationFail AddBlockErrorCode = "HeaderCreationFail"
 
-	//ChainUpdateFail error code representing situation when STALE chain should become Longest chain but the update of chains failed.
+	// ChainUpdateFail error code representing situation when STALE chain should become Longest chain but the update of chains failed.
 	ChainUpdateFail AddBlockErrorCode = "ChainUpdateFail"
 
-	//HeaderSaveFail error code representing situation when saving header in the repository failed.
+	// HeaderSaveFail error code representing situation when saving header in the repository failed.
 	HeaderSaveFail AddBlockErrorCode = "HeaderSaveFail"
+
+	// HeaderAlreadyPresent error code representing situation when header is already in the repository.
+	HeaderAlreadyPresent AddBlockErrorCode = "HeaderAlreadyPresent"
 )
 
 func (e *AddBlockError) Error() string {
