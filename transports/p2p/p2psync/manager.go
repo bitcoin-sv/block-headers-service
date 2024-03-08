@@ -424,7 +424,6 @@ func (sm *SyncManager) handleCheckSyncPeer() {
 
 // topBlock returns the best chains top block height.
 func (sm *SyncManager) topBlock() int32 {
-
 	if sm.syncPeer.LastBlock() > sm.syncPeer.StartingHeight() {
 		return sm.syncPeer.LastBlock()
 	}
@@ -528,6 +527,7 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 	// previous and that checkpoints match.
 	receivedCheckpoint := false
 	var finalHash *chainhash.Hash
+	var finalHeight int32 = 0
 	for _, blockHeader := range msg.Headers {
 		h, addErr := sm.Services.Chains.Add(domains.BlockHeaderSource(*blockHeader))
 
@@ -564,6 +564,7 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 
 		if h.IsLongestChain() {
 			finalHash = &h.Hash
+			finalHeight = h.Height
 		}
 		if sm.startHeader == nil {
 			sm.startHeader = h
@@ -602,11 +603,16 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 		return
 	}
 
+	// If we received only blocks that we already have, or are not from the longest chain,
+	// don't send another getHeaders message - do nothing.
+	if finalHeight < sm.Services.Headers.GetTipHeight() {
+		return
+	}
+
 	// This header is not a checkpoint, so request the next batch of
 	// headers starting from the latest known header and ending with the
 	// next checkpoint.
 	sm.sendGetHeadersWithPassedParams([]*chainhash.Hash{finalHash}, sm.nextCheckpoint.Hash, peer)
-
 }
 
 func (sm *SyncManager) requestForNextHeaderBatch(prevHash *chainhash.Hash, peer *peerpkg.Peer, prevHeight int32) {
@@ -699,17 +705,21 @@ func (sm *SyncManager) handleInvMsg(imsg *invMsg) {
 		return
 	}
 
-	// If our chain is current and a peer announces a block we already
-	// know of, then update their current block height.
-	if lastBlock != -1 && sm.current() {
-		blkHeight, err := sm.Services.Headers.GetHeightByHash(&invVects[lastBlock].Hash)
-		if err == nil {
-			peer.UpdateLastBlockHeight(blkHeight)
-		}
-	}
-
 	if lastBlock != -1 {
 		lastHeader := sm.Services.Headers.GetTip()
+
+		blkHeight, err := sm.Services.Headers.GetHeightByHash(&invVects[lastBlock].Hash)
+		if err == nil {
+			// If our chain is current and a peer announces a block we already
+			// know of, then update their current block height.
+			if sm.current() {
+				peer.UpdateLastBlockHeight(blkHeight)
+			}
+			if blkHeight < lastHeader.Height {
+				return
+			}
+		}
+
 		sm.log.Info().Msgf("[Manager] handleInvMsg  lastConfirmedHeaderNode.hash  : %s", lastHeader.Hash)
 		sm.log.Info().Msgf("[Manager] handleInvMsg lastConfirmedHeaderNode.height : %d", lastHeader.Height)
 		sm.log.Info().Msgf("[Manager] handleInvMsg &invVects[lastBlock].Hash  : %v", &invVects[lastBlock].Hash)
