@@ -113,11 +113,12 @@ func (a *sqLiteAdapter) importHeaders(inputFile *os.File, log *zerolog.Logger) (
 	repo := sql.NewHeadersDb(a.db, log)
 
 	previousBlockHash := chainhash.Hash{}.String()
+	var cumulatedChainWork string
 	rowIndex := 0
 	guard := 0
 
 	for {
-		rowIndex, previousBlockHash, err = a.insertHeaders(reader, repo, sqliteBatchSize, previousBlockHash, rowIndex)
+		rowIndex, previousBlockHash, cumulatedChainWork, err = a.insertHeaders(reader, repo, sqliteBatchSize, previousBlockHash, cumulatedChainWork, rowIndex)
 		if err != nil {
 			affectedRows = rowIndex
 			return
@@ -200,28 +201,34 @@ func (a *sqLiteAdapter) dropTableIndexes(table string) (func() error, error) {
 	return dropIndexes(a.db, &q)
 }
 
-func (a *sqLiteAdapter) insertHeaders(reader *csv.Reader, repo *sql.HeadersDb, batchSize int, previousBlockHash string, rowIndex int) (lastRowIndex int, lastBlockHash string, err error) {
+func (a *sqLiteAdapter) insertHeaders(reader *csv.Reader, repo *sql.HeadersDb, batchSize int, previousBlockHash string, cumulatedLastBlockChainWork string, rowIndex int) (lastRowIndex int, lastBlockHash string, cumulatedChainwork string, err error) {
 	lastRowIndex = rowIndex
 	lastBlockHash = previousBlockHash
 	batch := make([]dto.DbBlockHeader, 0, batchSize)
+	cumulatedChainwork = cumulatedLastBlockChainWork
 
 	for i := 0; i < batchSize; i++ {
-		record, readErr := reader.Read()
+		var record []string
+		record, err = reader.Read()
 		if err != nil {
-			if errors.Is(readErr, io.EOF) {
+			if errors.Is(err, io.EOF) {
 				break
 			}
-			err = fmt.Errorf("error reading record: %v", readErr)
+			err = fmt.Errorf("error reading record: %v", err)
 			return
 		}
 
 		if len(record) == 0 {
 			break
 		}
+		var block *dto.DbBlockHeader
+		block, err = prepareRecord(record, lastBlockHash, cumulatedChainwork, lastRowIndex)
+		if err != nil {
+			return
+		}
+		batch = append(batch, *block)
 
-		block := parseRecord(record, int32(lastRowIndex), lastBlockHash)
-		batch = append(batch, block)
-
+		cumulatedChainwork = block.CumulatedWork
 		lastBlockHash = block.Hash
 		lastRowIndex++
 	}
