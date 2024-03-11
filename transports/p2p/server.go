@@ -57,10 +57,8 @@ const (
 	userAgentVersion = "0.3.0"
 )
 
-var (
-	// ServerAlreadyStarted represents starting error when a p2p server is already started.
-	ServerAlreadyStarted = errors.New("p2p server already started")
-)
+// ServerAlreadyStarted represents starting error when a p2p server is already started.
+var ServerAlreadyStarted = errors.New("p2p server already started")
 
 type sampledLoggers struct {
 	query     *zerolog.Logger
@@ -399,7 +397,6 @@ func (sp *serverPeer) OnHeaders(_ *peer.Peer, msg *wire.MsgHeaders) {
 // OnGetHeaders is invoked when a peer receives a getheaders bitcoin
 // message.
 func (sp *serverPeer) OnGetHeaders(_ *peer.Peer, msg *wire.MsgGetHeaders) {
-
 	sp.log.Info().Msg("[Server] OnGetHeaders")
 	// Ignore getheaders requests if not in sync.
 	if !sp.server.syncManager.IsCurrent() {
@@ -517,6 +514,7 @@ func (sp *serverPeer) OnAddr(_ *peer.Peer, msg *wire.MsgAddr) {
 
 		// Add address to known addresses for this peer.
 		sp.addKnownAddresses([]*wire.NetAddress{na})
+		sp.log.Debug().Msgf("Added address %s from host %s", na.IP.String(), sp.NA().IP.String())
 	}
 
 	// Add addresses to server address manager.  The address manager handles
@@ -1327,7 +1325,8 @@ out:
 // bitcoin network type specified by chainParams.  Use start to begin accepting
 // connections from peers.
 func newServer(chainParams *chaincfg.Params, services *service.Services,
-	peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *config.P2PConfig, log *zerolog.Logger) (*server, error) {
+	peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *config.P2PConfig, log *zerolog.Logger,
+) (*server, error) {
 	wireServices := defaultServices
 
 	amgr := addrmgr.New(p2pCfg.BsvdLookup, log)
@@ -1430,7 +1429,6 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 		}
 
 		return nil, errors.New("no valid connect address")
-
 	}
 
 	cmgr, err := connmgr.New(&connmgr.Config{
@@ -1440,6 +1438,7 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 		Dial:          p2pCfg.BsvdDial,
 		OnConnection:  s.outboundPeerConnected,
 		GetNewAddress: newAddressFunc,
+		BanAddress:    s.addrManager.BanAddress,
 		Logger:        log,
 	})
 	if err != nil {
@@ -1561,7 +1560,8 @@ func dynamicTickDuration(remaining time.Duration) time.Duration {
 // notified with the server once it is setup so it can gracefully stop it when
 // requested from the service control manager.
 func RunServer(serverChan chan<- *server, services *service.Services,
-	peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *config.P2PConfig, log *zerolog.Logger) error {
+	peers map[*peerpkg.Peer]*peerpkg.PeerSyncState, p2pCfg *config.P2PConfig, log *zerolog.Logger,
+) error {
 	// Get a channel that will be closed when a shutdown signal has been
 	// triggered either from an OS signal such as SIGINT (Ctrl+C) or from
 	// another subsystem

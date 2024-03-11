@@ -7,11 +7,11 @@ package addrmgr_test
 import (
 	"errors"
 	"net"
+	"testing"
 
 	"github.com/rs/zerolog"
 
-	"testing"
-
+	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p/addrmgr"
 )
@@ -107,7 +107,7 @@ func TestStartStop(t *testing.T) {
 }
 
 func TestAddLocalAddress(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		address  wire.NetAddress
 		priority addrmgr.AddressPriority
 		valid    bool
@@ -169,7 +169,7 @@ func TestGetBestLocalAddress(t *testing.T) {
 		{IP: net.ParseIP("2001:470::1")},
 	}
 
-	var tests = []struct {
+	tests := []struct {
 		remoteAddr wire.NetAddress
 		want0      wire.NetAddress
 		want1      wire.NetAddress
@@ -278,5 +278,34 @@ func TestNetAddressKey(t *testing.T) {
 			continue
 		}
 	}
+}
 
+func TestBanAddress(t *testing.T) {
+	// given
+	log := zerolog.Nop()
+	amgr := addrmgr.New(nil, &log)
+
+	nip := net.ParseIP("18.199.12.185")
+	netAddr := wire.NewNetAddressIPPort(nip, 8333, wire.SFNodeNetwork)
+
+	// when
+	amgr.AddAddresses([]*wire.NetAddress{netAddr}, netAddr)
+
+	// then
+	addr := amgr.GetAddress()
+	assert.Equal(t, addr.NetAddress().IP.String(), "18.199.12.185")
+	assert.Equal(t, addr.NetAddress().Port, 8333)
+
+	// when
+	amgr.BanAddress("18.199.12.185:8333")
+
+	// then
+	addr = amgr.GetAddress()
+	assert.Equal(t, addr, nil)
+
+	// when
+	amgr.AddAddresses([]*wire.NetAddress{netAddr}, netAddr)
+
+	// then
+	assert.Equal(t, addr, nil)
 }

@@ -7,11 +7,12 @@ package connmgr
 import (
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog"
 	"net"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 // maxFailedAttempts is the maximum number of successive failed connection
@@ -20,7 +21,7 @@ import (
 const maxFailedAttempts = 25
 
 var (
-	//ErrDialNil is used to indicate that Dial cannot be nil in the config.
+	// ErrDialNil is used to indicate that Dial cannot be nil in the config.
 	ErrDialNil = errors.New("Config: Dial cannot be nil")
 
 	// maxRetryDuration is the max duration of time retrying of a persistent
@@ -141,6 +142,10 @@ type Config struct {
 	// to.  If nil, no new connections will be made automatically.
 	GetNewAddress func() (net.Addr, error)
 
+	// BanAddress is a way to ban an address that we cannot connect to
+	// after trying multiple times.
+	BanAddress func(string)
+
 	// Dial connects to the address on the named network. It cannot be nil.
 	Dial func(net.Addr) (net.Conn, error)
 
@@ -181,12 +186,53 @@ type ConnManager struct {
 	start        int32
 	stop         int32
 
-	cfg            Config
-	wg             sync.WaitGroup
-	failedAttempts uint64
-	requests       chan interface{}
-	log            *zerolog.Logger
-	quit           chan struct{}
+	cfg      Config
+	wg       sync.WaitGroup
+	requests chan interface{}
+	log      *zerolog.Logger
+	quit     chan struct{}
+
+	globalFailedAttempts uint64
+	failedAttempts       map[string]uint16
+	failedAttemptsMutex  sync.RWMutex
+}
+
+func (cm *ConnManager) incGlobalFailedAttempts() {
+	cm.failedAttemptsMutex.Lock()
+	defer cm.failedAttemptsMutex.Unlock()
+
+	cm.globalFailedAttempts++
+}
+
+func (cm *ConnManager) isGlobalConnectionAttemptsExceeded() bool {
+	cm.failedAttemptsMutex.RLock()
+	defer cm.failedAttemptsMutex.RUnlock()
+
+	return cm.globalFailedAttempts >= maxFailedAttempts
+}
+
+func (cm *ConnManager) incAddrConnAttempt(addr string) {
+	cm.failedAttemptsMutex.Lock()
+	defer cm.failedAttemptsMutex.Unlock()
+
+	cm.failedAttempts[addr]++
+}
+
+func (cm *ConnManager) isAddressConnectionAttemptsExceeded(addr string) bool {
+	cm.failedAttemptsMutex.RLock()
+	defer cm.failedAttemptsMutex.RUnlock()
+
+	return cm.failedAttempts[addr] >= maxFailedAttempts
+}
+
+func (cm *ConnManager) resetFailedAttempts(connReq *ConnReq) {
+	cm.failedAttemptsMutex.Lock()
+	defer cm.failedAttemptsMutex.Unlock()
+
+	cm.globalFailedAttempts = 0
+	if connReq.Addr != nil && connReq.Addr.String() != "" {
+		cm.failedAttempts[connReq.Addr.String()] = 0
+	}
 }
 
 // handleFailedConn handles a connection failed due to a disconnect or any
@@ -209,18 +255,39 @@ func (cm *ConnManager) handleFailedConn(c *ConnReq) {
 			cm.Connect(c)
 		})
 	} else if cm.cfg.GetNewAddress != nil {
-		cm.failedAttempts++
-		if cm.failedAttempts >= maxFailedAttempts {
-			cm.log.Debug().Msgf("Max failed connection attempts reached: [%d] "+
-				"-- retrying connection in: %v", maxFailedAttempts,
-				cm.cfg.RetryDuration)
-			time.AfterFunc(cm.cfg.RetryDuration, func() {
-				cm.NewConnReq()
-			})
+		if c.Addr != nil && c.Addr.String() != "" && cm.cfg.BanAddress != nil {
+			cm.registerFailedConnectionTo(c)
 		} else {
-			go cm.NewConnReq()
+			cm.registerFailedConnection()
 		}
 	}
+}
+
+// registerFailedConnectionTo registers failed connection when
+// the connection request has an address.
+func (cm *ConnManager) registerFailedConnectionTo(c *ConnReq) {
+	cm.incAddrConnAttempt(c.Addr.String())
+	if cm.isAddressConnectionAttemptsExceeded(c.Addr.String()) {
+		cm.cfg.BanAddress(c.Addr.String())
+		return
+	}
+	go cm.NewConnReq()
+}
+
+// registerFailedConnection registers failed connection when
+// the connection request doesn't have an address.
+func (cm *ConnManager) registerFailedConnection() {
+	cm.incGlobalFailedAttempts()
+	if cm.isGlobalConnectionAttemptsExceeded() {
+		cm.log.Debug().Msgf("Max failed connection attempts reached: [%d] "+
+			"-- retrying connection in: %v", maxFailedAttempts,
+			cm.cfg.RetryDuration)
+		time.AfterFunc(cm.cfg.RetryDuration, func() {
+			cm.NewConnReq()
+		})
+		return
+	}
+	go cm.NewConnReq()
 }
 
 // connHandler handles all connection related requests.  It must be run as a
@@ -230,7 +297,6 @@ func (cm *ConnManager) handleFailedConn(c *ConnReq) {
 // connections so that we remain connected to the network.  Connection requests
 // are processed and mapped by their assigned ids.
 func (cm *ConnManager) connHandler() {
-
 	var (
 		// pending holds all registered conn requests that have yet to
 		// succeed.
@@ -272,7 +338,7 @@ out:
 				conns[connReq.id] = connReq
 				cm.log.Debug().Msgf("Connected to %v", connReq)
 				connReq.retryCount = 0
-				cm.failedAttempts = 0
+				cm.resetFailedAttempts(connReq)
 
 				delete(pending, connReq.id)
 
@@ -576,10 +642,11 @@ func New(cfg *Config) (*ConnManager, error) {
 		cfg.TargetOutbound = defaultTargetOutbound
 	}
 	cm := ConnManager{
-		cfg:      *cfg, // Copy so caller can't mutate
-		requests: make(chan interface{}),
-		quit:     make(chan struct{}),
-		log:      &connManagerLogger,
+		cfg:            *cfg, // Copy so caller can't mutate
+		requests:       make(chan interface{}),
+		quit:           make(chan struct{}),
+		log:            &connManagerLogger,
+		failedAttempts: make(map[string]uint16),
 	}
 	return &cm, nil
 }
