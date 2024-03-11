@@ -108,6 +108,7 @@ func main() {
 		Logger:       log,
 		Config:       cfg,
 	})
+
 	p2pServer, err := p2p.NewServer(hs, peers, cfg.P2P, log)
 	if err != nil {
 		log.Error().Msgf("failed to init a new p2p server: %v\n", err)

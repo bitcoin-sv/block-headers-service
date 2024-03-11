@@ -224,8 +224,7 @@ var MainNetParams = Params{
 	Net:         wire.MainNet,
 	DefaultPort: "8333",
 	DNSSeeds: []DNSSeed{
-		{"seed.metasv.io", true},
-		{"btccash-seeder.bitcoinunlimited.info", true},
+		{"seed-nodes.bsvb.tech", true},
 	},
 
 	// Chain parameters
