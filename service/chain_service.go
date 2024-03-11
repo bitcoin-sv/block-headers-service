@@ -105,11 +105,6 @@ func (cs *chainService) Add(bs domains.BlockHeaderSource) (*domains.BlockHeader,
 		return nil, err
 	}
 
-	currentTip, errTip := cs.Headers.GetTip()
-	if errTip == nil && h.IsLongestChain() && h.Height < currentTip.Height {
-		return h, err
-	}
-
 	metrics.SetLatestBlock(h.Height, h.Timestamp, h.State.String())
 	cs.notification.Notify(domains.HeaderAdded(h))
 	return h, err
