@@ -1,6 +1,8 @@
 package service
 
 import (
+	"strings"
+
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
@@ -59,6 +61,12 @@ func NewChainsService(
 
 func (cs *chainService) Add(bs domains.BlockHeaderSource) (*domains.BlockHeader, error) {
 	hash := cs.BlockHasher.BlockHash(&bs)
+
+	existingHeader, err := cs.Headers.GetHeaderByHash(hash.String())
+	if existingHeader != nil {
+		err := errors.New("header already exists in db")
+		return nil, HeaderAlreadyExists.causedBy(&err)
+	}
 
 	if cs.ignoreBlockHash(&hash) {
 		cs.log.Warn().Msgf("Message rejected - containing forbidden header")
@@ -252,6 +260,9 @@ const (
 
 	// HeaderSaveFail error code representing situation when saving header in the repository failed.
 	HeaderSaveFail AddBlockErrorCode = "HeaderSaveFail"
+
+	// HeaderAlreadyExists error code representing situation when header received from peers already exists in db.
+	HeaderAlreadyExists AddBlockErrorCode = "HeaderAlreadyExists"
 )
 
 func (e *AddBlockError) Error() string {
@@ -277,5 +288,5 @@ func (c AddBlockErrorCode) causedBy(cause *error) error {
 
 // Is checks if given error contains AddBlockErrorCode.
 func (c AddBlockErrorCode) Is(err error) bool {
-	return err != nil && err.Error() == c.String()
+	return err != nil && strings.Contains(err.Error(), c.String())
 }

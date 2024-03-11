@@ -16,16 +16,16 @@ import (
 )
 
 func TestRejectBlockHeader(t *testing.T) {
-	//given
+	// given
 	r, longestChainTip := givenLongestChainInRepository()
 	h, hash := givenIgnoredHeaderToAddNextTo(longestChainTip)
 
 	cs := createChainsService(serviceSetup{Repositories: &r, IgnoredHash: hash})
 
-	//when
+	// when
 	header, err := cs.Add(h)
 
-	//then
+	// then
 	assert.IsError(t, err, BlockRejected.String())
 
 	assertHeaderExist(t, header)
@@ -34,16 +34,16 @@ func TestRejectBlockHeader(t *testing.T) {
 }
 
 func TestAddTheHeaderToLongestChain(t *testing.T) {
-	//given
+	// given
 	r, longestChainTip := givenChainWithOnlyGenesisBlockInRepository()
 	h := givenHeaderToAddNextTo(longestChainTip)
 
 	cs := createChainsService(serviceSetup{Repositories: &r})
 
-	//when
+	// when
 	header, addErr := cs.Add(h)
 
-	//then
+	// then
 	assert.NoError(t, addErr)
 	assertHeaderExist(t, header)
 	assertHeaderInDb(t, r, header)
@@ -62,16 +62,16 @@ func TestAddTheHeaderToLongestChain(t *testing.T) {
 }
 
 func TestAddOrphanHeaderToChain(t *testing.T) {
-	//given
+	// given
 	r, _ := givenLongestChainInRepository()
 	h := givenOrphanedHeaderToAdd()
 
 	cs := createChainsService(serviceSetup{Repositories: &r})
 
-	//when
+	// when
 	header, addErr := cs.Add(h)
 
-	//then
+	// then
 	assert.NoError(t, addErr)
 	assertHeaderExist(t, header)
 	assertHeaderInDb(t, r, header)
@@ -90,17 +90,17 @@ func TestAddOrphanHeaderToChain(t *testing.T) {
 }
 
 func TestAddHeaderToOrphanChain(t *testing.T) {
-	//given
+	// given
 	r, _ := givenLongestChainInRepository()
 	tip := givenOrphanChainInRepository(&r)
 	h := givenHeaderToAddNextTo(tip)
 
 	cs := createChainsService(serviceSetup{Repositories: &r})
 
-	//when
+	// when
 	header, addErr := cs.Add(h)
 
-	//then
+	// then
 	assert.NoError(t, addErr)
 	assertHeaderExist(t, header)
 	assertHeaderInDb(t, r, header)
@@ -119,34 +119,23 @@ func TestAddHeaderToOrphanChain(t *testing.T) {
 }
 
 func TestAddHeaderThatAlreadyExist(t *testing.T) {
-	//given
+	// given
 	r, tip := givenLongestChainInRepository()
 	h := fixtures.BlockHeaderSourceOf(tip)
 
 	cs := createChainsService(serviceSetup{Repositories: &r})
 
-	//when
+	// when
 	header, addErr := cs.Add(*h)
 
-	//then
-	assert.NoError(t, addErr)
-	assertHeaderExist(t, header)
-	assertHeaderInDb(t, r, header)
-
-	if header.State != "LONGEST_CHAIN" {
-		t.Errorf("Header should belong to the longest chain but is %s", header.State)
-	}
-
-	if !header.IsLongestChain() {
-		t.Error("Header should be marked as longest chain but is not")
-	}
-
-	assertOnlyOneHeaderOnHeight(t, r, header)
+	// then
+	assert.Equal(t, HeaderAlreadyExists.Is(addErr), true)
+	assert.Equal(t, header, nil)
 }
 
 func TestAddConcurrentChainBlock(t *testing.T) {
-	var blockFromLongestChain = fixtures.HashHeight1
-	var blockFromStaleChain = fixtures.StaleHashHeight2
+	blockFromLongestChain := fixtures.HashHeight1
+	blockFromStaleChain := fixtures.StaleHashHeight2
 	const bitsExceedingCumulatedChainWork uint32 = 0x180f0dc7
 
 	testCases := map[string]struct {
@@ -216,10 +205,10 @@ func TestAddConcurrentChainBlock(t *testing.T) {
 
 			cs := createChainsService(serviceSetup{Repositories: &r})
 
-			//when
+			// when
 			header, addErr := cs.Add(h)
 
-			//then
+			// then
 			assert.NoError(t, addErr)
 			assertHeaderExist(t, header)
 

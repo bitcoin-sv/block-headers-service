@@ -527,9 +527,12 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 	// previous and that checkpoints match.
 	receivedCheckpoint := false
 	var finalHash *chainhash.Hash
-	var finalHeight int32 = 0
 	for _, blockHeader := range msg.Headers {
 		h, addErr := sm.Services.Chains.Add(domains.BlockHeaderSource(*blockHeader))
+
+		if service.HeaderAlreadyExists.Is(addErr) {
+			continue
+		}
 
 		if service.BlockRejected.Is(addErr) {
 			sm.peerNotifier.BanPeer(peer)
@@ -564,7 +567,6 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 
 		if h.IsLongestChain() {
 			finalHash = &h.Hash
-			finalHeight = h.Height
 		}
 		if sm.startHeader == nil {
 			sm.startHeader = h
@@ -600,12 +602,6 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 		sm.log.Info().Msgf("Reached the final checkpoint -- switching to normal mode")
 		sm.log.Info().Msgf("Reached the final checkpoint -- lastHash: %#v", finalHash.String())
 		sm.sendGetHeadersWithPassedParams([]*chainhash.Hash{finalHash}, &zeroHash, peer)
-		return
-	}
-
-	// If we received only blocks that we already have, or are not from the longest chain,
-	// don't send another getHeaders message - do nothing.
-	if finalHeight < sm.Services.Headers.GetTipHeight() {
 		return
 	}
 
@@ -705,21 +701,17 @@ func (sm *SyncManager) handleInvMsg(imsg *invMsg) {
 		return
 	}
 
-	if lastBlock != -1 {
-		lastHeader := sm.Services.Headers.GetTip()
-
+	// If our chain is current and a peer announces a block we already
+	// know of, then update their current block height.
+	if lastBlock != -1 && sm.current() {
 		blkHeight, err := sm.Services.Headers.GetHeightByHash(&invVects[lastBlock].Hash)
 		if err == nil {
-			// If our chain is current and a peer announces a block we already
-			// know of, then update their current block height.
-			if sm.current() {
-				peer.UpdateLastBlockHeight(blkHeight)
-			}
-			if blkHeight < lastHeader.Height {
-				return
-			}
+			peer.UpdateLastBlockHeight(blkHeight)
 		}
+	}
 
+	if lastBlock != -1 {
+		lastHeader := sm.Services.Headers.GetTip()
 		sm.log.Info().Msgf("[Manager] handleInvMsg  lastConfirmedHeaderNode.hash  : %s", lastHeader.Hash)
 		sm.log.Info().Msgf("[Manager] handleInvMsg lastConfirmedHeaderNode.height : %d", lastHeader.Height)
 		sm.log.Info().Msgf("[Manager] handleInvMsg &invVects[lastBlock].Hash  : %v", &invVects[lastBlock].Hash)
