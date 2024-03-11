@@ -131,6 +131,7 @@ func TestAddHeaderThatAlreadyExist(t *testing.T) {
 	// then
 	assert.Equal(t, HeaderAlreadyExists.Is(addErr), true)
 	assert.Equal(t, header, nil)
+	assertOnlyOneHeaderOnHeight(t, r, tip)
 }
 
 func TestAddConcurrentChainBlock(t *testing.T) {
