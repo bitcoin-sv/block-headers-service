@@ -576,6 +576,7 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 	// If all the headers received where rejected or already in the database,
 	// don't request more headers from that peer. Do nothing.
 	if finalHash == nil {
+		sm.log.Warn().Msgf("Received only existing or rejected headers from peer: %s", peer.String())
 		return
 	}
 
