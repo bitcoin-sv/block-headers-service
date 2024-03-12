@@ -424,7 +424,6 @@ func (sm *SyncManager) handleCheckSyncPeer() {
 
 // topBlock returns the best chains top block height.
 func (sm *SyncManager) topBlock() int32 {
-
 	if sm.syncPeer.LastBlock() > sm.syncPeer.StartingHeight() {
 		return sm.syncPeer.LastBlock()
 	}
@@ -531,6 +530,10 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 	for _, blockHeader := range msg.Headers {
 		h, addErr := sm.Services.Chains.Add(domains.BlockHeaderSource(*blockHeader))
 
+		if service.HeaderAlreadyExists.Is(addErr) {
+			continue
+		}
+
 		if service.BlockRejected.Is(addErr) {
 			sm.peerNotifier.BanPeer(peer)
 			peer.Disconnect()
@@ -570,6 +573,13 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 		}
 	}
 
+	// If all the headers received where rejected or already in the database,
+	// don't request more headers from that peer. Do nothing.
+	if finalHash == nil {
+		sm.log.Warn().Msgf("Received only existing or rejected headers from peer: %s", peer.String())
+		return
+	}
+
 	// When this header is a checkpoint, switch to fetching the blocks for
 	// all the headers since the last checkpoint.
 	if receivedCheckpoint {
@@ -606,7 +616,6 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 	// headers starting from the latest known header and ending with the
 	// next checkpoint.
 	sm.sendGetHeadersWithPassedParams([]*chainhash.Hash{finalHash}, sm.nextCheckpoint.Hash, peer)
-
 }
 
 func (sm *SyncManager) requestForNextHeaderBatch(prevHash *chainhash.Hash, peer *peerpkg.Peer, prevHeight int32) {
@@ -709,7 +718,6 @@ func (sm *SyncManager) handleInvMsg(imsg *invMsg) {
 	}
 
 	if lastBlock != -1 {
-		lastHeader := sm.Services.Headers.GetTip()
 		sm.log.Info().Msgf("[Manager] handleInvMsg  lastConfirmedHeaderNode.hash  : %s", lastHeader.Hash)
 		sm.log.Info().Msgf("[Manager] handleInvMsg lastConfirmedHeaderNode.height : %d", lastHeader.Height)
 		sm.log.Info().Msgf("[Manager] handleInvMsg &invVects[lastBlock].Hash  : %v", &invVects[lastBlock].Hash)
