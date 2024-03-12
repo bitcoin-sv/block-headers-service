@@ -718,7 +718,6 @@ func (sm *SyncManager) handleInvMsg(imsg *invMsg) {
 	}
 
 	if lastBlock != -1 {
-		lastHeader := sm.Services.Headers.GetTip()
 		sm.log.Info().Msgf("[Manager] handleInvMsg  lastConfirmedHeaderNode.hash  : %s", lastHeader.Hash)
 		sm.log.Info().Msgf("[Manager] handleInvMsg lastConfirmedHeaderNode.height : %d", lastHeader.Height)
 		sm.log.Info().Msgf("[Manager] handleInvMsg &invVects[lastBlock].Hash  : %v", &invVects[lastBlock].Hash)
