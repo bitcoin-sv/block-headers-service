@@ -573,6 +573,12 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 		}
 	}
 
+	// If all the headers received where rejected or already in the database,
+	// don't request more headers from that peer. Do nothing.
+	if finalHash == nil {
+		return
+	}
+
 	// When this header is a checkpoint, switch to fetching the blocks for
 	// all the headers since the last checkpoint.
 	if receivedCheckpoint {
