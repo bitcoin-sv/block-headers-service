@@ -3,13 +3,12 @@ package config
 import (
 	"fmt"
 	"net"
+	"os"
 	"strings"
 	"sync"
 
 	"github.com/bitcoin-sv/block-headers-service/logging"
 	"github.com/rs/zerolog"
-
-	"os"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
@@ -40,9 +39,11 @@ func Load(cfg *AppConfig) (*AppConfig, *zerolog.Logger, error) {
 	return cfg, logger, nil
 }
 
-func SetDefaults(log *zerolog.Logger) error {
+func SetDefaults(defaultVersion string, log *zerolog.Logger) error {
+	viperLock.Lock()
+	defer viperLock.Unlock()
 	viper.SetDefault(ConfigFilePathKey, DefaultConfigFilePath)
-
+	version = defaultVersion
 	defaultsMap := make(map[string]interface{})
 	if err := mapstructure.Decode(GetDefaultAppConfig(), &defaultsMap); err != nil {
 		return err

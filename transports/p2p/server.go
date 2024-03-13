@@ -46,15 +46,6 @@ const (
 	// retries when connecting to persistent peers.  It is adjusted by the
 	// number of retries such that there is a retry backoff.
 	connectionRetryInterval = time.Second * 5
-
-	// userAgentName is the user agent name and is used to help identify
-	// ourselves to other bitcoin peers.
-	userAgentName = "/block-headers-service"
-
-	// userAgentVersion is the user agent version and is used to help
-	// identify ourselves to other bitcoin peers.
-	// userAgentVersion = fmt.Sprintf("%d.%d.%d", version.AppMajor, version.AppMinor, version.AppPatch).
-	userAgentVersion = "0.3.0"
 )
 
 // ServerAlreadyStarted represents starting error when a p2p server is already started.
@@ -191,9 +182,9 @@ func (ps *peerState) forAllPeers(closure func(sp *serverPeer)) {
 // server provides a bitcoin server for handling communications to and from
 // bitcoin peers.
 type server struct {
-	started       int32
-	shutdown      int32
-	startupTime   int64
+	started     int32
+	shutdown    int32
+	startupTime int64
 
 	chainParams          *chaincfg.Params
 	addrManager          *addrmgr.AddrManager
@@ -882,8 +873,8 @@ func newPeerConfig(sp *serverPeer) *peer.Config {
 		AddrMe:            addrMe,
 		NewestBlock:       sp.newestBlock,
 		HostToNetAddress:  sp.server.addrManager.HostToNetAddress,
-		UserAgentName:     userAgentName,
-		UserAgentVersion:  userAgentVersion,
+		UserAgentName:     sp.server.p2pConfig.UserAgentName,
+		UserAgentVersion:  sp.server.p2pConfig.UserAgentVersion,
 		UserAgentComments: initUserAgentComments(config.ExcessiveBlockSize),
 		ChainParams:       sp.server.chainParams,
 		Services:          sp.server.wireServices,
