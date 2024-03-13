@@ -1276,10 +1276,18 @@ out:
 			break out
 
 		case *wire.MsgVerAck:
-			// Limit to one verack message per peer (We read it on Peer.start()).
-			p.PushRejectMsg(msg.Command(), wire.RejectDuplicate,
-				"duplicate verack message", nil, true)
-			break out
+			// No read lock is necessary because verAckReceived is not written
+			// to in any other goroutine.
+			if p.verAckReceived {
+				p.cfg.Log.Info().Msgf("Already received 'verack' from peer %v -- disconnecting", p)
+				break out
+			}
+			p.flagsMtx.Lock()
+			p.verAckReceived = true
+			p.flagsMtx.Unlock()
+			if p.cfg.Listeners.OnVerAck != nil {
+				p.cfg.Listeners.OnVerAck(p, msg)
+			}
 
 		case *wire.MsgGetAddr:
 			if p.cfg.Listeners.OnGetAddr != nil {
@@ -1800,6 +1808,32 @@ func (p *Peer) Disconnect() {
 	close(p.quit)
 }
 
+func (p *Peer) readVerOrVerAck() error {
+	remoteMsg, _, err := p.readMessage(wire.LatestEncoding)
+	if err != nil {
+		return err
+	}
+
+	switch msg := remoteMsg.(type) {
+	case *wire.MsgVersion:
+		err = p.handleVersionMessage(msg)
+		if err != nil {
+			return err
+		}
+	case *wire.MsgVerAck:
+		err = p.handleVerAckMessage(msg)
+		if err != nil {
+			return err
+		}
+	default:
+		_, err = p.requireVerAckReceived(remoteMsg)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // readRemoteVersionMsg waits for the next message to arrive from the remote
 // peer.  If the next message is not a version message or the version is not
 // acceptable then return an error.
@@ -1809,18 +1843,15 @@ func (p *Peer) readRemoteVersionMsg() error {
 	if err != nil {
 		return err
 	}
-
-	// Notify and disconnect clients if the first message is not a version
-	// message.
-	msg, ok := remoteMsg.(*wire.MsgVersion)
-	if !ok {
-		reason := "a version message must precede all others"
-		rejectMsg := wire.NewMsgReject(msg.Command(), wire.RejectMalformed,
-			reason)
-		_ = p.writeMessage(rejectMsg, wire.LatestEncoding)
-		return errors.New(reason)
+	msg, err := p.requireVersionMsgReceived(remoteMsg)
+	if err != nil {
+		return err
 	}
 
+	return p.handleVersionMessage(msg)
+}
+
+func (p *Peer) handleVersionMessage(msg *wire.MsgVersion) error {
 	// Detect self connections.
 	if !p.cfg.TstAllowSelfConnection && sentNonces.Exists(msg.Nonce) {
 		return errors.New("disconnecting peer connected to self")
@@ -1881,6 +1912,21 @@ func (p *Peer) readRemoteVersionMsg() error {
 		return errors.New(reason)
 	}
 	return nil
+}
+
+func (p *Peer) requireVersionMsgReceived(remoteMsg wire.Message) (*wire.MsgVersion, error) {
+	// Notify and disconnect clients if the first message is not a version
+	// message.
+	msg, ok := remoteMsg.(*wire.MsgVersion)
+	if !ok {
+		reason := "a version message must precede all others"
+		rejectMsg := wire.NewMsgReject(msg.Command(), wire.RejectMalformed,
+			reason)
+		_ = p.writeMessage(rejectMsg, wire.LatestEncoding)
+		p.cfg.Log.Error().Msgf("%s, rejecting connection", reason)
+		return nil, errors.New(reason)
+	}
+	return msg, nil
 }
 
 // localVersionMsg creates a version message that can be used to send to the
@@ -1953,23 +1999,20 @@ func (p *Peer) writeLocalVersionMsg() error {
 	return p.writeMessage(localVerMsg, wire.LatestEncoding)
 }
 
-// requireVerAckMsg read and expect next message to be verack.
-func (p *Peer) requireVerAckMsg() error {
+// readVerAckMsg read and expect next message to be verack.
+func (p *Peer) readVerAckMsg() error {
 	remoteMsg, _, err := p.readMessage(wire.LatestEncoding)
 	if err != nil {
 		return err
 	}
-
-	msg, ok := remoteMsg.(*wire.MsgVerAck)
-	if !ok {
-		reason := "missing-verack message, misbehaving peer"
-		rejectMsg := wire.NewMsgReject(msg.Command(), wire.RejectMalformed,
-			reason)
-		_ = p.writeMessage(rejectMsg, wire.LatestEncoding)
-		p.cfg.Log.Error().Msgf("%s, rejecting connection", reason)
-		return errors.New(reason)
+	msg, err := p.requireVerAckReceived(remoteMsg)
+	if err != nil {
+		return err
 	}
+	return p.handleVerAckMessage(msg)
+}
 
+func (p *Peer) handleVerAckMessage(msg *wire.MsgVerAck) error {
 	p.flagsMtx.Lock()
 	p.verAckReceived = true
 	p.flagsMtx.Unlock()
@@ -1978,6 +2021,19 @@ func (p *Peer) requireVerAckMsg() error {
 	}
 
 	return nil
+}
+
+func (p *Peer) requireVerAckReceived(remoteMsg wire.Message) (*wire.MsgVerAck, error) {
+	msg, ok := remoteMsg.(*wire.MsgVerAck)
+	if !ok {
+		reason := "missing-verack message, misbehaving peer"
+		rejectMsg := wire.NewMsgReject(msg.Command(), wire.RejectMalformed,
+			reason)
+		_ = p.writeMessage(rejectMsg, wire.LatestEncoding)
+		p.cfg.Log.Error().Msgf("%s, rejecting connection", reason)
+		return nil, errors.New(reason)
+	}
+	return msg, nil
 }
 
 // writeVerAckMsg sends a verack message to the remote peer.
@@ -2006,7 +2062,7 @@ func (p *Peer) negotiateInboundProtocol() (err error) {
 		return
 	}
 
-	return p.requireVerAckMsg()
+	return p.readVerAckMsg()
 }
 
 // negotiateOutboundProtocol sends our version message then waits to receive a
@@ -2018,12 +2074,13 @@ func (p *Peer) negotiateOutboundProtocol() (err error) {
 		return
 	}
 
-	err = p.requireVerAckMsg()
+	// We should receive both version and verack but it happens that it can be in any order.
+	err = p.readVerOrVerAck()
 	if err != nil {
 		return
 	}
 
-	err = p.readRemoteVersionMsg()
+	err = p.readVerOrVerAck()
 	if err != nil {
 		return
 	}
