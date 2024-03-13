@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/big"
 	"net/http"
+	"strconv"
 	"testing"
 
 	"github.com/bitcoin-sv/block-headers-service/domains"
@@ -25,7 +25,7 @@ var expected_obj = headers.BlockHeaderResponse{
 	Timestamp:        uint32(fixtures.HeaderSourceHeight1.Timestamp.Unix()),
 	DifficultyTarget: fixtures.HeaderSourceHeight1.Bits,
 	Nonce:            fixtures.HeaderSourceHeight1.Nonce,
-	Work:             big.NewInt(fixtures.DefaultChainWork),
+	Work:             strconv.Itoa(fixtures.DefaultChainWork),
 }
 
 func TestGetHeaderByHash(t *testing.T) {
@@ -267,7 +267,7 @@ func TestGetCommonAncestor(t *testing.T) {
 			Timestamp:        uint32(genesis.Timestamp.Unix()),
 			DifficultyTarget: genesis.Bits,
 			Nonce:            genesis.Nonce,
-			Work:             genesis.Chainwork,
+			Work:             genesis.Chainwork.String(),
 		}
 		expected_result := struct {
 			code int
@@ -340,7 +340,7 @@ func TestGetHeadersState(t *testing.T) {
 		expected_response := headers.BlockHeaderStateResponse{
 			Header:    expected_obj,
 			State:     string(domains.LongestChain),
-			ChainWork: big.NewInt(fixtures.DefaultChainWork),
+			ChainWork: strconv.Itoa(fixtures.DefaultChainWork),
 			Height:    1,
 		}
 		expected_result := struct {
