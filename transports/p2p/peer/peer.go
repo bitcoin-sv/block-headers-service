@@ -1861,12 +1861,20 @@ func (p *Peer) readRemoteVersionMsg() error {
 
 	p.flagsMtx.Unlock()
 
+	var rejectMsg *wire.MsgReject
 	// Invoke the callback if specified.
 	if p.cfg.Listeners.OnVersion != nil {
-		rejectMsg := p.cfg.Listeners.OnVersion(p, msg)
-		if rejectMsg != nil {
-			_ = p.writeMessage(rejectMsg, wire.LatestEncoding)
-			return errors.New(rejectMsg.Reason)
+		rejectMsg = p.cfg.Listeners.OnVersion(p, msg)
+	}
+
+	if rejectMsg != nil {
+		_ = p.writeMessage(rejectMsg, wire.LatestEncoding)
+		return errors.New(rejectMsg.Reason)
+	} else {
+		// !!! We must send the verack message on version otherwise peer will consider us as misbehaving and disconnect.
+		err = p.writeMessage(wire.NewMsgVerAck(), wire.LatestEncoding)
+		if err != nil {
+			p.cfg.Log.Error().Err(err).Msgf("Failed to send verack message to %s because of error %s", p, err)
 		}
 	}
 
@@ -2016,8 +2024,6 @@ func (p *Peer) start() error {
 	go p.outHandler()
 	go p.pingHandler()
 
-	// Send our verack message now that the IO processing machinery has started.
-	p.QueueMessage(wire.NewMsgVerAck(), nil)
 	return nil
 }
 
