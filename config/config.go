@@ -11,13 +11,13 @@ import (
 )
 
 const (
-	ApplicationName       = "Block Headers Service"
-	APIVersion            = "v1"
-	Version               = "v0.6.0"
+	ApplicationName       = "block-headers-service"
 	ConfigFilePathKey     = "config_file"
 	DefaultConfigFilePath = "config.yaml"
 	ConfigEnvPrefix       = "bhs"
 )
+
+var version = "should-be-overridden-by-setDefaults"
 
 var Lookup func(string) ([]net.IP, error)
 var Dial func(string, string, time.Duration) (net.Conn, error)
@@ -31,6 +31,10 @@ const (
 	DBSqlite     DbEngine = "sqlite"
 	DBPostgreSql DbEngine = "postgres"
 )
+
+func Version() string {
+	return version
+}
 
 // AppConfig returns strongly typed config values.
 type AppConfig struct {
@@ -119,6 +123,8 @@ type P2PConfig struct {
 	BlocksForForkConfirmation int `mapstructure:"blocks_for_confirmation" description:"Minimum number of blocks to consider a block confirmed"`
 	// DefaultConnectTimeout is the default connection timeout.
 	DefaultConnectTimeout time.Duration `mapstructure:"default_connect_timeout" description:"The default connection timeout"`
+	UserAgentName         string        `mapstructure:"user_agent_name" description:"The name that should be used during announcement of the client on the p2p network"`
+	UserAgentVersion      string        `mapstructure:"user_agent_version" description:"By default will be equal to application version, but can be overridden for development purposes"`
 }
 
 // LoggingConfig represents a logging config.

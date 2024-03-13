@@ -10,7 +10,6 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/database"
 	"github.com/bitcoin-sv/block-headers-service/logging"
-	"github.com/bitcoin-sv/block-headers-service/version"
 )
 
 type cliFlags struct {
@@ -68,7 +67,7 @@ func parseCliFlags(cli *cliFlags, cfg *config.AppConfig, appFlags *pflag.FlagSet
 	}
 
 	if cli.showVersion {
-		log.Info().Msgf("block headers service version %s", version.String())
+		fmt.Println(config.ApplicationName, config.Version())
 		os.Exit(0)
 	}
 

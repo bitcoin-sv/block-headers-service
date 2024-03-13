@@ -191,9 +191,9 @@ func (ps *peerState) forAllPeers(closure func(sp *serverPeer)) {
 // server provides a bitcoin server for handling communications to and from
 // bitcoin peers.
 type server struct {
-	started       int32
-	shutdown      int32
-	startupTime   int64
+	started     int32
+	shutdown    int32
+	startupTime int64
 
 	chainParams          *chaincfg.Params
 	addrManager          *addrmgr.AddrManager
@@ -882,8 +882,8 @@ func newPeerConfig(sp *serverPeer) *peer.Config {
 		AddrMe:            addrMe,
 		NewestBlock:       sp.newestBlock,
 		HostToNetAddress:  sp.server.addrManager.HostToNetAddress,
-		UserAgentName:     userAgentName,
-		UserAgentVersion:  userAgentVersion,
+		UserAgentName:     sp.server.p2pConfig.UserAgentName,
+		UserAgentVersion:  sp.server.p2pConfig.UserAgentVersion,
 		UserAgentComments: initUserAgentComments(config.ExcessiveBlockSize),
 		ChainParams:       sp.server.chainParams,
 		Services:          sp.server.wireServices,
