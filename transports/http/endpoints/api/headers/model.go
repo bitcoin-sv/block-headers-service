@@ -1,21 +1,19 @@
 package headers
 
 import (
-	"math/big"
-
 	"github.com/bitcoin-sv/block-headers-service/domains"
 )
 
 // BlockHeaderResponse defines a single block header.
 type BlockHeaderResponse struct {
-	Hash             string   `json:"hash"`
-	Version          int32    `json:"version"`
-	PreviousBlock    string   `json:"prevBlockHash"`
-	MerkleRoot       string   `json:"merkleRoot"`
-	Timestamp        uint32   `json:"creationTimestamp"`
-	DifficultyTarget uint32   `json:"difficultyTarget"`
-	Nonce            uint32   `json:"nonce"`
-	Work             *big.Int `json:"work" swaggertype:"string"`
+	Hash             string `json:"hash"`
+	Version          int32  `json:"version"`
+	PreviousBlock    string `json:"prevBlockHash"`
+	MerkleRoot       string `json:"merkleRoot"`
+	Timestamp        uint32 `json:"creationTimestamp"`
+	DifficultyTarget uint32 `json:"difficultyTarget"`
+	Nonce            uint32 `json:"nonce"`
+	Work             string `json:"work"`
 }
 
 // BlockHeaderStateResponse is an extended version of the BlockHeaderResponse
@@ -23,7 +21,7 @@ type BlockHeaderResponse struct {
 type BlockHeaderStateResponse struct {
 	Header    BlockHeaderResponse `json:"header"`
 	State     string              `json:"state"`
-	ChainWork *big.Int            `json:"chainWork"  swaggertype:"string"`
+	ChainWork string              `json:"chainWork"`
 	Height    int32               `json:"height"`
 }
 
@@ -37,7 +35,7 @@ func newBlockHeaderResponse(header *domains.BlockHeader) BlockHeaderResponse {
 		Timestamp:        uint32(header.Timestamp.Unix()),
 		DifficultyTarget: header.Bits,
 		Nonce:            header.Nonce,
-		Work:             header.Chainwork,
+		Work:             header.Chainwork.String(),
 	}
 }
 
@@ -57,7 +55,7 @@ func newBlockHeaderStateResponse(header *domains.BlockHeader) BlockHeaderStateRe
 	return BlockHeaderStateResponse{
 		Header:    newBlockHeaderResponse(header),
 		State:     header.State.String(),
-		ChainWork: header.CumulatedWork,
+		ChainWork: header.CumulatedWork.String(),
 		Height:    header.Height,
 	}
 }
