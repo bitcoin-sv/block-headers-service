@@ -191,9 +191,9 @@ func (ps *peerState) forAllPeers(closure func(sp *serverPeer)) {
 // server provides a bitcoin server for handling communications to and from
 // bitcoin peers.
 type server struct {
-	started       int32
-	shutdown      int32
-	startupTime   int64
+	started     int32
+	shutdown    int32
+	startupTime int64
 
 	chainParams          *chaincfg.Params
 	addrManager          *addrmgr.AddrManager
@@ -509,7 +509,7 @@ func (sp *serverPeer) OnAddr(_ *peer.Peer, msg *wire.MsgAddr) {
 
 		// Add address to known addresses for this peer.
 		sp.addKnownAddresses([]*wire.NetAddress{na})
-		sp.log.Debug().Msgf("Added address %s from host %s", na.IP.String(), sp.NA().IP.String())
+		sp.log.Trace().Msgf("Added address %s from host %s", na.IP.String(), sp.NA().IP.String())
 	}
 
 	// Add addresses to server address manager.  The address manager handles
@@ -972,7 +972,7 @@ func (s *server) peerHandler() {
 	}
 
 	// Add peers discovered through DNS to the address manager.
-	fmt.Printf("[Server] configs.ActiveNetParams.Params: %#v", pretty.Formatter(config.ActiveNetParams.Params))
+	s.log.Info().Msgf("[Server] configs.ActiveNetParams.Params: %#v", pretty.Formatter(config.ActiveNetParams.Params))
 	connmgr.SeedFromDNS(config.ActiveNetParams.Params, defaultRequiredServices,
 		s.p2pConfig.BsvdLookup, func(addrs []*wire.NetAddress) {
 			// Bitcoind uses a lookup of the dns seeder here. This

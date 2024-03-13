@@ -7,6 +7,7 @@ package peer_test
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"strconv"
@@ -171,20 +172,20 @@ func testPeer(t *testing.T, p *peer.Peer, s peerStats) {
 // TestPeerConnection tests connection between inbound and outbound peers.
 func TestPeerConnection(t *testing.T) {
 	log := zerolog.Nop()
-	verack := make(chan struct{})
+	verack := make(chan string)
 	peer1Cfg := &peer.Config{
 		Listeners: peer.MessageListeners{
 			OnVerAck: func(p *peer.Peer, msg *wire.MsgVerAck) {
-				verack <- struct{}{}
+				verack <- "verack received"
 			},
 			OnWrite: func(p *peer.Peer, bytesWritten int, msg wire.Message,
 				err error) {
 				if _, ok := msg.(*wire.MsgVerAck); ok {
-					verack <- struct{}{}
+					verack <- "verack send"
 				}
 			},
 		},
-		UserAgentName:          "peer",
+		UserAgentName:          "i-peer",
 		UserAgentVersion:       "1.0",
 		UserAgentComments:      []string{"comment"},
 		ChainParams:            &chaincfg.MainNetParams,
@@ -196,7 +197,7 @@ func TestPeerConnection(t *testing.T) {
 	}
 	peer2Cfg := &peer.Config{
 		Listeners:              peer1Cfg.Listeners,
-		UserAgentName:          "peer",
+		UserAgentName:          "o-peer",
 		UserAgentVersion:       "1.0",
 		UserAgentComments:      []string{"comment"},
 		ChainParams:            &chaincfg.MainNetParams,
@@ -207,7 +208,7 @@ func TestPeerConnection(t *testing.T) {
 	}
 
 	wantStats1 := peerStats{
-		wantUserAgent:       "peer:1.0(comment)/",
+		wantUserAgent:       "i-peer:1.0(comment)/",
 		wantServices:        0,
 		wantProtocolVersion: wire.RejectVersion,
 		wantConnected:       true,
@@ -217,11 +218,11 @@ func TestPeerConnection(t *testing.T) {
 		wantLastPingNonce:   uint64(0),
 		wantLastPingMicros:  int64(0),
 		wantTimeOffset:      int64(0),
-		wantBytesSent:       152, // 128 version + 24 verack
-		wantBytesReceived:   152,
+		wantBytesSent:       154, // 130 version + 24 verack
+		wantBytesReceived:   154,
 	}
 	wantStats2 := peerStats{
-		wantUserAgent:       "peer:1.0(comment)/",
+		wantUserAgent:       "o-peer:1.0(comment)/",
 		wantServices:        wire.SFNodeNetwork,
 		wantProtocolVersion: wire.RejectVersion,
 		wantConnected:       true,
@@ -231,8 +232,8 @@ func TestPeerConnection(t *testing.T) {
 		wantLastPingNonce:   uint64(0),
 		wantLastPingMicros:  int64(0),
 		wantTimeOffset:      int64(0),
-		wantBytesSent:       152, // 128 version + 24 verack
-		wantBytesReceived:   152,
+		wantBytesSent:       154, // 130 version + 24 verack
+		wantBytesReceived:   154,
 	}
 
 	tests := []struct {
@@ -257,7 +258,8 @@ func TestPeerConnection(t *testing.T) {
 
 				for i := 0; i < 4; i++ {
 					select {
-					case <-verack:
+					case msg := <-verack:
+						fmt.Println(msg)
 					case <-time.After(time.Second):
 						return nil, nil, errors.New("verack timeout")
 					}
@@ -283,7 +285,8 @@ func TestPeerConnection(t *testing.T) {
 
 				for i := 0; i < 4; i++ {
 					select {
-					case <-verack:
+					case msg := <-verack:
+						fmt.Println(msg)
 					case <-time.After(time.Second):
 						return nil, nil, errors.New("verack timeout")
 					}
@@ -292,7 +295,6 @@ func TestPeerConnection(t *testing.T) {
 			},
 		},
 	}
-	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
 		inPeer, outPeer, err := test.setup()
 		if err != nil {
@@ -733,10 +735,7 @@ func TestUnsupportedVersionPeer(t *testing.T) {
 		&conn{laddr: "10.0.0.2:8333", raddr: "10.0.0.1:8333"},
 	)
 
-	p, err := peer.NewOutboundPeer(peerCfg, "10.0.0.1:8333")
-	if err != nil {
-		t.Fatalf("NewOutboundPeer: unexpected err - %v\n", err)
-	}
+	p := peer.NewInboundPeer(peerCfg)
 	p.AssociateConnection(localConn)
 
 	// Read outbound messages to peer into a channel
@@ -761,21 +760,10 @@ func TestUnsupportedVersionPeer(t *testing.T) {
 		}
 	}()
 
-	// Read version message sent to remote peer
-	select {
-	case msg := <-outboundMessages:
-		if _, ok := msg.(*wire.MsgVersion); !ok {
-			t.Fatalf("Expected version message, got [%s]", msg.Command())
-		}
-	case <-time.After(time.Second):
-		t.Fatal("Peer did not send version message")
-	}
-
 	// Remote peer writes version message advertising invalid protocol version 1
 	invalidVersionMsg := wire.NewMsgVersion(remoteNA, localNA, 0, 0)
 	invalidVersionMsg.ProtocolVersion = 1
-
-	_, err = wire.WriteMessageN(
+	_, err := wire.WriteMessageN(
 		remoteConn.Writer,
 		invalidVersionMsg,
 		uint32(invalidVersionMsg.ProtocolVersion),
