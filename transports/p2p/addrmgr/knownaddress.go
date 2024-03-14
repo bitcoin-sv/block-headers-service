@@ -95,3 +95,24 @@ func (ka *KnownAddress) isBad() bool {
 
 	return false
 }
+
+func (ka *KnownAddress) RegisterAttempt() {
+	ka.attempts++
+	ka.lastattempt = time.Now()
+}
+
+func (ka *KnownAddress) RegisterGoodAddr() {
+	// ka.Timestamp is not updated here to avoid leaking information
+	// about currently connected peers.
+	now := time.Now()
+	ka.lastsuccess = now
+	ka.lastattempt = now
+	ka.attempts = 0
+}
+
+func NewKnownAddress(na, src *wire.NetAddress) *KnownAddress {
+	return &KnownAddress{
+		na:      na,
+		srcAddr: src,
+	}
+}

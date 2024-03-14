@@ -137,18 +137,17 @@ func (sps *syncPeerState) updateNetwork(syncPeer *peerpkg.Peer) {
 // chain is in sync, the SyncManager handles incoming block and header
 // notifications and relays announcements of new blocks to peers.
 type SyncManager struct {
-	log            *zerolog.Logger
-	peerNotifier   PeerNotifier
-	started        int32
-	shutdown       int32
-	chainParams    *chaincfg.Params
-	progressLogger *blockProgressLogger
-	msgChan        chan interface{}
-	wg             sync.WaitGroup
-	quit           chan struct{}
-	syncPeer       *peerpkg.Peer
-	syncPeerState  *syncPeerState
-	peerStates     map[*peerpkg.Peer]*peerpkg.PeerSyncState
+	log           *zerolog.Logger
+	peerNotifier  PeerNotifier
+	started       int32
+	shutdown      int32
+	chainParams   *chaincfg.Params
+	msgChan       chan interface{}
+	wg            sync.WaitGroup
+	quit          chan struct{}
+	syncPeer      *peerpkg.Peer
+	syncPeerState *syncPeerState
+	peerStates    map[*peerpkg.Peer]*peerpkg.PeerSyncState
 
 	// The following fields are used for headers-first mode.
 	headersFirstMode bool
@@ -591,7 +590,6 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 		// sm.log.Infof("Received %v block headers: Fetching blocks",
 		// sm.headerList.Len())
 
-		sm.progressLogger.SetLastLogTime(time.Now())
 		sm.log.Info().Msgf("Received checkpoint headers: %v - Fetching next headers", sm.Services.Headers.CountHeaders())
 		prevHeight := sm.nextCheckpoint.Height
 		prevHash := sm.nextCheckpoint.Hash
@@ -895,7 +893,6 @@ func New(config *Config, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState) (*SyncM
 		peerNotifier:            config.PeerNotifier,
 		chainParams:             config.ChainParams,
 		peerStates:              peers,
-		progressLogger:          newBlockProgressLogger("Processed", &syncManagerLogger),
 		msgChan:                 make(chan interface{}, config.MaxPeers*3),
 		quit:                    make(chan struct{}),
 		minSyncPeerNetworkSpeed: config.MinSyncPeerNetworkSpeed,

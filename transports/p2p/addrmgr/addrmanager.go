@@ -201,7 +201,7 @@ func (a *AddrManager) updateAddress(netAddr, srcAddr *wire.NetAddress) {
 		// updated elsewhere in the addrmanager code and would otherwise
 		// change the actual netaddress on the peer.
 		netAddrCopy := *netAddr
-		ka = &KnownAddress{na: &netAddrCopy, srcAddr: srcAddr}
+		ka = NewKnownAddress(&netAddrCopy, srcAddr)
 		a.addrIndex[addr] = ka
 		a.nNew++
 		// XXX time penalty?
@@ -624,8 +624,7 @@ func (a *AddrManager) Attempt(addr *wire.NetAddress) {
 		return
 	}
 	// set last tried time to now
-	ka.attempts++
-	ka.lastattempt = time.Now()
+	ka.RegisterAttempt()
 }
 
 // Connected Marks the given address as currently connected and working at the
@@ -663,12 +662,7 @@ func (a *AddrManager) Good(addr *wire.NetAddress) {
 		return
 	}
 
-	// ka.Timestamp is not updated here to avoid leaking information
-	// about currently connected peers.
-	now := time.Now()
-	ka.lastsuccess = now
-	ka.lastattempt = now
-	ka.attempts = 0
+	ka.RegisterGoodAddr()
 
 	// move to tried set, optionally evicting other addresses if neeed.
 	if ka.tried {
