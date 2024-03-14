@@ -27,11 +27,11 @@ func (ps *peerState) CountIP(host string) int {
 // forAllOutboundPeers is a helper function that runs closure on all outbound
 // peers known to peerState.
 func (ps *peerState) forAllOutboundPeers(closure func(sp *serverPeer)) {
-	for _, e := range ps.outboundPeers {
-		closure(e)
+	for _, peer := range ps.outboundPeers {
+		closure(peer)
 	}
-	for _, e := range ps.persistentPeers {
-		closure(e)
+	for _, peer := range ps.persistentPeers {
+		closure(peer)
 	}
 }
 

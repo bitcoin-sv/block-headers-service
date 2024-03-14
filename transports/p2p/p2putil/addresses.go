@@ -12,13 +12,20 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p/addrmgr"
 )
 
+type (
+	GetAddressFn       func() *addrmgr.KnownAddress
+	OutboundGroupCount func(string) int
+	LookupFn           func(string) ([]net.IP, error)
+	FindNewAddrFn      func() (net.Addr, error)
+)
+
 // Only setup a function to return new addresses to connect to when
 // not running in connect-only mode.  The simulation network is always
 // in connect-only mode since it is only intended to connect to
 // specified peers and actively avoid advertising and connecting to
 // discovered peers in order to prevent it from becoming a public test
 // network.
-func NewAddressFunc(getAddressFn func() *addrmgr.KnownAddress, outboundGroupCount func(string) int, lookupFn func(string) ([]net.IP, error)) func() (net.Addr, error) {
+func NewAddressFunc(getAddressFn GetAddressFn, outboundGroupCount OutboundGroupCount, lookupFn LookupFn) FindNewAddrFn {
 	newAddressFunc := func() (net.Addr, error) {
 		for tries := 0; tries < 100; tries++ {
 			addr := getAddressFn()
@@ -61,7 +68,7 @@ func NewAddressFunc(getAddressFn func() *addrmgr.KnownAddress, outboundGroupCoun
 	return newAddressFunc
 }
 
-// addrStringToNetAddr takes an address in the form of 'host:port' and returns
+// AddrStringToNetAddr takes an address in the form of 'host:port' and returns
 // a net.Addr which maps to the original address with any host names resolved
 // to IP addresses.  It also handles tor addresses properly by returning a
 // net.Addr that encapsulates the address.

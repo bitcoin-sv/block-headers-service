@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// initListeners initializes the configured net listeners and adds any bound
+// InitListeners initializes the configured net listeners and adds any bound
 // addresses to the address manager. Returns the listeners and a NAT interface,
 // which is non-nil if UPnP is in use.
 func InitListeners(log *zerolog.Logger) ([]net.Listener, error) {
