@@ -70,7 +70,7 @@ func NewTestBlockHeaderService(t *testing.T, ops ...bhsOpt) (*TestBlockHeaderSer
 
 	viper.Reset()
 	testLog := zerolog.Nop()
-	if err := config.SetDefaults(&testLog); err != nil {
+	if err := config.SetDefaults("unittest", &testLog); err != nil {
 		panic(fmt.Sprintf("cannot set config default values: %v", err))
 	}
 	defaultConfig := config.GetDefaultAppConfig()

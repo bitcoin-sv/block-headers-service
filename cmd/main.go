@@ -31,10 +31,13 @@ import (
 	httpserver "github.com/bitcoin-sv/block-headers-service/transports/http/server"
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p"
 	peerpkg "github.com/bitcoin-sv/block-headers-service/transports/p2p/peer"
-	"github.com/bitcoin-sv/block-headers-service/version"
 
 	sqlrepository "github.com/bitcoin-sv/block-headers-service/database/repository"
 )
+
+// version version of the application that can be overridden with ldflags during build
+// (e.g. go build -ldflags "-X main.version=1.2.3").
+var version = "development"
 
 // nolint: godot
 // @securityDefinitions.apikey Bearer
@@ -43,7 +46,7 @@ import (
 func main() {
 	defaultLog := logging.GetDefaultLogger()
 
-	if err := config.SetDefaults(defaultLog); err != nil {
+	if err := config.SetDefaults(version, defaultLog); err != nil {
 		defaultLog.Error().Msgf("cannot set config default values: %v", err)
 	}
 
@@ -89,7 +92,7 @@ func main() {
 	wire.SetLimits(config.ExcessiveBlockSize)
 
 	// Show version at startup.
-	log.Info().Msgf("Version %s", version.String())
+	log.Info().Msgf("Version %s", config.Version())
 
 	peers := make(map[*peerpkg.Peer]*peerpkg.PeerSyncState)
 

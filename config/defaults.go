@@ -65,6 +65,8 @@ func getP2PDefaults() *P2PConfig {
 		BlocksForForkConfirmation: 10,
 		DefaultConnectTimeout:     30 * time.Second,
 		DisableCheckpoints:        false,
+		UserAgentName:             ApplicationName,
+		UserAgentVersion:          Version(),
 	}
 }
 
@@ -72,7 +74,7 @@ func getLoggingDefaults() *LoggingConfig {
 	return &LoggingConfig{
 		Level:        "debug",
 		Format:       "console",
-		InstanceName: "block-headers-service",
+		InstanceName: ApplicationName,
 		LogOrigin:    true,
 	}
 }
