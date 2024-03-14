@@ -300,7 +300,7 @@ func (sm *SyncManager) startSync() {
 		} else {
 			// TODO: initial request for headers
 			sm.log.Info().Msg("[Headers] Initial request")
-			err := bestPeer.PushGetBlocksMsg(locator, &zeroHash)
+			err := bestPeer.PushGetHeadersMsg(locator, &zeroHash)
 			if err != nil {
 				sm.log.Info().Msg(err.Error())
 			}
