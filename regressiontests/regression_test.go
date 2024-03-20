@@ -2,6 +2,7 @@ package regressiontests
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os/exec"
@@ -10,9 +11,24 @@ import (
 
 	"os"
 
+	"io"
+
+	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/tips"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
+
+const whatsonchainAPIURL = "https://api.whatsonchain.com/v1/bsv/main/chain/tips"
+
+type WhatsOnChainForkTip struct {
+	Height    int    `json:"height"`
+	Hash      string `json:"hash"`
+	BranchLen int    `json:"branchlen"`
+	Status    string `json:"status"`
+}
+
+var currentSyncTime = 1 * time.Minute
 
 func TestApplicationIntegration(t *testing.T) {
 	ctx := context.Background()
@@ -46,7 +62,7 @@ func TestApplicationIntegration(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Application exited unexpectedly: %v", err)
 		}
-	case <-time.After(1 * time.Minute):
+	case <-time.After(currentSyncTime):
 	}
 
 	resp, err := http.Get("http://localhost:8081/status")
@@ -57,6 +73,24 @@ func TestApplicationIntegration(t *testing.T) {
 
 	if resp.StatusCode != 200 {
 		t.Errorf("Expected status code 200, got %d", resp.StatusCode)
+	}
+
+	wocTipHeight, err := fetchExternalForkHeight(whatsonchainAPIURL)
+	if err != nil {
+		t.Fatalf("Failed to fetch external fork height: %v", err)
+	}
+
+	localTipHeight, err := fetchLocalTip()
+	if err != nil {
+		t.Fatalf("Failed to fetch local tip height: %v", err)
+	}
+
+	if localTipHeight < wocTipHeight {
+		t.Errorf("Couldn't sync to proper tip of chain: %d < %d", localTipHeight, wocTipHeight)
+	} else {
+		t.Logf("Synced to tip of chain: %d", localTipHeight)
+
+		// Further tests/assertions can be added here
 	}
 }
 
@@ -86,4 +120,54 @@ func startPostgresContainer(ctx context.Context, t *testing.T) (testcontainers.C
 		t.Fatalf("Failed to get mapped port: %v", err)
 	}
 	return postgresContainer, mappedPort.Port()
+}
+
+func fetchExternalForkHeight(url string) (int, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return 0, fmt.Errorf("failed to make HTTP request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var forks []WhatsOnChainForkTip
+	if err := json.NewDecoder(resp.Body).Decode(&forks); err != nil {
+		return 0, fmt.Errorf("failed to decode JSON response: %w", err)
+	}
+
+	for _, fork := range forks {
+		if fork.Status == "active" {
+			return fork.Height, nil
+		}
+	}
+
+	return 0, fmt.Errorf("no active fork found")
+}
+
+func fetchLocalTip() (int, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", "http://localhost:8081/api/v1/chain/tip/longest", nil)
+	if err != nil {
+		return 0, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Authorization", "Bearer "+config.DefaultAppToken)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return 0, fmt.Errorf("failed to make HTTP request to application: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		body, _ := io.ReadAll(io.Reader(resp.Body))
+		return 0, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(body))
+	}
+
+	var chainTip tips.TipStateResponse
+	if err := json.NewDecoder(resp.Body).Decode(&chainTip); err != nil {
+		return 0, fmt.Errorf("failed to decode JSON response: %w", err)
+	}
+
+	return int(chainTip.Height), nil
 }

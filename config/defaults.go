@@ -4,6 +4,8 @@ import (
 	"time"
 )
 
+const DefaultAppToken = "mQZQ6WmxURxWz5ch"
+
 func GetDefaultAppConfig() *AppConfig {
 	return &AppConfig{
 		Db:         getDbDefaults(),
@@ -35,7 +37,7 @@ func getHttpConfigDefaults() *HTTPConfig {
 		WriteTimeout:              10,
 		Port:                      8080,
 		UseAuth:                   true,
-		AuthToken:                 "mQZQ6WmxURxWz5ch",
+		AuthToken:                 DefaultAppToken,
 		ProfilingEndpointsEnabled: true,
 	}
 }
