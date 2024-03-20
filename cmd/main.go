@@ -48,6 +48,7 @@ func main() {
 
 	if err := config.SetDefaults(version, defaultLog); err != nil {
 		defaultLog.Error().Msgf("cannot set config default values: %v", err)
+		os.Exit(1)
 	}
 
 	defaultCfg := config.GetDefaultAppConfig()
