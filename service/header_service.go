@@ -326,56 +326,45 @@ func (hs *HeaderService) locateHeaders(locator domains.BlockLocator, hashStop *c
 }
 
 func (hs *HeaderService) locateInventory(locator domains.BlockLocator, hashStop *chainhash.Hash, maxEntries uint32) (*domains.BlockHeader, uint32) {
-	// There are no block locators so a specific block is being requested
-	// as identified by the stop hash.
-	stopNode, _ := hs.GetHeaderByHash(hashStop.String())
+	// minimum number of locator entries is 1 hash
 	if len(locator) == 0 {
+		return nil, 0
+	}
+
+	var zeroHash chainhash.Hash
+	var stopNode *domains.BlockHeader
+	if *hashStop != zeroHash {
+		stopNode, _ = hs.GetHeaderByHash(hashStop.String())
 		if stopNode == nil {
 			// No blocks with the stop hash were found so there is
 			// nothing to do.
 			return nil, 0
 		}
-		return stopNode, 1
+	} else {
+		stopNode = hs.GetTip()
 	}
 
-	// Find the most recent locator block hash in the main chain.  In the
-	// case none of the hashes in the locator are in the main chain, fall
-	// back to the genesis block.
-	startNode, _ := hs.repo.Headers.GetHeaderByHeight(0)
+	var startNode *domains.BlockHeader
 	for _, hash := range locator {
 		node, _ := hs.GetHeaderByHash(hash.String())
-		if node != nil && hs.Contains(node) {
+		if node != nil && node.State == domains.LongestChain {
 			startNode = node
 			break
 		}
 	}
 
-	// Start at the block after the most recently known block.  When there
-	// is no next block it means the most recently known block is the tip of
-	// the best chain, so there is nothing more to do.
-	next := hs.Next(startNode)
+	next := hs.next(startNode)
 	if next == nil {
 		return nil, 0
 	}
 	startNode = next
 
-	// Calculate how many entries are needed.
-	total := uint32((hs.GetTipHeight() - startNode.Height) + 1)
-	if stopNode != nil && hs.Contains(stopNode) &&
-		stopNode.Height >= startNode.Height {
-
-		total = uint32((stopNode.Height - startNode.Height) + 1)
-	}
+	total := uint32((stopNode.Height - startNode.Height) + 1)
 	if total > maxEntries {
 		total = maxEntries
 	}
 
 	return startNode, total
-}
-
-// Contains checks if given header is stored in db.
-func (hs *HeaderService) Contains(node *domains.BlockHeader) bool {
-	return hs.nodeByHeight(node.Height) == node
 }
 
 func (hs *HeaderService) nodeByHeight(height int32) *domains.BlockHeader {
@@ -401,12 +390,11 @@ func (hs *HeaderService) HeadersCount() int {
 	return count
 }
 
-// Next returns next header for the given one.
-func (hs *HeaderService) Next(node *domains.BlockHeader) *domains.BlockHeader {
-	if node == nil || !hs.Contains(node) {
+// next returns next header for the given one.
+func (hs *HeaderService) next(node *domains.BlockHeader) *domains.BlockHeader {
+	if (node == nil) || (node.Height+1 >= int32(hs.HeadersCount())) {
 		return nil
 	}
-
 	return hs.nodeByHeight(node.Height + 1)
 }
 
