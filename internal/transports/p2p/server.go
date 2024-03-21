@@ -1,13 +1,14 @@
 package p2pexp
 
 import (
-	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
+	"errors"
+	"net"
+	"reflect"
+
+	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 	"github.com/rs/zerolog"
 )
-
-var mainNetDNSSeeds = []chaincfg.DNSSeed{
-	{Host: "seed-nodes.bsvb.tech", HasFiltering: true},
-}
 
 type server struct {
 	peers map[string]string
@@ -20,10 +21,36 @@ func NewServer(log *zerolog.Logger) *server {
 }
 
 func (s *server) Start() error {
-	seeds := SeedFromDNS(mainNetDNSSeeds, s.log)
+	seeds := SeedFromDNS(config.ActiveNetParams.DNSSeeds, s.log)
+	if len(seeds) == 0 {
+		return errors.New("no seeds found")
+	}
+
 	for _, seed := range seeds {
 		s.log.Info().Msgf("Got peer addr: %s", seed.String())
 	}
+
+	firstPeer := seeds[0].String() + ":" + config.ActiveNetParams.DefaultPort
+	conn, err := net.Dial("tcp", firstPeer)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	s.log.Info().Msgf("connected to peer: %s", firstPeer)
+
+	rmsg, _, err := wire.ReadMessage(conn, uint32(70013), config.ActiveNetParams.Net)
+	if err != nil {
+		return err
+	}
+
+	s.log.Info().Msgf("received msg type: %s", reflect.TypeOf(rmsg))
+
+	switch msg := rmsg.(type) {
+	case *wire.MsgVersion:
+		s.log.Info().Msgf("got version msg: %v", msg)
+	}
+
 	return nil
 }
 
