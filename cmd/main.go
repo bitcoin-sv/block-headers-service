@@ -26,6 +26,7 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/transports/websocket"
 
 	"github.com/bitcoin-sv/block-headers-service/database/sql"
+	p2pexp "github.com/bitcoin-sv/block-headers-service/internal/transports/p2p"
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	httpserver "github.com/bitcoin-sv/block-headers-service/transports/http/server"
@@ -38,6 +39,11 @@ import (
 // version version of the application that can be overridden with ldflags during build
 // (e.g. go build -ldflags "-X main.version=1.2.3").
 var version = "development"
+
+type P2PServer interface {
+	Start() error
+	Shutdown() error
+}
 
 // nolint: godot
 // @securityDefinitions.apikey Bearer
@@ -113,12 +119,6 @@ func main() {
 		Config:       cfg,
 	})
 
-	p2pServer, err := p2p.NewServer(hs, peers, cfg.P2P, log)
-	if err != nil {
-		log.Error().Msgf("failed to init a new p2p server: %v\n", err)
-		os.Exit(1)
-	}
-
 	server := httpserver.NewHttpServer(cfg.HTTP, log)
 
 	server.ApplyConfiguration(metrics.Register)
@@ -145,6 +145,18 @@ func main() {
 	if err := ws.Start(); err != nil {
 		log.Error().Msgf("cannot start websocket server because of an error: %v", err)
 		os.Exit(1)
+	}
+
+	var p2pServer P2PServer
+
+	if cfg.P2P.Experimental {
+		p2pServer = p2pexp.NewServer(log)
+	} else {
+		p2pServer, err = p2p.NewServer(hs, peers, cfg.P2P, log)
+		if err != nil {
+			log.Error().Msgf("failed to init a new p2p server: %v\n", err)
+			os.Exit(1)
+		}
 	}
 
 	go func() {
