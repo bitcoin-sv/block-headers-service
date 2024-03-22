@@ -5,15 +5,15 @@ db:
   # Database engine [sqlite|postgres] (default: sqlite)
   engine: sqlite
   # Path to the database schema
-  schema_path: "./database/migrations"
+  schema_path: "../database/migrations"
   # Whether prepared DB is enabled
-  prepared_db: false
+  prepared_db: true
   # Path to prepared database file
-  prepared_db_file_path: "./data/blockheaders.csv.gz"
+  prepared_db_file_path: "../data/blockheaders.csv.gz"
 
   #sqlite engine cofiguration
   sqlite:
-    file_path: "./data/blockheaders.db"
+    file_path: "../data/blockheaders.db"
   #postgres engine cofiguration, required when engine=postgres
   postgres:
     host: "localhost"
