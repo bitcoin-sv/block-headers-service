@@ -1,6 +1,7 @@
 package regressiontests
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -14,6 +15,10 @@ import (
 	"io"
 
 	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/bitcoin-sv/block-headers-service/domains"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
+	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/headers"
+	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/merkleroots"
 	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/tips"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -47,7 +52,7 @@ func TestApplicationIntegration(t *testing.T) {
 
 	defer func() {
 		if err := cmd.Process.Kill(); err != nil {
-			t.Logf("Failed to kill application process: %v", err)
+			t.Fatalf("Failed to kill application process: %v", err)
 		}
 	}()
 
@@ -72,8 +77,11 @@ func TestApplicationIntegration(t *testing.T) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		t.Errorf("Expected status code 200, got %d", resp.StatusCode)
+		t.Fatalf("Expected status code 200, got %d", resp.StatusCode)
 	}
+
+	t.Log("HTTP server is up and running")
+	t.Log("Comparing local and external LONGEST_CHAIN tips...")
 
 	wocTipHeight, err := fetchExternalForkHeight(whatsonchainAPIURL)
 	if err != nil {
@@ -91,6 +99,17 @@ func TestApplicationIntegration(t *testing.T) {
 		t.Logf("Synced to tip of chain: %d", localTipHeight)
 	}
 
+	t.Log("Comparing synced data with known checkpoints...")
+
+	verifyHeaders(t)
+
+	t.Log("Headers checkpoint comparison passed successfully 🎉")
+
+	t.Log("Verifying merkle roots...")
+
+	verifyMerkleRoots(t, merkleRootFixtures)
+
+	t.Log("Merkle roots verification passed successfully 🎉")
 }
 
 func startPostgresContainer(ctx context.Context, t *testing.T) (testcontainers.Container, string) {
@@ -169,4 +188,96 @@ func fetchLocalTip() (int, error) {
 	}
 
 	return int(chainTip.Height), nil
+}
+
+func fetchBlockHeader(hash string) (*headers.BlockHeaderStateResponse, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", "http://localhost:8081/api/v1/chain/header/state/"+hash, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Authorization", "Bearer "+config.DefaultAppToken)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make HTTP request to application: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	var blockHeader headers.BlockHeaderStateResponse
+	if err := json.NewDecoder(resp.Body).Decode(&blockHeader); err != nil {
+		return nil, fmt.Errorf("failed to decode JSON response: %w", err)
+	}
+
+	return &blockHeader, nil
+}
+
+func verifyHeaders(t *testing.T) {
+	for _, checkpoint := range chaincfg.MainNetCheckpoints {
+		blockHeader, err := fetchBlockHeader(checkpoint.Hash.String())
+		if err != nil {
+			t.Fatalf("Failed to fetch block header for hash %s: %v", checkpoint.Hash.String(), err)
+			continue
+		}
+
+		if blockHeader.Height != checkpoint.Height || blockHeader.State != "LONGEST_CHAIN" {
+			t.Fatalf("Checkpoint height mismatch for hash %s: expected %d, got %d", checkpoint.Hash, checkpoint.Height, blockHeader.Height)
+		}
+	}
+}
+
+func verifyMerkleRoots(t *testing.T, fixtures []_merkleRootFixtures) {
+	confirmations := fetchMerkleRootConfirmations(fixtures, t)
+
+	for _, fixture := range fixtures {
+		found := false
+		for _, confirmation := range confirmations {
+			if fixture.MerkleRoot == confirmation.MerkleRoot && fixture.Height == confirmation.BlockHeight && confirmation.Confirmation == domains.Confirmed {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("Merkle root %s at height %d not confirmed as expected.", fixture.MerkleRoot, fixture.Height)
+		}
+	}
+}
+
+func fetchMerkleRootConfirmations(fixtures []_merkleRootFixtures, t *testing.T) []merkleroots.MerkleRootConfirmation {
+	jsonData, err := json.Marshal(fixtures)
+	if err != nil {
+		t.Fatalf("Failed to marshal JSON: %v", err)
+	}
+
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", "http://localhost:8081/api/v1/chain/merkleroot/verify", bytes.NewBuffer(jsonData))
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+config.DefaultAppToken)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("Failed to make HTTP request to application: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("Expected status code 200, got %d", resp.StatusCode)
+	}
+
+	var confirmations merkleroots.MerkleRootsConfirmationsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&confirmations); err != nil {
+		t.Fatalf("Failed to decode JSON response: %v", err)
+	}
+
+	return confirmations.Confirmations
 }
