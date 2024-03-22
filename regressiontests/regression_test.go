@@ -89,9 +89,8 @@ func TestApplicationIntegration(t *testing.T) {
 		t.Errorf("Couldn't sync to proper tip of chain: %d < %d", localTipHeight, wocTipHeight)
 	} else {
 		t.Logf("Synced to tip of chain: %d", localTipHeight)
-
-		// Further tests/assertions can be added here
 	}
+
 }
 
 func startPostgresContainer(ctx context.Context, t *testing.T) (testcontainers.Container, string) {
