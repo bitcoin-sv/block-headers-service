@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net/http"
 	"os/exec"
@@ -34,16 +35,44 @@ type WhatsOnChainForkTip struct {
 }
 
 var currentSyncTime = 1 * time.Minute
+var dbEngine string
+
+func init() {
+	flag.StringVar(&dbEngine, "dbEngine", "sqlite", "The database engine to use in tests (postgres or sqlite)")
+}
 
 func TestApplicationIntegration(t *testing.T) {
+	flag.Parse()
+
 	ctx := context.Background()
 
-	postgresContainer, mappedPort := startPostgresContainer(ctx, t)
-	defer postgresContainer.Terminate(ctx)
-	fmt.Printf("Connect to PostgreSQL on localhost:%s\n", mappedPort)
+	var cmd *exec.Cmd
 
-	cmd := exec.Command("go", "run", "../cmd/main.go", "-C", "../regressiontests/postgres.config.yaml")
-	cmd.Env = append(os.Environ(), "BHS_DB_POSTGRES_PORT="+mappedPort)
+	switch dbEngine {
+	case "postgres":
+		postgresContainer, mappedPort := startPostgresContainer(ctx, t)
+		defer postgresContainer.Terminate(ctx)
+		t.Logf("Connect to PostgreSQL on localhost:%s\n", mappedPort)
+		cmd = exec.Command("go", "run", "../cmd/main.go", "-C", "../regressiontests/postgres.config.yaml")
+		cmd.Env = append(os.Environ(), "BHS_DB_POSTGRES_PORT="+mappedPort)
+
+	case "sqlite":
+		t.Log("Using SQLite database")
+		cmd = exec.Command("go", "run", "../cmd/main.go", "-C", "../regressiontests/sqlite.config.yaml")
+
+		defer func() {
+			err := os.Remove("../data/blockheaders.db")
+			if err != nil {
+				t.Logf("Warning: Failed to remove SQLite database file: %v", err)
+			} else {
+				t.Log("SQLite database file removed successfully.")
+			}
+		}()
+
+	default:
+		t.Fatalf("Unsupported database engine: %s", dbEngine)
+	}
+
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
