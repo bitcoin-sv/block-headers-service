@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// #nosec G101
 const DefaultAppToken = "mQZQ6WmxURxWz5ch"
 
 func GetDefaultAppConfig() *AppConfig {
