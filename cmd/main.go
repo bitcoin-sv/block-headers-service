@@ -150,7 +150,7 @@ func main() {
 	var p2pServer P2PServer
 
 	if cfg.P2P.Experimental {
-		p2pServer = p2pexp.NewServer(log)
+		p2pServer = p2pexp.NewServer(cfg.P2P, log)
 	} else {
 		p2pServer, err = p2p.NewServer(hs, peers, cfg.P2P, log)
 		if err != nil {
