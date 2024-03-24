@@ -1,3 +1,6 @@
 package p2pexp
 
-const protocolVersion = uint32(70013)
+const (
+	userAgentComments      = "experimental"
+	initialProtocolVersion = uint32(70013)
+)

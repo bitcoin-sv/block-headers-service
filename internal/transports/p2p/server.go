@@ -2,26 +2,30 @@ package p2pexp
 
 import (
 	"errors"
-	"net"
-	"reflect"
 
 	"github.com/bitcoin-sv/block-headers-service/config"
-	"github.com/bitcoin-sv/block-headers-service/internal/wire"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 	"github.com/rs/zerolog"
 )
 
 type server struct {
-	peers map[string]string
-	log   *zerolog.Logger
+	config      *config.P2PConfig
+	chainParams *chaincfg.Params
+	log         *zerolog.Logger
 }
 
-func NewServer(log *zerolog.Logger) *server {
+func NewServer(config *config.P2PConfig, chainParams *chaincfg.Params, log *zerolog.Logger) *server {
 	serverLogger := log.With().Str("service", "p2p-experimental").Logger()
-	return &server{peers: make(map[string]string), log: &serverLogger}
+	server := &server{
+		config:      config,
+		chainParams: chainParams,
+		log:         &serverLogger,
+	}
+	return server
 }
 
 func (s *server) Start() error {
-	seeds := SeedFromDNS(config.ActiveNetParams.DNSSeeds, s.log)
+	seeds := SeedFromDNS(s.chainParams.DNSSeeds, s.log)
 	if len(seeds) == 0 {
 		return errors.New("no seeds found")
 	}
@@ -30,26 +34,20 @@ func (s *server) Start() error {
 		s.log.Info().Msgf("Got peer addr: %s", seed.String())
 	}
 
-	firstPeer := seeds[0].String() + ":" + config.ActiveNetParams.DefaultPort
-	conn, err := net.Dial("tcp", firstPeer)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	s.log.Info().Msgf("connected to peer: %s", firstPeer)
-
-	rmsg, _, err := wire.ReadMessage(conn, uint32(70013), config.ActiveNetParams.Net)
+	peer, err := NewPeer(seeds[0].String(), s.config, s.chainParams, s.log)
 	if err != nil {
 		return err
 	}
 
-	s.log.Info().Msgf("received msg type: %s", reflect.TypeOf(rmsg))
-
-	switch msg := rmsg.(type) {
-	case *wire.MsgVersion:
-		s.log.Info().Msgf("got version msg: %v", msg)
+	err = peer.Connect()
+	if err != nil {
+		return err
 	}
+	defer peer.Disconnect()
+
+	s.log.Info().Msgf("connected to peer: %s", peer.addr.String())
+
+	peer.writeOurVersionMsg()
 
 	return nil
 }
