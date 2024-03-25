@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"os/exec"
+	"syscall"
 	"testing"
 	"time"
 
@@ -75,15 +76,15 @@ func TestApplicationIntegration(t *testing.T) {
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	if err := cmd.Start(); err != nil {
-		t.Fatalf("Failed to start the application: %v", err)
-	}
-
 	defer func() {
-		if err := cmd.Process.Kill(); err != nil {
+		if err := cmd.Process.Signal(syscall.SIGTERM); err != nil {
 			t.Fatalf("Failed to kill application process: %v", err)
 		}
 	}()
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Failed to start the application: %v", err)
+	}
 
 	appExitSignal := make(chan error, 1)
 	go func() {
