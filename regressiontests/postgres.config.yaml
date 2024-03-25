@@ -58,7 +58,7 @@ http:
   # Write timeout
   write_timeout: 10
   # HTTP server port
-  port: 8081
+  port: 8080
   # URL prefix for API
   use_auth: true
   # Authentication token
