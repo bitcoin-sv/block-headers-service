@@ -5,21 +5,24 @@ import (
 
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
+	"github.com/bitcoin-sv/block-headers-service/service"
 	"github.com/rs/zerolog"
 )
 
 type server struct {
-	config      *config.P2PConfig
-	chainParams *chaincfg.Params
-	log         *zerolog.Logger
+	config         *config.P2PConfig
+	chainParams    *chaincfg.Params
+	headersService service.Headers
+	log            *zerolog.Logger
 }
 
-func NewServer(config *config.P2PConfig, chainParams *chaincfg.Params, log *zerolog.Logger) *server {
+func NewServer(config *config.P2PConfig, chainParams *chaincfg.Params, headersService service.Headers, log *zerolog.Logger) *server {
 	serverLogger := log.With().Str("service", "p2p-experimental").Logger()
 	server := &server{
-		config:      config,
-		chainParams: chainParams,
-		log:         &serverLogger,
+		config:         config,
+		chainParams:    chainParams,
+		headersService: headersService,
+		log:            &serverLogger,
 	}
 	return server
 }
@@ -34,7 +37,7 @@ func (s *server) Start() error {
 		s.log.Info().Msgf("Got peer addr: %s", seed.String())
 	}
 
-	peer, err := NewPeer(seeds[0].String(), s.config, s.chainParams, s.log)
+	peer, err := NewPeer(seeds[0].String(), s.config, s.chainParams, s.headersService, s.log)
 	if err != nil {
 		return err
 	}
@@ -45,9 +48,11 @@ func (s *server) Start() error {
 	}
 	defer peer.Disconnect()
 
-	s.log.Info().Msgf("connected to peer: %s", peer.addr.String())
-
-	peer.writeOurVersionMsg()
+	err = peer.NegotiateProtocol()
+	if err != nil {
+		s.log.Error().Msgf("error negotiating protocol, reason: %v", err)
+		return err
+	}
 
 	return nil
 }
