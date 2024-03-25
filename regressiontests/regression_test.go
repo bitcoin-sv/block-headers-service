@@ -39,7 +39,7 @@ var currentSyncTime = 1 * time.Minute
 var dbEngine string
 
 func init() {
-	flag.StringVar(&dbEngine, "dbEngine", "sqlite", "The database engine to use in tests (postgres or sqlite)")
+	flag.StringVar(&dbEngine, "dbEngine", "postgres", "The database engine to use in tests (postgres or sqlite)")
 }
 
 func TestApplicationIntegration(t *testing.T) {
@@ -100,7 +100,7 @@ func TestApplicationIntegration(t *testing.T) {
 	case <-time.After(currentSyncTime):
 	}
 
-	resp, err := http.Get("http://localhost:8081/status")
+	resp, err := http.Get("http://localhost:8080/status")
 	if err != nil {
 		t.Fatalf("Failed to make HTTP request to the application: %v", err)
 	}
@@ -193,7 +193,7 @@ func fetchExternalForkHeight(url string) (int, error) {
 
 func fetchLocalTip() (int, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", "http://localhost:8081/api/v1/chain/tip/longest", nil)
+	req, err := http.NewRequest("GET", "http://localhost:8080/api/v1/chain/tip/longest", nil)
 	if err != nil {
 		return 0, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -222,7 +222,7 @@ func fetchLocalTip() (int, error) {
 
 func fetchBlockHeader(hash string) (*headers.BlockHeaderStateResponse, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", "http://localhost:8081/api/v1/chain/header/state/"+hash, nil)
+	req, err := http.NewRequest("GET", "http://localhost:8080/api/v1/chain/header/state/"+hash, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -286,7 +286,7 @@ func fetchMerkleRootConfirmations(fixtures []_merkleRootFixtures, t *testing.T) 
 	}
 
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", "http://localhost:8081/api/v1/chain/merkleroot/verify", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", "http://localhost:8080/api/v1/chain/merkleroot/verify", bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatalf("Failed to create request: %v", err)
 	}
