@@ -6,15 +6,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"os/exec"
-	"syscall"
 	"testing"
 	"time"
-
-	"os"
-
-	"io"
 
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/domains"
@@ -39,7 +36,7 @@ var currentSyncTime = 1 * time.Minute
 var dbEngine string
 
 func init() {
-	flag.StringVar(&dbEngine, "dbEngine", "postgres", "The database engine to use in tests (postgres or sqlite)")
+	flag.StringVar(&dbEngine, "dbEngine", "sqlite", "The database engine to use in tests (postgres or sqlite)")
 }
 
 func TestApplicationIntegration(t *testing.T) {
@@ -77,7 +74,9 @@ func TestApplicationIntegration(t *testing.T) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	defer func() {
-		if err := cmd.Process.Signal(syscall.SIGTERM); err != nil {
+		t.Log("Killing application process...")
+		t.Logf("pid: %d", cmd.Process.Pid)
+		if err := cmd.Process.Kill(); err != nil {
 			t.Fatalf("Failed to kill application process: %v", err)
 		}
 	}()
