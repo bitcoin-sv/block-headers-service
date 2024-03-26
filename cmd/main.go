@@ -158,7 +158,6 @@ func main() {
 
 	<-quit
 
-	log.Info().Msg("!!!!!!!!!!!!!!!!!!!Shutting down...!!!!!!!!!!!!!!!!!!!")
 	if err := p2pServer.Shutdown(); err != nil {
 		log.Error().Msgf("failed to stop p2p server: %v", err)
 	}
