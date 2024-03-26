@@ -36,7 +36,7 @@ var currentSyncTime = 1 * time.Minute
 var dbEngine string
 
 func init() {
-	flag.StringVar(&dbEngine, "dbEngine", "sqlite", "The database engine to use in tests (postgres or sqlite)")
+	flag.StringVar(&dbEngine, "dbEngine", "postgres", "The database engine to use in tests (postgres or sqlite)")
 }
 
 func TestApplicationIntegration(t *testing.T) {
@@ -44,19 +44,23 @@ func TestApplicationIntegration(t *testing.T) {
 
 	ctx := context.Background()
 
+	buildCmd := exec.Command("go", "build", "-o", "../cmd/bhsExecutable", "../cmd/main.go")
+	if err := buildCmd.Run(); err != nil {
+		t.Fatalf("Failed to build the application for tests: %v", err)
+	}
+	defer os.Remove("../cmd/bhsExecutable")
+
 	var cmd *exec.Cmd
 
 	switch dbEngine {
 	case "postgres":
 		postgresContainer, mappedPort := startPostgresContainer(ctx, t)
 		defer postgresContainer.Terminate(ctx)
-		t.Logf("Connect to PostgreSQL on localhost:%s\n", mappedPort)
-		cmd = exec.Command("go", "run", "../cmd/main.go", "-C", "../regressiontests/postgres.config.yaml")
+		cmd = exec.Command("../cmd/bhsExecutable", "-C", "../regressiontests/postgres.config.yaml")
 		cmd.Env = append(os.Environ(), "BHS_DB_POSTGRES_PORT="+mappedPort)
 
 	case "sqlite":
-		t.Log("Using SQLite database")
-		cmd = exec.Command("go", "run", "../cmd/main.go", "-C", "../regressiontests/sqlite.config.yaml")
+		cmd = exec.Command("../cmd/bhsExecutable", "-C", "../regressiontests/sqlite.config.yaml")
 
 		defer func() {
 			err := os.Remove("../data/blockheaders.db")
