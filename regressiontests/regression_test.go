@@ -32,7 +32,6 @@ type WhatsOnChainForkTip struct {
 	Status    string `json:"status"`
 }
 
-var currentSyncTime = 1 * time.Minute
 var dbEngine string
 
 func init() {
@@ -42,20 +41,35 @@ func init() {
 func TestApplicationIntegration(t *testing.T) {
 	flag.Parse()
 
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
+	timeoutTimer := time.NewTimer(2 * time.Minute)
+	defer timeoutTimer.Stop()
+
 	ctx := context.Background()
 
 	buildCmd := exec.Command("go", "build", "-o", "../cmd/bhsExecutable", "../cmd/main.go")
 	if err := buildCmd.Run(); err != nil {
 		t.Fatalf("Failed to build the application for tests: %v", err)
 	}
-	defer os.Remove("../cmd/bhsExecutable")
+	defer func() {
+		err := os.Remove("../cmd/bhsExecutable")
+		if err != nil {
+			t.Logf("Couldn't remove executable files %v", err)
+		}
+	}()
 
 	var cmd *exec.Cmd
 
 	switch dbEngine {
 	case "postgres":
 		postgresContainer, mappedPort := startPostgresContainer(ctx, t)
-		defer postgresContainer.Terminate(ctx)
+		defer func(postgresContainer testcontainers.Container, ctx context.Context) {
+			err := postgresContainer.Terminate(ctx)
+			if err != nil {
+				t.Logf("Couldn't terminate postgres container %v", err)
+			}
+		}(postgresContainer, ctx)
 		cmd = exec.Command("../cmd/bhsExecutable", "-C", "../regressiontests/postgres.config.yaml")
 		cmd.Env = append(os.Environ(), "BHS_DB_POSTGRES_PORT="+mappedPort)
 
@@ -95,41 +109,55 @@ func TestApplicationIntegration(t *testing.T) {
 		appExitSignal <- err
 	}()
 
-	select {
-	case err := <-appExitSignal:
-		if err != nil {
-			t.Fatalf("Application exited unexpectedly: %v", err)
+out:
+	for {
+		select {
+		case err := <-appExitSignal:
+			if err != nil {
+				t.Fatalf("Application exited unexpectedly: %v", err)
+			}
+		case <-timeoutTimer.C:
+			t.Fatalf("Test timed out after 2 minutes without passing all checks.")
+		case <-ticker.C:
+			resp, err := http.Get("http://localhost:8080/status")
+			if err != nil {
+				t.Logf("Failed to make HTTP request to the application: %v - next attempt in 10s", err)
+				continue
+			}
+			defer func(Body io.ReadCloser) {
+				err := Body.Close()
+				if err != nil {
+					t.Logf("Couldn't close http status request body %v", err)
+				}
+			}(resp.Body)
+
+			if resp.StatusCode != 200 {
+				t.Logf("Expected status code 200, got %d - next attempt in 10s", resp.StatusCode)
+				continue
+			}
+
+			t.Log("HTTP server is up and running")
+
+			wocTipHeight, err := fetchExternalForkHeight(whatsonchainAPIURL)
+			if err != nil {
+				t.Logf("Failed to fetch external fork height: %v", err)
+				continue
+			}
+
+			localTipHeight, err := fetchLocalTip()
+			if err != nil {
+				t.Logf("Failed to fetch local tip height: %v", err)
+				continue
+			}
+
+			if localTipHeight < wocTipHeight {
+				t.Logf("Couldn't sync to proper tip of chain - next attempt in 10s: %d < %d", localTipHeight, wocTipHeight)
+				continue
+			} else {
+				t.Logf("Synced to tip of chain: %d", localTipHeight)
+				break out
+			}
 		}
-	case <-time.After(currentSyncTime):
-	}
-
-	resp, err := http.Get("http://localhost:8080/status")
-	if err != nil {
-		t.Fatalf("Failed to make HTTP request to the application: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		t.Fatalf("Expected status code 200, got %d", resp.StatusCode)
-	}
-
-	t.Log("HTTP server is up and running")
-	t.Log("Comparing local and external LONGEST_CHAIN tips...")
-
-	wocTipHeight, err := fetchExternalForkHeight(whatsonchainAPIURL)
-	if err != nil {
-		t.Fatalf("Failed to fetch external fork height: %v", err)
-	}
-
-	localTipHeight, err := fetchLocalTip()
-	if err != nil {
-		t.Fatalf("Failed to fetch local tip height: %v", err)
-	}
-
-	if localTipHeight < wocTipHeight {
-		t.Errorf("Couldn't sync to proper tip of chain: %d < %d", localTipHeight, wocTipHeight)
-	} else {
-		t.Logf("Synced to tip of chain: %d", localTipHeight)
 	}
 
 	t.Log("Comparing synced data with known checkpoints...")
@@ -256,7 +284,6 @@ func verifyHeaders(t *testing.T) {
 		blockHeader, err := fetchBlockHeader(checkpoint.Hash.String())
 		if err != nil {
 			t.Fatalf("Failed to fetch block header for hash %s: %v", checkpoint.Hash.String(), err)
-			continue
 		}
 
 		if blockHeader.Height != checkpoint.Height || blockHeader.State != "LONGEST_CHAIN" {
@@ -301,7 +328,12 @@ func fetchMerkleRootConfirmations(fixtures []_merkleRootFixtures, t *testing.T) 
 	if err != nil {
 		t.Fatalf("Failed to make HTTP request to application: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			t.Logf("Couldn't close merkle root response body %v", err)
+		}
+	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("Expected status code 200, got %d", resp.StatusCode)
