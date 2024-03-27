@@ -168,7 +168,7 @@ out:
 
 	t.Log("Verifying merkle roots...")
 
-	verifyMerkleRoots(t, merkleRootFixtures)
+	verifyMerkleRoots(t, fixtures)
 
 	t.Log("Merkle roots verification passed successfully 🎉")
 }
@@ -290,7 +290,7 @@ func verifyHeaders(t *testing.T) {
 	}
 }
 
-func verifyMerkleRoots(t *testing.T, fixtures []_merkleRootFixtures) {
+func verifyMerkleRoots(t *testing.T, fixtures []merkleRootFixtures) {
 	confirmations := fetchMerkleRootConfirmations(fixtures, t)
 
 	for _, fixture := range fixtures {
@@ -307,7 +307,7 @@ func verifyMerkleRoots(t *testing.T, fixtures []_merkleRootFixtures) {
 	}
 }
 
-func fetchMerkleRootConfirmations(fixtures []_merkleRootFixtures, t *testing.T) []merkleroots.MerkleRootConfirmation {
+func fetchMerkleRootConfirmations(fixtures []merkleRootFixtures, t *testing.T) []merkleroots.MerkleRootConfirmation {
 	jsonData, err := json.Marshal(fixtures)
 	if err != nil {
 		t.Fatalf("Failed to marshal JSON: %v", err)

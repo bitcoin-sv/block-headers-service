@@ -1,11 +1,11 @@
 package regressiontests
 
-type _merkleRootFixtures struct {
+type merkleRootFixtures struct {
 	MerkleRoot string `json:"merkleRoot"`
 	Height     int32  `json:"blockHeight"`
 }
 
-var merkleRootFixtures = []_merkleRootFixtures{
+var fixtures = []merkleRootFixtures{
 	{"2d05f0c9c3e1c226e63b5fac240137687544cf631cd616fd34fd188fc9020866", 100},
 	{"5032c865ec9dffc052c0ae492d0b42c05d5904e7d540db1f8ca18118a2e561b3", 100100},
 	{"f0caff9e93bc0ffe943538e242acdcbcdfb1759f59b0ef06da2ca834187cbb18", 200100},
