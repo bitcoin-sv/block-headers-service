@@ -1,4 +1,4 @@
-package p2pexp
+package peer
 
 func minUint32(a, b uint32) uint32 {
 	if a < b {

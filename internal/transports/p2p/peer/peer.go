@@ -1,4 +1,4 @@
-package p2pexp
+package peer
 
 import (
 	"crypto/rand"
