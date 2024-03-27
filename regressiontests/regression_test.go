@@ -23,6 +23,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
+const localHTTPServerURL = "http://localhost:8080"
 const whatsonchainAPIURL = "https://api.whatsonchain.com/v1/bsv/main/chain/tips"
 
 type WhatsOnChainForkTip struct {
@@ -119,7 +120,7 @@ out:
 		case <-timeoutTimer.C:
 			t.Fatalf("Test timed out after 2 minutes without passing all checks.")
 		case <-ticker.C:
-			resp, err := http.Get("http://localhost:8080/status")
+			resp, err := http.Get(localHTTPServerURL + "/status")
 			if err != nil {
 				t.Logf("Failed to make HTTP request to the application: %v - next attempt in 10s", err)
 				continue
@@ -222,7 +223,7 @@ func fetchExternalForkHeight(url string) (int, error) {
 
 func fetchLocalTip() (int, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", "http://localhost:8080/api/v1/chain/tip/longest", nil)
+	req, err := http.NewRequest("GET", localHTTPServerURL+"/api/v1/chain/tip/longest", nil)
 	if err != nil {
 		return 0, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -251,7 +252,7 @@ func fetchLocalTip() (int, error) {
 
 func fetchBlockHeader(hash string) (*headers.BlockHeaderStateResponse, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", "http://localhost:8080/api/v1/chain/header/state/"+hash, nil)
+	req, err := http.NewRequest("GET", localHTTPServerURL+"/api/v1/chain/header/state/"+hash, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -314,7 +315,7 @@ func fetchMerkleRootConfirmations(fixtures []merkleRootFixtures, t *testing.T) [
 	}
 
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", "http://localhost:8080/api/v1/chain/merkleroot/verify", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", localHTTPServerURL+"/api/v1/chain/merkleroot/verify", bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatalf("Failed to create request: %v", err)
 	}
