@@ -31,6 +31,9 @@ type Peer struct {
 	timeOffset      int64
 	userAgent       string
 	verAckReceived  bool
+
+	msgChan chan wire.Message
+	quit    chan struct{}
 }
 
 func NewPeer(addr string, cfg *config.P2PConfig, chainParams *chaincfg.Params, headersService service.Headers, log *zerolog.Logger) (*Peer, error) {
@@ -56,6 +59,8 @@ func NewPeer(addr string, cfg *config.P2PConfig, chainParams *chaincfg.Params, h
 		log:             log,
 		services:        wire.SFspv,
 		protocolVersion: initialProtocolVersion,
+		msgChan:         make(chan wire.Message),
+		quit:            make(chan struct{}),
 	}
 	return peer, nil
 }
@@ -73,11 +78,26 @@ func (p *Peer) Connect() error {
 
 func (p *Peer) Disconnect() error {
 	p.log.Info().Msgf("disconnecting peer: %s", p.addr.String())
+	close(p.quit)
 	p.conn.Close()
 	return nil
 }
 
-func (p *Peer) NegotiateProtocol() error {
+func (p *Peer) Start() error {
+	err := p.negotiateProtocol()
+	if err != nil {
+		p.log.Error().Msgf("error negotiating protocol, reason: %v", err)
+		return err
+	}
+
+	go p.writeMsgHandler()
+	go p.readMsgHandler()
+	go p.pingHandler()
+
+	return nil
+}
+
+func (p *Peer) negotiateProtocol() error {
 	err := p.writeOurVersionMsg()
 	if err != nil {
 		return err
@@ -104,6 +124,57 @@ func (p *Peer) NegotiateProtocol() error {
 	return nil
 }
 
+// PingHandler is a handler for sending ping messages to peers.
+// Must be run as a goroutine.
+func (p *Peer) pingHandler() {
+	pingTicker := time.NewTicker(pingInterval)
+	defer pingTicker.Stop()
+
+out:
+	for {
+		select {
+		case <-pingTicker.C:
+			nonce, err := wire.RandomUint64()
+			if err != nil {
+				p.log.Error().Msgf("error generating nonce for ping msg, reason: %v", err)
+				continue
+			}
+			p.log.Info().Msgf("sending ping to peer %s with nonce: %d", p.addr.String(), nonce)
+			p.queueMessage(wire.NewMsgPing(nonce))
+
+		case <-p.quit:
+			break out
+		}
+	}
+}
+
+// MsgHandler is a message handler for incoming messages.
+// Must be run as a goroutine.
+func (p *Peer) readMsgHandler() {
+out:
+	for {
+		select {
+		case <-p.quit:
+			break out
+
+		default:
+			remoteMsg, _, err := wire.ReadMessage(p.conn, p.protocolVersion, p.chainParams.Net)
+			if err != nil {
+				p.log.Error().Msgf("cannot read message from peer %s, reason: %v", p.addr.String(), err)
+			}
+
+			switch msg := remoteMsg.(type) {
+			case *wire.MsgPing:
+				p.handlePing(msg)
+			case *wire.MsgPong:
+				p.log.Info().Msgf("received pong from peer %s with nonce: %d", p.addr.String(), msg.Nonce)
+			default:
+				p.log.Info().Msgf("received msg of type: %T", msg)
+			}
+		}
+	}
+}
+
 func (p *Peer) writeMessage(msg wire.Message) error {
 	err := wire.WriteMessage(p.conn, msg, p.protocolVersion, p.chainParams.Net)
 	if err != nil {
@@ -117,6 +188,25 @@ func (p *Peer) writeRejectMessage(msg wire.Message, reason string) {
 	err := p.writeMessage(rejectMsg)
 	if err != nil {
 		p.log.Error().Msgf("could not write reject message to peer, reason: %v", err)
+	}
+}
+
+func (p *Peer) queueMessage(msg wire.Message) {
+	// running in goroutine here, because writing
+	// to channel is blocking until read
+	go func() {
+		p.msgChan <- msg
+	}()
+}
+
+func (p *Peer) writeMsgHandler() {
+	for {
+		select {
+		case msg := <-p.msgChan:
+			p.writeMessage(msg)
+		case <-p.quit:
+			return
+		}
 	}
 }
 
@@ -215,4 +305,11 @@ func (p *Peer) requireVerAckReceived(remoteMsg wire.Message) (*wire.MsgVerAck, e
 		return nil, errors.New(reason)
 	}
 	return msg, nil
+}
+
+func (p *Peer) handlePing(msg *wire.MsgPing) {
+	p.log.Info().Msgf("received ping from peer %s with nonce: %d", p.addr.String(), msg.Nonce)
+	if p.protocolVersion > wire.BIP0031Version {
+		p.queueMessage(wire.NewMsgPong(msg.Nonce))
+	}
 }

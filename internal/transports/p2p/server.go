@@ -14,6 +14,8 @@ type server struct {
 	chainParams    *chaincfg.Params
 	headersService service.Headers
 	log            *zerolog.Logger
+
+	peer *Peer
 }
 
 func NewServer(config *config.P2PConfig, chainParams *chaincfg.Params, headersService service.Headers, log *zerolog.Logger) *server {
@@ -42,15 +44,16 @@ func (s *server) Start() error {
 		return err
 	}
 
+	s.peer = peer
+
 	err = peer.Connect()
 	if err != nil {
 		return err
 	}
-	defer peer.Disconnect()
 
-	err = peer.NegotiateProtocol()
+	err = peer.Start()
 	if err != nil {
-		s.log.Error().Msgf("error negotiating protocol, reason: %v", err)
+		s.log.Error().Msgf("error starting peer, reason: %v", err)
 		return err
 	}
 
@@ -58,5 +61,6 @@ func (s *server) Start() error {
 }
 
 func (s *server) Shutdown() error {
+	s.peer.Disconnect()
 	return nil
 }
