@@ -1,4 +1,4 @@
-package p2pexp
+package peer
 
 import (
 	"time"
@@ -11,5 +11,5 @@ const (
 	initialProtocolVersion       = uint32(70013)
 	maxProtocolVersion           = wire.FeeFilterVersion
 	minAcceptableProtocolVersion = wire.MultipleAddressVersion
-	pingInterval                 = 2 * time.Minute
+	pingInterval                 = 15 * time.Second
 )

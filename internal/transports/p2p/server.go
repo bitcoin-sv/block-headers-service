@@ -5,6 +5,7 @@ import (
 
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
+	"github.com/bitcoin-sv/block-headers-service/internal/transports/p2p/peer"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	"github.com/rs/zerolog"
 )
@@ -15,7 +16,7 @@ type server struct {
 	headersService service.Headers
 	log            *zerolog.Logger
 
-	peer *Peer
+	peer *peer.Peer
 }
 
 func NewServer(config *config.P2PConfig, chainParams *chaincfg.Params, headersService service.Headers, log *zerolog.Logger) *server {
@@ -39,7 +40,7 @@ func (s *server) Start() error {
 		s.log.Info().Msgf("Got peer addr: %s", seed.String())
 	}
 
-	peer, err := NewPeer(seeds[0].String(), s.config, s.chainParams, s.headersService, s.log)
+	peer, err := peer.NewPeer(seeds[0].String(), s.config, s.chainParams, s.headersService, s.log)
 	if err != nil {
 		return err
 	}
