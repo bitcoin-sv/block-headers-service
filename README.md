@@ -12,6 +12,8 @@
 
 <h4 id="top" align="center">Formerly known as "Pulse"</h1>
 
+[SPV Wallet GitBook](https://bsvblockchain.gitbook.io/docs)
+
 ## Table of contents
 <details>
   <!--<summary>Table of Contents</summary> -->
