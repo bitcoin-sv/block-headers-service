@@ -16,6 +16,8 @@ type server struct {
 	headersService service.Headers
 	log            *zerolog.Logger
 
+	// For now it's a single peer, in the future
+	// it's gonna be a list of peers
 	peer *peer.Peer
 }
 

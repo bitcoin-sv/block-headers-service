@@ -10,7 +10,9 @@ import (
 	"time"
 
 	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	"github.com/rs/zerolog"
@@ -21,7 +23,10 @@ type Peer struct {
 	addr            *net.TCPAddr
 	cfg             *config.P2PConfig
 	chainParams     *chaincfg.Params
+	checkpoints     []chaincfg.Checkpoint
+	nextCheckpoint  *chaincfg.Checkpoint
 	headersService  service.Headers
+	chainService    service.Chains
 	log             *zerolog.Logger
 	services        wire.ServiceFlag
 	protocolVersion uint32
@@ -36,7 +41,14 @@ type Peer struct {
 	quit    chan struct{}
 }
 
-func NewPeer(addr string, cfg *config.P2PConfig, chainParams *chaincfg.Params, headersService service.Headers, log *zerolog.Logger) (*Peer, error) {
+func NewPeer(
+	addr string,
+	cfg *config.P2PConfig,
+	chainParams *chaincfg.Params,
+	headersService service.Headers,
+	chainService service.Chains,
+	log *zerolog.Logger,
+) (*Peer, error) {
 	port, err := strconv.Atoi(config.ActiveNetParams.DefaultPort)
 	if err != nil {
 		return nil, err
@@ -46,16 +58,23 @@ func NewPeer(addr string, cfg *config.P2PConfig, chainParams *chaincfg.Params, h
 	if ip == nil {
 		return nil, errors.New("could not parse peer IP")
 	}
+
 	netAddr := &net.TCPAddr{
 		IP:   ip,
 		Port: port,
 	}
+
+	currentTipHeight := headersService.GetTipHeight()
+	nextCheckpoint := findNextHeaderCheckpoint(chainParams.Checkpoints, currentTipHeight)
 
 	peer := &Peer{
 		addr:            netAddr,
 		cfg:             cfg,
 		chainParams:     chainParams,
 		headersService:  headersService,
+		chainService:    chainService,
+		checkpoints:     chainParams.Checkpoints,
+		nextCheckpoint:  nextCheckpoint,
 		log:             log,
 		services:        wire.SFspv,
 		protocolVersion: initialProtocolVersion,
@@ -165,7 +184,7 @@ out:
 
 			switch msg := remoteMsg.(type) {
 			case *wire.MsgPing:
-				p.handlePing(msg)
+				p.handlePingMsg(msg)
 			case *wire.MsgPong:
 				p.log.Info().Msgf("received pong from peer %s with nonce: %d", p.addr.String(), msg.Nonce)
 			default:
@@ -246,6 +265,22 @@ func (p *Peer) writeOurVersionMsg() error {
 	return nil
 }
 
+func (p *Peer) writeGetHeadersMsg(stopHash *chainhash.Hash) error {
+	msg := wire.NewMsgGetHeaders()
+	msg.HashStop = *stopHash
+
+	locator := p.headersService.LatestHeaderLocator()
+	for _, hash := range locator {
+		err := msg.AddBlockLocatorHash(hash)
+		if err != nil {
+			return err
+		}
+	}
+
+	p.queueMessage(msg)
+	return nil
+}
+
 func (p *Peer) readVerOrVerAck() error {
 	remoteMsg, _, err := wire.ReadMessage(p.conn, p.protocolVersion, p.chainParams.Net)
 	if err != nil {
@@ -307,9 +342,86 @@ func (p *Peer) requireVerAckReceived(remoteMsg wire.Message) (*wire.MsgVerAck, e
 	return msg, nil
 }
 
-func (p *Peer) handlePing(msg *wire.MsgPing) {
+func (p *Peer) handlePingMsg(msg *wire.MsgPing) {
 	p.log.Info().Msgf("received ping from peer %s with nonce: %d", p.addr.String(), msg.Nonce)
 	if p.protocolVersion > wire.BIP0031Version {
 		p.queueMessage(wire.NewMsgPong(msg.Nonce))
 	}
+}
+
+func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
+	receivedCheckpoint := false
+	anyHeadersAdded := false
+
+	for _, header := range msg.Headers {
+		h, addErr := p.chainService.Add(domains.BlockHeaderSource(*header))
+
+		if service.HeaderAlreadyExists.Is(addErr) {
+			continue
+		}
+
+		if service.BlockRejected.Is(addErr) {
+			// TODO: ban peer
+			p.Disconnect()
+			return
+		}
+
+		if service.HeaderSaveFail.Is(addErr) {
+			p.log.Error().Msgf("couldn't save header %v in database, because of %+v", h, addErr)
+			continue
+		}
+
+		if service.HeaderCreationFail.Is(addErr) {
+			p.log.Error().Msgf("couldn't create header from %v because of error %+v", header, addErr)
+			continue
+		}
+
+		if service.ChainUpdateFail.Is(addErr) {
+			p.log.Error().Msgf("when adding header %v couldn't update chains state because of error %+v", header, addErr)
+			continue
+		}
+
+		var err error
+		receivedCheckpoint, err = p.verifyCheckpointReached(h, receivedCheckpoint)
+		if err != nil {
+			// TODO: ban peer or lower peer sync score
+			p.Disconnect()
+			return
+		}
+
+		anyHeadersAdded = true
+	}
+
+	if !anyHeadersAdded {
+		// TODO: write error msg
+		return
+	}
+
+	// TODO: write logs here
+	if receivedCheckpoint {
+		p.nextCheckpoint = findNextHeaderCheckpoint(p.checkpoints, p.nextCheckpoint.Height)
+		p.writeGetHeadersMsg(p.nextCheckpoint.Hash)
+		return
+	}
+
+	p.writeGetHeadersMsg(&zeroHash)
+}
+
+func (p *Peer) verifyCheckpointReached(h *domains.BlockHeader, receivedCheckpoint bool) (bool, error) {
+	if p.nextCheckpoint != nil && h.Height == p.nextCheckpoint.Height {
+		if h.Hash == *p.nextCheckpoint.Hash {
+			receivedCheckpoint = true
+			p.log.Info().Msgf(
+				"verified downloaded block header against checkpoint at height %d / hash %s",
+				h.Height, h.Hash,
+			)
+		} else {
+			p.log.Error().Msgf(
+				"block header at height %d/hash %s from peer %s does NOT match expected checkpoint hash of %s -- disconnecting",
+				h.Height, h.Hash, p.addr.String(), p.nextCheckpoint.Hash,
+			)
+			return false, fmt.Errorf("corresponding checkpoint height does not match got: %v, exp: %v", h.Height, p.nextCheckpoint.Height)
+		}
+	}
+	return receivedCheckpoint, nil
 }
