@@ -7,8 +7,6 @@ on:
         description: 'Branch Name'
         required: true
         default: 'main'
-  pull_request_target:
-    types: [labeled]
 
 jobs:
   run-regression-test-on-sqlite:
