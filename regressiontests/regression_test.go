@@ -36,7 +36,7 @@ type WhatsOnChainForkTip struct {
 var dbEngine string
 
 func init() {
-	flag.StringVar(&dbEngine, "dbEngine", "postgres", "The database engine to use in tests (postgres or sqlite)")
+	flag.StringVar(&dbEngine, "dbEngine", "sqlite", "The database engine to use in tests (postgres or sqlite)")
 }
 
 func TestApplicationIntegration(t *testing.T) {
