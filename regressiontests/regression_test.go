@@ -71,11 +71,12 @@ func TestApplicationIntegration(t *testing.T) {
 				t.Logf("Couldn't terminate postgres container %v", err)
 			}
 		}(postgresContainer, ctx)
-		cmd = exec.Command("../cmd/bhsExecutable", "-C", "../regressiontests/postgres.config.yaml")
-		cmd.Env = append(os.Environ(), "BHS_DB_POSTGRES_PORT="+mappedPort)
+		cmd = exec.Command("../cmd/bhsExecutable")
+		setPostgresEnvs(cmd, mappedPort)
 
 	case "sqlite":
-		cmd = exec.Command("../cmd/bhsExecutable", "-C", "../regressiontests/sqlite.config.yaml")
+		cmd = exec.Command("../cmd/bhsExecutable")
+		setSQLiteEnvs(cmd)
 
 		defer func() {
 			err := os.Remove("../data/blockheaders.db")
@@ -120,17 +121,21 @@ out:
 		case <-timeoutTimer.C:
 			t.Fatalf("Test timed out after 2 minutes without passing all checks.")
 		case <-ticker.C:
-			resp, err := http.Get(localHTTPServerURL + "/status")
+			client := &http.Client{}
+			req, err := http.NewRequestWithContext(ctx, http.MethodGet, localHTTPServerURL+"/status", nil)
+			if err != nil {
+				t.Fatalf("Couldn't prepare HTTP request %v", err)
+			}
+
+			resp, err := client.Do(req)
 			if err != nil {
 				t.Logf("Failed to make HTTP request to the application: %v - next attempt in 10s", err)
 				continue
 			}
-			defer func(Body io.ReadCloser) {
-				err := Body.Close()
-				if err != nil {
-					t.Logf("Couldn't close http status request body %v", err)
-				}
-			}(resp.Body)
+
+			if closeErr := resp.Body.Close(); closeErr != nil {
+				t.Errorf("failed to close response body: %v", closeErr)
+			}
 
 			if resp.StatusCode != 200 {
 				t.Logf("Expected status code 200, got %d - next attempt in 10s", resp.StatusCode)
@@ -139,13 +144,13 @@ out:
 
 			t.Log("HTTP server is up and running")
 
-			wocTipHeight, err := fetchExternalForkHeight(whatsonchainAPIURL)
+			wocTipHeight, err := fetchExternalForkHeight(ctx, whatsonchainAPIURL, t)
 			if err != nil {
 				t.Logf("Failed to fetch external fork height: %v", err)
 				continue
 			}
 
-			localTipHeight, err := fetchLocalTip()
+			localTipHeight, err := fetchLocalTip(ctx, t)
 			if err != nil {
 				t.Logf("Failed to fetch local tip height: %v", err)
 				continue
@@ -163,15 +168,32 @@ out:
 
 	t.Log("Comparing synced data with known checkpoints...")
 
-	verifyHeaders(t)
+	verifyHeaders(ctx, t)
 
 	t.Log("Headers checkpoint comparison passed successfully 🎉")
 
 	t.Log("Verifying merkle roots...")
 
-	verifyMerkleRoots(t, fixtures)
+	verifyMerkleRoots(ctx, t, fixtures)
 
 	t.Log("Merkle roots verification passed successfully 🎉")
+}
+
+func setPostgresEnvs(cmd *exec.Cmd, mappedPort string) {
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, "BHS_DB_POSTGRES_PORT="+mappedPort)
+	cmd.Env = append(cmd.Env, "BHS_DB_ENGINE=postgres")
+	cmd.Env = append(cmd.Env, "BHS_DB_PREPARED_DB=true")
+	cmd.Env = append(cmd.Env, "BHS_DB_PREPARED_DB_FILE_PATH=../data/blockheaders.csv.gz")
+	cmd.Env = append(cmd.Env, "BHS_DB_SCHEMA_PATH=../database/migrations")
+}
+
+func setSQLiteEnvs(cmd *exec.Cmd) {
+	cmd.Env = append(cmd.Env, "BHS_DB_ENGINE=sqlite")
+	cmd.Env = append(cmd.Env, "BHS_DB_PREPARED_DB=true")
+	cmd.Env = append(cmd.Env, "BHS_DB_PREPARED_DB_FILE_PATH=../data/blockheaders.csv.gz")
+	cmd.Env = append(cmd.Env, "BHS_DB_SCHEMA_PATH=../database/migrations")
+	cmd.Env = append(cmd.Env, "BHS_DB_SQLITE_FILE_PATH=../data/blockheaders.db")
 }
 
 func startPostgresContainer(ctx context.Context, t *testing.T) (testcontainers.Container, string) {
@@ -179,8 +201,8 @@ func startPostgresContainer(ctx context.Context, t *testing.T) (testcontainers.C
 		Image:        "postgres:latest",
 		ExposedPorts: []string{"5432/tcp"},
 		Env: map[string]string{
-			"POSTGRES_USER":     "testuser",
-			"POSTGRES_PASSWORD": "test",
+			"POSTGRES_USER":     "user",
+			"POSTGRES_PASSWORD": "password",
 			"POSTGRES_DB":       "bhs",
 		},
 		WaitingFor: wait.ForListeningPort("5432/tcp"),
@@ -200,12 +222,23 @@ func startPostgresContainer(ctx context.Context, t *testing.T) (testcontainers.C
 	return postgresContainer, mappedPort.Port()
 }
 
-func fetchExternalForkHeight(url string) (int, error) {
-	resp, err := http.Get(url)
+func fetchExternalForkHeight(ctx context.Context, url string, t *testing.T) (int, error) {
+	client := &http.Client{}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return 0, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := client.Do(req)
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			t.Errorf("failed to close response body: %v", closeErr)
+		}
+	}()
+
 	if err != nil {
 		return 0, fmt.Errorf("failed to make HTTP request: %w", err)
 	}
-	defer resp.Body.Close()
 
 	var forks []WhatsOnChainForkTip
 	if err := json.NewDecoder(resp.Body).Decode(&forks); err != nil {
@@ -221,9 +254,9 @@ func fetchExternalForkHeight(url string) (int, error) {
 	return 0, fmt.Errorf("no active fork found")
 }
 
-func fetchLocalTip() (int, error) {
+func fetchLocalTip(ctx context.Context, t *testing.T) (int, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", localHTTPServerURL+"/api/v1/chain/tip/longest", nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, localHTTPServerURL+"/api/v1/chain/tip/longest", nil)
 	if err != nil {
 		return 0, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -235,7 +268,11 @@ func fetchLocalTip() (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("failed to make HTTP request to application: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			t.Errorf("failed to close response body: %v", closeErr)
+		}
+	}()
 
 	if resp.StatusCode != 200 {
 		body, _ := io.ReadAll(io.Reader(resp.Body))
@@ -250,9 +287,9 @@ func fetchLocalTip() (int, error) {
 	return int(chainTip.Height), nil
 }
 
-func fetchBlockHeader(hash string) (*headers.BlockHeaderStateResponse, error) {
+func fetchBlockHeader(ctx context.Context, hash string, t *testing.T) (*headers.BlockHeaderStateResponse, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", localHTTPServerURL+"/api/v1/chain/header/state/"+hash, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, localHTTPServerURL+"/api/v1/chain/header/state/"+hash, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -264,7 +301,11 @@ func fetchBlockHeader(hash string) (*headers.BlockHeaderStateResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to make HTTP request to application: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			t.Errorf("failed to close response body: %v", closeErr)
+		}
+	}()
 
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
@@ -278,9 +319,9 @@ func fetchBlockHeader(hash string) (*headers.BlockHeaderStateResponse, error) {
 	return &blockHeader, nil
 }
 
-func verifyHeaders(t *testing.T) {
+func verifyHeaders(ctx context.Context, t *testing.T) {
 	for _, checkpoint := range chaincfg.MainNetCheckpoints {
-		blockHeader, err := fetchBlockHeader(checkpoint.Hash.String())
+		blockHeader, err := fetchBlockHeader(ctx, checkpoint.Hash.String(), t)
 		if err != nil {
 			t.Fatalf("Failed to fetch block header for hash %s: %v", checkpoint.Hash.String(), err)
 		}
@@ -291,8 +332,8 @@ func verifyHeaders(t *testing.T) {
 	}
 }
 
-func verifyMerkleRoots(t *testing.T, fixtures []merkleRootFixtures) {
-	confirmations := fetchMerkleRootConfirmations(fixtures, t)
+func verifyMerkleRoots(ctx context.Context, t *testing.T, fixtures []merkleRootFixtures) {
+	confirmations := fetchMerkleRootConfirmations(ctx, fixtures, t)
 
 	for _, fixture := range fixtures {
 		found := false
@@ -308,14 +349,14 @@ func verifyMerkleRoots(t *testing.T, fixtures []merkleRootFixtures) {
 	}
 }
 
-func fetchMerkleRootConfirmations(fixtures []merkleRootFixtures, t *testing.T) []merkleroots.MerkleRootConfirmation {
+func fetchMerkleRootConfirmations(ctx context.Context, fixtures []merkleRootFixtures, t *testing.T) []merkleroots.MerkleRootConfirmation {
 	jsonData, err := json.Marshal(fixtures)
 	if err != nil {
 		t.Fatalf("Failed to marshal JSON: %v", err)
 	}
 
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", localHTTPServerURL+"/api/v1/chain/merkleroot/verify", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, localHTTPServerURL+"/api/v1/chain/merkleroot/verify", bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatalf("Failed to create request: %v", err)
 	}
@@ -327,12 +368,11 @@ func fetchMerkleRootConfirmations(fixtures []merkleRootFixtures, t *testing.T) [
 	if err != nil {
 		t.Fatalf("Failed to make HTTP request to application: %v", err)
 	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			t.Logf("Couldn't close merkle root response body %v", err)
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			t.Errorf("failed to close response body: %v", closeErr)
 		}
-	}(resp.Body)
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("Expected status code 200, got %d", resp.StatusCode)
