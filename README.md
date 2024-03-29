@@ -288,7 +288,7 @@ BHS_HISTORY_MAX=300
 
 ## Updating predefined database
 
-When you start the application, and synchronization process is long when using prepared database, it's recommended to use the `-e` flag to export fresh database with all headers. This will speed up the process of synchronization in the future.
+When you start the application and the synchronization process takes a long time with a prepared database, it's recommended to use the `-e` flag to export a fresh database with all headers. This will speed up the synchronization process in the future.
 
 > **Note:**: Export feature works only with SQLite database.
 
