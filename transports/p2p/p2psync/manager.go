@@ -606,14 +606,16 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 		// from the block after this one up to the end of the chain (zero hash).
 		sm.log.Info().Msgf("Reached the final checkpoint -- switching to normal mode")
 		sm.log.Info().Msgf("Reached the final checkpoint -- lastHash: %#v", finalHash.String())
-		sm.sendGetHeadersWithPassedParams([]*chainhash.Hash{finalHash}, &zeroHash, peer)
+		locator := sm.Services.Headers.LatestHeaderLocator()
+		sm.sendGetHeadersWithPassedParams(locator, &zeroHash, peer)
 		return
 	}
 
 	// This header is not a checkpoint, so request the next batch of
 	// headers starting from the latest known header and ending with the
 	// next checkpoint.
-	sm.sendGetHeadersWithPassedParams([]*chainhash.Hash{finalHash}, sm.nextCheckpoint.Hash, peer)
+	locator := sm.Services.Headers.LatestHeaderLocator()
+	sm.sendGetHeadersWithPassedParams(locator, sm.nextCheckpoint.Hash, peer)
 }
 
 func (sm *SyncManager) requestForNextHeaderBatch(prevHash *chainhash.Hash, peer *peerpkg.Peer, prevHeight int32) {
@@ -676,9 +678,6 @@ func (sm *SyncManager) handleInvMsg(imsg *invMsg) {
 	}
 	sm.log.Info().Msgf("[Headers] handleInvMsg, peer.ID: %d, invType: %s", imsg.peer.ID(), typeMap[imsg.inv.InvList[0].Type])
 
-	lastHeader := sm.Services.Headers.GetTip()
-	sm.log.Info().Msgf("[Manager] handleInvMsg lastHeaderNode.height : %d", lastHeader.Height)
-
 	peer := imsg.peer
 	_, exists := sm.peerStates[peer]
 	if !exists {
@@ -712,15 +711,18 @@ func (sm *SyncManager) handleInvMsg(imsg *invMsg) {
 		blkHeight, err := sm.Services.Headers.GetHeightByHash(&invVects[lastBlock].Hash)
 		if err == nil {
 			peer.UpdateLastBlockHeight(blkHeight)
+			// we know about the block, no need to fetch it
+			return
 		}
 	}
 
 	if lastBlock != -1 {
-		sm.log.Info().Msgf("[Manager] handleInvMsg  lastConfirmedHeaderNode.hash  : %s", lastHeader.Hash)
-		sm.log.Info().Msgf("[Manager] handleInvMsg lastConfirmedHeaderNode.height : %d", lastHeader.Height)
+		locator := sm.Services.Headers.LatestHeaderLocator()
+		sm.log.Info().Msgf("[Manager] handleInvMsg tip hash  : %s", locator[0])
 		sm.log.Info().Msgf("[Manager] handleInvMsg &invVects[lastBlock].Hash  : %v", &invVects[lastBlock].Hash)
+		sm.log.Info().Msg("[Manager] handleInvMsg requesting for all the headers since our tip")
 
-		sm.sendGetHeadersWithPassedParams([]*chainhash.Hash{&lastHeader.Hash}, &invVects[lastBlock].Hash, peer)
+		sm.sendGetHeadersWithPassedParams(locator, &zeroHash, peer)
 	}
 }
 
