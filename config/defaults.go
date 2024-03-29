@@ -29,6 +29,7 @@ func getDbDefaults() *DbConfig {
 		Sqlite: SqliteConfig{
 			FilePath: "./data/blockheaders.db",
 		},
+		Postgres: getPostgresDefaults(),
 	}
 }
 
@@ -85,5 +86,16 @@ func getLoggingDefaults() *LoggingConfig {
 func getMetricsDefaults() *MetricsConfig {
 	return &MetricsConfig{
 		Enabled: false,
+	}
+}
+
+func getPostgresDefaults() PostgreSqlConfig {
+	return PostgreSqlConfig{
+		Host:     "localhost",
+		Port:     5432,
+		User:     "user",
+		Password: "password",
+		DbName:   "bhs",
+		Sslmode:  "disable",
 	}
 }
