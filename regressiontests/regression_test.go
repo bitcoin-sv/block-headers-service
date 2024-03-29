@@ -1,3 +1,6 @@
+//go:build regression
+// +build regression
+
 package regressiontests
 
 import (
@@ -120,6 +123,7 @@ out:
 			}
 		case <-timeoutTimer.C:
 			t.Fatalf("Test timed out after 2 minutes without passing all checks.")
+			t.Logf("Consider updating predefined database file with new headers - https://github.com/bitcoin-sv/block-headers-service/blob/master/README.md#updating-predefined-database")
 		case <-ticker.C:
 			client := &http.Client{}
 			req, err := http.NewRequestWithContext(ctx, http.MethodGet, localHTTPServerURL+"/status", nil)
