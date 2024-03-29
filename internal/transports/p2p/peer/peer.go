@@ -150,7 +150,6 @@ func (p *Peer) pingHandler() {
 	pingTicker := time.NewTicker(pingInterval)
 	defer pingTicker.Stop()
 
-out:
 	for {
 		select {
 		case <-pingTicker.C:
@@ -163,7 +162,7 @@ out:
 			p.queueMessage(wire.NewMsgPing(nonce))
 
 		case <-p.quit:
-			break out
+			return
 		}
 	}
 }
@@ -171,11 +170,10 @@ out:
 // MsgHandler is a message handler for incoming messages.
 // Must be run as a goroutine.
 func (p *Peer) readMsgHandler() {
-out:
 	for {
 		select {
 		case <-p.quit:
-			break out
+			return
 
 		default:
 			remoteMsg, _, err := wire.ReadMessage(p.conn, p.protocolVersion, p.chainParams.Net)
