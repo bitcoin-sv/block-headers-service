@@ -14,19 +14,27 @@ type server struct {
 	config         *config.P2PConfig
 	chainParams    *chaincfg.Params
 	headersService service.Headers
+	chainService   service.Chains
 	log            *zerolog.Logger
 
 	// For now it's a single peer, in the future
-	// it's gonna be a list of peers
+	// it's gonna be a pool of peers
 	peer *peer.Peer
 }
 
-func NewServer(config *config.P2PConfig, chainParams *chaincfg.Params, headersService service.Headers, log *zerolog.Logger) *server {
+func NewServer(
+	config *config.P2PConfig,
+	chainParams *chaincfg.Params,
+	headersService service.Headers,
+	chainService service.Chains,
+	log *zerolog.Logger,
+) *server {
 	serverLogger := log.With().Str("service", "p2p-experimental").Logger()
 	server := &server{
 		config:         config,
 		chainParams:    chainParams,
 		headersService: headersService,
+		chainService:   chainService,
 		log:            &serverLogger,
 	}
 	return server
@@ -41,8 +49,9 @@ func (s *server) Start() error {
 	for _, seed := range seeds {
 		s.log.Info().Msgf("Got peer addr: %s", seed.String())
 	}
+	firstPeerSeed := seeds[0].String()
 
-	peer, err := peer.NewPeer(seeds[0].String(), s.config, s.chainParams, s.headersService, s.log)
+	peer, err := peer.NewPeer(firstPeerSeed, s.config, s.chainParams, s.headersService, s.chainService, s.log)
 	if err != nil {
 		return err
 	}

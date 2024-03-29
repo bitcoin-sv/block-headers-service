@@ -151,7 +151,7 @@ func main() {
 
 	if cfg.P2P.Experimental {
 		chainParams := config.ActiveNetParams.Params
-		p2pServer = p2pexp.NewServer(cfg.P2P, chainParams, hs.Headers, log)
+		p2pServer = p2pexp.NewServer(cfg.P2P, chainParams, hs.Headers, hs.Chains, log)
 	} else {
 		p2pServer, err = p2p.NewServer(hs, peers, cfg.P2P, log)
 		if err != nil {

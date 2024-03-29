@@ -36,6 +36,7 @@ type Peer struct {
 	timeOffset      int64
 	userAgent       string
 	verAckReceived  bool
+	synced          bool
 
 	msgChan chan wire.Message
 	quit    chan struct{}
@@ -187,6 +188,10 @@ out:
 				p.handlePingMsg(msg)
 			case *wire.MsgPong:
 				p.log.Info().Msgf("received pong from peer %s with nonce: %d", p.addr.String(), msg.Nonce)
+			case *wire.MsgHeaders:
+				p.handleHeadersMsg(msg)
+			case *wire.MsgInv:
+				p.handleInvMsg(msg)
 			default:
 				p.log.Info().Msgf("received msg of type: %T", msg)
 			}
@@ -218,6 +223,8 @@ func (p *Peer) queueMessage(msg wire.Message) {
 	}()
 }
 
+// writeMsgHandler serves as a queue for writing messages to peers,
+// must be run as a goroutine.
 func (p *Peer) writeMsgHandler() {
 	for {
 		select {
@@ -349,9 +356,29 @@ func (p *Peer) handlePingMsg(msg *wire.MsgPing) {
 	}
 }
 
+func (p *Peer) handleInvMsg(msg *wire.MsgInv) {
+	if !p.synced {
+		return
+	}
+
+	lastBlock := searchForFinalBlock(msg.InvList)
+	if lastBlock == -1 {
+		return
+	}
+
+	// if last header from inv msg is already in database, ignore
+	lastBlockHash := &msg.InvList[lastBlock].Hash
+	_, err := p.headersService.GetHeightByHash(lastBlockHash)
+	if err == nil {
+		return
+	}
+
+	p.writeGetHeadersMsg(lastBlockHash)
+}
+
 func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 	receivedCheckpoint := false
-	anyHeadersAdded := false
+	lastHeight := int32(0)
 
 	for _, header := range msg.Headers {
 		h, addErr := p.chainService.Add(domains.BlockHeaderSource(*header))
@@ -389,21 +416,37 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 			return
 		}
 
-		anyHeadersAdded = true
+		lastHeight = h.Height
 	}
 
-	if !anyHeadersAdded {
-		// TODO: write error msg
+	if lastHeight == 0 {
+		p.log.Warn().Msgf("received only existing or rejected headers from peer: %s", p.addr.String())
+		// TODO: lower peer sync score
 		return
 	}
 
-	// TODO: write logs here
+	p.log.Info().Msgf("successfully received headers from peer %s, up to height %d", p.addr.String(), lastHeight)
+
 	if receivedCheckpoint {
 		p.nextCheckpoint = findNextHeaderCheckpoint(p.checkpoints, p.nextCheckpoint.Height)
+		if p.nextCheckpoint == nil {
+			p.synced = true
+		}
+	}
+
+	if p.nextCheckpoint != nil {
+		p.log.Info().Msgf(
+			"requesting next headers batch from peer %s, height range %d - %d",
+			p.addr.String(), lastHeight, p.nextCheckpoint.Height,
+		)
 		p.writeGetHeadersMsg(p.nextCheckpoint.Hash)
 		return
 	}
 
+	p.log.Info().Msgf(
+		"checkpoints synced, requesting headers from height %d up to end of chain (zero hash) from peer %s",
+		lastHeight, p.addr.String(),
+	)
 	p.writeGetHeadersMsg(&zeroHash)
 }
 
