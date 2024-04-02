@@ -8,8 +8,8 @@ on:
 
 jobs:
   run-regression-test-on-sqlite:
-    if: > 
-      (github.event_name == 'workflow_dispatch') || 
+    if: >
+      (github.event_name == 'workflow_dispatch') ||
       (github.event_name == 'pull_request_target' && github.event.label.name == 'regression-tests')
     runs-on: ubuntu-latest
     steps:
@@ -27,8 +27,8 @@ jobs:
         run: go test -v -tags regression -run TestApplicationIntegration ./regressiontests -dbEngine=sqlite
 
   run-regression-test-on-postgres:
-    if: > 
-      (github.event_name == 'workflow_dispatch') || 
+    if: >
+      (github.event_name == 'workflow_dispatch') ||
       (github.event_name == 'pull_request_target' && github.event.label.name == 'regression-tests')
     runs-on: ubuntu-latest
     steps:
