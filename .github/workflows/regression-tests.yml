@@ -2,45 +2,45 @@ name: Regression Tests
 
 on:
   workflow_dispatch:
-    inputs:
-      branchName:
-        description: 'Branch Name'
-        required: true
-        default: 'main'
+
   pull_request_target:
     types: [labeled]
 
 jobs:
   run-regression-test-on-sqlite:
-    if: (github.event_name == 'workflow_dispatch') || (github.event_name == 'pull_request_target' && github.event.label.name == 'regression-tests')
+    if: > 
+      (github.event_name == 'workflow_dispatch') || 
+      (github.event_name == 'pull_request_target' && github.event.label.name == 'regression-tests')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.branchName || github.head_ref }}
+          ref: ${{ github.head_ref || github.ref }}
+      
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '^1.21.5'
+          go-version-file: 'go.mod'
+
       - name: Run Integration Tests on SQLite
-        run: >
-          go test -v -tags regression -run TestApplicationIntegration
-          ./regressiontests -dbEngine=sqlite
+        run: go test -v -tags regression -run TestApplicationIntegration ./regressiontests -dbEngine=sqlite
 
   run-regression-test-on-postgres:
-    if: (github.event_name == 'workflow_dispatch') || (github.event_name == 'pull_request_target' && github.event.label.name == 'regression-tests')
+    if: > 
+      (github.event_name == 'workflow_dispatch') || 
+      (github.event_name == 'pull_request_target' && github.event.label.name == 'regression-tests')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.branchName || github.head_ref }}
+          ref: ${{ github.head_ref || github.ref }}
+      
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '^1.21.5'
+          go-version-file: 'go.mod'
+
       - name: Run Integration Tests on PostgreSQL
-        run: >
-          go test -v -tags regression -run TestApplicationIntegration
-          ./regressiontests -dbEngine=postgres
+        run: go test -v -tags regression -run TestApplicationIntegration ./regressiontests -dbEngine=postgres

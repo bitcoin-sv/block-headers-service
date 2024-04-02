@@ -39,79 +39,109 @@ type WhatsOnChainForkTip struct {
 var dbEngine string
 
 func init() {
-	flag.StringVar(&dbEngine, "dbEngine", "sqlite", "The database engine to use in tests (postgres or sqlite)")
+	flag.StringVar(&dbEngine, "dbEngine", "postgres", "The database engine to use in tests (postgres or sqlite)")
 }
 
 func TestApplicationIntegration(t *testing.T) {
 	flag.Parse()
+	ctx := context.Background()
 
+	setupApplicationBuild(t)
+	defer cleanupApplicationExecutable(t)
+
+	var cmd *exec.Cmd
+	var dbCleanupFunc func()
+
+	switch dbEngine {
+	case "postgres":
+		cmd, dbCleanupFunc = setupPostgresDatabase(ctx, t)
+	case "sqlite":
+		cmd, dbCleanupFunc = setupSQLiteDatabase(t)
+	default:
+		t.Fatalf("Unsupported database engine: %s", dbEngine)
+	}
+
+	defer dbCleanupFunc()
+	defer killApplicationProcess(cmd, t)
+
+	monitorApplicationStartup(ctx, t, cmd)
+
+	t.Log("Comparing synced data with known checkpoints...")
+
+	verifyHeaders(ctx, t)
+
+	t.Log("Headers checkpoint comparison passed successfully 🎉")
+
+	t.Log("Verifying merkle roots...")
+
+	verifyMerkleRoots(ctx, t, fixtures)
+
+	t.Log("Merkle roots verification passed successfully 🎉")
+
+}
+
+func setupApplicationBuild(t *testing.T) {
+	buildCmd := exec.Command("go", "build", "-o", "../cmd/bhsExecutable", "../cmd/main.go")
+	if err := buildCmd.Run(); err != nil {
+		t.Fatalf("Failed to build the application for tests: %v", err)
+	}
+}
+
+func cleanupApplicationExecutable(t *testing.T) {
+	if err := os.Remove("../cmd/bhsExecutable"); err != nil {
+		t.Logf("Couldn't remove executable files: %v", err)
+	}
+}
+
+func setupPostgresDatabase(ctx context.Context, t *testing.T) (*exec.Cmd, func()) {
+	postgresContainer, mappedPort := startPostgresContainer(ctx, t)
+	cleanupFunc := func() {
+		if err := postgresContainer.Terminate(ctx); err != nil {
+			t.Logf("Couldn't terminate postgres container: %v", err)
+		}
+	}
+	cmd := configureApplication("postgres", mappedPort)
+	return cmd, cleanupFunc
+}
+
+// setupSQLiteDatabase sets up the environment for SQLite and returns the command to start the application.
+func setupSQLiteDatabase(t *testing.T) (*exec.Cmd, func()) {
+	cmd := configureApplication("sqlite", "")
+	cleanupFunc := func() {
+		cleanupSQLiteDB(t)
+	}
+	return cmd, cleanupFunc
+}
+
+func configureApplication(engine, postgresPort string) *exec.Cmd {
+	cmd := exec.Command("../cmd/bhsExecutable")
+	if engine == "postgres" {
+		setPostgresEnvs(cmd, postgresPort)
+	} else if engine == "sqlite" {
+		setSQLiteEnvs(cmd)
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd
+}
+
+func monitorApplicationStartup(ctx context.Context, t *testing.T, cmd *exec.Cmd) {
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Failed to start the application: %v", err)
+	}
+
+	waitForApplicationStartup(ctx, t, cmd)
+}
+
+func waitForApplicationStartup(ctx context.Context, t *testing.T, cmd *exec.Cmd) {
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 	timeoutTimer := time.NewTimer(2 * time.Minute)
 	defer timeoutTimer.Stop()
 
-	ctx := context.Background()
-
-	buildCmd := exec.Command("go", "build", "-o", "../cmd/bhsExecutable", "../cmd/main.go")
-	if err := buildCmd.Run(); err != nil {
-		t.Fatalf("Failed to build the application for tests: %v", err)
-	}
-	defer func() {
-		err := os.Remove("../cmd/bhsExecutable")
-		if err != nil {
-			t.Logf("Couldn't remove executable files %v", err)
-		}
-	}()
-
-	var cmd *exec.Cmd
-
-	switch dbEngine {
-	case "postgres":
-		postgresContainer, mappedPort := startPostgresContainer(ctx, t)
-		defer func(postgresContainer testcontainers.Container, ctx context.Context) {
-			err := postgresContainer.Terminate(ctx)
-			if err != nil {
-				t.Logf("Couldn't terminate postgres container %v", err)
-			}
-		}(postgresContainer, ctx)
-		cmd = exec.Command("../cmd/bhsExecutable")
-		setPostgresEnvs(cmd, mappedPort)
-
-	case "sqlite":
-		cmd = exec.Command("../cmd/bhsExecutable")
-		setSQLiteEnvs(cmd)
-
-		defer func() {
-			err := os.Remove("../data/blockheaders.db")
-			if err != nil {
-				t.Logf("Warning: Failed to remove SQLite database file: %v", err)
-			} else {
-				t.Log("SQLite database file removed successfully.")
-			}
-		}()
-
-	default:
-		t.Fatalf("Unsupported database engine: %s", dbEngine)
-	}
-
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	defer func() {
-		t.Log("Killing application process...")
-		t.Logf("pid: %d", cmd.Process.Pid)
-		if err := cmd.Process.Kill(); err != nil {
-			t.Fatalf("Failed to kill application process: %v", err)
-		}
-	}()
-
-	if err := cmd.Start(); err != nil {
-		t.Fatalf("Failed to start the application: %v", err)
-	}
-
 	appExitSignal := make(chan error, 1)
 	go func() {
-		err := cmd.Wait()
-		appExitSignal <- err
+		appExitSignal <- cmd.Wait()
 	}()
 
 out:
@@ -122,8 +152,7 @@ out:
 				t.Fatalf("Application exited unexpectedly: %v", err)
 			}
 		case <-timeoutTimer.C:
-			t.Fatalf("Test timed out after 2 minutes without passing all checks.")
-			t.Logf("Consider updating predefined database file with new headers - https://github.com/bitcoin-sv/block-headers-service/blob/master/README.md#updating-predefined-database")
+			t.Fatalf("Test timed out after 2 minutes.")
 		case <-ticker.C:
 			client := &http.Client{}
 			req, err := http.NewRequestWithContext(ctx, http.MethodGet, localHTTPServerURL+"/status", nil)
@@ -167,24 +196,21 @@ out:
 				t.Logf("Synced to tip of chain: %d", localTipHeight)
 				break out
 			}
+
 		}
 	}
+}
 
-	t.Log("Comparing synced data with known checkpoints...")
-
-	verifyHeaders(ctx, t)
-
-	t.Log("Headers checkpoint comparison passed successfully 🎉")
-
-	t.Log("Verifying merkle roots...")
-
-	verifyMerkleRoots(ctx, t, fixtures)
-
-	t.Log("Merkle roots verification passed successfully 🎉")
+func cleanupSQLiteDB(t *testing.T) {
+	err := os.Remove("blockheaders.db")
+	if err != nil {
+		t.Logf("Warning: Failed to remove SQLite database file: %v", err)
+	} else {
+		t.Log("SQLite database file removed successfully.")
+	}
 }
 
 func setPostgresEnvs(cmd *exec.Cmd, mappedPort string) {
-	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, "BHS_DB_POSTGRES_PORT="+mappedPort)
 	cmd.Env = append(cmd.Env, "BHS_DB_ENGINE=postgres")
 	cmd.Env = append(cmd.Env, "BHS_DB_PREPARED_DB=true")
@@ -197,7 +223,14 @@ func setSQLiteEnvs(cmd *exec.Cmd) {
 	cmd.Env = append(cmd.Env, "BHS_DB_PREPARED_DB=true")
 	cmd.Env = append(cmd.Env, "BHS_DB_PREPARED_DB_FILE_PATH=../data/blockheaders.csv.gz")
 	cmd.Env = append(cmd.Env, "BHS_DB_SCHEMA_PATH=../database/migrations")
-	cmd.Env = append(cmd.Env, "BHS_DB_SQLITE_FILE_PATH=../data/blockheaders.db")
+	cmd.Env = append(cmd.Env, "BHS_DB_SQLITE_FILE_PATH=blockheaders.db")
+}
+
+func killApplicationProcess(cmd *exec.Cmd, t *testing.T) {
+	t.Log("Killing application process...")
+	if err := cmd.Process.Kill(); err != nil {
+		t.Fatalf("Failed to kill application process: %v", err)
+	}
 }
 
 func startPostgresContainer(ctx context.Context, t *testing.T) (testcontainers.Container, string) {
