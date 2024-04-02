@@ -6,6 +6,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -44,6 +45,7 @@ var version = "development"
 // @in header
 // @name Authorization
 func main() {
+	fmt.Fprint(os.Stdout, "Starting block-headers-service\n")
 	defaultLog := logging.GetDefaultLogger()
 
 	if err := config.SetDefaults(version, defaultLog); err != nil {
