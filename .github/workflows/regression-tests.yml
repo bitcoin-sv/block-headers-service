@@ -19,14 +19,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branchName || github.head_ref }}
-      
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '^1.21.5'
-
       - name: Run Integration Tests on SQLite
-        run: go test -v -tags regression -run TestApplicationIntegration ./regressiontests -dbEngine=sqlite
+        run: >
+          go test -v -tags regression -run TestApplicationIntegration
+          ./regressiontests -dbEngine=sqlite
 
   run-regression-test-on-postgres:
     if: (github.event_name == 'workflow_dispatch') || (github.event_name == 'pull_request_target' && github.event.label.name == 'regression-tests')
@@ -36,11 +36,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branchName || github.head_ref }}
-      
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '^1.21.5'
-
       - name: Run Integration Tests on PostgreSQL
-        run: go test -v -tags regression -run TestApplicationIntegration ./regressiontests -dbEngine=postgres
+        run: >
+          go test -v -tags regression -run TestApplicationIntegration
+          ./regressiontests -dbEngine=postgres
