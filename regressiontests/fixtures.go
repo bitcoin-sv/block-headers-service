@@ -1,3 +1,6 @@
+//go:build regression
+// +build regression
+
 package regressiontests
 
 type merkleRootFixtures struct {
