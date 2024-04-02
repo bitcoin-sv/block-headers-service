@@ -285,3 +285,16 @@ BHS_HISTORY_MAX=300
 
 <!-- PROJECT LOGO -->
 <br />
+
+## Updating predefined database
+
+When you start the application and the synchronization process takes a long time with a prepared database, it's recommended to use the `-e` flag to export a fresh database with all headers. This will speed up the synchronization process in the future.
+
+> **Note:**: Export feature works only with SQLite database.
+
+```bash
+go run ./cmd/main.go -e
+```
+
+This will create a new .csv file with all headers in the same directory as the database file.
+Commit your changes and create a pull request with the new database file.
