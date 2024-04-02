@@ -73,6 +73,9 @@ func (s *server) Start() error {
 }
 
 func (s *server) Shutdown() error {
-	s.peer.Disconnect()
+	err := s.peer.Disconnect()
+	if err != nil {
+		return err
+	}
 	return nil
 }
