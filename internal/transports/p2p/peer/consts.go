@@ -13,6 +13,7 @@ const (
 	maxProtocolVersion           = wire.FeeFilterVersion
 	minAcceptableProtocolVersion = wire.MultipleAddressVersion
 	pingInterval                 = 2 * time.Minute
+	writeMsgChannelBufferSize    = 10
 )
 
 var zeroHash chainhash.Hash

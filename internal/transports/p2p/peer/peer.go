@@ -85,7 +85,7 @@ func NewPeer(
 		protocolVersion: initialProtocolVersion,
 		synced:          nextCheckpoint == nil,
 		wg:              sync.WaitGroup{},
-		msgChan:         make(chan wire.Message),
+		msgChan:         make(chan wire.Message, writeMsgChannelBufferSize),
 		quitting:        false,
 		quit:            make(chan struct{}),
 	}
@@ -260,11 +260,7 @@ func (p *Peer) writeRejectMessage(msg wire.Message, reason string) {
 }
 
 func (p *Peer) queueMessage(msg wire.Message) {
-	// running in goroutine here, because writing
-	// to channel is blocking until read
-	go func() {
-		p.msgChan <- msg
-	}()
+	p.msgChan <- msg
 }
 
 // writeMsgHandler serves as a queue for writing messages to peers,
@@ -527,7 +523,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 }
 
 func (p *Peer) verifyCheckpointReached(h *domains.BlockHeader, receivedCheckpoint bool) (bool, error) {
-	if p.nextCheckpoint != nil && h.Height == p.nextCheckpoint.Height {
+	if p.nextCheckpoint != nil && p.nextCheckpoint.Hash != nil && h.Height == p.nextCheckpoint.Height {
 		if h.Hash == *p.nextCheckpoint.Hash {
 			receivedCheckpoint = true
 			p.log.Info().Msgf(
