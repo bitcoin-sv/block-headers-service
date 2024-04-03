@@ -80,7 +80,7 @@ func TestSearchForFinalBlock(t *testing.T) {
 		expectedFinalBlock := 3
 
 		// when
-		finalBlock := searchForFinalBlock(invVects)
+		finalBlock := searchForFinalBlockIndex(invVects)
 
 		// then
 		assert.Equal(t, finalBlock, expectedFinalBlock)
@@ -109,7 +109,7 @@ func TestSearchForFinalBlock(t *testing.T) {
 		expectedFinalBlock := -1
 
 		// when
-		finalBlock := searchForFinalBlock(invVects)
+		finalBlock := searchForFinalBlockIndex(invVects)
 
 		// then
 		assert.Equal(t, finalBlock, expectedFinalBlock)

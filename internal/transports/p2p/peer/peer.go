@@ -1,10 +1,9 @@
 package peer
 
 import (
-	"crypto/rand"
 	"errors"
 	"fmt"
-	"math/big"
+	"math/rand"
 	"net"
 	"strconv"
 	"sync"
@@ -55,7 +54,7 @@ func NewPeer(
 ) (*Peer, error) {
 	port, err := strconv.Atoi(config.ActiveNetParams.DefaultPort)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not parse default port: %w", err)
 	}
 
 	ip := net.ParseIP(addr)
@@ -182,11 +181,11 @@ func (p *Peer) negotiateProtocol() error {
 // PingHandler is a handler for sending ping messages to peers.
 // Must be run as a goroutine.
 func (p *Peer) pingHandler() {
-	p.wg.Add(1)
 	pingTicker := time.NewTicker(pingInterval)
 	defer pingTicker.Stop()
+	p.wg.Add(1)
+	defer p.wg.Done()
 
-out:
 	for {
 		select {
 		case <-pingTicker.C:
@@ -199,24 +198,23 @@ out:
 			p.queueMessage(wire.NewMsgPing(nonce))
 
 		case <-p.quit:
-			break out
+			p.log.Info().Msgf("ping handler shutdown for peer %s", p)
+			return
 		}
 	}
-
-	p.log.Info().Msgf("ping handler shutdown for peer %s", p)
-	p.wg.Done()
 }
 
 // MsgHandler is a message handler for incoming messages.
 // Must be run as a goroutine.
 func (p *Peer) readMsgHandler() {
 	p.wg.Add(1)
+	defer p.wg.Done()
 
-out:
 	for {
 		select {
 		case <-p.quit:
-			break out
+			p.log.Info().Msgf("read msg handler shutdown for peer %s", p)
+			return
 
 		default:
 			remoteMsg, _, err := wire.ReadMessage(p.conn, p.protocolVersion, p.chainParams.Net)
@@ -241,9 +239,6 @@ out:
 			}
 		}
 	}
-
-	p.log.Info().Msgf("read msg handler shutdown for peer %s", p)
-	p.wg.Done()
 }
 
 func (p *Peer) writeMessage(msg wire.Message) error {
@@ -274,8 +269,8 @@ func (p *Peer) queueMessage(msg wire.Message) {
 // must be run as a goroutine.
 func (p *Peer) writeMsgHandler() {
 	p.wg.Add(1)
+	defer p.wg.Done()
 
-out:
 	for {
 		select {
 		case msg := <-p.msgChan:
@@ -284,29 +279,21 @@ out:
 				p.log.Error().Msgf("error writing msg %T to peer %s", msg, p)
 			}
 		case <-p.quit:
-			break out
+			// draining the channels for cleanup
+			for {
+				select {
+				case <-p.msgChan:
+				default:
+					p.log.Info().Msgf("write msg handler shutdown for peer %s", p)
+					return
+				}
+			}
 		}
 	}
-
-cleanup:
-	for {
-		select {
-		case <-p.msgChan:
-		default:
-			break cleanup
-		}
-	}
-
-	p.log.Info().Msgf("write msg handler shutdown for peer %s", p)
-	p.wg.Done()
 }
 
 func (p *Peer) writeOurVersionMsg() error {
-	n, err := rand.Int(rand.Reader, big.NewInt(9223372036854775807))
-	if err != nil {
-		panic(err)
-	}
-	nonce := n.Uint64()
+	nonce := rand.Uint64()
 	p.nonce = nonce
 
 	ourNA := &wire.NetAddress{
@@ -318,14 +305,12 @@ func (p *Peer) writeOurVersionMsg() error {
 	lastBlock := p.headersService.GetTip().Height
 
 	msg := wire.NewMsgVersion(ourNA, theirNA, nonce, lastBlock)
-	err = msg.AddUserAgent(p.cfg.UserAgentName, p.cfg.UserAgentVersion, userAgentComments)
+	err := msg.AddUserAgent(p.cfg.UserAgentName, p.cfg.UserAgentVersion, userAgentComments)
 	if err != nil {
 		p.log.Error().Msgf("could not add user agent to version message, reason: %v", err)
 		return err
 	}
 
-	// NOTE: it's 0 by default, so in theory we don't need
-	// to set that, but it's better to be explicit.
 	msg.Services = p.services
 
 	err = p.writeMessage(msg)
@@ -386,7 +371,7 @@ func (p *Peer) handleVersionMessage(msg *wire.MsgVersion) error {
 		return err
 	}
 
-	p.protocolVersion = minUint32(p.protocolVersion, uint32(msg.ProtocolVersion))
+	p.protocolVersion = min(p.protocolVersion, uint32(msg.ProtocolVersion))
 	p.services = msg.Services
 	p.lastBlock = msg.LastBlock
 	p.startingHeight = msg.LastBlock
@@ -428,7 +413,7 @@ func (p *Peer) handleInvMsg(msg *wire.MsgInv) {
 		return
 	}
 
-	lastBlock := searchForFinalBlock(msg.InvList)
+	lastBlock := searchForFinalBlockIndex(msg.InvList)
 	if lastBlock == -1 {
 		p.log.Info().Msgf("no blocks in inv msg from peer %s", p)
 		return
@@ -455,35 +440,35 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 	headersReceived := 0
 
 	for _, header := range msg.Headers {
-		h, addErr := p.chainService.Add(domains.BlockHeaderSource(*header))
+		h, err := p.chainService.Add(domains.BlockHeaderSource(*header))
+		if err != nil {
+			if service.HeaderAlreadyExists.Is(err) {
+				continue
+			}
 
-		if service.HeaderAlreadyExists.Is(addErr) {
-			continue
+			if service.BlockRejected.Is(err) {
+				// TODO: ban peer
+				p.log.Error().Msgf("received rejected header %v from peer %s", h, p)
+				_ = p.Disconnect()
+				return
+			}
+
+			if service.HeaderSaveFail.Is(err) {
+				p.log.Error().Msgf("couldn't save header %v in database, because of %+v", h, err)
+				continue
+			}
+
+			if service.HeaderCreationFail.Is(err) {
+				p.log.Error().Msgf("couldn't create header from %v because of error %+v", header, err)
+				continue
+			}
+
+			if service.ChainUpdateFail.Is(err) {
+				p.log.Error().Msgf("when adding header %v couldn't update chains state because of error %+v", header, err)
+				continue
+			}
 		}
 
-		if service.BlockRejected.Is(addErr) {
-			// TODO: ban peer
-			p.log.Error().Msgf("received rejected header %v from peer %s", h, p)
-			_ = p.Disconnect()
-			return
-		}
-
-		if service.HeaderSaveFail.Is(addErr) {
-			p.log.Error().Msgf("couldn't save header %v in database, because of %+v", h, addErr)
-			continue
-		}
-
-		if service.HeaderCreationFail.Is(addErr) {
-			p.log.Error().Msgf("couldn't create header from %v because of error %+v", header, addErr)
-			continue
-		}
-
-		if service.ChainUpdateFail.Is(addErr) {
-			p.log.Error().Msgf("when adding header %v couldn't update chains state because of error %+v", header, addErr)
-			continue
-		}
-
-		var err error
 		receivedCheckpoint, err = p.verifyCheckpointReached(h, receivedCheckpoint)
 		if err != nil {
 			// TODO: ban peer or lower peer sync score

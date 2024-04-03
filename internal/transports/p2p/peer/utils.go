@@ -5,13 +5,6 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 )
 
-func minUint32(a, b uint32) uint32 {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 func findNextHeaderCheckpoint(checkpoints []chaincfg.Checkpoint, height int32) *chaincfg.Checkpoint {
 	if len(checkpoints) == 0 {
 		return nil
@@ -32,7 +25,7 @@ func findNextHeaderCheckpoint(checkpoints []chaincfg.Checkpoint, height int32) *
 	return nextCheckpoint
 }
 
-func searchForFinalBlock(invVects []*wire.InvVect) int {
+func searchForFinalBlockIndex(invVects []*wire.InvVect) int {
 	lastBlock := -1
 	for i := len(invVects) - 1; i >= 0; i-- {
 		if invVects[i].Type == wire.InvTypeBlock {
