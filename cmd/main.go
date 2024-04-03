@@ -75,7 +75,7 @@ func main() {
 	}
 
 	db, err := database.Init(cfg, log)
-	if err != nil {
+	if err == nil {
 		log.Error().Msgf("cannot setup database because of error: %v", err)
 		os.Exit(1)
 	}
