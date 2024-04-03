@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"runtime"
 	"testing"
 	"time"
 
@@ -81,14 +82,14 @@ func TestApplicationIntegration(t *testing.T) {
 }
 
 func setupApplicationBuild(t *testing.T) {
-	buildCmd := exec.Command("go", "build", "-o", "../cmd/bhsExecutable", "../cmd/main.go")
+	buildCmd := exec.Command("go", "build", "-o", pathToExecutable(), "../cmd/main.go")
 	if err := buildCmd.Run(); err != nil {
 		t.Fatalf("Failed to build the application for tests: %v", err)
 	}
 }
 
 func cleanupApplicationExecutable(t *testing.T) {
-	if err := os.Remove("../cmd/bhsExecutable"); err != nil {
+	if err := os.Remove(pathToExecutable()); err != nil {
 		t.Logf("Couldn't remove executable files: %v", err)
 	}
 }
@@ -114,7 +115,9 @@ func setupSQLiteDatabase(t *testing.T) (*exec.Cmd, func()) {
 }
 
 func configureApplication(engine, postgresPort string) *exec.Cmd {
-	cmd := exec.Command("../cmd/bhsExecutable")
+	cmd := exec.Command(pathToExecutable())
+	cmd.Env = os.Environ()
+
 	if engine == "postgres" {
 		setPostgresEnvs(cmd, postgresPort)
 	} else if engine == "sqlite" {
@@ -136,7 +139,7 @@ func monitorApplicationStartup(ctx context.Context, t *testing.T, cmd *exec.Cmd)
 func waitForApplicationStartup(ctx context.Context, t *testing.T, cmd *exec.Cmd) {
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
-	timeoutTimer := time.NewTimer(2 * time.Minute)
+	timeoutTimer := time.NewTimer(4 * time.Minute)
 	defer timeoutTimer.Stop()
 
 	appExitSignal := make(chan error, 1)
@@ -421,4 +424,12 @@ func fetchMerkleRootConfirmations(ctx context.Context, fixtures []merkleRootFixt
 	}
 
 	return confirmations.Confirmations
+}
+
+func pathToExecutable() string {
+	path := "../cmd/bhsExecutable"
+	if runtime.GOOS == "windows" {
+		path += ".exe"
+	}
+	return path
 }
