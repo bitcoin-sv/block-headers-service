@@ -41,7 +41,7 @@ func NewServer(
 }
 
 func (s *server) Start() error {
-	seeds := SeedFromDNS(s.chainParams.DNSSeeds, s.log)
+	seeds := seedFromDNS(s.chainParams.DNSSeeds, s.log)
 	if len(seeds) == 0 {
 		return errors.New("no seeds found")
 	}

@@ -14,6 +14,7 @@ const (
 	minAcceptableProtocolVersion = wire.MultipleAddressVersion
 	pingInterval                 = 2 * time.Minute
 	writeMsgChannelBufferSize    = 10
+	ourServices                  = wire.SFspv
 )
 
 var zeroHash chainhash.Hash

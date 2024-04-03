@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func SeedFromDNS(seeds []chaincfg.DNSSeed, log *zerolog.Logger) []net.IP {
+func seedFromDNS(seeds []chaincfg.DNSSeed, log *zerolog.Logger) []net.IP {
 	allSeedPeers := make([]net.IP, 0)
 
 	for _, seed := range seeds {

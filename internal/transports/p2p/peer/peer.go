@@ -34,7 +34,6 @@ type Peer struct {
 	protocolVersion uint32
 	nonce           uint64
 	lastBlock       int32
-	startingHeight  int32
 	timeOffset      int64
 	userAgent       string
 	verAckReceived  bool
@@ -100,6 +99,15 @@ func (p *Peer) Connect() error {
 	}
 	p.conn = conn
 	p.log.Info().Msgf("connected to peer: %s", p)
+
+	err = p.negotiateProtocol()
+	if err != nil {
+		p.log.Error().Msgf("error negotiating protocol with peer %s, reason: %v", p, err)
+		return err
+	}
+
+	go p.pingHandler()
+
 	return nil
 }
 
@@ -118,26 +126,19 @@ func (p *Peer) Disconnect() error {
 	return nil
 }
 
-func (p *Peer) Start() error {
-	err := p.negotiateProtocol()
-	if err != nil {
-		p.log.Error().Msgf("error negotiating protocol with peer %s, reason: %v", p, err)
-		return err
-	}
-
+func (p *Peer) StartHeadersSync() error {
 	go p.writeMsgHandler()
 	go p.readMsgHandler()
-	go p.pingHandler()
 
-	err = p.startSync()
+	err := p.requestHeaders()
 	if err != nil {
-		p.log.Error().Msgf("error starting sync from peer %s, reason: %v", p, err)
+		p.log.Error().Msgf("error requesting headers from peer %s, reason: %v", p, err)
 		return err
 	}
 	return nil
 }
 
-func (p *Peer) startSync() error {
+func (p *Peer) requestHeaders() error {
 	p.log.Info().Msgf("requesting headers from peer %s", p)
 
 	var err error
@@ -244,11 +245,7 @@ func (p *Peer) readMsgHandler() {
 }
 
 func (p *Peer) writeMessage(msg wire.Message) error {
-	err := wire.WriteMessage(p.conn, msg, p.protocolVersion, p.chainParams.Net)
-	if err != nil {
-		return err
-	}
-	return nil
+	return wire.WriteMessage(p.conn, msg, p.protocolVersion, p.chainParams.Net)
 }
 
 func (p *Peer) writeRejectMessage(msg wire.Message, reason string) {
@@ -300,7 +297,7 @@ func (p *Peer) writeOurVersionMsg() error {
 	p.nonce = nonce
 
 	ourNA := &wire.NetAddress{
-		Services:  wire.SFspv,
+		Services:  ourServices,
 		Timestamp: time.Now(),
 	}
 	theirNA := wire.NewNetAddress(p.addr, 0)
@@ -314,7 +311,7 @@ func (p *Peer) writeOurVersionMsg() error {
 		return err
 	}
 
-	msg.Services = p.services
+	msg.Services = ourServices
 
 	err = p.writeMessage(msg)
 	if err != nil {
@@ -377,7 +374,6 @@ func (p *Peer) handleVersionMessage(msg *wire.MsgVersion) error {
 	p.protocolVersion = min(p.protocolVersion, uint32(msg.ProtocolVersion))
 	p.services = msg.Services
 	p.lastBlock = msg.LastBlock
-	p.startingHeight = msg.LastBlock
 	p.timeOffset = msg.Timestamp.Unix() - time.Now().Unix()
 	p.userAgent = msg.UserAgent
 
