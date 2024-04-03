@@ -1,9 +1,11 @@
 package peer
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
-	"math/rand"
+	"math"
+	"math/big"
 	"net"
 	"strconv"
 	"sync"
@@ -293,7 +295,12 @@ func (p *Peer) writeMsgHandler() {
 }
 
 func (p *Peer) writeOurVersionMsg() error {
-	nonce := rand.Uint64()
+	randomVal, err := rand.Int(rand.Reader, big.NewInt(int64(math.MaxInt64)))
+	if err != nil {
+		return fmt.Errorf("could not generate random nonce: %v", err)
+	}
+
+	nonce := randomVal.Uint64()
 	p.nonce = nonce
 
 	ourNA := &wire.NetAddress{
@@ -305,7 +312,7 @@ func (p *Peer) writeOurVersionMsg() error {
 	lastBlock := p.headersService.GetTip().Height
 
 	msg := wire.NewMsgVersion(ourNA, theirNA, nonce, lastBlock)
-	err := msg.AddUserAgent(p.cfg.UserAgentName, p.cfg.UserAgentVersion, userAgentComments)
+	err = msg.AddUserAgent(p.cfg.UserAgentName, p.cfg.UserAgentVersion, userAgentComments)
 	if err != nil {
 		p.log.Error().Msgf("could not add user agent to version message, reason: %v", err)
 		return err
