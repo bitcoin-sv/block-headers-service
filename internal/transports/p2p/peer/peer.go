@@ -130,6 +130,9 @@ func (p *Peer) StartHeadersSync() error {
 	go p.writeMsgHandler()
 	go p.readMsgHandler()
 
+	currentTipHeight := p.headersService.GetTipHeight()
+	p.setNextHeaderCheckpoint(currentTipHeight)
+
 	err := p.requestHeaders()
 	if err != nil {
 		p.log.Error().Msgf("error requesting headers from peer %s, reason: %v", p, err)
@@ -139,17 +142,28 @@ func (p *Peer) StartHeadersSync() error {
 	return nil
 }
 
+func (p *Peer) setNextHeaderCheckpoint(height int32) {
+	p.nextCheckpoint = findNextHeaderCheckpoint(p.checkpoints, height)
+	if p.nextCheckpoint == nil {
+		p.synced = true
+	}
+}
+
 func (p *Peer) requestHeaders() error {
 	p.log.Info().Msgf("requesting headers from peer %s", p)
 
 	var err error
 	if p.nextCheckpoint != nil {
+		p.log.Info().Msgf("requesting next headers batch from peer %s, up to height %d", p, p.nextCheckpoint.Height)
 		err = p.writeGetHeadersMsg(p.nextCheckpoint.Hash)
 	} else {
+		p.log.Info().Msgf("checkpoints synced, requesting headers up to end of chain from peer %s", p)
 		err = p.writeGetHeadersMsg(&zeroHash)
 	}
 
 	if err != nil {
+		// TODO: lower peer sync score
+		p.log.Error().Msgf("error requesting headers from peer %s, reason: %v", p, err)
 		return err
 	}
 	return nil
@@ -496,7 +510,11 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 		headersReceived, p, lastHeight,
 	)
 
-	p.requestNextHeadersBatch(receivedCheckpoint, lastHeight)
+	if receivedCheckpoint {
+		p.setNextHeaderCheckpoint(p.nextCheckpoint.Height)
+	}
+
+	p.requestHeaders()
 }
 
 func (p *Peer) verifyCheckpointReached(h *domains.BlockHeader, receivedCheckpoint bool) (bool, error) {
@@ -516,37 +534,6 @@ func (p *Peer) verifyCheckpointReached(h *domains.BlockHeader, receivedCheckpoin
 		}
 	}
 	return receivedCheckpoint, nil
-}
-
-func (p *Peer) requestNextHeadersBatch(receivedCheckpoint bool, lastHeight int32) {
-	if receivedCheckpoint {
-		p.nextCheckpoint = findNextHeaderCheckpoint(p.checkpoints, p.nextCheckpoint.Height)
-		if p.nextCheckpoint == nil {
-			p.synced = true
-		}
-	}
-
-	if p.nextCheckpoint != nil {
-		p.log.Info().Msgf(
-			"requesting next headers batch from peer %s, height range %d - %d",
-			p, lastHeight, p.nextCheckpoint.Height,
-		)
-		err := p.writeGetHeadersMsg(p.nextCheckpoint.Hash)
-		if err != nil {
-			p.log.Error().Msgf("error requesting headers from peer %s, reason: %v", p, err)
-		}
-		return
-	}
-
-	p.log.Info().Msgf(
-		"checkpoints synced, requesting headers from height %d up to end of chain (zero hash) from peer %s",
-		lastHeight, p,
-	)
-
-	err := p.writeGetHeadersMsg(&zeroHash)
-	if err != nil {
-		p.log.Error().Msgf("error requesting headers from peer %s, reason: %v", p, err)
-	}
 }
 
 func (p *Peer) String() string {
