@@ -135,7 +135,7 @@ func (p *Peer) StartHeadersSync() error {
 
 	err := p.requestHeaders()
 	if err != nil {
-		p.log.Error().Msgf("error requesting headers from peer %s, reason: %v", p, err)
+		// TODO: lower peer sync score
 		_ = p.Disconnect()
 		return err
 	}
@@ -162,7 +162,6 @@ func (p *Peer) requestHeaders() error {
 	}
 
 	if err != nil {
-		// TODO: lower peer sync score
 		p.log.Error().Msgf("error requesting headers from peer %s, reason: %v", p, err)
 		return err
 	}
@@ -514,7 +513,11 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 		p.setNextHeaderCheckpoint(p.nextCheckpoint.Height)
 	}
 
-	p.requestHeaders()
+	err := p.requestHeaders()
+	if err != nil {
+		// TODO: lower peer sync score
+		_ = p.Disconnect()
+	}
 }
 
 func (p *Peer) verifyCheckpointReached(h *domains.BlockHeader, receivedCheckpoint bool) (bool, error) {
