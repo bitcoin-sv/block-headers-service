@@ -36,7 +36,6 @@ type Peer struct {
 	lastBlock       int32
 	timeOffset      int64
 	userAgent       string
-	verAckReceived  bool
 	synced          bool
 
 	wg       sync.WaitGroup
@@ -103,6 +102,7 @@ func (p *Peer) Connect() error {
 	err = p.negotiateProtocol()
 	if err != nil {
 		p.log.Error().Msgf("error negotiating protocol with peer %s, reason: %v", p, err)
+		p.Disconnect()
 		return err
 	}
 
@@ -161,12 +161,7 @@ func (p *Peer) negotiateProtocol() error {
 	}
 	p.log.Info().Msgf("version sent to peer: %s", p)
 
-	err = p.readVerOrVerAck()
-	if err != nil {
-		return err
-	}
-
-	err = p.readVerOrVerAck()
+	err = p.readVerAndVerAck()
 	if err != nil {
 		return err
 	}
@@ -338,26 +333,37 @@ func (p *Peer) writeGetHeadersMsg(stopHash *chainhash.Hash) error {
 	return nil
 }
 
-func (p *Peer) readVerOrVerAck() error {
-	remoteMsg, _, err := wire.ReadMessage(p.conn, p.protocolVersion, p.chainParams.Net)
-	if err != nil {
-		p.log.Error().Msgf("could not read message from peer, reason: %v", err)
-		return err
+func (p *Peer) readVerAndVerAck() error {
+	versionReceived := false
+	verAckReceived := false
+	numberOfMsgsExpected := 2
+
+	for i := 0; i < numberOfMsgsExpected; i++ {
+		remoteMsg, _, err := wire.ReadMessage(p.conn, p.protocolVersion, p.chainParams.Net)
+		if err != nil {
+			p.log.Error().Msgf("could not read message from peer, reason: %v", err)
+			return err
+		}
+
+		switch msg := remoteMsg.(type) {
+		case *wire.MsgVersion:
+			err = p.handleVersionMessage(msg)
+			if err != nil {
+				return err
+			}
+			versionReceived = true
+		case *wire.MsgVerAck:
+			verAckReceived = true
+		default:
+			_, err = p.requireVerAckReceived(remoteMsg)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
-	switch msg := remoteMsg.(type) {
-	case *wire.MsgVersion:
-		err = p.handleVersionMessage(msg)
-		if err != nil {
-			return err
-		}
-	case *wire.MsgVerAck:
-		p.verAckReceived = true
-	default:
-		_, err = p.requireVerAckReceived(remoteMsg)
-		if err != nil {
-			return err
-		}
+	if !versionReceived || !verAckReceived {
+		return fmt.Errorf("did not receive version and verack correctly, peer %s misbehaving", p)
 	}
 
 	return nil

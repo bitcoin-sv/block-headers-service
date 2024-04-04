@@ -63,7 +63,7 @@ func (s *server) Start() error {
 		return err
 	}
 
-	err = peer.Start()
+	err = peer.StartHeadersSync()
 	if err != nil {
 		s.log.Error().Msgf("error starting peer, reason: %v", err)
 		return err
