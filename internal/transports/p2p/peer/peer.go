@@ -495,6 +495,29 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 		headersReceived, p, lastHeight,
 	)
 
+	p.requestNextHeadersBatch(receivedCheckpoint, lastHeight)
+}
+
+func (p *Peer) verifyCheckpointReached(h *domains.BlockHeader, receivedCheckpoint bool) (bool, error) {
+	if p.nextCheckpoint != nil && p.nextCheckpoint.Hash != nil && h.Height == p.nextCheckpoint.Height {
+		if h.Hash == *p.nextCheckpoint.Hash {
+			receivedCheckpoint = true
+			p.log.Info().Msgf(
+				"verified downloaded block header against checkpoint at height %d / hash %s",
+				h.Height, h.Hash,
+			)
+		} else {
+			p.log.Error().Msgf(
+				"block header at height %d/hash %s from peer %s does NOT match expected checkpoint hash of %s -- disconnecting",
+				h.Height, h.Hash, p, p.nextCheckpoint.Hash,
+			)
+			return false, fmt.Errorf("corresponding checkpoint height does not match got: %v, exp: %v", h.Height, p.nextCheckpoint.Height)
+		}
+	}
+	return receivedCheckpoint, nil
+}
+
+func (p *Peer) requestNextHeadersBatch(receivedCheckpoint bool, lastHeight int32) {
 	if receivedCheckpoint {
 		p.nextCheckpoint = findNextHeaderCheckpoint(p.checkpoints, p.nextCheckpoint.Height)
 		if p.nextCheckpoint == nil {
@@ -518,29 +541,11 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 		"checkpoints synced, requesting headers from height %d up to end of chain (zero hash) from peer %s",
 		lastHeight, p,
 	)
+
 	err := p.writeGetHeadersMsg(&zeroHash)
 	if err != nil {
 		p.log.Error().Msgf("error requesting headers from peer %s, reason: %v", p, err)
 	}
-}
-
-func (p *Peer) verifyCheckpointReached(h *domains.BlockHeader, receivedCheckpoint bool) (bool, error) {
-	if p.nextCheckpoint != nil && p.nextCheckpoint.Hash != nil && h.Height == p.nextCheckpoint.Height {
-		if h.Hash == *p.nextCheckpoint.Hash {
-			receivedCheckpoint = true
-			p.log.Info().Msgf(
-				"verified downloaded block header against checkpoint at height %d / hash %s",
-				h.Height, h.Hash,
-			)
-		} else {
-			p.log.Error().Msgf(
-				"block header at height %d/hash %s from peer %s does NOT match expected checkpoint hash of %s -- disconnecting",
-				h.Height, h.Hash, p, p.nextCheckpoint.Hash,
-			)
-			return false, fmt.Errorf("corresponding checkpoint height does not match got: %v, exp: %v", h.Height, p.nextCheckpoint.Height)
-		}
-	}
-	return receivedCheckpoint, nil
 }
 
 func (p *Peer) String() string {
