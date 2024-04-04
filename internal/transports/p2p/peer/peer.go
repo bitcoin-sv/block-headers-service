@@ -102,7 +102,7 @@ func (p *Peer) Connect() error {
 	err = p.negotiateProtocol()
 	if err != nil {
 		p.log.Error().Msgf("error negotiating protocol with peer %s, reason: %v", p, err)
-		p.Disconnect()
+		_ = p.Disconnect()
 		return err
 	}
 
@@ -133,6 +133,7 @@ func (p *Peer) StartHeadersSync() error {
 	err := p.requestHeaders()
 	if err != nil {
 		p.log.Error().Msgf("error requesting headers from peer %s, reason: %v", p, err)
+		_ = p.Disconnect()
 		return err
 	}
 	return nil
