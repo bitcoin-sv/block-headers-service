@@ -19,7 +19,7 @@ ARG version
 ARG gh_repository=$repository_owner/$project_name
 ARG tag=${version:+v$version}
 ENV VERSION=${version:-develop}
-ENV TAG=${tag:-master}
+ENV TAG=${tag:-main}
 ENV PRELOADED_DB_URL="https://raw.githubusercontent.com/${gh_repository}/${TAG}/data/blockheaders.csv.gz"
 
 VOLUME ["/app/data"]
