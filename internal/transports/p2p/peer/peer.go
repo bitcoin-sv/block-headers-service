@@ -93,7 +93,7 @@ func NewPeer(
 func (p *Peer) Connect() error {
 	conn, err := net.Dial(p.addr.Network(), p.addr.String())
 	if err != nil {
-		p.log.Error().Msgf("error connecting to the peer, reason: %v", err)
+		p.log.Error().Msgf("error connecting to peer %s, reason: %v", p, err)
 		return err
 	}
 	p.conn = conn
