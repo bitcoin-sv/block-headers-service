@@ -21,22 +21,23 @@ import (
 )
 
 type Peer struct {
-	conn            net.Conn
-	addr            *net.TCPAddr
-	cfg             *config.P2PConfig
-	chainParams     *chaincfg.Params
-	checkpoints     []chaincfg.Checkpoint
-	nextCheckpoint  *chaincfg.Checkpoint
-	headersService  service.Headers
-	chainService    service.Chains
-	log             *zerolog.Logger
-	services        wire.ServiceFlag
-	protocolVersion uint32
-	nonce           uint64
-	lastBlock       int32
-	timeOffset      int64
-	userAgent       string
-	synced          bool
+	conn              net.Conn
+	addr              *net.TCPAddr
+	cfg               *config.P2PConfig
+	chainParams       *chaincfg.Params
+	checkpoints       []chaincfg.Checkpoint
+	nextCheckpoint    *chaincfg.Checkpoint
+	headersService    service.Headers
+	chainService      service.Chains
+	log               *zerolog.Logger
+	services          wire.ServiceFlag
+	protocolVersion   uint32
+	nonce             uint64
+	lastBlock         int32
+	timeOffset        int64
+	userAgent         string
+	syncedCheckpoints bool
+	sendHeadersMode   bool
 
 	wg       sync.WaitGroup
 	msgChan  chan wire.Message
@@ -71,21 +72,21 @@ func NewPeer(
 	nextCheckpoint := findNextHeaderCheckpoint(chainParams.Checkpoints, currentTipHeight)
 
 	peer := &Peer{
-		addr:            netAddr,
-		cfg:             cfg,
-		chainParams:     chainParams,
-		headersService:  headersService,
-		chainService:    chainService,
-		checkpoints:     chainParams.Checkpoints,
-		nextCheckpoint:  nextCheckpoint,
-		log:             log,
-		services:        wire.SFspv,
-		protocolVersion: initialProtocolVersion,
-		synced:          nextCheckpoint == nil,
-		wg:              sync.WaitGroup{},
-		msgChan:         make(chan wire.Message, writeMsgChannelBufferSize),
-		quitting:        false,
-		quit:            make(chan struct{}),
+		addr:              netAddr,
+		cfg:               cfg,
+		chainParams:       chainParams,
+		headersService:    headersService,
+		chainService:      chainService,
+		checkpoints:       chainParams.Checkpoints,
+		nextCheckpoint:    nextCheckpoint,
+		log:               log,
+		services:          wire.SFspv,
+		protocolVersion:   initialProtocolVersion,
+		syncedCheckpoints: nextCheckpoint == nil,
+		wg:                sync.WaitGroup{},
+		msgChan:           make(chan wire.Message, writeMsgChannelBufferSize),
+		quitting:          false,
+		quit:              make(chan struct{}),
 	}
 	return peer, nil
 }
@@ -132,6 +133,7 @@ func (p *Peer) StartHeadersSync() error {
 
 	currentTipHeight := p.headersService.GetTipHeight()
 	p.setNextHeaderCheckpoint(currentTipHeight)
+	p.sendHeadersMode = false
 
 	err := p.requestHeaders()
 	if err != nil {
@@ -145,7 +147,7 @@ func (p *Peer) StartHeadersSync() error {
 func (p *Peer) setNextHeaderCheckpoint(height int32) {
 	p.nextCheckpoint = findNextHeaderCheckpoint(p.checkpoints, height)
 	if p.nextCheckpoint == nil {
-		p.synced = true
+		p.syncedCheckpoints = true
 	}
 }
 
@@ -421,13 +423,14 @@ func (p *Peer) requireVerAckReceived(remoteMsg wire.Message) (*wire.MsgVerAck, e
 func (p *Peer) handlePingMsg(msg *wire.MsgPing) {
 	p.log.Info().Msgf("received ping from peer %s with nonce: %d", p, msg.Nonce)
 	if p.protocolVersion > wire.BIP0031Version {
+		p.log.Info().Msgf("sending pong to peer %s with nonce: %d", p, msg.Nonce)
 		p.queueMessage(wire.NewMsgPong(msg.Nonce))
 	}
 }
 
 func (p *Peer) handleInvMsg(msg *wire.MsgInv) {
 	p.log.Info().Msgf("received inv msg from peer %s", p)
-	if !p.synced {
+	if !p.syncedCheckpoints {
 		p.log.Info().Msgf("we are still syncing, ignoring inv msg from peer %s", p)
 		return
 	}
@@ -454,6 +457,8 @@ func (p *Peer) handleInvMsg(msg *wire.MsgInv) {
 }
 
 func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
+	p.log.Info().Msgf("received headers msg from peer %s", p)
+
 	receivedCheckpoint := false
 	lastHeight := int32(0)
 	headersReceived := 0
@@ -501,6 +506,15 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 
 	if headersReceived == 0 {
 		p.log.Debug().Msgf("received only existing headers from peer: %s", p)
+		// If we're synced with all checkpoints and received only existing headers
+		// then it likely means that we're synced with tip of chain, so now we can
+		// request the peer to send us headers directly instead of inv messages.
+		//
+		// If we do this while still syncing, we will get a lot of orphaned blocks,
+		// because the new headers sent by peer will not have parents yet.
+		if p.syncedCheckpoints {
+			p.switchToSendHeadersMode()
+		}
 		return
 	}
 
@@ -537,6 +551,14 @@ func (p *Peer) verifyCheckpointReached(h *domains.BlockHeader, receivedCheckpoin
 		}
 	}
 	return receivedCheckpoint, nil
+}
+
+func (p *Peer) switchToSendHeadersMode() {
+	if !p.sendHeadersMode && p.protocolVersion >= wire.SendHeadersVersion {
+		p.log.Info().Msgf("switching to send headers mode - requesting peer %s to send us headers directly instead of inv msg", p)
+		p.queueMessage(wire.NewMsgSendHeaders())
+		p.sendHeadersMode = true
+	}
 }
 
 func (p *Peer) String() string {
