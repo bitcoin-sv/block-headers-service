@@ -71,6 +71,7 @@ func getP2PDefaults() *P2PConfig {
 		DisableCheckpoints:        false,
 		UserAgentName:             ApplicationName,
 		UserAgentVersion:          Version(),
+		Experimental:              false,
 	}
 }
 
