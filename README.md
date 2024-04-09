@@ -12,10 +12,6 @@
 
 <h4 id="top" align="center">Formerly known as "Pulse"</h1>
 
-## Documentation
-
-For in-depth information and guidance, please refer to the [SPV Wallet Documentation](https://bsvblockchain.gitbook.io/docs).
-
 ## Table of contents
 <details>
   <!--<summary>Table of Contents</summary> -->
@@ -65,6 +61,8 @@ Block header service is a go service which connects into BSV P2P network to gath
 
 #### Main functionality
 The main functionality of the application is synchornization with peers and collecting all headers. After starting the server, it creates default objects and connects to BSV P2P network. Application has defined checkpoints (specific headers) which are used in synchronization. During this process, server is asking peers for headers (from checkpoint to checkpoint) in batches of 2000. Every header received from peers is saved in memory. After full synchronization, server is changing the operating mode and start to listening for new header. After when new block has been mined, this information should be sended from peers to our server.
+
+For in-depth information and guidance, please refer to the [SPV Wallet Documentation](https://bsvblockchain.gitbook.io/docs).
 
 ## How to use it
 
