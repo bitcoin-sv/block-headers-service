@@ -33,7 +33,9 @@ type Peer struct {
 	services          wire.ServiceFlag
 	protocolVersion   uint32
 	nonce             uint64
-	lastBlock         int32
+	latestHeight      int32
+	latestHash        *chainhash.Hash
+	latestStatsMutex  sync.RWMutex
 	timeOffset        int64
 	userAgent         string
 	syncedCheckpoints bool
@@ -395,7 +397,7 @@ func (p *Peer) handleVersionMessage(msg *wire.MsgVersion) error {
 
 	p.protocolVersion = min(p.protocolVersion, uint32(msg.ProtocolVersion))
 	p.services = msg.Services
-	p.lastBlock = msg.LastBlock
+	p.latestHeight = msg.LastBlock
 	p.timeOffset = msg.Timestamp.Unix() - time.Now().Unix()
 	p.userAgent = msg.UserAgent
 
@@ -441,13 +443,13 @@ func (p *Peer) handleInvMsg(msg *wire.MsgInv) {
 		return
 	}
 
-	// if last header from inv msg is already in database, ignore
 	lastBlockHash := &msg.InvList[lastBlock].Hash
 	_, err := p.headersService.GetHeightByHash(lastBlockHash)
 	if err == nil {
 		p.log.Info().Msgf("blocks from inv msg from peer %s already existsing in db", p)
 		return
 	}
+	p.updateLatestStats(0, lastBlockHash)
 
 	p.log.Info().Msgf("requesting new headers from peer %s", p)
 	err = p.writeGetHeadersMsg(lastBlockHash)
@@ -462,6 +464,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 	receivedCheckpoint := false
 	lastHeight := int32(0)
 	headersReceived := 0
+	var lastHash *chainhash.Hash
 
 	for _, header := range msg.Headers {
 		h, err := p.chainService.Add(domains.BlockHeaderSource(*header))
@@ -493,6 +496,10 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 			}
 		}
 
+		if !h.IsLongestChain() {
+			continue
+		}
+
 		receivedCheckpoint, err = p.verifyCheckpointReached(h, receivedCheckpoint)
 		if err != nil {
 			// TODO: ban peer or lower peer sync score
@@ -501,20 +508,12 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 		}
 
 		lastHeight = h.Height
+		lastHash = &h.Hash
 		headersReceived += 1
 	}
 
 	if headersReceived == 0 {
 		p.log.Debug().Msgf("received only existing headers from peer: %s", p)
-		// If we're synced with all checkpoints and received only existing headers
-		// then it likely means that we're synced with tip of chain, so now we can
-		// request the peer to send us headers directly instead of inv messages.
-		//
-		// If we do this while still syncing, we will get a lot of orphaned blocks,
-		// because the new headers sent by peer will not have parents yet.
-		if p.syncedCheckpoints {
-			p.switchToSendHeadersMode()
-		}
 		return
 	}
 
@@ -522,6 +521,17 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 		"successfully received %d headers from peer %s, up to height %d",
 		headersReceived, p, lastHeight,
 	)
+
+	p.updateLatestStats(lastHeight, lastHash)
+
+	if p.sendHeadersMode {
+		return
+	}
+
+	if p.isSynced() {
+		p.switchToSendHeadersMode()
+		return
+	}
 
 	if receivedCheckpoint {
 		p.setNextHeaderCheckpoint(p.nextCheckpoint.Height)
@@ -559,6 +569,33 @@ func (p *Peer) switchToSendHeadersMode() {
 		p.queueMessage(wire.NewMsgSendHeaders())
 		p.sendHeadersMode = true
 	}
+}
+
+func (p *Peer) updateLatestStats(lastHeight int32, lastHash *chainhash.Hash) {
+	p.latestStatsMutex.Lock()
+	defer p.latestStatsMutex.Unlock()
+
+	if lastHeight > p.latestHeight {
+		p.latestHeight = lastHeight
+	}
+	if lastHash.IsEqual(p.latestHash) {
+		p.latestHash = nil
+	}
+}
+
+func (p *Peer) getLatestStats() (lastHeight int32, lastHash *chainhash.Hash) {
+	p.latestStatsMutex.RLock()
+	defer p.latestStatsMutex.RUnlock()
+
+	return p.latestHeight, p.latestHash
+}
+
+func (p *Peer) isSynced() bool {
+	tipHeight := p.headersService.GetTipHeight()
+	latestHeight, latestHash := p.getLatestStats()
+	noNewHash := latestHash.IsEqual(nil)
+
+	return noNewHash && latestHeight == tipHeight
 }
 
 func (p *Peer) String() string {
