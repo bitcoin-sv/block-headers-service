@@ -154,8 +154,6 @@ func (p *Peer) setNextHeaderCheckpoint(height int32) {
 }
 
 func (p *Peer) requestHeaders() error {
-	p.log.Info().Msgf("requesting headers from peer %s", p)
-
 	var err error
 	if p.nextCheckpoint != nil {
 		p.log.Info().Msgf("requesting next headers batch from peer %s, up to height %d", p, p.nextCheckpoint.Height)
@@ -497,6 +495,11 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 		}
 
 		if !h.IsLongestChain() {
+			// TODO: ban peer or lower sync score
+			p.log.Warn().Msgf(
+				"received header with hash: %s that's not a part of the longest chain, from peer %s",
+				h.Hash.String(), p,
+			)
 			continue
 		}
 
@@ -529,6 +532,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 	}
 
 	if p.isSynced() {
+		p.log.Info().Msgf("synced with the tip of chain from peer %s", p)
 		p.switchToSendHeadersMode()
 		return
 	}
