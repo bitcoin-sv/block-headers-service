@@ -21,22 +21,25 @@ import (
 )
 
 type Peer struct {
-	conn            net.Conn
-	addr            *net.TCPAddr
-	cfg             *config.P2PConfig
-	chainParams     *chaincfg.Params
-	checkpoints     []chaincfg.Checkpoint
-	nextCheckpoint  *chaincfg.Checkpoint
-	headersService  service.Headers
-	chainService    service.Chains
-	log             *zerolog.Logger
-	services        wire.ServiceFlag
-	protocolVersion uint32
-	nonce           uint64
-	lastBlock       int32
-	timeOffset      int64
-	userAgent       string
-	synced          bool
+	conn              net.Conn
+	addr              *net.TCPAddr
+	cfg               *config.P2PConfig
+	chainParams       *chaincfg.Params
+	checkpoints       []chaincfg.Checkpoint
+	nextCheckpoint    *chaincfg.Checkpoint
+	headersService    service.Headers
+	chainService      service.Chains
+	log               *zerolog.Logger
+	services          wire.ServiceFlag
+	protocolVersion   uint32
+	nonce             uint64
+	latestHeight      int32
+	latestHash        *chainhash.Hash
+	latestStatsMutex  sync.RWMutex
+	timeOffset        int64
+	userAgent         string
+	syncedCheckpoints bool
+	sendHeadersMode   bool
 
 	wg       sync.WaitGroup
 	msgChan  chan wire.Message
@@ -71,21 +74,21 @@ func NewPeer(
 	nextCheckpoint := findNextHeaderCheckpoint(chainParams.Checkpoints, currentTipHeight)
 
 	peer := &Peer{
-		addr:            netAddr,
-		cfg:             cfg,
-		chainParams:     chainParams,
-		headersService:  headersService,
-		chainService:    chainService,
-		checkpoints:     chainParams.Checkpoints,
-		nextCheckpoint:  nextCheckpoint,
-		log:             log,
-		services:        wire.SFspv,
-		protocolVersion: initialProtocolVersion,
-		synced:          nextCheckpoint == nil,
-		wg:              sync.WaitGroup{},
-		msgChan:         make(chan wire.Message, writeMsgChannelBufferSize),
-		quitting:        false,
-		quit:            make(chan struct{}),
+		addr:              netAddr,
+		cfg:               cfg,
+		chainParams:       chainParams,
+		headersService:    headersService,
+		chainService:      chainService,
+		checkpoints:       chainParams.Checkpoints,
+		nextCheckpoint:    nextCheckpoint,
+		log:               log,
+		services:          wire.SFspv,
+		protocolVersion:   initialProtocolVersion,
+		syncedCheckpoints: nextCheckpoint == nil,
+		wg:                sync.WaitGroup{},
+		msgChan:           make(chan wire.Message, writeMsgChannelBufferSize),
+		quitting:          false,
+		quit:              make(chan struct{}),
 	}
 	return peer, nil
 }
@@ -132,6 +135,7 @@ func (p *Peer) StartHeadersSync() error {
 
 	currentTipHeight := p.headersService.GetTipHeight()
 	p.setNextHeaderCheckpoint(currentTipHeight)
+	p.sendHeadersMode = false
 
 	err := p.requestHeaders()
 	if err != nil {
@@ -145,13 +149,11 @@ func (p *Peer) StartHeadersSync() error {
 func (p *Peer) setNextHeaderCheckpoint(height int32) {
 	p.nextCheckpoint = findNextHeaderCheckpoint(p.checkpoints, height)
 	if p.nextCheckpoint == nil {
-		p.synced = true
+		p.syncedCheckpoints = true
 	}
 }
 
 func (p *Peer) requestHeaders() error {
-	p.log.Info().Msgf("requesting headers from peer %s", p)
-
 	var err error
 	if p.nextCheckpoint != nil {
 		p.log.Info().Msgf("requesting next headers batch from peer %s, up to height %d", p, p.nextCheckpoint.Height)
@@ -393,7 +395,7 @@ func (p *Peer) handleVersionMessage(msg *wire.MsgVersion) error {
 
 	p.protocolVersion = min(p.protocolVersion, uint32(msg.ProtocolVersion))
 	p.services = msg.Services
-	p.lastBlock = msg.LastBlock
+	p.latestHeight = msg.LastBlock
 	p.timeOffset = msg.Timestamp.Unix() - time.Now().Unix()
 	p.userAgent = msg.UserAgent
 
@@ -421,13 +423,14 @@ func (p *Peer) requireVerAckReceived(remoteMsg wire.Message) (*wire.MsgVerAck, e
 func (p *Peer) handlePingMsg(msg *wire.MsgPing) {
 	p.log.Info().Msgf("received ping from peer %s with nonce: %d", p, msg.Nonce)
 	if p.protocolVersion > wire.BIP0031Version {
+		p.log.Info().Msgf("sending pong to peer %s with nonce: %d", p, msg.Nonce)
 		p.queueMessage(wire.NewMsgPong(msg.Nonce))
 	}
 }
 
 func (p *Peer) handleInvMsg(msg *wire.MsgInv) {
 	p.log.Info().Msgf("received inv msg from peer %s", p)
-	if !p.synced {
+	if !p.syncedCheckpoints {
 		p.log.Info().Msgf("we are still syncing, ignoring inv msg from peer %s", p)
 		return
 	}
@@ -438,13 +441,13 @@ func (p *Peer) handleInvMsg(msg *wire.MsgInv) {
 		return
 	}
 
-	// if last header from inv msg is already in database, ignore
 	lastBlockHash := &msg.InvList[lastBlock].Hash
 	_, err := p.headersService.GetHeightByHash(lastBlockHash)
 	if err == nil {
 		p.log.Info().Msgf("blocks from inv msg from peer %s already existsing in db", p)
 		return
 	}
+	p.updateLatestStats(0, lastBlockHash)
 
 	p.log.Info().Msgf("requesting new headers from peer %s", p)
 	err = p.writeGetHeadersMsg(lastBlockHash)
@@ -454,9 +457,12 @@ func (p *Peer) handleInvMsg(msg *wire.MsgInv) {
 }
 
 func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
+	p.log.Info().Msgf("received headers msg from peer %s", p)
+
 	receivedCheckpoint := false
 	lastHeight := int32(0)
 	headersReceived := 0
+	var lastHash *chainhash.Hash
 
 	for _, header := range msg.Headers {
 		h, err := p.chainService.Add(domains.BlockHeaderSource(*header))
@@ -488,6 +494,15 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 			}
 		}
 
+		if !h.IsLongestChain() {
+			// TODO: ban peer or lower sync score
+			p.log.Warn().Msgf(
+				"received header with hash: %s that's not a part of the longest chain, from peer %s",
+				h.Hash.String(), p,
+			)
+			continue
+		}
+
 		receivedCheckpoint, err = p.verifyCheckpointReached(h, receivedCheckpoint)
 		if err != nil {
 			// TODO: ban peer or lower peer sync score
@@ -496,6 +511,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 		}
 
 		lastHeight = h.Height
+		lastHash = &h.Hash
 		headersReceived += 1
 	}
 
@@ -508,6 +524,18 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 		"successfully received %d headers from peer %s, up to height %d",
 		headersReceived, p, lastHeight,
 	)
+
+	p.updateLatestStats(lastHeight, lastHash)
+
+	if p.sendHeadersMode {
+		return
+	}
+
+	if p.isSynced() {
+		p.log.Info().Msgf("synced with the tip of chain from peer %s", p)
+		p.switchToSendHeadersMode()
+		return
+	}
 
 	if receivedCheckpoint {
 		p.setNextHeaderCheckpoint(p.nextCheckpoint.Height)
@@ -537,6 +565,41 @@ func (p *Peer) verifyCheckpointReached(h *domains.BlockHeader, receivedCheckpoin
 		}
 	}
 	return receivedCheckpoint, nil
+}
+
+func (p *Peer) switchToSendHeadersMode() {
+	if !p.sendHeadersMode && p.protocolVersion >= wire.SendHeadersVersion {
+		p.log.Info().Msgf("switching to send headers mode - requesting peer %s to send us headers directly instead of inv msg", p)
+		p.queueMessage(wire.NewMsgSendHeaders())
+		p.sendHeadersMode = true
+	}
+}
+
+func (p *Peer) updateLatestStats(lastHeight int32, lastHash *chainhash.Hash) {
+	p.latestStatsMutex.Lock()
+	defer p.latestStatsMutex.Unlock()
+
+	if lastHeight > p.latestHeight {
+		p.latestHeight = lastHeight
+	}
+	if lastHash.IsEqual(p.latestHash) {
+		p.latestHash = nil
+	}
+}
+
+func (p *Peer) getLatestStats() (lastHeight int32, lastHash *chainhash.Hash) {
+	p.latestStatsMutex.RLock()
+	defer p.latestStatsMutex.RUnlock()
+
+	return p.latestHeight, p.latestHash
+}
+
+func (p *Peer) isSynced() bool {
+	tipHeight := p.headersService.GetTipHeight()
+	latestHeight, latestHash := p.getLatestStats()
+	noNewHash := latestHash.IsEqual(nil)
+
+	return noNewHash && latestHeight == tipHeight
 }
 
 func (p *Peer) String() string {
