@@ -23,6 +23,8 @@ import (
 type Peer struct {
 	conn              net.Conn
 	addr              *net.TCPAddr
+	listener          net.Listener
+	inbound           bool
 	cfg               *config.P2PConfig
 	chainParams       *chaincfg.Params
 	checkpoint        *checkpoint
@@ -70,29 +72,75 @@ func NewPeer(
 	}
 
 	peer := &Peer{
-		addr:            netAddr,
-		cfg:             cfg,
-		chainParams:     chainParams,
-		headersService:  headersService,
-		chainService:    chainService,
-		log:             log,
-		services:        wire.SFspv,
-		protocolVersion: initialProtocolVersion,
-		wg:              sync.WaitGroup{},
-		msgChan:         make(chan wire.Message, writeMsgChannelBufferSize),
-		quitting:        false,
-		quit:            make(chan struct{}),
+		addr:              netAddr,
+		inbound:           false,
+		cfg:               cfg,
+		chainParams:       chainParams,
+		headersService:    headersService,
+		chainService:      chainService,
+		checkpoints:       chainParams.Checkpoints,
+		nextCheckpoint:    nextCheckpoint,
+		log:               log,
+		services:          wire.SFspv,
+		protocolVersion:   initialProtocolVersion,
+		syncedCheckpoints: nextCheckpoint == nil,
+		wg:                sync.WaitGroup{},
+		msgChan:           make(chan wire.Message, writeMsgChannelBufferSize),
+		quitting:          false,
+		quit:              make(chan struct{}),
+	}
+	return peer, nil
+}
+
+func NewInboundPeer(
+	listener net.Listener,
+	cfg *config.P2PConfig,
+	chainParams *chaincfg.Params,
+	headersService service.Headers,
+	chainService service.Chains,
+	log *zerolog.Logger,
+) (*Peer, error) {
+	currentTipHeight := headersService.GetTipHeight()
+	nextCheckpoint := findNextHeaderCheckpoint(chainParams.Checkpoints, currentTipHeight)
+
+	peer := &Peer{
+		listener:          listener,
+		inbound:           true,
+		cfg:               cfg,
+		chainParams:       chainParams,
+		headersService:    headersService,
+		chainService:      chainService,
+		checkpoints:       chainParams.Checkpoints,
+		nextCheckpoint:    nextCheckpoint,
+		log:               log,
+		services:          wire.SFspv,
+		protocolVersion:   initialProtocolVersion,
+		syncedCheckpoints: nextCheckpoint == nil,
+		wg:                sync.WaitGroup{},
+		msgChan:           make(chan wire.Message, writeMsgChannelBufferSize),
+		quitting:          false,
+		quit:              make(chan struct{}),
 	}
 	return peer, nil
 }
 
 func (p *Peer) Connect() error {
-	conn, err := net.Dial(p.addr.Network(), p.addr.String())
+	var conn net.Conn
+	var err error
+
+	if p.inbound {
+		conn, err = p.listener.Accept()
+	} else {
+		conn, err = net.Dial(p.addr.Network(), p.addr.String())
+	}
 	if err != nil {
 		p.log.Error().Msgf("error connecting to peer %s, reason: %v", p, err)
 		return err
 	}
+
 	p.conn = conn
+	p.updatePeerAddr()
+
 	p.log.Info().Msgf("connected to peer: %s", p)
 
 	err = p.negotiateProtocol()
@@ -114,6 +162,7 @@ func (p *Peer) Disconnect() error {
 	close(p.quit)
 	err := p.conn.Close()
 	if err != nil {
+		p.log.Error().Msgf("error disconnecting peer %s, reason %v", p, err)
 		return err
 	}
 
@@ -137,6 +186,27 @@ func (p *Peer) StartHeadersSync() error {
 		return err
 	}
 	return nil
+}
+
+func (p *Peer) updatePeerAddr() error {
+	remoteAddr, addrIsTcp := p.conn.RemoteAddr().(*net.TCPAddr)
+
+	if remoteAddr != nil && addrIsTcp {
+		p.addr = remoteAddr
+	} else {
+		errMsg := "error retreiving address from peer"
+		p.log.Error().Msg(errMsg)
+		_ = p.Disconnect()
+		return errors.New(errMsg)
+	}
+	return nil
+}
+
+func (p *Peer) setNextHeaderCheckpoint(height int32) {
+	p.nextCheckpoint = findNextHeaderCheckpoint(p.checkpoints, height)
+	if p.nextCheckpoint == nil {
+		p.syncedCheckpoints = true
+	}
 }
 
 func (p *Peer) requestHeaders() error {
