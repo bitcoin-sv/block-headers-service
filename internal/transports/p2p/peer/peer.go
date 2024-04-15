@@ -21,31 +21,58 @@ import (
 )
 
 type Peer struct {
-	conn              net.Conn
-	addr              *net.TCPAddr
-	listener          net.Listener
-	inbound           bool
-	cfg               *config.P2PConfig
-	chainParams       *chaincfg.Params
-	checkpoint        *checkpoint
-	headersService    service.Headers
-	chainService      service.Chains
-	log               *zerolog.Logger
-	services          wire.ServiceFlag
-	protocolVersion   uint32
-	nonce             uint64
-	latestHeight      int32
-	latestHash        *chainhash.Hash
-	latestStatsMutex  sync.RWMutex
-	timeOffset        int64
-	userAgent         string
+	// conn is the current connection to peer
+	conn net.Conn
+	// addr is the net.Addr of peer, used for connection
+	addr *net.TCPAddr
+	// listener is the net.Listener for inbound connections
+	listener net.Listener
+	// inbound is specifing if the peer is inbound (incoming) or outbound (outgoing)
+	inbound bool
+	// cfg is the P2P configuration specified by the user
+	cfg *config.P2PConfig
+	// chainParams are the params of the main network
+	chainParams *chaincfg.Params
+	// checkpoint is used to validate block headers when syncing
+	checkpoint *checkpoint
+	// headersService is the service allowing us to retrieve e.g. the current tip height
+	headersService service.Headers
+	// chainService is used for adding new headers to the database
+	chainService service.Chains
+	// log is a zerolog logger used in the p2p package
+	log *zerolog.Logger
+	// services is a flag that specifies whether the peer is a full node or an SPV
+	services wire.ServiceFlag
+	// protocolVersion is the negotiated protocol version between us and the peer
+	protocolVersion uint32
+	// nonce is used when negotiating protocol version for another peer to identify us
+	nonce uint64
+	// latestHeight is the latest header's height of the peer,
+	// used for checking if we're synced with the peer
+	latestHeight int32
+	// latestHash is the latest header's hash from the peer,
+	// used for checking if we're synced with the peer
+	latestHash *chainhash.Hash
+	// latestStatsMutex is used to make latestHeight and latestHash thread-safe
+	latestStatsMutex sync.RWMutex
+	// timeOffset is the offset between peer sending the version message and us receiving it
+	timeOffset int64
+	// userAgent is the 'name' of the peer used for identification
+	userAgent string
+	// syncedCheckpoints is specifing whether we have synced all checkpoints
 	syncedCheckpoints bool
-	sendHeadersMode   bool
+	// sendHeadersMode is specifing whether we already sent the sendheaders message
+	// to the peer and we're expecting to get just headers and no inv msg
+	sendHeadersMode bool
 
-	wg       sync.WaitGroup
-	msgChan  chan wire.Message
+	// wg is a WaitGroup used to properly handle peer disconnection
+	wg sync.WaitGroup
+	// msgChan is a buffered channel used as a queue for sending messages to peer
+	msgChan chan wire.Message
+	// quitting is a flag used to properly handle peer disconnection
 	quitting bool
-	quit     chan struct{}
+	// quit is a channel used to properly handle peer disconnection
+	quit chan struct{}
 }
 
 func NewPeer(
@@ -78,8 +105,6 @@ func NewPeer(
 		chainParams:       chainParams,
 		headersService:    headersService,
 		chainService:      chainService,
-		checkpoints:       chainParams.Checkpoints,
-		nextCheckpoint:    nextCheckpoint,
 		log:               log,
 		services:          wire.SFspv,
 		protocolVersion:   initialProtocolVersion,
@@ -110,8 +135,6 @@ func NewInboundPeer(
 		chainParams:       chainParams,
 		headersService:    headersService,
 		chainService:      chainService,
-		checkpoints:       chainParams.Checkpoints,
-		nextCheckpoint:    nextCheckpoint,
 		log:               log,
 		services:          wire.SFspv,
 		protocolVersion:   initialProtocolVersion,
@@ -203,13 +226,6 @@ func (p *Peer) updatePeerAddr() error {
 		return errors.New(errMsg)
 	}
 	return nil
-}
-
-func (p *Peer) setNextHeaderCheckpoint(height int32) {
-	p.nextCheckpoint = findNextHeaderCheckpoint(p.checkpoints, height)
-	if p.nextCheckpoint == nil {
-		p.syncedCheckpoints = true
-	}
 }
 
 func (p *Peer) requestHeaders() error {
