@@ -27,7 +27,7 @@ type Peer struct {
 	addr *net.TCPAddr
 	// listener is the net.Listener for inbound connections
 	listener net.Listener
-	// inbound is specifing if the peer is inbound (incoming) or outbound (outgoing)
+	// inbound is specifying if the peer is inbound (incoming) or outbound (outgoing)
 	inbound bool
 	// cfg is the P2P configuration specified by the user
 	cfg *config.P2PConfig
@@ -59,9 +59,9 @@ type Peer struct {
 	timeOffset int64
 	// userAgent is the 'name' of the peer used for identification
 	userAgent string
-	// syncedCheckpoints is specifing whether we have synced all checkpoints
+	// syncedCheckpoints is specifying whether we have synced all checkpoints
 	syncedCheckpoints bool
-	// sendHeadersMode is specifing whether we already sent the sendheaders message
+	// sendHeadersMode is specifying whether we already sent the sendheaders message
 	// to the peer and we're expecting to get just headers and no inv msg
 	sendHeadersMode bool
 
