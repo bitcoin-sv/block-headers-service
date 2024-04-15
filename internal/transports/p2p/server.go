@@ -41,10 +41,10 @@ func NewServer(
 }
 
 func (s *server) Start() error {
-	// err := s.seedAndConnect()
-	// if err != nil {
-	// 	return err
-	// }
+	err := s.seedAndConnect()
+	if err != nil {
+		return err
+	}
 
 	return s.listenAndConnect()
 }

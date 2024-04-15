@@ -139,7 +139,11 @@ func (p *Peer) Connect() error {
 	}
 
 	p.conn = conn
-	p.updatePeerAddr()
+	err = p.updatePeerAddr()
+	if err != nil {
+		_ = p.Disconnect()
+		return err
+	}
 
 	p.log.Info().Msgf("connected to peer: %s", p)
 
@@ -196,7 +200,6 @@ func (p *Peer) updatePeerAddr() error {
 	} else {
 		errMsg := "error retreiving address from peer"
 		p.log.Error().Msg(errMsg)
-		_ = p.Disconnect()
 		return errors.New(errMsg)
 	}
 	return nil
