@@ -69,15 +69,12 @@ func NewPeer(
 		Port: port,
 	}
 
-	currentTipHeight := headersService.GetTipHeight()
-
 	peer := &Peer{
 		addr:            netAddr,
 		cfg:             cfg,
 		chainParams:     chainParams,
 		headersService:  headersService,
 		chainService:    chainService,
-		checkpoint:      newCheckpoint(chainParams.Checkpoints, currentTipHeight, log),
 		log:             log,
 		services:        wire.SFspv,
 		protocolVersion: initialProtocolVersion,
@@ -130,7 +127,7 @@ func (p *Peer) StartHeadersSync() error {
 	go p.readMsgHandler()
 
 	currentTipHeight := p.headersService.GetTipHeight()
-	p.checkpoint.UseTip(currentTipHeight)
+	p.checkpoint = newCheckpoint(p.chainParams.Checkpoints, currentTipHeight, p.log)
 	p.sendHeadersMode = false
 
 	err := p.requestHeaders()
