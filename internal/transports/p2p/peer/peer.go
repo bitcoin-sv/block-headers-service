@@ -24,8 +24,6 @@ type Peer struct {
 	conn net.Conn
 	// addr is the net.Addr of peer, used for connection
 	addr *net.TCPAddr
-	// listener is the net.Listener for inbound connections
-	listener net.Listener
 	// inbound is specifying if the peer is inbound (incoming) or outbound (outgoing)
 	inbound bool
 	// cfg is the P2P configuration specified by the user
