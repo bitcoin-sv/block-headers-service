@@ -60,8 +60,8 @@ func (ch *checkpoint) LastReached() bool {
 	return ch.currentCheckpoint == nil
 }
 
-// Check checks if the header is valid according to the checkpoint and marks switches to next checkpoint if reached.
-func (ch *checkpoint) Check(header *domains.BlockHeader) error {
+// VerifyAndAdvance checks if the header is valid according to the checkpoint and marks switches to next checkpoint if reached.
+func (ch *checkpoint) VerifyAndAdvance(header *domains.BlockHeader) error {
 	ch.lock.Lock()
 	defer ch.lock.Unlock()
 

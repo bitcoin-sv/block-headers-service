@@ -104,7 +104,7 @@ func TestCheckpointCurrentCheckpoint(t *testing.T) {
 			chckPoint := newCheckpoint(checkpoints, params.header.Height-1, &testLogger)
 
 			// when:
-			err := chckPoint.Check(params.header)
+			err := chckPoint.VerifyAndAdvance(params.header)
 
 			// then:
 			require.NoError(t, err)
@@ -117,7 +117,7 @@ func TestCheckpointCurrentCheckpoint(t *testing.T) {
 
 }
 
-func TestCheckpointCheckSuccess(t *testing.T) {
+func TestCheckpointVerificationSuccess(t *testing.T) {
 	testLogger := zerolog.Nop()
 	checkpoints := chaincfg.MainNetParams.Checkpoints
 	lastCheckpoint := checkpoints[len(checkpoints)-1]
@@ -165,12 +165,12 @@ func TestCheckpointCheckSuccess(t *testing.T) {
 			chckPoint := newCheckpoint(params.checkpoints, params.header.Height-1, &testLogger)
 
 			// expect:
-			require.NoError(t, chckPoint.Check(params.header))
+			require.NoError(t, chckPoint.VerifyAndAdvance(params.header))
 		})
 	}
 }
 
-func TestCheckpointCheckFailure(t *testing.T) {
+func TestCheckpointVerificationFailure(t *testing.T) {
 	testLogger := zerolog.Nop()
 	checkpoints := chaincfg.MainNetParams.Checkpoints
 	lastCheckpoint := checkpoints[len(checkpoints)-1]
@@ -205,7 +205,7 @@ func TestCheckpointCheckFailure(t *testing.T) {
 			chckPoint := newCheckpoint(params.checkpoints, params.previousHeight, &testLogger)
 
 			// when:
-			err := chckPoint.Check(params.header)
+			err := chckPoint.VerifyAndAdvance(params.header)
 
 			// then:
 			require.Error(t, err)

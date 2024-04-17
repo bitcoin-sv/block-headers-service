@@ -488,7 +488,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 			continue
 		}
 
-		err = p.checkpoint.Check(h)
+		err = p.checkpoint.VerifyAndAdvance(h)
 		if err != nil {
 			// TODO: ban peer or lower peer sync score
 			p.log.Error().Msgf("error when checking checkpoint, reason: %v", err)
