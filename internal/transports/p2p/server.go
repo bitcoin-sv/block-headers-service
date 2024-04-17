@@ -51,7 +51,7 @@ func (s *server) Start() error {
 
 func (s *server) Shutdown() error {
 	for _, p := range s.peers {
-		_ = p.Disconnect()
+		p.Disconnect()
 	}
 	return nil
 }
@@ -65,14 +65,22 @@ func (s *server) seedAndConnect() error {
 	for _, seed := range seeds {
 		s.log.Info().Msgf("Got peer addr: %s", seed.String())
 	}
-	firstPeerSeed := seeds[0].String()
 
-	peer, err := peer.NewPeer(firstPeerSeed, s.config, s.chainParams, s.headersService, s.chainService, s.log)
+	firstPeerSeed := seeds[0].String()
+	firstPeerAddr, err := parseAddress(firstPeerSeed, s.chainParams.DefaultPort)
 	if err != nil {
+		s.log.Error().Msgf("error parsing peer %s address, reason: %v", firstPeerAddr.String(), err)
 		return err
 	}
 
-	return s.connectPeer(peer)
+	inbound := false
+	conn, err := net.Dial(firstPeerAddr.Network(), firstPeerAddr.String())
+	if err != nil {
+		s.log.Error().Msgf("error connecting to peer %s, reason: %v", firstPeerAddr.String(), err)
+		return err
+	}
+
+	return s.connectPeer(conn, inbound)
 }
 
 func (s *server) listenAndConnect() error {
@@ -85,25 +93,33 @@ func (s *server) listenAndConnect() error {
 		return err
 	}
 
-	peer, err := peer.NewInboundPeer(listener, s.config, s.chainParams, s.headersService, s.chainService, s.log)
+	inbound := true
+	conn, err := listener.Accept()
+	if err != nil {
+		s.log.Error().Msgf("error accepting connection, reason: %v", err)
+		return err
+	}
+
+	return s.connectPeer(conn, inbound)
+}
+
+func (s *server) connectPeer(conn net.Conn, inbound bool) error {
+	peer, err := peer.NewPeer(conn, inbound, s.config, s.chainParams, s.headersService, s.chainService, s.log)
 	if err != nil {
 		return err
 	}
 
-	return s.connectPeer(peer)
-}
-
-func (s *server) connectPeer(peer *peer.Peer) error {
 	s.peers = append(s.peers, peer)
 
-	err := peer.Connect()
+	err = peer.Connect()
 	if err != nil {
+		s.log.Error().Msgf("error connecting with peer %s, reason: %v", peer, err)
 		return err
 	}
 
 	err = peer.StartHeadersSync()
 	if err != nil {
-		s.log.Error().Msgf("error starting peer, reason: %v", err)
+		s.log.Error().Msgf("error starting sync with peer %s, reason: %v", peer, err)
 		return err
 	}
 

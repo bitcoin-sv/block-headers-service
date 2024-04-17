@@ -7,7 +7,6 @@ import (
 	"math"
 	"math/big"
 	"net"
-	"strconv"
 	"sync"
 	"time"
 
@@ -76,49 +75,8 @@ type Peer struct {
 }
 
 func NewPeer(
-	addr string,
-	cfg *config.P2PConfig,
-	chainParams *chaincfg.Params,
-	headersService service.Headers,
-	chainService service.Chains,
-	log *zerolog.Logger,
-) (*Peer, error) {
-	port, err := strconv.Atoi(config.ActiveNetParams.DefaultPort)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse default port: %w", err)
-	}
-
-	ip := net.ParseIP(addr)
-	if ip == nil {
-		return nil, errors.New("could not parse peer IP")
-	}
-
-	netAddr := &net.TCPAddr{
-		IP:   ip,
-		Port: port,
-	}
-
-	peer := &Peer{
-		addr:              netAddr,
-		inbound:           false,
-		cfg:               cfg,
-		chainParams:       chainParams,
-		headersService:    headersService,
-		chainService:      chainService,
-		log:               log,
-		services:          wire.SFspv,
-		protocolVersion:   initialProtocolVersion,
-		syncedCheckpoints: nextCheckpoint == nil,
-		wg:                sync.WaitGroup{},
-		msgChan:           make(chan wire.Message, writeMsgChannelBufferSize),
-		quitting:          false,
-		quit:              make(chan struct{}),
-	}
-	return peer, nil
-}
-
-func NewInboundPeer(
-	listener net.Listener,
+	conn net.Conn,
+	inbound bool,
 	cfg *config.P2PConfig,
 	chainParams *chaincfg.Params,
 	headersService service.Headers,
@@ -129,8 +87,8 @@ func NewInboundPeer(
 	nextCheckpoint := findNextHeaderCheckpoint(chainParams.Checkpoints, currentTipHeight)
 
 	peer := &Peer{
-		listener:          listener,
-		inbound:           true,
+		conn:              conn,
+		inbound:           inbound,
 		cfg:               cfg,
 		chainParams:       chainParams,
 		headersService:    headersService,
@@ -148,23 +106,9 @@ func NewInboundPeer(
 }
 
 func (p *Peer) Connect() error {
-	var conn net.Conn
-	var err error
-
-	if p.inbound {
-		conn, err = p.listener.Accept()
-	} else {
-		conn, err = net.Dial(p.addr.Network(), p.addr.String())
-	}
+	err := p.updatePeerAddr()
 	if err != nil {
-		p.log.Error().Msgf("error connecting to peer %s, reason: %v", p, err)
-		return err
-	}
-
-	p.conn = conn
-	err = p.updatePeerAddr()
-	if err != nil {
-		_ = p.Disconnect()
+		p.Disconnect()
 		return err
 	}
 
@@ -173,7 +117,7 @@ func (p *Peer) Connect() error {
 	err = p.negotiateProtocol()
 	if err != nil {
 		p.log.Error().Msgf("error negotiating protocol with peer %s, reason: %v", p, err)
-		_ = p.Disconnect()
+		p.Disconnect()
 		return err
 	}
 
@@ -182,7 +126,7 @@ func (p *Peer) Connect() error {
 	return nil
 }
 
-func (p *Peer) Disconnect() error {
+func (p *Peer) Disconnect() {
 	p.log.Info().Msgf("disconnecting peer: %s", p)
 
 	p.quitting = true
@@ -190,12 +134,10 @@ func (p *Peer) Disconnect() error {
 	err := p.conn.Close()
 	if err != nil {
 		p.log.Error().Msgf("error disconnecting peer %s, reason %v", p, err)
-		return err
 	}
 
 	p.wg.Wait()
 	p.log.Info().Msgf("successfully disconnected peer %s", p)
-	return nil
 }
 
 func (p *Peer) StartHeadersSync() error {
@@ -209,7 +151,7 @@ func (p *Peer) StartHeadersSync() error {
 	err := p.requestHeaders()
 	if err != nil {
 		// TODO: lower peer sync score
-		_ = p.Disconnect()
+		p.Disconnect()
 		return err
 	}
 	return nil
@@ -548,7 +490,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 			if service.BlockRejected.Is(err) {
 				// TODO: ban peer
 				p.log.Error().Msgf("received rejected header %v from peer %s", h, p)
-				_ = p.Disconnect()
+				p.Disconnect()
 				return
 			}
 
@@ -580,8 +522,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 		err = p.checkpoint.VerifyAndAdvance(h)
 		if err != nil {
 			// TODO: ban peer or lower peer sync score
-			p.log.Error().Msgf("error when checking checkpoint, reason: %v", err)
-			_ = p.Disconnect()
+			p.Disconnect()
 			return
 		}
 
@@ -615,7 +556,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 	err := p.requestHeaders()
 	if err != nil {
 		// TODO: lower peer sync score
-		_ = p.Disconnect()
+		p.Disconnect()
 	}
 }
 
