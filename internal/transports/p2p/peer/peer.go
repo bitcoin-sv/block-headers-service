@@ -25,8 +25,7 @@ type Peer struct {
 	addr              *net.TCPAddr
 	cfg               *config.P2PConfig
 	chainParams       *chaincfg.Params
-	checkpoints       []chaincfg.Checkpoint
-	nextCheckpoint    *chaincfg.Checkpoint
+	checkpoint        *checkpoint
 	headersService    service.Headers
 	chainService      service.Chains
 	log               *zerolog.Logger
@@ -70,25 +69,19 @@ func NewPeer(
 		Port: port,
 	}
 
-	currentTipHeight := headersService.GetTipHeight()
-	nextCheckpoint := findNextHeaderCheckpoint(chainParams.Checkpoints, currentTipHeight)
-
 	peer := &Peer{
-		addr:              netAddr,
-		cfg:               cfg,
-		chainParams:       chainParams,
-		headersService:    headersService,
-		chainService:      chainService,
-		checkpoints:       chainParams.Checkpoints,
-		nextCheckpoint:    nextCheckpoint,
-		log:               log,
-		services:          wire.SFspv,
-		protocolVersion:   initialProtocolVersion,
-		syncedCheckpoints: nextCheckpoint == nil,
-		wg:                sync.WaitGroup{},
-		msgChan:           make(chan wire.Message, writeMsgChannelBufferSize),
-		quitting:          false,
-		quit:              make(chan struct{}),
+		addr:            netAddr,
+		cfg:             cfg,
+		chainParams:     chainParams,
+		headersService:  headersService,
+		chainService:    chainService,
+		log:             log,
+		services:        wire.SFspv,
+		protocolVersion: initialProtocolVersion,
+		wg:              sync.WaitGroup{},
+		msgChan:         make(chan wire.Message, writeMsgChannelBufferSize),
+		quitting:        false,
+		quit:            make(chan struct{}),
 	}
 	return peer, nil
 }
@@ -134,7 +127,7 @@ func (p *Peer) StartHeadersSync() error {
 	go p.readMsgHandler()
 
 	currentTipHeight := p.headersService.GetTipHeight()
-	p.setNextHeaderCheckpoint(currentTipHeight)
+	p.checkpoint = newCheckpoint(p.chainParams.Checkpoints, currentTipHeight, p.log)
 	p.sendHeadersMode = false
 
 	err := p.requestHeaders()
@@ -146,21 +139,14 @@ func (p *Peer) StartHeadersSync() error {
 	return nil
 }
 
-func (p *Peer) setNextHeaderCheckpoint(height int32) {
-	p.nextCheckpoint = findNextHeaderCheckpoint(p.checkpoints, height)
-	if p.nextCheckpoint == nil {
-		p.syncedCheckpoints = true
-	}
-}
-
 func (p *Peer) requestHeaders() error {
 	var err error
-	if p.nextCheckpoint != nil {
-		p.log.Info().Msgf("requesting next headers batch from peer %s, up to height %d", p, p.nextCheckpoint.Height)
-		err = p.writeGetHeadersMsg(p.nextCheckpoint.Hash)
-	} else {
+	if p.checkpoint.LastReached() {
 		p.log.Info().Msgf("checkpoints synced, requesting headers up to end of chain from peer %s", p)
 		err = p.writeGetHeadersMsg(&zeroHash)
+	} else {
+		p.log.Info().Msgf("requesting next headers batch from peer %s, up to height %d", p, p.checkpoint.Height())
+		err = p.writeGetHeadersMsg(p.checkpoint.Hash())
 	}
 
 	if err != nil {
@@ -459,7 +445,6 @@ func (p *Peer) handleInvMsg(msg *wire.MsgInv) {
 func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 	p.log.Info().Msgf("received headers msg from peer %s", p)
 
-	receivedCheckpoint := false
 	lastHeight := int32(0)
 	headersReceived := 0
 	var lastHash *chainhash.Hash
@@ -503,9 +488,10 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 			continue
 		}
 
-		receivedCheckpoint, err = p.verifyCheckpointReached(h, receivedCheckpoint)
+		err = p.checkpoint.VerifyAndAdvance(h)
 		if err != nil {
 			// TODO: ban peer or lower peer sync score
+			p.log.Error().Msgf("error when checking checkpoint, reason: %v", err)
 			_ = p.Disconnect()
 			return
 		}
@@ -537,34 +523,11 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 		return
 	}
 
-	if receivedCheckpoint {
-		p.setNextHeaderCheckpoint(p.nextCheckpoint.Height)
-	}
-
 	err := p.requestHeaders()
 	if err != nil {
 		// TODO: lower peer sync score
 		_ = p.Disconnect()
 	}
-}
-
-func (p *Peer) verifyCheckpointReached(h *domains.BlockHeader, receivedCheckpoint bool) (bool, error) {
-	if p.nextCheckpoint != nil && p.nextCheckpoint.Hash != nil && h.Height == p.nextCheckpoint.Height {
-		if h.Hash == *p.nextCheckpoint.Hash {
-			receivedCheckpoint = true
-			p.log.Info().Msgf(
-				"verified downloaded block header against checkpoint at height %d / hash %s",
-				h.Height, h.Hash,
-			)
-		} else {
-			p.log.Error().Msgf(
-				"block header at height %d/hash %s from peer %s does NOT match expected checkpoint hash of %s -- disconnecting",
-				h.Height, h.Hash, p, p.nextCheckpoint.Hash,
-			)
-			return false, fmt.Errorf("corresponding checkpoint height does not match got: %v, exp: %v", h.Height, p.nextCheckpoint.Height)
-		}
-	}
-	return receivedCheckpoint, nil
 }
 
 func (p *Peer) switchToSendHeadersMode() {
