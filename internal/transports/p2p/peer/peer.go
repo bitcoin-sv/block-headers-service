@@ -7,7 +7,6 @@ import (
 	"math"
 	"math/big"
 	"net"
-	"strconv"
 	"sync"
 	"time"
 
@@ -21,56 +20,70 @@ import (
 )
 
 type Peer struct {
-	conn              net.Conn
-	addr              *net.TCPAddr
-	cfg               *config.P2PConfig
-	chainParams       *chaincfg.Params
-	checkpoint        *checkpoint
-	headersService    service.Headers
-	chainService      service.Chains
-	log               *zerolog.Logger
-	services          wire.ServiceFlag
-	protocolVersion   uint32
-	nonce             uint64
-	latestHeight      int32
-	latestHash        *chainhash.Hash
-	latestStatsMutex  sync.RWMutex
-	timeOffset        int64
-	userAgent         string
+	// conn is the current connection to peer
+	conn net.Conn
+	// addr is the net.Addr of peer, used for connection
+	addr *net.TCPAddr
+	// inbound is specifying if the peer is inbound (incoming) or outbound (outgoing)
+	inbound bool
+	// cfg is the P2P configuration specified by the user
+	cfg *config.P2PConfig
+	// chainParams are the params of the main network
+	chainParams *chaincfg.Params
+	// checkpoint is used to validate block headers when syncing
+	checkpoint *checkpoint
+	// headersService is the service allowing us to retrieve e.g. the current tip height
+	headersService service.Headers
+	// chainService is used for adding new headers to the database
+	chainService service.Chains
+	// log is a zerolog logger used in the p2p package
+	log *zerolog.Logger
+	// services is a flag that specifies whether the peer is a full node or an SPV
+	services wire.ServiceFlag
+	// protocolVersion is the negotiated protocol version between us and the peer
+	protocolVersion uint32
+	// nonce is used when negotiating protocol version for another peer to identify us
+	nonce uint64
+	// latestHeight is the latest header's height of the peer,
+	// used for checking if we're synced with the peer
+	latestHeight int32
+	// latestHash is the latest header's hash from the peer,
+	// used for checking if we're synced with the peer
+	latestHash *chainhash.Hash
+	// latestStatsMutex is used to make latestHeight and latestHash thread-safe
+	latestStatsMutex sync.RWMutex
+	// timeOffset is the offset between peer sending the version message and us receiving it
+	timeOffset int64
+	// userAgent is the 'name' of the peer used for identification
+	userAgent string
+	// syncedCheckpoints is specifying whether we have synced all checkpoints
 	syncedCheckpoints bool
-	sendHeadersMode   bool
+	// sendHeadersMode is specifying whether we already sent the sendheaders message
+	// to the peer and we're expecting to get just headers and no inv msg
+	sendHeadersMode bool
 
-	wg       sync.WaitGroup
-	msgChan  chan wire.Message
+	// wg is a WaitGroup used to properly handle peer disconnection
+	wg sync.WaitGroup
+	// msgChan is a buffered channel used as a queue for sending messages to peer
+	msgChan chan wire.Message
+	// quitting is a flag used to properly handle peer disconnection
 	quitting bool
-	quit     chan struct{}
+	// quit is a channel used to properly handle peer disconnection
+	quit chan struct{}
 }
 
 func NewPeer(
-	addr string,
+	conn net.Conn,
+	inbound bool,
 	cfg *config.P2PConfig,
 	chainParams *chaincfg.Params,
 	headersService service.Headers,
 	chainService service.Chains,
 	log *zerolog.Logger,
 ) (*Peer, error) {
-	port, err := strconv.Atoi(config.ActiveNetParams.DefaultPort)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse default port: %w", err)
-	}
-
-	ip := net.ParseIP(addr)
-	if ip == nil {
-		return nil, errors.New("could not parse peer IP")
-	}
-
-	netAddr := &net.TCPAddr{
-		IP:   ip,
-		Port: port,
-	}
-
 	peer := &Peer{
-		addr:            netAddr,
+		conn:            conn,
+		inbound:         inbound,
 		cfg:             cfg,
 		chainParams:     chainParams,
 		headersService:  headersService,
@@ -87,18 +100,18 @@ func NewPeer(
 }
 
 func (p *Peer) Connect() error {
-	conn, err := net.Dial(p.addr.Network(), p.addr.String())
+	err := p.updatePeerAddr()
 	if err != nil {
-		p.log.Error().Msgf("error connecting to peer %s, reason: %v", p, err)
+		p.Disconnect()
 		return err
 	}
-	p.conn = conn
+
 	p.log.Info().Msgf("connected to peer: %s", p)
 
 	err = p.negotiateProtocol()
 	if err != nil {
 		p.log.Error().Msgf("error negotiating protocol with peer %s, reason: %v", p, err)
-		_ = p.Disconnect()
+		p.Disconnect()
 		return err
 	}
 
@@ -107,19 +120,18 @@ func (p *Peer) Connect() error {
 	return nil
 }
 
-func (p *Peer) Disconnect() error {
+func (p *Peer) Disconnect() {
 	p.log.Info().Msgf("disconnecting peer: %s", p)
 
 	p.quitting = true
 	close(p.quit)
 	err := p.conn.Close()
 	if err != nil {
-		return err
+		p.log.Error().Msgf("error disconnecting peer %s, reason %v", p, err)
 	}
 
 	p.wg.Wait()
 	p.log.Info().Msgf("successfully disconnected peer %s", p)
-	return nil
 }
 
 func (p *Peer) StartHeadersSync() error {
@@ -133,8 +145,21 @@ func (p *Peer) StartHeadersSync() error {
 	err := p.requestHeaders()
 	if err != nil {
 		// TODO: lower peer sync score
-		_ = p.Disconnect()
+		p.Disconnect()
 		return err
+	}
+	return nil
+}
+
+func (p *Peer) updatePeerAddr() error {
+	remoteAddr, addrIsTcp := p.conn.RemoteAddr().(*net.TCPAddr)
+
+	if remoteAddr != nil && addrIsTcp {
+		p.addr = remoteAddr
+	} else {
+		errMsg := "error retreiving address from peer"
+		p.log.Error().Msg(errMsg)
+		return errors.New(errMsg)
 	}
 	return nil
 }
@@ -459,7 +484,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 			if service.BlockRejected.Is(err) {
 				// TODO: ban peer
 				p.log.Error().Msgf("received rejected header %v from peer %s", h, p)
-				_ = p.Disconnect()
+				p.Disconnect()
 				return
 			}
 
@@ -492,7 +517,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 		if err != nil {
 			// TODO: ban peer or lower peer sync score
 			p.log.Error().Msgf("error when checking checkpoint, reason: %v", err)
-			_ = p.Disconnect()
+			p.Disconnect()
 			return
 		}
 
@@ -526,7 +551,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 	err := p.requestHeaders()
 	if err != nil {
 		// TODO: lower peer sync score
-		_ = p.Disconnect()
+		p.Disconnect()
 	}
 }
 
