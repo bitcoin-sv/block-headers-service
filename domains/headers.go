@@ -36,8 +36,8 @@ type BlockHeader struct {
 	Bits          uint32         `json:"-"`
 	Nonce         uint32         `json:"nonce"`
 	State         HeaderState    `json:"-"`
-	Chainwork     *big.Int       `json:"-"                 swaggertype:"string"`
-	CumulatedWork *big.Int       `json:"work"              swaggertype:"string"`
+	Chainwork     *big.Int       `json:"-"`
+	CumulatedWork *big.Int       `json:"work"`
 	PreviousBlock chainhash.Hash `json:"prevBlockHash"`
 }
 

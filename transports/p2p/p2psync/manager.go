@@ -137,18 +137,17 @@ func (sps *syncPeerState) updateNetwork(syncPeer *peerpkg.Peer) {
 // chain is in sync, the SyncManager handles incoming block and header
 // notifications and relays announcements of new blocks to peers.
 type SyncManager struct {
-	log            *zerolog.Logger
-	peerNotifier   PeerNotifier
-	started        int32
-	shutdown       int32
-	chainParams    *chaincfg.Params
-	progressLogger *blockProgressLogger
-	msgChan        chan interface{}
-	wg             sync.WaitGroup
-	quit           chan struct{}
-	syncPeer       *peerpkg.Peer
-	syncPeerState  *syncPeerState
-	peerStates     map[*peerpkg.Peer]*peerpkg.PeerSyncState
+	log           *zerolog.Logger
+	peerNotifier  PeerNotifier
+	started       int32
+	shutdown      int32
+	chainParams   *chaincfg.Params
+	msgChan       chan interface{}
+	wg            sync.WaitGroup
+	quit          chan struct{}
+	syncPeer      *peerpkg.Peer
+	syncPeerState *syncPeerState
+	peerStates    map[*peerpkg.Peer]*peerpkg.PeerSyncState
 
 	// The following fields are used for headers-first mode.
 	headersFirstMode bool
@@ -300,7 +299,7 @@ func (sm *SyncManager) startSync() {
 		} else {
 			// TODO: initial request for headers
 			sm.log.Info().Msg("[Headers] Initial request")
-			err := bestPeer.PushGetBlocksMsg(locator, &zeroHash)
+			err := bestPeer.PushGetHeadersMsg(locator, &zeroHash)
 			if err != nil {
 				sm.log.Info().Msg(err.Error())
 			}
@@ -424,7 +423,6 @@ func (sm *SyncManager) handleCheckSyncPeer() {
 
 // topBlock returns the best chains top block height.
 func (sm *SyncManager) topBlock() int32 {
-
 	if sm.syncPeer.LastBlock() > sm.syncPeer.StartingHeight() {
 		return sm.syncPeer.LastBlock()
 	}
@@ -531,6 +529,10 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 	for _, blockHeader := range msg.Headers {
 		h, addErr := sm.Services.Chains.Add(domains.BlockHeaderSource(*blockHeader))
 
+		if service.HeaderAlreadyExists.Is(addErr) {
+			continue
+		}
+
 		if service.BlockRejected.Is(addErr) {
 			sm.peerNotifier.BanPeer(peer)
 			peer.Disconnect()
@@ -570,6 +572,13 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 		}
 	}
 
+	// If all the headers received where rejected or already in the database,
+	// don't request more headers from that peer. Do nothing.
+	if finalHash == nil {
+		sm.log.Warn().Msgf("Received only existing or rejected headers from peer: %s", peer.String())
+		return
+	}
+
 	// When this header is a checkpoint, switch to fetching the blocks for
 	// all the headers since the last checkpoint.
 	if receivedCheckpoint {
@@ -581,7 +590,6 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 		// sm.log.Infof("Received %v block headers: Fetching blocks",
 		// sm.headerList.Len())
 
-		sm.progressLogger.SetLastLogTime(time.Now())
 		sm.log.Info().Msgf("Received checkpoint headers: %v - Fetching next headers", sm.Services.Headers.CountHeaders())
 		prevHeight := sm.nextCheckpoint.Height
 		prevHash := sm.nextCheckpoint.Hash
@@ -598,15 +606,16 @@ func (sm *SyncManager) handleHeadersMsg(hmsg *headersMsg) {
 		// from the block after this one up to the end of the chain (zero hash).
 		sm.log.Info().Msgf("Reached the final checkpoint -- switching to normal mode")
 		sm.log.Info().Msgf("Reached the final checkpoint -- lastHash: %#v", finalHash.String())
-		sm.sendGetHeadersWithPassedParams([]*chainhash.Hash{finalHash}, &zeroHash, peer)
+		locator := sm.Services.Headers.LatestHeaderLocator()
+		sm.sendGetHeadersWithPassedParams(locator, &zeroHash, peer)
 		return
 	}
 
 	// This header is not a checkpoint, so request the next batch of
 	// headers starting from the latest known header and ending with the
 	// next checkpoint.
-	sm.sendGetHeadersWithPassedParams([]*chainhash.Hash{finalHash}, sm.nextCheckpoint.Hash, peer)
-
+	locator := sm.Services.Headers.LatestHeaderLocator()
+	sm.sendGetHeadersWithPassedParams(locator, sm.nextCheckpoint.Hash, peer)
 }
 
 func (sm *SyncManager) requestForNextHeaderBatch(prevHash *chainhash.Hash, peer *peerpkg.Peer, prevHeight int32) {
@@ -669,9 +678,6 @@ func (sm *SyncManager) handleInvMsg(imsg *invMsg) {
 	}
 	sm.log.Info().Msgf("[Headers] handleInvMsg, peer.ID: %d, invType: %s", imsg.peer.ID(), typeMap[imsg.inv.InvList[0].Type])
 
-	lastHeader := sm.Services.Headers.GetTip()
-	sm.log.Info().Msgf("[Manager] handleInvMsg lastHeaderNode.height : %d", lastHeader.Height)
-
 	peer := imsg.peer
 	_, exists := sm.peerStates[peer]
 	if !exists {
@@ -705,16 +711,18 @@ func (sm *SyncManager) handleInvMsg(imsg *invMsg) {
 		blkHeight, err := sm.Services.Headers.GetHeightByHash(&invVects[lastBlock].Hash)
 		if err == nil {
 			peer.UpdateLastBlockHeight(blkHeight)
+			// we know about the block, no need to fetch it
+			return
 		}
 	}
 
 	if lastBlock != -1 {
-		lastHeader := sm.Services.Headers.GetTip()
-		sm.log.Info().Msgf("[Manager] handleInvMsg  lastConfirmedHeaderNode.hash  : %s", lastHeader.Hash)
-		sm.log.Info().Msgf("[Manager] handleInvMsg lastConfirmedHeaderNode.height : %d", lastHeader.Height)
+		locator := sm.Services.Headers.LatestHeaderLocator()
+		sm.log.Info().Msgf("[Manager] handleInvMsg tip hash  : %s", locator[0])
 		sm.log.Info().Msgf("[Manager] handleInvMsg &invVects[lastBlock].Hash  : %v", &invVects[lastBlock].Hash)
+		sm.log.Info().Msg("[Manager] handleInvMsg requesting for all the headers since our tip")
 
-		sm.sendGetHeadersWithPassedParams([]*chainhash.Hash{&lastHeader.Hash}, &invVects[lastBlock].Hash, peer)
+		sm.sendGetHeadersWithPassedParams(locator, &zeroHash, peer)
 	}
 }
 
@@ -887,7 +895,6 @@ func New(config *Config, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState) (*SyncM
 		peerNotifier:            config.PeerNotifier,
 		chainParams:             config.ChainParams,
 		peerStates:              peers,
-		progressLogger:          newBlockProgressLogger("Processed", &syncManagerLogger),
 		msgChan:                 make(chan interface{}, config.MaxPeers*3),
 		quit:                    make(chan struct{}),
 		minSyncPeerNetworkSpeed: config.MinSyncPeerNetworkSpeed,

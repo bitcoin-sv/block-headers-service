@@ -26,15 +26,24 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/transports/websocket"
 
 	"github.com/bitcoin-sv/block-headers-service/database/sql"
+	p2pexp "github.com/bitcoin-sv/block-headers-service/internal/transports/p2p"
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	httpserver "github.com/bitcoin-sv/block-headers-service/transports/http/server"
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p"
 	peerpkg "github.com/bitcoin-sv/block-headers-service/transports/p2p/peer"
-	"github.com/bitcoin-sv/block-headers-service/version"
 
 	sqlrepository "github.com/bitcoin-sv/block-headers-service/database/repository"
 )
+
+// version version of the application that can be overridden with ldflags during build
+// (e.g. go build -ldflags "-X main.version=1.2.3").
+var version = "development"
+
+type P2PServer interface {
+	Start() error
+	Shutdown() error
+}
 
 // nolint: godot
 // @securityDefinitions.apikey Bearer
@@ -43,8 +52,9 @@ import (
 func main() {
 	defaultLog := logging.GetDefaultLogger()
 
-	if err := config.SetDefaults(defaultLog); err != nil {
+	if err := config.SetDefaults(version, defaultLog); err != nil {
 		defaultLog.Error().Msgf("cannot set config default values: %v", err)
+		os.Exit(1)
 	}
 
 	defaultCfg := config.GetDefaultAppConfig()
@@ -89,7 +99,7 @@ func main() {
 	wire.SetLimits(config.ExcessiveBlockSize)
 
 	// Show version at startup.
-	log.Info().Msgf("Version %s", version.String())
+	log.Info().Msgf("Version %s", config.Version())
 
 	peers := make(map[*peerpkg.Peer]*peerpkg.PeerSyncState)
 
@@ -108,11 +118,6 @@ func main() {
 		Logger:       log,
 		Config:       cfg,
 	})
-	p2pServer, err := p2p.NewServer(hs, peers, cfg.P2P, log)
-	if err != nil {
-		log.Error().Msgf("failed to init a new p2p server: %v\n", err)
-		os.Exit(1)
-	}
 
 	server := httpserver.NewHttpServer(cfg.HTTP, log)
 
@@ -140,6 +145,19 @@ func main() {
 	if err := ws.Start(); err != nil {
 		log.Error().Msgf("cannot start websocket server because of an error: %v", err)
 		os.Exit(1)
+	}
+
+	var p2pServer P2PServer
+
+	if cfg.P2P.Experimental {
+		chainParams := config.ActiveNetParams.Params
+		p2pServer = p2pexp.NewServer(cfg.P2P, chainParams, hs.Headers, hs.Chains, log)
+	} else {
+		p2pServer, err = p2p.NewServer(hs, peers, cfg.P2P, log)
+		if err != nil {
+			log.Error().Msgf("failed to init a new p2p server: %v\n", err)
+			os.Exit(1)
+		}
 	}
 
 	go func() {

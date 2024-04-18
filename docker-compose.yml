@@ -12,3 +12,18 @@ services:
       - DB_PREPAREDDBFILEPATH=./data/blockheaders.csv.gz
       - HTTP_AUTHTOKEN=admin_only_afUMlv5iiDgQtj22O9n5fADeSb
     restart: unless-stopped
+
+  db:
+    container_name: p2p-headers-db
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  db-data:
+    driver: local

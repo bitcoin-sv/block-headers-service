@@ -4,6 +4,9 @@ import (
 	"time"
 )
 
+// #nosec G101
+const DefaultAppToken = "mQZQ6WmxURxWz5ch"
+
 func GetDefaultAppConfig() *AppConfig {
 	return &AppConfig{
 		Db:         getDbDefaults(),
@@ -26,6 +29,7 @@ func getDbDefaults() *DbConfig {
 		Sqlite: SqliteConfig{
 			FilePath: "./data/blockheaders.db",
 		},
+		Postgres: getPostgresDefaults(),
 	}
 }
 
@@ -35,7 +39,7 @@ func getHttpConfigDefaults() *HTTPConfig {
 		WriteTimeout:              10,
 		Port:                      8080,
 		UseAuth:                   true,
-		AuthToken:                 "mQZQ6WmxURxWz5ch",
+		AuthToken:                 DefaultAppToken,
 		ProfilingEndpointsEnabled: true,
 	}
 }
@@ -65,6 +69,9 @@ func getP2PDefaults() *P2PConfig {
 		BlocksForForkConfirmation: 10,
 		DefaultConnectTimeout:     30 * time.Second,
 		DisableCheckpoints:        false,
+		UserAgentName:             ApplicationName,
+		UserAgentVersion:          Version(),
+		Experimental:              false,
 	}
 }
 
@@ -72,7 +79,7 @@ func getLoggingDefaults() *LoggingConfig {
 	return &LoggingConfig{
 		Level:        "debug",
 		Format:       "console",
-		InstanceName: "block-headers-service",
+		InstanceName: ApplicationName,
 		LogOrigin:    true,
 	}
 }
@@ -80,5 +87,16 @@ func getLoggingDefaults() *LoggingConfig {
 func getMetricsDefaults() *MetricsConfig {
 	return &MetricsConfig{
 		Enabled: false,
+	}
+}
+
+func getPostgresDefaults() PostgreSqlConfig {
+	return PostgreSqlConfig{
+		Host:     "localhost",
+		Port:     5432,
+		User:     "user",
+		Password: "password",
+		DbName:   "bhs",
+		Sslmode:  "disable",
 	}
 }

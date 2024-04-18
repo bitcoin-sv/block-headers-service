@@ -11,13 +11,13 @@ import (
 )
 
 const (
-	ApplicationName       = "Block Headers Service"
-	APIVersion            = "v1"
-	Version               = "v0.6.0"
+	ApplicationName       = "block-headers-service"
 	ConfigFilePathKey     = "config_file"
 	DefaultConfigFilePath = "config.yaml"
 	ConfigEnvPrefix       = "bhs"
 )
+
+var version = "should-be-overridden-by-setDefaults"
 
 var Lookup func(string) ([]net.IP, error)
 var Dial func(string, string, time.Duration) (net.Conn, error)
@@ -31,6 +31,10 @@ const (
 	DBSqlite     DbEngine = "sqlite"
 	DBPostgreSql DbEngine = "postgres"
 )
+
+func Version() string {
+	return version
+}
 
 // AppConfig returns strongly typed config values.
 type AppConfig struct {
@@ -55,8 +59,8 @@ type DbConfig struct {
 	// PreparedDbFilePath is the path to the prepared database file.
 	PreparedDbFilePath string `mapstructure:"prepared_db_file_path"`
 
-	Postgres *PostgreSqlConfig `mapstructure:"postgres"`
-	Sqlite   SqliteConfig      `mapstructure:"sqlite"`
+	Postgres PostgreSqlConfig `mapstructure:"postgres"`
+	Sqlite   SqliteConfig     `mapstructure:"sqlite"`
 }
 
 type SqliteConfig struct {
@@ -119,6 +123,9 @@ type P2PConfig struct {
 	BlocksForForkConfirmation int `mapstructure:"blocks_for_confirmation" description:"Minimum number of blocks to consider a block confirmed"`
 	// DefaultConnectTimeout is the default connection timeout.
 	DefaultConnectTimeout time.Duration `mapstructure:"default_connect_timeout" description:"The default connection timeout"`
+	UserAgentName         string        `mapstructure:"user_agent_name" description:"The name that should be used during announcement of the client on the p2p network"`
+	UserAgentVersion      string        `mapstructure:"user_agent_version" description:"By default will be equal to application version, but can be overridden for development purposes"`
+	Experimental          bool          `mapstructure:"experimental" description:"Turns on a new (highly experimental) way of getting headers with the usage of /internal/transports/p2p instead of /transports/p2p"`
 }
 
 // LoggingConfig represents a logging config.
@@ -173,8 +180,8 @@ func (c *DbConfig) Validate() error {
 		}
 
 	case DBPostgreSql:
-		if c.Postgres == nil {
-			return fmt.Errorf("db: postgres configuration cannot be empty where db type is set to %s", DBPostgreSql)
+		if c.Postgres.Host == "" || c.Postgres.Port == 0 || c.Postgres.User == "" || c.Postgres.DbName == "" {
+			return fmt.Errorf("db: postgres configuration should be filled properly to use postgres engine %s", DBPostgreSql)
 		}
 
 	default:

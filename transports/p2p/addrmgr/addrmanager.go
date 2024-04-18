@@ -35,6 +35,7 @@ type AddrManager struct {
 	key            [32]byte
 	addrIndex      map[string]*KnownAddress // address key to ka for all addrs.
 	addrNew        [newBucketCount]map[string]*KnownAddress
+	addrBanned     map[string]time.Time
 	addrTried      [triedBucketCount]*list.List
 	started        int32
 	shutdown       int32
@@ -134,6 +135,10 @@ const (
 	// getAddrPercent is the percentage of total addresses known that we
 	// will share with a call to AddressCache.
 	getAddrPercent = 23
+
+	// banTime is the default amount of time for which to ban
+	// a peer that we cannot connect to.
+	banTime = time.Hour * 24
 )
 
 // updateAddress is a helper function to either update an address already known
@@ -146,6 +151,17 @@ func (a *AddrManager) updateAddress(netAddr, srcAddr *wire.NetAddress) {
 	}
 
 	addr := NetAddressKey(netAddr)
+
+	// If address in banned addresses and its bantime still active, ignore it
+	// otherwise, remove it from banned addresses and add it again
+	if t, ok := a.addrBanned[addr]; ok {
+		if t.After(time.Now()) {
+			a.Log.Debug().Msgf("New address %s still banned, ignoring", addr)
+			return
+		}
+		delete(a.addrBanned, addr)
+	}
+
 	ka := a.find(netAddr)
 	if ka != nil {
 		// TODO: only update addresses periodically.
@@ -185,7 +201,7 @@ func (a *AddrManager) updateAddress(netAddr, srcAddr *wire.NetAddress) {
 		// updated elsewhere in the addrmanager code and would otherwise
 		// change the actual netaddress on the peer.
 		netAddrCopy := *netAddr
-		ka = &KnownAddress{na: &netAddrCopy, srcAddr: srcAddr}
+		ka = NewKnownAddress(&netAddrCopy, srcAddr)
 		a.addrIndex[addr] = ka
 		a.nNew++
 		// XXX time penalty?
@@ -209,6 +225,51 @@ func (a *AddrManager) updateAddress(netAddr, srcAddr *wire.NetAddress) {
 	a.addrNew[bucket][addr] = ka
 
 	a.Log.Trace().Msgf("Added new address %s for a total of %d addresses", addr, a.nTried+a.nNew)
+}
+
+// BanAddress creates a ban for defaultBanTime for a peer that we cannot connect to.
+func (a *AddrManager) BanAddress(addr string) {
+	a.mtx.Lock()
+	defer a.mtx.Unlock()
+
+	banTimeUntil := time.Now().Add(banTime)
+	a.addrBanned[addr] = banTimeUntil
+
+	a.removeAddrFromTried(addr)
+	a.removeAddrFromNew(addr)
+
+	a.Log.Warn().Msgf("Address %s banned until %s!", addr, banTimeUntil.Format(time.RFC1123))
+}
+
+func (a *AddrManager) removeAddrFromTried(addr string) {
+	for _, bucket := range a.addrTried {
+		for e := bucket.Front(); e != nil; e = e.Next() {
+			ka := e.Value.(*KnownAddress)
+			if NetAddressKey(ka.NetAddress()) == addr {
+				bucket.Remove(e)
+				ka.refs--
+				if ka.refs == 0 {
+					a.nTried--
+					delete(a.addrIndex, NetAddressKey(ka.NetAddress()))
+				}
+			}
+		}
+	}
+}
+
+func (a *AddrManager) removeAddrFromNew(addr string) {
+	for i, bucket := range a.addrNew {
+		for k, v := range bucket {
+			if k == addr {
+				delete(a.addrNew[i], k)
+				v.refs--
+				if v.refs == 0 {
+					a.nNew--
+					delete(a.addrIndex, k)
+				}
+			}
+		}
+	}
 }
 
 // expireNew makes space in the new buckets by expiring the really bad entries.
@@ -410,8 +471,8 @@ func (a *AddrManager) AddressCache() []*wire.NetAddress {
 // reset resets the address manager by reinitialising the random source
 // and allocating fresh empty bucket storage.
 func (a *AddrManager) reset() {
-
 	a.addrIndex = make(map[string]*KnownAddress)
+	a.addrBanned = make(map[string]time.Time)
 
 	// fill key with bytes from a good random source.
 	_, err := io.ReadFull(crand.Reader, a.key[:])
@@ -505,8 +566,7 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 
 			// Pick a random entry in the list
 			e := a.addrTried[bucket].Front()
-			for i :=
-				a.rand.Int63n(int64(a.addrTried[bucket].Len())); i > 0; i-- {
+			for i := a.rand.Int63n(int64(a.addrTried[bucket].Len())); i > 0; i-- {
 				e = e.Next()
 			}
 			ka := e.Value.(*KnownAddress)
@@ -564,8 +624,7 @@ func (a *AddrManager) Attempt(addr *wire.NetAddress) {
 		return
 	}
 	// set last tried time to now
-	ka.attempts++
-	ka.lastattempt = time.Now()
+	ka.RegisterAttempt()
 }
 
 // Connected Marks the given address as currently connected and working at the
@@ -603,12 +662,7 @@ func (a *AddrManager) Good(addr *wire.NetAddress) {
 		return
 	}
 
-	// ka.Timestamp is not updated here to avoid leaking information
-	// about currently connected peers.
-	now := time.Now()
-	ka.lastsuccess = now
-	ka.lastattempt = now
-	ka.attempts = 0
+	ka.RegisterGoodAddr()
 
 	// move to tried set, optionally evicting other addresses if neeed.
 	if ka.tried {

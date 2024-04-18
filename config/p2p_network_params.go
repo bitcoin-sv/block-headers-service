@@ -27,10 +27,7 @@ var mainNetParams = params{
 }
 
 var mainNetDNSSeeds = []chaincfg.DNSSeed{
-	{Host: "seed.bitcoinsv.io", HasFiltering: true},
-	{Host: "seed.gorillapool.io", HasFiltering: true},
-	{Host: "seed.cascharia.com", HasFiltering: true},
-	{Host: "seed.satoshisvision.network", HasFiltering: true},
+	{Host: "seed-nodes.bsvb.tech", HasFiltering: true},
 }
 
 func updatedMainNetParams(p params) *params {
