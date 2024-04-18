@@ -40,7 +40,9 @@ func newCheckpoint(checkpoints []chaincfg.Checkpoint, tipHeight int32, log *zero
 func (ch *checkpoint) Height() int32 {
 	ch.lock.RLock()
 	defer ch.lock.RUnlock()
-
+	if ch.currentCheckpoint == nil {
+		return notFound
+	}
 	return ch.currentCheckpoint.Height
 }
 
@@ -48,7 +50,9 @@ func (ch *checkpoint) Height() int32 {
 func (ch *checkpoint) Hash() *chainhash.Hash {
 	ch.lock.RLock()
 	defer ch.lock.RUnlock()
-
+	if ch.currentCheckpoint == nil {
+		return nil
+	}
 	return ch.currentCheckpoint.Hash
 }
 

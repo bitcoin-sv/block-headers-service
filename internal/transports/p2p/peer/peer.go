@@ -142,11 +142,11 @@ func (p *Peer) StartHeadersSync() error {
 func (p *Peer) requestHeaders() error {
 	var err error
 	if p.checkpoint.LastReached() {
-		p.log.Info().Msgf("requesting next headers batch from peer %s, up to height %d", p, p.checkpoint.Height())
-		err = p.writeGetHeadersMsg(p.checkpoint.Hash())
-	} else {
 		p.log.Info().Msgf("checkpoints synced, requesting headers up to end of chain from peer %s", p)
 		err = p.writeGetHeadersMsg(&zeroHash)
+	} else {
+		p.log.Info().Msgf("requesting next headers batch from peer %s, up to height %d", p, p.checkpoint.Height())
+		err = p.writeGetHeadersMsg(p.checkpoint.Hash())
 	}
 
 	if err != nil {
