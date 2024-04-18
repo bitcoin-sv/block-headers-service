@@ -81,24 +81,20 @@ func NewPeer(
 	chainService service.Chains,
 	log *zerolog.Logger,
 ) (*Peer, error) {
-	currentTipHeight := headersService.GetTipHeight()
-	nextCheckpoint := findNextHeaderCheckpoint(chainParams.Checkpoints, currentTipHeight)
-
 	peer := &Peer{
-		conn:              conn,
-		inbound:           inbound,
-		cfg:               cfg,
-		chainParams:       chainParams,
-		headersService:    headersService,
-		chainService:      chainService,
-		log:               log,
-		services:          wire.SFspv,
-		protocolVersion:   initialProtocolVersion,
-		syncedCheckpoints: nextCheckpoint == nil,
-		wg:                sync.WaitGroup{},
-		msgChan:           make(chan wire.Message, writeMsgChannelBufferSize),
-		quitting:          false,
-		quit:              make(chan struct{}),
+		conn:            conn,
+		inbound:         inbound,
+		cfg:             cfg,
+		chainParams:     chainParams,
+		headersService:  headersService,
+		chainService:    chainService,
+		log:             log,
+		services:        wire.SFspv,
+		protocolVersion: initialProtocolVersion,
+		wg:              sync.WaitGroup{},
+		msgChan:         make(chan wire.Message, writeMsgChannelBufferSize),
+		quitting:        false,
+		quit:            make(chan struct{}),
 	}
 	return peer, nil
 }
@@ -520,6 +516,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 		err = p.checkpoint.VerifyAndAdvance(h)
 		if err != nil {
 			// TODO: ban peer or lower peer sync score
+			p.log.Error().Msgf("error when checking checkpoint, reason: %v", err)
 			p.Disconnect()
 			return
 		}
