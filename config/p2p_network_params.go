@@ -30,5 +30,5 @@ func GetNetParams(network NetworkType) *chaincfg.Params {
 
 // ActiveNetParams is a pointer to the parameters specific to the
 // currently active bitcoin network.
-// TODO: remove this after switching to new p2p server
+// TODO: remove this after switching to new p2p server.
 var ActiveNetParams = &chaincfg.MainNetParams
