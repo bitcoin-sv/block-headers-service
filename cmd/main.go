@@ -113,7 +113,7 @@ func main() {
 	hs := service.NewServices(service.Dept{
 		Repositories: repo,
 		Peers:        peers,
-		Params:       config.ActiveNetParams.Params,
+		Params:       config.ActiveNetParams,
 		AdminToken:   cfg.HTTP.AuthToken,
 		Logger:       log,
 		Config:       cfg,
@@ -150,8 +150,7 @@ func main() {
 	var p2pServer P2PServer
 
 	if cfg.P2P.Experimental {
-		chainParams := config.ActiveNetParams.Params
-		p2pServer = p2pexp.NewServer(cfg.P2P, chainParams, hs.Headers, hs.Chains, log)
+		p2pServer = p2pexp.NewServer(cfg.P2P, hs.Headers, hs.Chains, log)
 	} else {
 		p2pServer, err = p2p.NewServer(hs, peers, cfg.P2P, log)
 		if err != nil {

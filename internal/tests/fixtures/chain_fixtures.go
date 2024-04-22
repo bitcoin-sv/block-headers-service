@@ -2,6 +2,7 @@ package fixtures
 
 import (
 	"github.com/bitcoin-sv/block-headers-service/domains"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 )
 
@@ -12,7 +13,7 @@ func StartingChain() (db []domains.BlockHeader, tip *domains.BlockHeader) {
 }
 
 func startingChain() headerChainFixture {
-	genesisBlock := domains.CreateGenesisHeaderBlock()
+	genesisBlock := domains.CreateGenesisHeaderBlock(chaincfg.MainNetParams.GenesisBlock.Header)
 	return []domains.BlockHeader{
 		genesisBlock,
 	}

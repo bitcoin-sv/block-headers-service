@@ -65,7 +65,7 @@ func (p *TestBlockHeaderService) When() *When {
 
 // NewTestBlockHeaderService Start block headers service for testing reason.
 func NewTestBlockHeaderService(t *testing.T, ops ...bhsOpt) (*TestBlockHeaderService, Cleanup) {
-	//override arguments otherwise all flags provided to go test command will be parsed by LoadConfig
+	// override arguments otherwise all flags provided to go test command will be parsed by LoadConfig
 	os.Args = []string{""}
 
 	viper.Reset()
@@ -95,7 +95,7 @@ func NewTestBlockHeaderService(t *testing.T, ops ...bhsOpt) (*TestBlockHeaderSer
 	hs := service.NewServices(service.Dept{
 		Repositories: repo.ToDomainRepo(),
 		Peers:        nil,
-		Params:       config.ActiveNetParams.Params,
+		Params:       config.ActiveNetParams,
 		AdminToken:   cfg.HTTP.AuthToken,
 		Logger:       &testLog,
 		Config:       cfg,

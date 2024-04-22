@@ -29,7 +29,6 @@ type Headers interface {
 	GetTip() *domains.BlockHeader
 	GetTipHeight() int32
 	CountHeaders() int
-	InsertGenesisHeaderInDatabase() error
 	GetHeaderByHash(hash string) (*domains.BlockHeader, error)
 	GetHeadersByHeight(height int, count int) ([]*domains.BlockHeader, error)
 	GetMerkleRootsConfirmations(request []domains.MerkleRootConfirmationRequestItem) ([]*domains.MerkleRootConfirmation, error)
