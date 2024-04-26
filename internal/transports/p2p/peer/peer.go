@@ -21,6 +21,7 @@ import (
 
 // Manager is peer manager
 type Manager interface {
+	AddAddrs([]*wire.NetAddress)
 	SignalError(*Peer, error)
 }
 type Peer struct {
@@ -167,6 +168,9 @@ func (p *Peer) StartHeadersSync() error {
 	return nil
 }
 
+func (p *Peer) SendGetAddrInfo() {
+	p.queueMessage(wire.NewMsgGetAddr())
+}
 
 func (p *Peer) GetPeerAddr() *wire.NetAddress {
 	return &wire.NetAddress{
@@ -289,6 +293,8 @@ func (p *Peer) readMsgHandler() {
 				p.handleHeadersMsg(msg)
 			case *wire.MsgInv:
 				p.handleInvMsg(msg)
+			case *wire.MsgAddr:
+				p.handleAddrMsg(msg)
 			default:
 				p.logDebug("received msg of type: %T", msg)
 			}
@@ -574,6 +580,11 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 	if err != nil {
 		p.manager.SignalError(p, err)
 	}
+}
+
+func (p *Peer) handleAddrMsg(msg *wire.MsgAddr) {
+	p.logInfo("received addr msg with %d addresses", len(msg.AddrList))
+	p.manager.AddAddrs(msg.AddrList)
 }
 
 func (p *Peer) switchToSendHeadersMode() {

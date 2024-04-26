@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"time"
 
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 	"github.com/bitcoin-sv/block-headers-service/internal/transports/p2p/network"
 	"github.com/bitcoin-sv/block-headers-service/internal/transports/p2p/peer"
+	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	"github.com/rs/zerolog"
 )
@@ -152,6 +154,7 @@ func (s *server) connectPeer(conn net.Conn, inbound bool) (*peer.Peer, error) {
 		return nil, err
 	}
 
+	peer.SendGetAddrInfo()
 
 	if !inbound {
 		err = peer.StartHeadersSync()
@@ -162,6 +165,11 @@ func (s *server) connectPeer(conn net.Conn, inbound bool) (*peer.Peer, error) {
 	}
 
 	return peer, nil
+}
+
+
+func (s *server) AddAddrs(address []*wire.NetAddress) {
+	s.addresses.AddAddrs(address)
 }
 
 func (s *server) SignalError(p *peer.Peer, err error) {
