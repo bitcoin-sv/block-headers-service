@@ -72,6 +72,7 @@ func getP2PDefaults() *P2PConfig {
 		UserAgentName:             ApplicationName,
 		UserAgentVersion:          Version(),
 		Experimental:              false,
+		MaxOutboundConnections:    8,
 	}
 }
 

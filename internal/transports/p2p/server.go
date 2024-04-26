@@ -2,7 +2,9 @@ package p2pexp
 
 import (
 	"errors"
+	"fmt"
 	"net"
+	"strconv"
 
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
@@ -18,7 +20,8 @@ type server struct {
 	chainService   service.Chains
 	log            *zerolog.Logger
 
-	peers []*peer.Peer
+	////
+	outboundPeers *peer.PeersCollection
 }
 
 func NewServer(
@@ -35,99 +38,131 @@ func NewServer(
 		headersService: headersService,
 		chainService:   chainService,
 		log:            &serverLogger,
-		peers:          make([]*peer.Peer, 0),
 	}
+	server.outboundPeers = peer.NewPeersCollection(server.config.MaxOutboundConnections)
 	return server
 }
 
 func (s *server) Start() error {
-	err := s.seedAndConnect()
+	err := s.connectOutboundPeers()
 	if err != nil {
 		return err
 	}
 
-	return s.listenAndConnect()
+	//return s.listenAndConnect()
+	return nil
 }
 
 func (s *server) Shutdown() error {
-	for _, p := range s.peers {
+	for _, p := range s.outboundPeers.Enumerate() {
 		p.Disconnect()
 	}
 	return nil
 }
 
-func (s *server) seedAndConnect() error {
+func (s *server) connectOutboundPeers() error {
 	seeds := seedFromDNS(s.chainParams.DNSSeeds, s.log)
 	if len(seeds) == 0 {
 		return errors.New("no seeds found")
+	}
+
+	if len(seeds) > int(s.config.MaxOutboundConnections) {
+		seeds = seeds[:s.config.MaxOutboundConnections]
 	}
 
 	for _, seed := range seeds {
 		s.log.Debug().Msgf("got peer addr: %s", seed.String())
 	}
 
-	firstPeerSeed := seeds[0].String()
-	firstPeerAddr, err := parseAddress(firstPeerSeed, s.chainParams.DefaultPort)
+	portInt, err := strconv.Atoi(s.chainParams.DefaultPort)
 	if err != nil {
-		s.log.Error().Msgf("error parsing peer %s address, reason: %v", firstPeerAddr.String(), err)
-		return err
+		return fmt.Errorf("could not parse port: %w", err)
 	}
 
-	inbound := false
-	conn, err := net.Dial(firstPeerAddr.Network(), firstPeerAddr.String())
-	if err != nil {
-		s.log.Error().Msgf("error connecting to peer %s, reason: %v", firstPeerAddr.String(), err)
-		return err
+	peersCounter := 0
+	for _, addr := range seeds {
+		if err = s.connectToAddr(addr, portInt); err != nil {
+			continue
+		}
+
+		peersCounter++
 	}
 
-	return s.connectPeer(conn, inbound)
+	if peersCounter == 0 {
+		return errors.New("cannot connect to any peers from seed")
+	}
+
+	s.log.Info().Msgf("connected to %d peers", peersCounter)
+	return nil
 }
 
-func (s *server) listenAndConnect() error {
-	s.log.Info().Msgf("listening for inbound connections on port %s", s.chainParams.DefaultPort)
+// func (s *server) listenAndConnect() error {
+// 	s.log.Info().Msgf("listening for inbound connections on port %s", s.chainParams.DefaultPort)
 
-	ourAddr := net.JoinHostPort("", s.chainParams.DefaultPort)
-	listener, err := net.Listen("tcp", ourAddr)
+// 	ourAddr := net.JoinHostPort("", s.chainParams.DefaultPort)
+// 	listener, err := net.Listen("tcp", ourAddr)
+// 	if err != nil {
+// 		s.log.Error().Msgf("error creating listener, reason: %v", err)
+// 		return err
+// 	}
+
+// 	conn, err := listener.Accept()
+// 	if err != nil {
+// 		s.log.Error().Msgf("error accepting connection, reason: %v", err)
+// 		return err
+// 	}
+
+// 	inbound := true
+// 	return s.connectPeer(conn, inbound)
+// }
+
+func (s *server) connectToAddr(addr net.IP, port int) error {
+	netAddr := &net.TCPAddr{
+		IP:   addr,
+		Port: port,
+	}
+
+	conn, err := net.Dial(netAddr.Network(), netAddr.String())
 	if err != nil {
-		s.log.Error().Msgf("error creating listener, reason: %v", err)
+		s.log.Error().Str("peer", netAddr.String()).
+			Msgf("error connecting with peer, reason: %v", err)
 		return err
 	}
 
-	inbound := true
-	conn, err := listener.Accept()
+	peer, err := s.connectPeer(conn, false)
 	if err != nil {
-		s.log.Error().Msgf("error accepting connection, reason: %v", err)
 		return err
 	}
 
-	return s.connectPeer(conn, inbound)
+	s.outboundPeers.AddPeer(peer)
+	return nil
 }
 
-func (s *server) connectPeer(conn net.Conn, inbound bool) error {
+func (s *server) connectPeer(conn net.Conn, inbound bool) (*peer.Peer, error) {
 	peer := peer.NewPeer(conn, inbound, s.config, s.chainParams, s.headersService, s.chainService, s.log, s)
 
 	err := peer.Connect()
 	if err != nil {
 		peer.Disconnect()
 		s.log.Error().Str("peer", peer.String()).Msgf("error connecting with peer, reason: %v", err)
-		return err
+		return nil, err
 	}
 
-	s.peers = append(s.peers, peer)
 
 	if !inbound {
 		err = peer.StartHeadersSync()
 		if err != nil {
 			peer.Disconnect()
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return peer, nil
 }
 
 func (s *server) SignalError(p *peer.Peer, err error) {
 	//TODO: handle error and decide what to do with the peer
 	p.Disconnect()
 
+	s.outboundPeers.RmPeer(p)
 }

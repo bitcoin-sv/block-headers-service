@@ -126,6 +126,8 @@ type P2PConfig struct {
 	UserAgentName         string        `mapstructure:"user_agent_name" description:"The name that should be used during announcement of the client on the p2p network"`
 	UserAgentVersion      string        `mapstructure:"user_agent_version" description:"By default will be equal to application version, but can be overridden for development purposes"`
 	Experimental          bool          `mapstructure:"experimental" description:"Turns on a new (highly experimental) way of getting headers with the usage of /internal/transports/p2p instead of /transports/p2p"`
+
+	MaxOutboundConnections uint `mapstructure:"max_outbound_connections" description:"Maximum active outbound connections"`
 }
 
 // LoggingConfig represents a logging config.
