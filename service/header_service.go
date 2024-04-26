@@ -66,12 +66,12 @@ func (hs *HeaderService) IsCurrent() bool {
 	// Not current if the latest main (best) chain height is before the
 	// latest known good checkpoint (when checkpoints are enabled).
 	checkpoints := hs.checkpoints
-	checkpoint := &checkpoints[len(checkpoints)-1]
+	checkpoint := checkpoints[len(checkpoints)-1]
 	tip := hs.GetTip()
 	if tip == nil {
 		return true
 	}
-	if checkpoint != nil && tip.Height < checkpoint.Height {
+	if tip.Height < checkpoint.Height {
 		return false
 	}
 
