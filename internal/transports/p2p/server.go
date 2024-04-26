@@ -8,6 +8,7 @@ import (
 
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
+	"github.com/bitcoin-sv/block-headers-service/internal/transports/p2p/network"
 	"github.com/bitcoin-sv/block-headers-service/internal/transports/p2p/peer"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	"github.com/rs/zerolog"
@@ -22,6 +23,7 @@ type server struct {
 
 	////
 	outboundPeers *peer.PeersCollection
+	addresses *network.AddressBook
 }
 
 func NewServer(
@@ -38,6 +40,7 @@ func NewServer(
 		headersService: headersService,
 		chainService:   chainService,
 		log:            &serverLogger,
+		addresses: network.NewAdressbook(24 * time.Hour),
 	}
 	server.outboundPeers = peer.NewPeersCollection(server.config.MaxOutboundConnections)
 	return server
@@ -135,6 +138,7 @@ func (s *server) connectToAddr(addr net.IP, port int) error {
 	}
 
 	s.outboundPeers.AddPeer(peer)
+	s.addresses.UpsertPeerAddr(peer)
 	return nil
 }
 

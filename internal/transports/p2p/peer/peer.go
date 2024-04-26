@@ -66,6 +66,8 @@ type Peer struct {
 	// sendHeadersMode is specifying whether we already sent the sendheaders message
 	// to the peer and we're expecting to get just headers and no inv msg
 	sendHeadersMode bool
+	// lastSeen is timestamp of last pong message from peer
+	lastSeen int64
 
 	// wg is a WaitGroup used to properly handle peer disconnection
 	wg sync.WaitGroup
@@ -125,6 +127,7 @@ func (p *Peer) Connect() error {
 		return err
 	}
 
+	p.lastSeen = time.Now().Unix()
 	go p.writeMsgHandler()
 	go p.readMsgHandler()
 	go p.pingHandler()
@@ -162,6 +165,16 @@ func (p *Peer) StartHeadersSync() error {
 		return err
 	}
 	return nil
+}
+
+
+func (p *Peer) GetPeerAddr() *wire.NetAddress {
+	return &wire.NetAddress{
+		Timestamp: time.Unix(p.lastSeen, 0),
+		Services:  p.services,
+		IP:        p.addr.IP,
+		Port:      uint16(p.addr.Port),
+	}
 }
 
 func (p *Peer) updatePeerAddr() error {
@@ -271,6 +284,7 @@ func (p *Peer) readMsgHandler() {
 				p.handlePingMsg(msg)
 			case *wire.MsgPong:
 				p.logDebug("received pong with nonce: %d", msg.Nonce)
+				p.lastSeen = time.Now().Unix()
 			case *wire.MsgHeaders:
 				p.handleHeadersMsg(msg)
 			case *wire.MsgInv:
