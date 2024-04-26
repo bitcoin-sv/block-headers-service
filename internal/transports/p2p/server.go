@@ -131,11 +131,20 @@ func (s *server) connectToAddr(addr net.IP, port int) error {
 	if err != nil {
 		s.log.Error().Str("peer", netAddr.String()).
 			Msgf("error connecting with peer, reason: %v", err)
+
+		s.log.Info().Str("peer", netAddr.String()).
+			Msgf("peer banned, reason: %v", err)
+
+		s.addresses.BanAddr(&wire.NetAddress{IP: netAddr.IP, Port: uint16(netAddr.Port)})
 		return err
 	}
 
 	peer, err := s.connectPeer(conn, false)
 	if err != nil {
+		s.log.Info().Str("peer", netAddr.String()).
+			Msgf("peer banned, reason: %v", err)
+
+		s.addresses.BanAddr(&wire.NetAddress{IP: netAddr.IP, Port: uint16(netAddr.Port)})
 		return err
 	}
 
@@ -173,8 +182,11 @@ func (s *server) AddAddrs(address []*wire.NetAddress) {
 }
 
 func (s *server) SignalError(p *peer.Peer, err error) {
-	//TODO: handle error and decide what to do with the peer
-	p.Disconnect()
+	// handle error and decide what to do with the peer
 
+	s.log.Info().Str("peer", p.String()).Msgf("peer banned, reason: %v", err)
+	s.addresses.BanAddr(p.GetPeerAddr())
+
+	p.Disconnect()
 	s.outboundPeers.RmPeer(p)
 }

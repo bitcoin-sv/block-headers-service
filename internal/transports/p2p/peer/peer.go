@@ -24,6 +24,7 @@ type Manager interface {
 	AddAddrs([]*wire.NetAddress)
 	SignalError(*Peer, error)
 }
+
 type Peer struct {
 	// conn is the current connection to peer
 	conn net.Conn
