@@ -1,6 +1,7 @@
 package p2pexp
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -25,7 +26,11 @@ type server struct {
 
 	////
 	outboundPeers *peer.PeersCollection
+
 	addresses *network.AddressBook
+
+	ctx       context.Context
+	ctxCancel context.CancelFunc
 }
 
 func NewServer(
@@ -36,6 +41,7 @@ func NewServer(
 	log *zerolog.Logger,
 ) *server {
 	serverLogger := log.With().Str("service", "p2p-experimental").Logger()
+	ctx, ctxCancel := context.WithCancel(context.Background())
 	server := &server{
 		config:         config,
 		chainParams:    chainParams,
@@ -43,6 +49,8 @@ func NewServer(
 		chainService:   chainService,
 		log:            &serverLogger,
 		addresses: network.NewAdressbook(24 * time.Hour),
+		ctx:       ctx,
+		ctxCancel: ctxCancel,
 	}
 	server.outboundPeers = peer.NewPeersCollection(server.config.MaxOutboundConnections)
 	return server
@@ -59,6 +67,8 @@ func (s *server) Start() error {
 }
 
 func (s *server) Shutdown() error {
+	s.ctxCancel()
+
 	for _, p := range s.outboundPeers.Enumerate() {
 		p.Disconnect()
 	}
@@ -98,6 +108,8 @@ func (s *server) connectOutboundPeers() error {
 	}
 
 	s.log.Info().Msgf("connected to %d peers", peersCounter)
+
+	go s.observeOutboundPeers()
 	return nil
 }
 
@@ -176,6 +188,51 @@ func (s *server) connectPeer(conn net.Conn, inbound bool) (*peer.Peer, error) {
 	return peer, nil
 }
 
+func (s *server) observeOutboundPeers() {
+	const sleepMinutes = 5
+
+	for {
+		select {
+		case <-s.ctx.Done(): // exit if context was cancaled
+			s.log.Info().Msg("[observeOutboundPeers] exit")
+			return
+
+		default:
+			time.Sleep(sleepMinutes * time.Minute)
+
+			peersToConnect := s.outboundPeers.Space()
+			if peersToConnect == 0 {
+				s.log.Debug().Msg("[observeOutboundPeers] nothing to do")
+				continue
+			}
+
+			s.log.Info().Msgf("try connect with %d new peers", peersToConnect)
+
+			for ; peersToConnect > 0; peersToConnect-- {
+				// potentially run in parallel	- if so implement address leasing
+				s.connectToRandomAddr()
+			}
+		}
+	}
+}
+
+func (s *server) connectToRandomAddr() {
+	const tries = 20
+
+	for i := 0; i < tries; i++ {
+		addr := s.addresses.GetRndUnusedAddr(tries)
+		if addr == nil {
+			s.log.Warn().Msgf("[observeOutboundPeers] coudnt find random unused/unbanned peer address with %d tries", tries)
+			continue
+		}
+
+		if err := s.connectToAddr(addr.IP, int(addr.Port)); err != nil {
+			continue // try one more time
+		}
+
+		return // success
+	}
+}
 
 func (s *server) AddAddrs(address []*wire.NetAddress) {
 	s.addresses.AddAddrs(address)
