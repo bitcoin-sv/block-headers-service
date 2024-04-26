@@ -63,7 +63,7 @@ func (s *server) seedAndConnect() error {
 	}
 
 	for _, seed := range seeds {
-		s.log.Info().Msgf("Got peer addr: %s", seed.String())
+		s.log.Debug().Msgf("got peer addr: %s", seed.String())
 	}
 
 	firstPeerSeed := seeds[0].String()
@@ -104,24 +104,30 @@ func (s *server) listenAndConnect() error {
 }
 
 func (s *server) connectPeer(conn net.Conn, inbound bool) error {
-	peer, err := peer.NewPeer(conn, inbound, s.config, s.chainParams, s.headersService, s.chainService, s.log)
+	peer := peer.NewPeer(conn, inbound, s.config, s.chainParams, s.headersService, s.chainService, s.log, s)
+
+	err := peer.Connect()
 	if err != nil {
+		peer.Disconnect()
+		s.log.Error().Str("peer", peer.String()).Msgf("error connecting with peer, reason: %v", err)
 		return err
 	}
 
 	s.peers = append(s.peers, peer)
 
-	err = peer.Connect()
-	if err != nil {
-		s.log.Error().Msgf("error connecting with peer %s, reason: %v", peer, err)
-		return err
-	}
-
-	err = peer.StartHeadersSync()
-	if err != nil {
-		s.log.Error().Msgf("error starting sync with peer %s, reason: %v", peer, err)
-		return err
+	if !inbound {
+		err = peer.StartHeadersSync()
+		if err != nil {
+			peer.Disconnect()
+			return err
+		}
 	}
 
 	return nil
+}
+
+func (s *server) SignalError(p *peer.Peer, err error) {
+	//TODO: handle error and decide what to do with the peer
+	p.Disconnect()
+
 }

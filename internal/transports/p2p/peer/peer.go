@@ -19,6 +19,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// Manager is peer manager
+type Manager interface {
+	SignalError(*Peer, error)
+}
 type Peer struct {
 	// conn is the current connection to peer
 	conn net.Conn
@@ -71,6 +75,11 @@ type Peer struct {
 	quitting bool
 	// quit is a channel used to properly handle peer disconnection
 	quit chan struct{}
+
+	// manager is a peer  manager
+	manager Manager
+	// prevents errors if client invoke Disconect() multiple times
+	disconnected bool
 }
 
 func NewPeer(
@@ -81,7 +90,8 @@ func NewPeer(
 	headersService service.Headers,
 	chainService service.Chains,
 	log *zerolog.Logger,
-) (*Peer, error) {
+	manager Manager,
+) *Peer {
 	peer := &Peer{
 		conn:            conn,
 		inbound:         inbound,
@@ -96,14 +106,14 @@ func NewPeer(
 		msgChan:         make(chan wire.Message, writeMsgChannelBufferSize),
 		quitting:        false,
 		quit:            make(chan struct{}),
+		manager:         manager,
 	}
-	return peer, nil
+	return peer
 }
 
 func (p *Peer) Connect() error {
 	err := p.updatePeerAddr()
 	if err != nil {
-		p.Disconnect()
 		return err
 	}
 
@@ -112,16 +122,21 @@ func (p *Peer) Connect() error {
 	err = p.negotiateProtocol()
 	if err != nil {
 		p.logError("error negotiating protocol with peer, reason: %v", err)
-		p.Disconnect()
 		return err
 	}
 
+	go p.writeMsgHandler()
+	go p.readMsgHandler()
 	go p.pingHandler()
 
 	return nil
 }
 
 func (p *Peer) Disconnect() {
+	if p.disconnected {
+		return
+	}
+
 	p.logInfo("disconnecting peer")
 
 	p.quitting = true
@@ -133,20 +148,17 @@ func (p *Peer) Disconnect() {
 
 	p.wg.Wait()
 	p.logInfo("successfully disconnected peer")
+
+	p.disconnected = true
 }
 
 func (p *Peer) StartHeadersSync() error {
-	go p.writeMsgHandler()
-	go p.readMsgHandler()
-
 	currentTipHeight := p.headersService.GetTipHeight()
 	p.checkpoint = newCheckpoint(p.chainParams.Checkpoints, currentTipHeight, p.log)
 	p.sendHeadersMode = false
 
 	err := p.requestHeaders()
 	if err != nil {
-		// TODO: lower peer sync score
-		p.Disconnect()
 		return err
 	}
 	return nil
@@ -249,6 +261,7 @@ func (p *Peer) readMsgHandler() {
 				if !p.quitting {
 					err = fmt.Errorf("cannot read message, reason: %w", err)
 					p.logError(err.Error())
+					p.manager.SignalError(p, err)
 				}
 				continue
 			}
@@ -327,7 +340,7 @@ func (p *Peer) writeOurVersionMsg() error {
 	}
 	theirNA := wire.NewNetAddress(p.addr, 0)
 
-	lastBlock := p.headersService.GetTip().Height
+	lastBlock := p.headersService.GetTipHeight()
 
 	msg := wire.NewMsgVersion(ourNA, theirNA, nonce, lastBlock)
 	err = msg.AddUserAgent(p.cfg.UserAgentName, p.cfg.UserAgentVersion, userAgentComments)
@@ -487,8 +500,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 
 			if service.BlockRejected.Is(err) {
 				p.logError("received rejected header %v", h)
-				// TODO: ban peer
-				p.Disconnect()
+				p.manager.SignalError(p, err)
 				return
 			}
 
@@ -517,8 +529,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 		err = p.checkpoint.VerifyAndAdvance(h)
 		if err != nil {
 			p.logError("error when checking checkpoint, reason: %v", err)
-			// TODO: ban peer or lower peer sync score
-			p.Disconnect()
+			p.manager.SignalError(p, err)
 			return
 		}
 
@@ -547,8 +558,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 
 	err := p.requestHeaders()
 	if err != nil {
-		// TODO: lower peer sync score
-		p.Disconnect()
+		p.manager.SignalError(p, err)
 	}
 }
 
