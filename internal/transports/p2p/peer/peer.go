@@ -23,7 +23,8 @@ type Peer struct {
 	// conn is the current connection to peer
 	conn net.Conn
 	// addr is the net.Addr of peer, used for connection
-	addr *net.TCPAddr
+	addr  *net.TCPAddr
+	addrS string
 	// inbound is specifying if the peer is inbound (incoming) or outbound (outgoing)
 	inbound bool
 	// cfg is the P2P configuration specified by the user
@@ -106,11 +107,11 @@ func (p *Peer) Connect() error {
 		return err
 	}
 
-	p.log.Info().Msgf("connected to peer: %s", p)
+	p.logInfo("connected to peer")
 
 	err = p.negotiateProtocol()
 	if err != nil {
-		p.log.Error().Msgf("error negotiating protocol with peer %s, reason: %v", p, err)
+		p.logError("error negotiating protocol with peer, reason: %v", err)
 		p.Disconnect()
 		return err
 	}
@@ -121,17 +122,17 @@ func (p *Peer) Connect() error {
 }
 
 func (p *Peer) Disconnect() {
-	p.log.Info().Msgf("disconnecting peer: %s", p)
+	p.logInfo("disconnecting peer")
 
 	p.quitting = true
 	close(p.quit)
 	err := p.conn.Close()
 	if err != nil {
-		p.log.Error().Msgf("error disconnecting peer %s, reason %v", p, err)
+		p.logError("error disconnecting peer, reason %v", err)
 	}
 
 	p.wg.Wait()
-	p.log.Info().Msgf("successfully disconnected peer %s", p)
+	p.logInfo("successfully disconnected peer")
 }
 
 func (p *Peer) StartHeadersSync() error {
@@ -156,9 +157,10 @@ func (p *Peer) updatePeerAddr() error {
 
 	if remoteAddr != nil && addrIsTcp {
 		p.addr = remoteAddr
+		p.addrS = p.addr.String()
 	} else {
 		errMsg := "error retreiving address from peer"
-		p.log.Error().Msg(errMsg)
+		p.logError(errMsg)
 		return errors.New(errMsg)
 	}
 	return nil
@@ -167,15 +169,15 @@ func (p *Peer) updatePeerAddr() error {
 func (p *Peer) requestHeaders() error {
 	var err error
 	if p.checkpoint.LastReached() {
-		p.log.Info().Msgf("checkpoints synced, requesting headers up to end of chain from peer %s", p)
+		p.logInfo("checkpoints synced, requesting headers up to end of chain from peer %s", p)
 		err = p.writeGetHeadersMsg(&zeroHash)
 	} else {
-		p.log.Info().Msgf("requesting next headers batch from peer %s, up to height %d", p, p.checkpoint.Height())
+		p.logInfo("requesting next headers batch from peer %s, up to height %d", p, p.checkpoint.Height())
 		err = p.writeGetHeadersMsg(p.checkpoint.Hash())
 	}
 
 	if err != nil {
-		p.log.Error().Msgf("error requesting headers from peer %s, reason: %v", p, err)
+		p.logError("error requesting headers, reason: %v", err)
 		return err
 	}
 	return nil
@@ -186,20 +188,20 @@ func (p *Peer) negotiateProtocol() error {
 	if err != nil {
 		return err
 	}
-	p.log.Info().Msgf("version sent to peer: %s", p)
+	p.logInfo("version sent to peer")
 
 	err = p.readVerAndVerAck()
 	if err != nil {
 		return err
 	}
-	p.log.Info().Msgf("received version and verack from peer: %s", p)
+	p.logInfo("received version and verack")
 
 	err = p.writeMessage(wire.NewMsgVerAck())
 	if err != nil {
 		return err
 	}
 
-	p.log.Info().Msgf("protocol negotiated successfully with peer: %s", p)
+	p.logInfo("protocol negotiated successfully with peer")
 	return nil
 }
 
@@ -216,14 +218,14 @@ func (p *Peer) pingHandler() {
 		case <-pingTicker.C:
 			nonce, err := wire.RandomUint64()
 			if err != nil {
-				p.log.Error().Msgf("error generating nonce for ping msg, reason: %v", err)
+				p.logError("error generating nonce for ping msg, reason: %v", err)
 				continue
 			}
-			p.log.Info().Msgf("sending ping to peer %s with nonce: %d", p, nonce)
+			p.logDebug("sending ping to peer with nonce: %d", nonce)
 			p.queueMessage(wire.NewMsgPing(nonce))
 
 		case <-p.quit:
-			p.log.Info().Msgf("ping handler shutdown for peer %s", p)
+			p.logInfo("ping handler shutdown for peer")
 			return
 		}
 	}
@@ -238,14 +240,15 @@ func (p *Peer) readMsgHandler() {
 	for {
 		select {
 		case <-p.quit:
-			p.log.Info().Msgf("read msg handler shutdown for peer %s", p)
+			p.logInfo("read msg handler shutdown")
 			return
 
 		default:
 			remoteMsg, _, err := wire.ReadMessage(p.conn, p.protocolVersion, p.chainParams.Net)
 			if err != nil {
 				if !p.quitting {
-					p.log.Error().Msgf("cannot read message from peer %s, reason: %v", p, err)
+					err = fmt.Errorf("cannot read message, reason: %w", err)
+					p.logError(err.Error())
 				}
 				continue
 			}
@@ -254,13 +257,13 @@ func (p *Peer) readMsgHandler() {
 			case *wire.MsgPing:
 				p.handlePingMsg(msg)
 			case *wire.MsgPong:
-				p.log.Info().Msgf("received pong from peer %s with nonce: %d", p, msg.Nonce)
+				p.logDebug("received pong with nonce: %d", msg.Nonce)
 			case *wire.MsgHeaders:
 				p.handleHeadersMsg(msg)
 			case *wire.MsgInv:
 				p.handleInvMsg(msg)
 			default:
-				p.log.Info().Msgf("received msg of type: %T", msg)
+				p.logDebug("received msg of type: %T", msg)
 			}
 		}
 	}
@@ -274,7 +277,7 @@ func (p *Peer) writeRejectMessage(msg wire.Message, reason string) {
 	rejectMsg := wire.NewMsgReject(msg.Command(), wire.RejectObsolete, reason)
 	err := p.writeMessage(rejectMsg)
 	if err != nil {
-		p.log.Error().Msgf("could not write reject message to peer, reason: %v", err)
+		p.logError("could not write reject message to peer, reason: %v", err)
 	}
 }
 
@@ -293,7 +296,7 @@ func (p *Peer) writeMsgHandler() {
 		case msg := <-p.msgChan:
 			err := p.writeMessage(msg)
 			if err != nil {
-				p.log.Error().Msgf("error writing msg %T to peer %s", msg, p)
+				p.logError("error writing msg %T to peer", msg)
 			}
 		case <-p.quit:
 			// draining the channels for cleanup
@@ -301,7 +304,7 @@ func (p *Peer) writeMsgHandler() {
 				select {
 				case <-p.msgChan:
 				default:
-					p.log.Info().Msgf("write msg handler shutdown for peer %s", p)
+					p.logInfo("write msg handler shutdown")
 					return
 				}
 			}
@@ -329,7 +332,7 @@ func (p *Peer) writeOurVersionMsg() error {
 	msg := wire.NewMsgVersion(ourNA, theirNA, nonce, lastBlock)
 	err = msg.AddUserAgent(p.cfg.UserAgentName, p.cfg.UserAgentVersion, userAgentComments)
 	if err != nil {
-		p.log.Error().Msgf("could not add user agent to version message, reason: %v", err)
+		p.logError("could not add user agent to version message, reason: %v", err)
 		return err
 	}
 
@@ -337,7 +340,7 @@ func (p *Peer) writeOurVersionMsg() error {
 
 	err = p.writeMessage(msg)
 	if err != nil {
-		p.log.Error().Msgf("could not write version message to peer, reason: %v", err)
+		p.logError("could not write version message to peer, reason: %v", err)
 		return err
 	}
 
@@ -356,6 +359,7 @@ func (p *Peer) writeGetHeadersMsg(stopHash *chainhash.Hash) error {
 		}
 	}
 
+	p.logDebug("queue GetHeaders msg: %v", *msg)
 	p.queueMessage(msg)
 	return nil
 }
@@ -368,7 +372,7 @@ func (p *Peer) readVerAndVerAck() error {
 	for i := 0; i < numberOfMsgsExpected; i++ {
 		remoteMsg, _, err := wire.ReadMessage(p.conn, p.protocolVersion, p.chainParams.Net)
 		if err != nil {
-			p.log.Error().Msgf("could not read message from peer, reason: %v", err)
+			p.logError("could not read message from peer, reason: %v", err)
 			return err
 		}
 
@@ -400,7 +404,7 @@ func (p *Peer) handleVersionMessage(msg *wire.MsgVersion) error {
 	// Detect self connections.
 	if msg.Nonce == p.nonce {
 		err := errors.New("disconnecting peer connected to self")
-		p.log.Error().Msg(err.Error())
+		p.logError(err.Error())
 		return err
 	}
 
@@ -413,7 +417,7 @@ func (p *Peer) handleVersionMessage(msg *wire.MsgVersion) error {
 	if uint32(msg.ProtocolVersion) < minAcceptableProtocolVersion {
 		reason := fmt.Sprintf("protocol version must be %d or greater", minAcceptableProtocolVersion)
 		p.writeRejectMessage(msg, reason)
-		p.log.Error().Msgf("%s, rejecting connection", reason)
+		p.logError("%s, rejecting connection", reason)
 		return errors.New(reason)
 	}
 
@@ -425,50 +429,50 @@ func (p *Peer) requireVerAckReceived(remoteMsg wire.Message) (*wire.MsgVerAck, e
 	if !ok {
 		reason := "missing-verack message, misbehaving peer"
 		p.writeRejectMessage(msg, reason)
-		p.log.Error().Msgf("%s, rejecting connection", reason)
+		p.logError("%s, rejecting connection", reason)
 		return nil, errors.New(reason)
 	}
 	return msg, nil
 }
 
 func (p *Peer) handlePingMsg(msg *wire.MsgPing) {
-	p.log.Info().Msgf("received ping from peer %s with nonce: %d", p, msg.Nonce)
+	p.logDebug("received ping with nonce: %d", msg.Nonce)
 	if p.protocolVersion > wire.BIP0031Version {
-		p.log.Info().Msgf("sending pong to peer %s with nonce: %d", p, msg.Nonce)
+		p.logDebug("sending pong to peer with nonce: %d", msg.Nonce)
 		p.queueMessage(wire.NewMsgPong(msg.Nonce))
 	}
 }
 
 func (p *Peer) handleInvMsg(msg *wire.MsgInv) {
-	p.log.Info().Msgf("received inv msg from peer %s", p)
+	p.logInfo("received inv msg")
 	if !p.syncedCheckpoints {
-		p.log.Info().Msgf("we are still syncing, ignoring inv msg from peer %s", p)
+		p.logInfo("we are still syncing, ignoring inv msg")
 		return
 	}
 
 	lastBlock := searchForFinalBlockIndex(msg.InvList)
 	if lastBlock == -1 {
-		p.log.Info().Msgf("no blocks in inv msg from peer %s", p)
+		p.logInfo("no blocks in inv msg from peer")
 		return
 	}
 
 	lastBlockHash := &msg.InvList[lastBlock].Hash
 	_, err := p.headersService.GetHeightByHash(lastBlockHash)
 	if err == nil {
-		p.log.Info().Msgf("blocks from inv msg from peer %s already existsing in db", p)
+		p.logInfo("blocks from inv msg already existsing in db")
 		return
 	}
 	p.updateLatestStats(0, lastBlockHash)
 
-	p.log.Info().Msgf("requesting new headers from peer %s", p)
+	p.logDebug("requesting new headers")
 	err = p.writeGetHeadersMsg(lastBlockHash)
 	if err != nil {
-		p.log.Error().Msgf("error while requesting new headers from peer %s, reason: %v", p, err)
+		p.logError("error while requesting new headers, reason: %v", err)
 	}
 }
 
 func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
-	p.log.Info().Msgf("received headers msg from peer %s", p)
+	p.logInfo("received headers msg")
 
 	lastHeight := int32(0)
 	headersReceived := 0
@@ -482,41 +486,38 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 			}
 
 			if service.BlockRejected.Is(err) {
+				p.logError("received rejected header %v", h)
 				// TODO: ban peer
-				p.log.Error().Msgf("received rejected header %v from peer %s", h, p)
 				p.Disconnect()
 				return
 			}
 
 			if service.HeaderSaveFail.Is(err) {
-				p.log.Error().Msgf("couldn't save header %v in database, because of %+v", h, err)
+				p.logError("couldn't save header %v in database, because of %+v", h, err)
 				continue
 			}
 
 			if service.HeaderCreationFail.Is(err) {
-				p.log.Error().Msgf("couldn't create header from %v because of error %+v", header, err)
+				p.logError("couldn't create header from %v because of error %+v", header, err)
 				continue
 			}
 
 			if service.ChainUpdateFail.Is(err) {
-				p.log.Error().Msgf("when adding header %v couldn't update chains state because of error %+v", header, err)
+				p.logError("when adding header %v couldn't update chains state because of error %+v", header, err)
 				continue
 			}
 		}
 
 		if !h.IsLongestChain() {
 			// TODO: ban peer or lower sync score
-			p.log.Warn().Msgf(
-				"received header with hash: %s that's not a part of the longest chain, from peer %s",
-				h.Hash.String(), p,
-			)
+			p.logWrn("received header with hash: %s that's not a part of the longest chain", h.Hash)
 			continue
 		}
 
 		err = p.checkpoint.VerifyAndAdvance(h)
 		if err != nil {
+			p.logError("error when checking checkpoint, reason: %v", err)
 			// TODO: ban peer or lower peer sync score
-			p.log.Error().Msgf("error when checking checkpoint, reason: %v", err)
 			p.Disconnect()
 			return
 		}
@@ -527,15 +528,11 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 	}
 
 	if headersReceived == 0 {
-		p.log.Debug().Msgf("received only existing headers from peer: %s", p)
+		p.logDebug("received only existing headers")
 		return
 	}
 
-	p.log.Info().Msgf(
-		"successfully received %d headers from peer %s, up to height %d",
-		headersReceived, p, lastHeight,
-	)
-
+	p.logInfo("successfully received %d headers up to height %d", headersReceived, lastHeight)
 	p.updateLatestStats(lastHeight, lastHash)
 
 	if p.sendHeadersMode {
@@ -543,7 +540,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 	}
 
 	if p.isSynced() {
-		p.log.Info().Msgf("synced with the tip of chain from peer %s", p)
+		p.logInfo("synced with the tip of chain from peer")
 		p.switchToSendHeadersMode()
 		return
 	}
@@ -557,7 +554,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 
 func (p *Peer) switchToSendHeadersMode() {
 	if !p.sendHeadersMode && p.protocolVersion >= wire.SendHeadersVersion {
-		p.log.Info().Msgf("switching to send headers mode - requesting peer %s to send us headers directly instead of inv msg", p)
+		p.logInfo("switching to send headers mode - requesting peer %s to send us headers directly instead of inv msg", p)
 		p.queueMessage(wire.NewMsgSendHeaders())
 		p.sendHeadersMode = true
 	}
@@ -591,5 +588,21 @@ func (p *Peer) isSynced() bool {
 }
 
 func (p *Peer) String() string {
-	return p.addr.String()
+	return p.addrS
+}
+
+func (p *Peer) logDebug(format string, v ...any) {
+	p.log.Debug().Str("peer", p.String()).Msgf(format, v...)
+}
+
+func (p *Peer) logInfo(format string, v ...any) {
+	p.log.Info().Str("peer", p.String()).Msgf(format, v...)
+}
+
+func (p *Peer) logWrn(format string, v ...any) {
+	p.log.Warn().Str("peer", p.String()).Msgf(format, v...)
+}
+
+func (p *Peer) logError(format string, v ...any) {
+	p.log.Error().Str("peer", p.String()).Msgf(format, v...)
 }
