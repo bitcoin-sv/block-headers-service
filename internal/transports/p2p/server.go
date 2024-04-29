@@ -52,7 +52,7 @@ func NewServer(
 
 		outboundPeers: peer.NewPeersCollection(config.MaxOutboundConnections),
 		inboundPeers:  peer.NewPeersCollection(config.MaxInboundConnections),
-		addresses:     network.NewAdressbook(time.Hour * time.Duration(config.BanDuration)),
+		addresses:     network.NewAdressbook(time.Hour*time.Duration(config.BanDuration), config.AcceptLocalPeers),
 
 		ctx:       ctx,
 		ctxCancel: ctxCancel,
@@ -69,7 +69,7 @@ func (s *server) Start() error {
 
 	err = s.listenInboundPeers()
 	if err != nil {
-		s.log.Info().Msg("shutdown p2p server")
+		s.log.Info().Msg(" shutdown p2p server")
 		s.Shutdown()
 	}
 	return nil

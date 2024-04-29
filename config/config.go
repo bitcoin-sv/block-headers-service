@@ -130,6 +130,7 @@ type P2PConfig struct {
 	MaxOutboundConnections uint `mapstructure:"max_outbound_connections" description:"Maximum active outbound connections"`
 	MaxInboundConnections  uint `mapstructure:"max_inbound_connections" description:"Maximum active inbound connections"`
 	BanHours               uint `mapstructure:"ban_hours" description:"Ban duration"`
+	AcceptLocalPeers       bool `mapstructure:"accept_local_peers" description:"Accept connection from local network"`
 }
 
 // LoggingConfig represents a logging config.

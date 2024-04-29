@@ -15,14 +15,21 @@ type AddressBook struct {
 	addrs       []*knownAddress
 	keyIndex    map[string]int
 
-	mu sync.Mutex
+	mu           sync.Mutex
+	addrFitlerFn func(*wire.NetAddress) bool
 }
 
-func NewAdressbook(banDuration time.Duration) *AddressBook {
+func NewAdressbook(banDuration time.Duration, acceptLocalAddresses bool) *AddressBook {
+	addrFitlerFn := IsRoutable
+	if acceptLocalAddresses {
+		addrFitlerFn = IsRoutableWithLocal
+	}
+
 	return &AddressBook{
-		addrs:       make([]*knownAddress, 0, 400),
-		keyIndex:    make(map[string]int, 400),
-		banDuration: banDuration,
+		addrs:        make([]*knownAddress, 0, 500),
+		keyIndex:     make(map[string]int, 500),
+		banDuration:  banDuration,
+		addrFitlerFn: addrFitlerFn,
 	}
 }
 
@@ -45,7 +52,7 @@ func (a *AddressBook) AddAddrs(address []*wire.NetAddress) {
 	defer a.mu.Unlock()
 
 	for _, addr := range address {
-		if !IsRoutable(addr) {
+		if a.addrFitlerFn(addr) {
 			continue
 		}
 

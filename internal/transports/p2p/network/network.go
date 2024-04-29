@@ -229,6 +229,16 @@ func IsRoutable(na *wire.NetAddress) bool {
 		IsLocal(na) || (IsRFC4193(na) && !IsOnionCatTor(na)))
 }
 
+// IsRoutableWithLocal returns whether or not the passed address is routable over
+// the public internet.  This is true as long as the address is valid and is not
+// in any reserved ranges.
+func IsRoutableWithLocal(na *wire.NetAddress) bool {
+	return IsValid(na) && !(IsRFC1918(na) || IsRFC2544(na) ||
+		IsRFC3927(na) || IsRFC4862(na) || IsRFC3849(na) ||
+		IsRFC4843(na) || IsRFC5737(na) || IsRFC6598(na) ||
+		(IsRFC4193(na) && !IsOnionCatTor(na)))
+}
+
 // GroupKey returns a string representing the network group an address is part
 // of.  This is the /16 for IPv4, the /32 (/36 for he.net) for IPv6, the string
 // "local" for a local address, the string "tor:key" where key is the /4 of the
