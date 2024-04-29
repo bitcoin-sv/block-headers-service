@@ -19,7 +19,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Manager is peer manager
+// Manager is peer manager.
 type Manager interface {
 	AddAddrs([]*wire.NetAddress)
 	SignalError(*Peer, error)
@@ -180,6 +180,10 @@ func (p *Peer) GetPeerAddr() *wire.NetAddress {
 		IP:        p.addr.IP,
 		Port:      uint16(p.addr.Port),
 	}
+}
+
+func (p *Peer) Inbound() bool {
+	return p.inbound
 }
 
 func (p *Peer) updatePeerAddr() error {
@@ -628,17 +632,17 @@ func (p *Peer) String() string {
 }
 
 func (p *Peer) logDebug(format string, v ...any) {
-	p.log.Debug().Str("peer", p.String()).Msgf(format, v...)
+	p.log.Debug().Str("peer", p.String()).Bool("inbound", p.inbound).Msgf(format, v...)
 }
 
 func (p *Peer) logInfo(format string, v ...any) {
-	p.log.Info().Str("peer", p.String()).Msgf(format, v...)
+	p.log.Info().Str("peer", p.String()).Bool("inbound", p.inbound).Msgf(format, v...)
 }
 
 func (p *Peer) logWrn(format string, v ...any) {
-	p.log.Warn().Str("peer", p.String()).Msgf(format, v...)
+	p.log.Warn().Str("peer", p.String()).Bool("inbound", p.inbound).Msgf(format, v...)
 }
 
 func (p *Peer) logError(format string, v ...any) {
-	p.log.Error().Str("peer", p.String()).Msgf(format, v...)
+	p.log.Error().Str("peer", p.String()).Bool("inbound", p.inbound).Msgf(format, v...)
 }

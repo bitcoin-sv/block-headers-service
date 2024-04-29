@@ -26,6 +26,7 @@ type server struct {
 
 	////
 	outboundPeers *peer.PeersCollection
+	inboundPeers  *peer.PeersCollection
 
 	addresses *network.AddressBook
 
@@ -48,11 +49,15 @@ func NewServer(
 		headersService: headersService,
 		chainService:   chainService,
 		log:            &serverLogger,
-		addresses: network.NewAdressbook(24 * time.Hour),
+
+		outboundPeers: peer.NewPeersCollection(config.MaxOutboundConnections),
+		inboundPeers:  peer.NewPeersCollection(config.MaxInboundConnections),
+		addresses:     network.NewAdressbook(time.Hour * time.Duration(config.BanDuration)),
+
 		ctx:       ctx,
 		ctxCancel: ctxCancel,
 	}
-	server.outboundPeers = peer.NewPeersCollection(server.config.MaxOutboundConnections)
+
 	return server
 }
 
@@ -62,7 +67,11 @@ func (s *server) Start() error {
 		return err
 	}
 
-	//return s.listenAndConnect()
+	err = s.listenInboundPeers()
+	if err != nil {
+		s.log.Info().Msg("shutdown p2p server")
+		s.Shutdown()
+	}
 	return nil
 }
 
@@ -72,6 +81,11 @@ func (s *server) Shutdown() error {
 	for _, p := range s.outboundPeers.Enumerate() {
 		p.Disconnect()
 	}
+
+	for _, p := range s.inboundPeers.Enumerate() {
+		p.Disconnect()
+	}
+
 	return nil
 }
 
@@ -113,25 +127,19 @@ func (s *server) connectOutboundPeers() error {
 	return nil
 }
 
-// func (s *server) listenAndConnect() error {
-// 	s.log.Info().Msgf("listening for inbound connections on port %s", s.chainParams.DefaultPort)
+func (s *server) listenInboundPeers() error {
+	s.log.Info().Msgf("listening for inbound connections on port %s", s.chainParams.DefaultPort)
 
-// 	ourAddr := net.JoinHostPort("", s.chainParams.DefaultPort)
-// 	listener, err := net.Listen("tcp", ourAddr)
-// 	if err != nil {
-// 		s.log.Error().Msgf("error creating listener, reason: %v", err)
-// 		return err
-// 	}
+	ourAddr := net.JoinHostPort("", s.chainParams.DefaultPort)
+	listener, err := net.Listen("tcp", ourAddr)
+	if err != nil {
+		s.log.Error().Msgf("error creating listener, reason: %v", err)
+		return err
+	}
 
-// 	conn, err := listener.Accept()
-// 	if err != nil {
-// 		s.log.Error().Msgf("error accepting connection, reason: %v", err)
-// 		return err
-// 	}
-
-// 	inbound := true
-// 	return s.connectPeer(conn, inbound)
-// }
+	go s.observeInboundPeers(listener)
+	return nil
+}
 
 func (s *server) connectToAddr(addr net.IP, port int) error {
 	netAddr := &net.TCPAddr{
@@ -142,9 +150,11 @@ func (s *server) connectToAddr(addr net.IP, port int) error {
 	conn, err := net.Dial(netAddr.Network(), netAddr.String())
 	if err != nil {
 		s.log.Error().Str("peer", netAddr.String()).
+			Bool("inbound", true).
 			Msgf("error connecting with peer, reason: %v", err)
 
 		s.log.Info().Str("peer", netAddr.String()).
+			Bool("inbound", true).
 			Msgf("peer banned, reason: %v", err)
 
 		s.addresses.BanAddr(&wire.NetAddress{IP: netAddr.IP, Port: uint16(netAddr.Port)})
@@ -154,6 +164,7 @@ func (s *server) connectToAddr(addr net.IP, port int) error {
 	peer, err := s.connectPeer(conn, false)
 	if err != nil {
 		s.log.Info().Str("peer", netAddr.String()).
+			Bool("inbound", false).
 			Msgf("peer banned, reason: %v", err)
 
 		s.addresses.BanAddr(&wire.NetAddress{IP: netAddr.IP, Port: uint16(netAddr.Port)})
@@ -171,7 +182,9 @@ func (s *server) connectPeer(conn net.Conn, inbound bool) (*peer.Peer, error) {
 	err := peer.Connect()
 	if err != nil {
 		peer.Disconnect()
-		s.log.Error().Str("peer", peer.String()).Msgf("error connecting with peer, reason: %v", err)
+		s.log.Error().Str("peer", peer.String()).
+			Bool("inbound", inbound).
+			Msgf("error connecting with peer, reason: %v", err)
 		return nil, err
 	}
 
@@ -209,7 +222,6 @@ func (s *server) observeOutboundPeers() {
 			s.log.Info().Msgf("try connect with %d new peers", peersToConnect)
 
 			for ; peersToConnect > 0; peersToConnect-- {
-				// potentially run in parallel	- if so implement address leasing
 				s.connectToRandomAddr()
 			}
 		}
@@ -234,6 +246,44 @@ func (s *server) connectToRandomAddr() {
 	}
 }
 
+func (s *server) observeInboundPeers(listener net.Listener) {
+	const sleepMinutes = 5
+
+	for {
+		select {
+		case <-s.ctx.Done(): // exit if context was canceled
+			s.log.Info().Msg("[observeInboundPeers] exit")
+			return
+
+		default:
+			if s.inboundPeers.Space() == 0 {
+				s.log.Debug().Msg("[observeInboundPeers] nothing to do")
+				time.Sleep(sleepMinutes * time.Minute)
+				continue
+			}
+
+			s.log.Info().Msgf("listening for inbound connections on port %s", s.chainParams.DefaultPort)
+			s.waitForIncomingConnection(listener)
+		}
+	}
+}
+
+func (s *server) waitForIncomingConnection(listener net.Listener) {
+	conn, err := listener.Accept() // should we check if is the same adress already connected? or it's outbounded peer?
+	if err != nil {
+		s.log.Error().Msgf("error accepting connection, reason: %v", err)
+		return
+	}
+
+	peer, err := s.connectPeer(conn, true)
+	if err != nil {
+		return
+	}
+
+	s.inboundPeers.AddPeer(peer)
+	s.addresses.UpsertPeerAddr(peer)
+}
+
 func (s *server) AddAddrs(address []*wire.NetAddress) {
 	s.addresses.AddAddrs(address)
 }
@@ -241,9 +291,13 @@ func (s *server) AddAddrs(address []*wire.NetAddress) {
 func (s *server) SignalError(p *peer.Peer, err error) {
 	// handle error and decide what to do with the peer
 
-	s.log.Info().Str("peer", p.String()).Msgf("peer banned, reason: %v", err)
+	s.log.Info().Str("peer", p.String()).
+		Bool("inbound", p.Inbound()).
+		Msgf("peer banned, reason: %v", err)
+
 	s.addresses.BanAddr(p.GetPeerAddr())
 
 	p.Disconnect()
 	s.outboundPeers.RmPeer(p)
+	s.inboundPeers.RmPeer(p)
 }

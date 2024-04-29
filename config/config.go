@@ -128,6 +128,8 @@ type P2PConfig struct {
 	Experimental          bool          `mapstructure:"experimental" description:"Turns on a new (highly experimental) way of getting headers with the usage of /internal/transports/p2p instead of /transports/p2p"`
 
 	MaxOutboundConnections uint `mapstructure:"max_outbound_connections" description:"Maximum active outbound connections"`
+	MaxInboundConnections  uint `mapstructure:"max_inbound_connections" description:"Maximum active inbound connections"`
+	BanHours               uint `mapstructure:"ban_hours" description:"Ban duration"`
 }
 
 // LoggingConfig represents a logging config.
