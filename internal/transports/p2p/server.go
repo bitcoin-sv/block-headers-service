@@ -72,7 +72,7 @@ func (s *server) Start() error {
 	return nil
 }
 
-func (s *server) Shutdown() error {
+func (s *server) Shutdown() {
 	s.ctxCancel()
 
 	for _, p := range s.outboundPeers.Enumerate() {
@@ -83,7 +83,6 @@ func (s *server) Shutdown() error {
 		p.Disconnect()
 	}
 
-	return nil
 }
 
 func (s *server) connectOutboundPeers() error {

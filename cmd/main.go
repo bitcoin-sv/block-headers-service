@@ -42,7 +42,7 @@ var version = "development"
 
 type P2PServer interface {
 	Start() error
-	Shutdown() error
+	Shutdown()
 }
 
 // nolint: godot
@@ -172,9 +172,7 @@ func main() {
 
 	<-quit
 
-	if err := p2pServer.Shutdown(); err != nil {
-		log.Error().Msgf("failed to stop p2p server: %v", err)
-	}
+	p2pServer.Shutdown()
 
 	if err := ws.Shutdown(); err != nil {
 		log.Error().Msgf("failed to stop websocket server: %v", err)
