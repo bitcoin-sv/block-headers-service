@@ -113,7 +113,6 @@ func (s *server) connectOutboundPeers() error {
 	}
 
 	s.log.Info().Msgf("connected to %d peers", peersCounter)
-
 	go s.observeOutboundPeers()
 	return nil
 }
@@ -160,7 +159,7 @@ func (s *server) connectToAddr(addr net.IP, port uint16) error {
 		return err
 	}
 
-	s.outboundPeers.AddPeer(peer)
+	_ = s.outboundPeers.AddPeer(peer) // don't need to check error here
 	s.addresses.UpsertPeerAddr(peer)
 	return nil
 }

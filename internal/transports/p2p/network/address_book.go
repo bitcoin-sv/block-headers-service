@@ -82,6 +82,7 @@ func (a *AddressBook) GetRndUnusedAddr(tries uint) *wire.NetAddress {
 
 	alen := len(a.addrs)
 	for i := uint(0); i < tries; i++ {
+		// #nosec G404
 		ka := a.addrs[rand.Intn(alen)]
 		if ka.peer == nil {
 			if ka.isBanned(a.banDuration) {
