@@ -8,7 +8,7 @@ import (
 	"fmt"
 	mrand "math/rand"
 	"net"
-	"strconv"
+
 	"time"
 
 	"github.com/rs/zerolog"
@@ -60,7 +60,7 @@ func SeedFromDNS(chainParams *chaincfg.Params, reqServices wire.ServiceFlag,
 			}
 			addresses := make([]*wire.NetAddress, len(seedpeers))
 			// if this errors then we have *real* problems
-			intPort, _ := strconv.Atoi(chainParams.DefaultPort)
+			intPort := chainParams.DefaultPort //strconv.Atoi(chainParams.DefaultPort)
 			for i, peer := range seedpeers {
 				addresses[i] = wire.NewNetAddressTimestamp(
 					// bitcoind seeds with addresses from

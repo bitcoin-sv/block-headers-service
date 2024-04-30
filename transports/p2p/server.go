@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -749,7 +748,7 @@ func (s *server) upnpUpdateThread() {
 	// Go off immediately to prevent code duplication, thereafter we renew
 	// lease every 15 minutes.
 	timer := time.NewTimer(0 * time.Second)
-	lport, _ := strconv.ParseInt(config.ActiveNetParams.DefaultPort, 10, 16)
+	lport := config.ActiveNetParams.DefaultPort
 	first := true
 out:
 	for {

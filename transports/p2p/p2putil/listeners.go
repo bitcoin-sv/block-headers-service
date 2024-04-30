@@ -15,7 +15,7 @@ import (
 // which is non-nil if UPnP is in use.
 func InitListeners(log *zerolog.Logger) ([]net.Listener, error) {
 	listenAddrs := []string{
-		net.JoinHostPort("", config.ActiveNetParams.DefaultPort),
+		net.JoinHostPort("", fmt.Sprintf("%d", config.ActiveNetParams.DefaultPort)),
 	}
 
 	// Listen for TCP connections at the configured addresses

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"strconv"
 	"time"
 
 	"github.com/bitcoin-sv/block-headers-service/config"
@@ -24,11 +23,9 @@ type server struct {
 	chainService   service.Chains
 	log            *zerolog.Logger
 
-	////
 	outboundPeers *peer.PeersCollection
 	inboundPeers  *peer.PeersCollection
-
-	addresses *network.AddressBook
+	addresses     *network.AddressBook
 
 	ctx       context.Context
 	ctxCancel context.CancelFunc
@@ -103,14 +100,9 @@ func (s *server) connectOutboundPeers() error {
 		s.log.Debug().Msgf("got peer addr: %s", seed.String())
 	}
 
-	portInt, err := strconv.Atoi(s.chainParams.DefaultPort)
-	if err != nil {
-		return fmt.Errorf("could not parse port: %w", err)
-	}
-
 	peersCounter := 0
 	for _, addr := range seeds {
-		if err = s.connectToAddr(addr, portInt); err != nil {
+		if err := s.connectToAddr(addr, s.chainParams.DefaultPort); err != nil {
 			continue
 		}
 
@@ -128,7 +120,7 @@ func (s *server) connectOutboundPeers() error {
 }
 
 func (s *server) listenInboundPeers() error {
-	ourAddr := net.JoinHostPort("", s.chainParams.DefaultPort)
+	ourAddr := net.JoinHostPort("", fmt.Sprintf("%d", s.chainParams.DefaultPort))
 	listener, err := net.Listen("tcp", ourAddr)
 	if err != nil {
 		s.log.Error().Msgf("error creating listener, reason: %v", err)
@@ -139,10 +131,10 @@ func (s *server) listenInboundPeers() error {
 	return nil
 }
 
-func (s *server) connectToAddr(addr net.IP, port int) error {
+func (s *server) connectToAddr(addr net.IP, port uint16) error {
 	netAddr := &net.TCPAddr{
 		IP:   addr,
-		Port: port,
+		Port: int(port),
 	}
 
 	conn, err := net.Dial(netAddr.Network(), netAddr.String())
@@ -236,7 +228,7 @@ func (s *server) connectToRandomAddr() {
 			continue
 		}
 
-		if err := s.connectToAddr(addr.IP, int(addr.Port)); err != nil {
+		if err := s.connectToAddr(addr.IP, addr.Port); err != nil {
 			continue // try one more time
 		}
 
@@ -261,7 +253,7 @@ func (s *server) observeInboundPeers(listener net.Listener) {
 				continue
 			}
 
-			s.log.Info().Msgf("listening for inbound connections on port %s", s.chainParams.DefaultPort)
+			s.log.Info().Msgf("listening for inbound connections on port %d", s.chainParams.DefaultPort)
 			s.waitForIncomingConnection(listener)
 		}
 	}

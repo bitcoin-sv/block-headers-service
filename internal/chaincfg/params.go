@@ -108,7 +108,7 @@ type Params struct {
 	Net wire.BitcoinNet
 
 	// DefaultPort defines the default peer-to-peer port for the network.
-	DefaultPort string
+	DefaultPort uint16
 
 	// DNSSeeds defines a list of DNS seeds for the network that are used
 	// as one method to discover peers.
@@ -222,7 +222,7 @@ type Params struct {
 var MainNetParams = Params{
 	Name:        "mainnet",
 	Net:         wire.MainNet,
-	DefaultPort: "8333",
+	DefaultPort: uint16(8333), //"8333",
 	DNSSeeds: []DNSSeed{
 		{"seed-nodes.bsvb.tech", true},
 	},
@@ -297,7 +297,7 @@ var MainNetParams = Params{
 var RegressionNetParams = Params{
 	Name:        "regtest",
 	Net:         wire.TestNet,
-	DefaultPort: "18444",
+	DefaultPort: uint16(18444), //"18444",
 	DNSSeeds:    []DNSSeed{},
 
 	// Chain parameters
@@ -365,7 +365,7 @@ var RegressionNetParams = Params{
 var TestNet3Params = Params{
 	Name:        "testnet3",
 	Net:         wire.TestNet3,
-	DefaultPort: "18333",
+	DefaultPort: uint16(18333), //"18333",
 	DNSSeeds: []DNSSeed{
 		{"testnet-seed.metasv.io", true},
 		{"testnet-btccash-seeder.bitcoinunlimited.info", true},
@@ -452,8 +452,8 @@ var TestNet3Params = Params{
 var SimNetParams = Params{
 	Name:        "simnet",
 	Net:         wire.SimNet,
-	DefaultPort: "18555",
-	DNSSeeds:    []DNSSeed{}, // NOTE: There must NOT be any seeds.
+	DefaultPort: uint16(18555), //"18555",
+	DNSSeeds:    []DNSSeed{},   // NOTE: There must NOT be any seeds.
 
 	// Chain parameters
 	GenesisBlock:             &simNetGenesisBlock,

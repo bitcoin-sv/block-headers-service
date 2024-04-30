@@ -53,7 +53,7 @@ func NewAddressFunc(getAddressFn GetAddressFn, outboundGroupCount OutboundGroupC
 			}
 
 			// allow nondefault ports after 50 failed tries.
-			if tries < 50 && fmt.Sprintf("%d", addr.NetAddress().Port) !=
+			if tries < 50 && addr.NetAddress().Port !=
 				config.ActiveNetParams.DefaultPort {
 				continue
 			}
