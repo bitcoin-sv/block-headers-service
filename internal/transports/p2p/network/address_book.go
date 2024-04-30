@@ -47,7 +47,7 @@ func (a *AddressBook) UpsertPeerAddr(p *peer.Peer) {
 	}
 }
 
-func (a *AddressBook) AddAddrs(address []*wire.NetAddress) {
+func (a *AddressBook) UpsertAddrs(address []*wire.NetAddress) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 

@@ -61,5 +61,12 @@ func (col *PeersCollection) Enumerate() []*Peer {
 	col.mu.Lock()
 	defer col.mu.Unlock()
 
-	return col.peers[:]
+	res := make([]*Peer, 0, len(col.peers))
+	for _, p := range col.peers {
+		if p != nil {
+			res = append(res, p)
+		}
+	}
+
+	return res
 }

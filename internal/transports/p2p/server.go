@@ -284,7 +284,7 @@ func (s *server) waitForIncomingConnection(listener net.Listener) {
 }
 
 func (s *server) AddAddrs(address []*wire.NetAddress) {
-	s.addresses.AddAddrs(address)
+	s.addresses.UpsertAddrs(address)
 }
 
 func (s *server) SignalError(p *peer.Peer, err error) {
