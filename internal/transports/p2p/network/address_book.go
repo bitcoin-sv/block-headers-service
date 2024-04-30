@@ -52,7 +52,7 @@ func (a *AddressBook) AddAddrs(address []*wire.NetAddress) {
 	defer a.mu.Unlock()
 
 	for _, addr := range address {
-		if a.addrFitlerFn(addr) {
+		if !a.addrFitlerFn(addr) {
 			continue
 		}
 

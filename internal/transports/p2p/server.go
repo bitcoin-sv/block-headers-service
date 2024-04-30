@@ -128,8 +128,6 @@ func (s *server) connectOutboundPeers() error {
 }
 
 func (s *server) listenInboundPeers() error {
-	s.log.Info().Msgf("listening for inbound connections on port %s", s.chainParams.DefaultPort)
-
 	ourAddr := net.JoinHostPort("", s.chainParams.DefaultPort)
 	listener, err := net.Listen("tcp", ourAddr)
 	if err != nil {
@@ -150,11 +148,11 @@ func (s *server) connectToAddr(addr net.IP, port int) error {
 	conn, err := net.Dial(netAddr.Network(), netAddr.String())
 	if err != nil {
 		s.log.Error().Str("peer", netAddr.String()).
-			Bool("inbound", true).
+			Bool("inbound", false).
 			Msgf("error connecting with peer, reason: %v", err)
 
 		s.log.Info().Str("peer", netAddr.String()).
-			Bool("inbound", true).
+			Bool("inbound", false).
 			Msgf("peer banned, reason: %v", err)
 
 		s.addresses.BanAddr(&wire.NetAddress{IP: netAddr.IP, Port: uint16(netAddr.Port)})
@@ -203,6 +201,7 @@ func (s *server) connectPeer(conn net.Conn, inbound bool) (*peer.Peer, error) {
 
 func (s *server) observeOutboundPeers() {
 	const sleepMinutes = 5
+	time.Sleep(sleepMinutes * time.Minute)
 
 	for {
 		select {
@@ -211,11 +210,10 @@ func (s *server) observeOutboundPeers() {
 			return
 
 		default:
-			time.Sleep(sleepMinutes * time.Minute)
-
 			peersToConnect := s.outboundPeers.Space()
 			if peersToConnect == 0 {
 				s.log.Debug().Msg("[observeOutboundPeers] nothing to do")
+				time.Sleep(sleepMinutes * time.Minute)
 				continue
 			}
 
@@ -248,6 +246,7 @@ func (s *server) connectToRandomAddr() {
 
 func (s *server) observeInboundPeers(listener net.Listener) {
 	const sleepMinutes = 5
+	time.Sleep(sleepMinutes * time.Minute)
 
 	for {
 		select {
