@@ -25,6 +25,7 @@ type server struct {
 
 	outboundPeers *peer.PeersCollection
 	inboundPeers  *peer.PeersCollection
+	listener      net.Listener
 	addresses     *network.AddressBook
 
 	ctx       context.Context
@@ -49,7 +50,8 @@ func NewServer(
 
 		outboundPeers: peer.NewPeersCollection(config.MaxOutboundConnections),
 		inboundPeers:  peer.NewPeersCollection(config.MaxInboundConnections),
-		addresses:     network.NewAdressbook(time.Hour*time.Duration(config.BanDuration), config.AcceptLocalPeers),
+
+		addresses: network.NewAdressbook(time.Hour*time.Duration(config.BanDuration), config.AcceptLocalPeers),
 
 		ctx:       ctx,
 		ctxCancel: ctxCancel,
@@ -81,6 +83,10 @@ func (s *server) Shutdown() {
 
 	for _, p := range s.inboundPeers.Enumerate() {
 		p.Disconnect()
+	}
+
+	if s.listener != nil {
+		s.listener.Close()
 	}
 
 }
@@ -258,7 +264,7 @@ func (s *server) observeInboundPeers(listener net.Listener) {
 }
 
 func (s *server) waitForIncomingConnection(listener net.Listener) {
-	conn, err := listener.Accept() // should we check if is the same adress already connected? or it's outbounded peer?
+	conn, err := listener.Accept()
 	if err != nil {
 		s.log.Error().Msgf("error accepting connection, reason: %v", err)
 		return
@@ -269,7 +275,7 @@ func (s *server) waitForIncomingConnection(listener net.Listener) {
 		return
 	}
 
-	s.inboundPeers.AddPeer(peer)
+	_ = s.inboundPeers.AddPeer(peer)
 	s.addresses.UpsertPeerAddr(peer)
 }
 
