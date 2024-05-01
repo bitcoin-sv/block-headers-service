@@ -51,7 +51,7 @@ func NewServer(
 		outboundPeers: peer.NewPeersCollection(config.MaxOutboundConnections),
 		inboundPeers:  peer.NewPeersCollection(config.MaxInboundConnections),
 
-		addresses: network.NewAdressbook(time.Hour*config.BanDuration, config.AcceptLocalPeers),
+		addresses: network.NewAdressbook(config.BanDuration, config.AcceptLocalPeers),
 
 		ctx:       ctx,
 		ctxCancel: ctxCancel,
