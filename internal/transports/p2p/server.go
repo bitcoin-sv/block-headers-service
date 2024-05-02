@@ -22,14 +22,12 @@ type server struct {
 	headersService service.Headers
 	chainService   service.Chains
 	log            *zerolog.Logger
-
-	outboundPeers *peer.PeersCollection
-	inboundPeers  *peer.PeersCollection
-	listener      net.Listener
-	addresses     *network.AddressBook
-
-	ctx       context.Context
-	ctxCancel context.CancelFunc
+	outboundPeers  *peer.PeersCollection
+	inboundPeers   *peer.PeersCollection
+	listener       net.Listener
+	addresses      *network.AddressBook
+	ctx            context.Context
+	ctxCancel      context.CancelFunc
 }
 
 func NewServer(
@@ -47,19 +45,17 @@ func NewServer(
 		headersService: headersService,
 		chainService:   chainService,
 		log:            &serverLogger,
-
-		outboundPeers: peer.NewPeersCollection(config.MaxOutboundConnections),
-		inboundPeers:  peer.NewPeersCollection(config.MaxInboundConnections),
-
-		addresses: network.NewAdressbook(config.BanDuration, config.AcceptLocalPeers),
-
-		ctx:       ctx,
-		ctxCancel: ctxCancel,
+		outboundPeers:  peer.NewPeersCollection(config.MaxOutboundConnections),
+		inboundPeers:   peer.NewPeersCollection(config.MaxInboundConnections),
+		addresses:      network.NewAdressBook(config.BanDuration, config.AcceptLocalPeers),
+		ctx:            ctx,
+		ctxCancel:      ctxCancel,
 	}
 
 	return server
 }
 
+// Start starts the P2P server by connecting to outbound peers and listening for inbound connections.
 func (s *server) Start() error {
 	err := s.connectOutboundPeers()
 	if err != nil {
@@ -74,6 +70,7 @@ func (s *server) Start() error {
 	return nil
 }
 
+// Shutdown gracefully shuts down the P2P server by disconnecting all peers.
 func (s *server) Shutdown() {
 	s.ctxCancel()
 
@@ -199,27 +196,20 @@ func (s *server) observeOutboundPeers() {
 	const sleepMinutes = 5
 	time.Sleep(sleepMinutes * time.Minute)
 
-	for {
-		select {
-		case <-s.ctx.Done(): // exit if context was cancaled
-			s.log.Info().Msg("[observeOutboundPeers] exit")
+	s.withCancelHandle("observeOutboundPeers", func() {
+		peersToConnect := s.outboundPeers.Space()
+		if peersToConnect == 0 {
+			s.log.Debug().Msg("[observeOutboundPeers] nothing to do")
+			time.Sleep(sleepMinutes * time.Minute)
 			return
-
-		default:
-			peersToConnect := s.outboundPeers.Space()
-			if peersToConnect == 0 {
-				s.log.Debug().Msg("[observeOutboundPeers] nothing to do")
-				time.Sleep(sleepMinutes * time.Minute)
-				continue
-			}
-
-			s.log.Info().Msgf("try connect with %d new peers", peersToConnect)
-
-			for ; peersToConnect > 0; peersToConnect-- {
-				s.connectToRandomAddr()
-			}
 		}
-	}
+
+		s.log.Info().Msgf("try connect with %d new peers", peersToConnect)
+
+		for ; peersToConnect > 0; peersToConnect-- {
+			s.connectToRandomAddr()
+		}
+	})
 }
 
 func (s *server) connectToRandomAddr() {
@@ -244,21 +234,28 @@ func (s *server) observeInboundPeers(listener net.Listener) {
 	const sleepMinutes = 5
 	time.Sleep(sleepMinutes * time.Minute)
 
+	s.withCancelHandle("observeInboundPeers", func() {
+		if s.inboundPeers.Space() == 0 {
+			s.log.Debug().Msg("[observeInboundPeers] nothing to do")
+			time.Sleep(sleepMinutes * time.Minute)
+			return
+		}
+
+		s.log.Info().Msgf("listening for inbound connections on port %d", s.chainParams.DefaultPort)
+		s.waitForIncomingConnection(listener)
+	})
+
+}
+
+func (s *server) withCancelHandle(fname string, f func()) {
 	for {
 		select {
-		case <-s.ctx.Done(): // exit if context was canceled
-			s.log.Info().Msg("[observeInboundPeers] exit")
+		case <-s.ctx.Done(): // Exit if context was canceled
+			s.log.Info().Msgf("[%s] context canceled -> exit", fname)
 			return
 
 		default:
-			if s.inboundPeers.Space() == 0 {
-				s.log.Debug().Msg("[observeInboundPeers] nothing to do")
-				time.Sleep(sleepMinutes * time.Minute)
-				continue
-			}
-
-			s.log.Info().Msgf("listening for inbound connections on port %d", s.chainParams.DefaultPort)
-			s.waitForIncomingConnection(listener)
+			f()
 		}
 	}
 }
@@ -279,10 +276,12 @@ func (s *server) waitForIncomingConnection(listener net.Listener) {
 	s.addresses.UpsertPeerAddr(peer)
 }
 
+// AddAddrs adds addresses to the address book of the P2P server. It's peer.Manager functionality.
 func (s *server) AddAddrs(address []*wire.NetAddress) {
 	s.addresses.UpsertAddrs(address)
 }
 
+// SignalError signals an error with a peer and takes appropriate actions such as banning the peer and disconnecting it. It's peer.Manager functionality.
 func (s *server) SignalError(p *peer.Peer, err error) {
 	// handle error and decide what to do with the peer
 

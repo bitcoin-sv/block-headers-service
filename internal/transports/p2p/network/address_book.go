@@ -10,29 +10,33 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 )
 
+// AddressBook represents a collection of known network addresses.
 type AddressBook struct {
-	banDuration time.Duration
-	addrs       []*knownAddress
-	keyIndex    map[string]int
-
+	banDuration  time.Duration
+	addrs        []*knownAddress // addrs is a slice containing known addresses
+	addrsLookup  map[string]int  // addrLookup is a map for fast lookup of addresses, maps address key to index in addrs slice
 	mu           sync.Mutex
 	addrFitlerFn func(*wire.NetAddress) bool
 }
 
-func NewAdressbook(banDuration time.Duration, acceptLocalAddresses bool) *AddressBook {
+// NewAddressBook creates and initializes a new AddressBook instance.
+func NewAdressBook(banDuration time.Duration, acceptLocalAddresses bool) *AddressBook {
+	// Set the address filter function based on whether local addresses are accepted
 	addrFitlerFn := IsRoutable
 	if acceptLocalAddresses {
 		addrFitlerFn = IsRoutableWithLocal
 	}
 
+	const addressesInitCapacity = 500
 	return &AddressBook{
-		addrs:        make([]*knownAddress, 0, 500),
-		keyIndex:     make(map[string]int, 500),
+		addrs:        make([]*knownAddress, 0, addressesInitCapacity),
+		addrsLookup:  make(map[string]int, addressesInitCapacity),
 		banDuration:  banDuration,
 		addrFitlerFn: addrFitlerFn,
 	}
 }
 
+// UpsertPeerAddr updates or adds a peer's address.
 func (a *AddressBook) UpsertPeerAddr(p *peer.Peer) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -47,6 +51,7 @@ func (a *AddressBook) UpsertPeerAddr(p *peer.Peer) {
 	}
 }
 
+// UpsertAddrs updates or adds multiple addresses.
 func (a *AddressBook) UpsertAddrs(address []*wire.NetAddress) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -57,14 +62,17 @@ func (a *AddressBook) UpsertAddrs(address []*wire.NetAddress) {
 		}
 
 		key, ka := a.internalFind(addr)
+		// If the address is not found, add it to the AddressBook.
 		if ka == nil {
 			a.internalAddAddr(key, &knownAddress{addr: addr})
 		} else if addr.Timestamp.After(ka.addr.Timestamp) {
+			// Otherwise, update the timestamp if the new one is newer.
 			ka.addr.Timestamp = addr.Timestamp
 		}
 	}
 }
 
+// BanAddr bans a network address. Ignores address if doesn't exist in the AddressBook.
 func (a *AddressBook) BanAddr(addr *wire.NetAddress) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -76,6 +84,7 @@ func (a *AddressBook) BanAddr(addr *wire.NetAddress) {
 	}
 }
 
+// GetRndUnusedAddr returns a randomly chosen unused network address.
 func (a *AddressBook) GetRndUnusedAddr(tries uint) *wire.NetAddress {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -92,12 +101,13 @@ func (a *AddressBook) GetRndUnusedAddr(tries uint) *wire.NetAddress {
 		}
 	}
 
+	// return nil if no suitable address is found
 	return nil
 }
 
 func (a *AddressBook) internalFind(addr *wire.NetAddress) (string, *knownAddress) {
 	key := addrKey(addr)
-	addrIndex, ok := a.keyIndex[key]
+	addrIndex, ok := a.addrsLookup[key]
 
 	if ok {
 		return key, a.addrs[addrIndex]
@@ -109,7 +119,7 @@ func (a *AddressBook) internalAddAddr(key string, addr *knownAddress) {
 	newItemIndex := len(a.addrs)
 
 	a.addrs = append(a.addrs, addr)
-	a.keyIndex[key] = newItemIndex
+	a.addrsLookup[key] = newItemIndex
 }
 
 func addrKey(addr *wire.NetAddress) string {
