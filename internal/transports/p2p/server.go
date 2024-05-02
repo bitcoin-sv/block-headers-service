@@ -84,11 +84,11 @@ func (s *server) Shutdown() {
 		_ = s.listener.Close()
 	}
 
-	// Cancel all child go routines
+	// Cancel all child goroutines
 	s.ctxCancel()
 	s.ctxWg.Wait()
 
-	// Finally disconnect active peers
+	// Disconnect active peers
 	for _, p := range s.outboundPeers.Enumerate() {
 		p.Disconnect()
 	}
@@ -206,21 +206,27 @@ func (s *server) observeOutboundPeers() {
 	sleeDuration := 1 * time.Minute
 	time.Sleep(sleeDuration)
 
-	s.withCancelHandle("observeOutboundPeers", func() {
-		s.ctxWg.Add(1) // Wait on shutdown
-
-		freeSlots := s.outboundPeers.Space()
-		if freeSlots == 0 {
-			s.log.Debug().Msg("[observeOutboundPeers] nothing to do")
-			s.noWaitingSleep(sleeDuration)
+	for {
+		select {
+		case <-s.ctx.Done(): // Exit if context was canceled
+			s.log.Info().Msg("[observeOutboundPeers] context canceled -> exit")
 			return
+		default:
+			s.ctxWg.Add(1) // Wait on shutdown
+
+			freeSlots := s.outboundPeers.Space()
+			if freeSlots == 0 {
+				s.log.Debug().Msg("[observeOutboundPeers] nothing to do")
+				s.noWaitingSleep(sleeDuration)
+				continue
+			}
+
+			s.log.Info().Msgf("try connect with a new peer. Free slots: %d", freeSlots)
+			s.connectToRandomAddr() // Connect one-by-one to gracefully handle shutdown
+
+			s.ctxWg.Done()
 		}
-
-		s.log.Info().Msgf("try connect with a new peer. Free slots: %d", freeSlots)
-		s.connectToRandomAddr() // Connect one-by-one to gracefully handle shutdown
-
-		s.ctxWg.Done()
-	})
+	}
 }
 
 func (s *server) connectToRandomAddr() {
@@ -238,31 +244,24 @@ func (s *server) observeInboundPeers() {
 	sleeDuration := 1 * time.Minute
 	time.Sleep(sleeDuration)
 
-	s.withCancelHandle("observeInboundPeers", func() {
-		s.ctxWg.Add(1) // Wait on shutdown
-
-		if s.inboundPeers.Space() == 0 {
-			s.log.Debug().Msg("[observeInboundPeers] nothing to do")
-			s.noWaitingSleep(sleeDuration)
-			return
-		}
-
-		s.log.Info().Msgf("listening for inbound connections on port %d", s.chainParams.DefaultPort)
-		s.waitForIncomingConnection() // Accept connection one-by-one to gracefully handle shutdown
-
-		s.ctxWg.Done()
-	})
-
-}
-
-func (s *server) withCancelHandle(fname string, f func()) {
 	for {
 		select {
 		case <-s.ctx.Done(): // Exit if context was canceled
-			s.log.Info().Msgf("[%s] context canceled -> exit", fname)
+			s.log.Info().Msg("[observeInboundPeers] context canceled -> exit")
 			return
 		default:
-			f()
+			s.ctxWg.Add(1) // Wait on shutdown
+
+			if s.inboundPeers.Space() == 0 {
+				s.log.Debug().Msg("[observeInboundPeers] nothing to do")
+				s.noWaitingSleep(sleeDuration)
+				continue
+			}
+
+			s.log.Info().Msgf("listening for inbound connections on port %d", s.chainParams.DefaultPort)
+			s.waitForIncomingConnection() // Accept connection one-by-one to gracefully handle shutdown
+
+			s.ctxWg.Done()
 		}
 	}
 }
