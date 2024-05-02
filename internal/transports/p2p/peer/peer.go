@@ -79,11 +79,11 @@ type Peer struct {
 	quitting bool
 	// quit is a channel used to properly handle peer disconnection
 	quit chan struct{}
+	// quitMutex is used to prevents concurrect disconnections
+	quitMutex sync.Mutex
 
 	// manager is a peer  manager
 	manager Manager
-	// prevents errors if client invoke Disconect() multiple times
-	disconnected bool
 }
 
 func NewPeer(
@@ -138,13 +138,16 @@ func (p *Peer) Connect() error {
 }
 
 func (p *Peer) Disconnect() {
-	if p.disconnected {
+	p.quitMutex.Lock()
+	defer p.quitMutex.Unlock()
+
+	if p.quitting {
 		return
 	}
 
+	p.quitting = true
 	p.logInfo("disconnecting peer")
 
-	p.quitting = true
 	close(p.quit)
 	err := p.conn.Close()
 	if err != nil {
@@ -153,8 +156,6 @@ func (p *Peer) Disconnect() {
 
 	p.wg.Wait()
 	p.logInfo("successfully disconnected peer")
-
-	p.disconnected = true
 }
 
 func (p *Peer) StartHeadersSync() error {

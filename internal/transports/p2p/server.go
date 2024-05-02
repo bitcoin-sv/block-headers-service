@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/bitcoin-sv/block-headers-service/config"
@@ -26,8 +27,11 @@ type server struct {
 	inboundPeers   *peer.PeersCollection
 	listener       net.Listener
 	addresses      *network.AddressBook
-	ctx            context.Context
-	ctxCancel      context.CancelFunc
+
+	// lifecycle properties
+	ctx       context.Context
+	ctxCancel context.CancelFunc
+	ctxWg     sync.WaitGroup
 }
 
 // NewServer creates and initializes a new P2P server instance.
@@ -75,20 +79,22 @@ func (s *server) Start() error {
 
 // Shutdown gracefully shuts down the P2P server by disconnecting all peers.
 func (s *server) Shutdown() {
-	s.ctxCancel()
-
-	for _, p := range s.outboundPeers.Enumerate() {
-		p.Disconnect()
-	}
-
-	for _, p := range s.inboundPeers.Enumerate() {
-		p.Disconnect()
-	}
-
+	// Stop listening for incoming connections
 	if s.listener != nil {
 		_ = s.listener.Close()
 	}
 
+	// Cancel all child go routines
+	s.ctxCancel()
+	s.ctxWg.Wait()
+
+	// Finally disconnect active peers
+	for _, p := range s.outboundPeers.Enumerate() {
+		p.Disconnect()
+	}
+	for _, p := range s.inboundPeers.Enumerate() {
+		p.Disconnect()
+	}
 }
 
 func (s *server) connectOutboundPeers() error {
@@ -131,7 +137,8 @@ func (s *server) listenInboundPeers() error {
 		return err
 	}
 
-	go s.observeInboundPeers(listener)
+	s.listener = listener
+	go s.observeInboundPeers()
 	return nil
 }
 
@@ -196,56 +203,54 @@ func (s *server) connectPeer(conn net.Conn, inbound bool) (*peer.Peer, error) {
 }
 
 func (s *server) observeOutboundPeers() {
-	const sleepMinutes = 5
-	time.Sleep(sleepMinutes * time.Minute)
+	sleeDuration := 1 * time.Minute
+	time.Sleep(sleeDuration)
 
 	s.withCancelHandle("observeOutboundPeers", func() {
-		peersToConnect := s.outboundPeers.Space()
-		if peersToConnect == 0 {
+		s.ctxWg.Add(1) // Wait on shutdown
+
+		freeSlots := s.outboundPeers.Space()
+		if freeSlots == 0 {
 			s.log.Debug().Msg("[observeOutboundPeers] nothing to do")
-			time.Sleep(sleepMinutes * time.Minute)
+			s.noWaitingSleep(sleeDuration)
 			return
 		}
 
-		s.log.Info().Msgf("try connect with %d new peers", peersToConnect)
+		s.log.Info().Msgf("try connect with a new peer. Free slots: %d", freeSlots)
+		s.connectToRandomAddr() // Connect one-by-one to gracefully handle shutdown
 
-		for ; peersToConnect > 0; peersToConnect-- {
-			s.connectToRandomAddr()
-		}
+		s.ctxWg.Done()
 	})
 }
 
 func (s *server) connectToRandomAddr() {
 	const tries = 20
-
-	for i := 0; i < tries; i++ {
-		addr := s.addresses.GetRndUnusedAddr(tries)
-		if addr == nil {
-			s.log.Warn().Msgf("[observeOutboundPeers] coudnt find random unused/unbanned peer address with %d tries", tries)
-			continue
-		}
-
-		if err := s.connectToAddr(addr.IP, addr.Port); err != nil {
-			continue // try one more time
-		}
-
-		return // success
+	addr := s.addresses.GetRndUnusedAddr(tries)
+	if addr == nil {
+		s.log.Warn().Msgf("[observeOutboundPeers] coudnt find random unused/unbanned peer address with %d tries", tries)
+		return
 	}
+
+	_ = s.connectToAddr(addr.IP, addr.Port)
 }
 
-func (s *server) observeInboundPeers(listener net.Listener) {
-	const sleepMinutes = 5
-	time.Sleep(sleepMinutes * time.Minute)
+func (s *server) observeInboundPeers() {
+	sleeDuration := 1 * time.Minute
+	time.Sleep(sleeDuration)
 
 	s.withCancelHandle("observeInboundPeers", func() {
+		s.ctxWg.Add(1) // Wait on shutdown
+
 		if s.inboundPeers.Space() == 0 {
 			s.log.Debug().Msg("[observeInboundPeers] nothing to do")
-			time.Sleep(sleepMinutes * time.Minute)
+			s.noWaitingSleep(sleeDuration)
 			return
 		}
 
 		s.log.Info().Msgf("listening for inbound connections on port %d", s.chainParams.DefaultPort)
-		s.waitForIncomingConnection(listener)
+		s.waitForIncomingConnection() // Accept connection one-by-one to gracefully handle shutdown
+
+		s.ctxWg.Done()
 	})
 
 }
@@ -262,8 +267,15 @@ func (s *server) withCancelHandle(fname string, f func()) {
 	}
 }
 
-func (s *server) waitForIncomingConnection(listener net.Listener) {
-	conn, err := listener.Accept()
+// usage MUST be preceded by `s.ctx.Wg.Add(1)`
+func (s *server) noWaitingSleep(duration time.Duration) {
+	s.ctxWg.Done() // We are sleeping -> no need to wait
+	time.Sleep(duration)
+	s.ctxWg.Add(1) // Wake up. Wait for us
+}
+
+func (s *server) waitForIncomingConnection() {
+	conn, err := s.listener.Accept()
 	if err != nil {
 		s.log.Error().Msgf("error accepting connection, reason: %v", err)
 		return
@@ -285,7 +297,7 @@ func (s *server) AddAddrs(address []*wire.NetAddress) {
 
 // SignalError signals an error with a peer and takes appropriate actions such as banning the peer and disconnecting it. It's peer.Manager functionality.
 func (s *server) SignalError(p *peer.Peer, err error) {
-	// handle error and decide what to do with the peer
+	// Handle error and decide what to do with the peer
 
 	s.log.Info().Str("peer", p.String()).
 		Bool("inbound", p.Inbound()).
@@ -293,7 +305,10 @@ func (s *server) SignalError(p *peer.Peer, err error) {
 
 	s.addresses.BanAddr(p.GetPeerAddr())
 
-	p.Disconnect()
-	s.outboundPeers.RmPeer(p)
-	s.inboundPeers.RmPeer(p)
+	// Disconnection here must be non-blocking to prevent deadlock within the peer logic.
+	go func() {
+		p.Disconnect()
+		s.outboundPeers.RmPeer(p)
+		s.inboundPeers.RmPeer(p)
+	}()
 }
