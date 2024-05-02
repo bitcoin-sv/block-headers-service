@@ -30,6 +30,7 @@ type server struct {
 	ctxCancel      context.CancelFunc
 }
 
+// NewServer creates and initializes a new P2P server instance.
 func NewServer(
 	config *config.P2PConfig,
 	chainParams *chaincfg.Params,
@@ -64,8 +65,10 @@ func (s *server) Start() error {
 
 	err = s.listenInboundPeers()
 	if err != nil {
-		s.log.Info().Msg(" shutdown p2p server")
+		s.log.Error().Msgf("error during server start. Shutdown p2p server. Reason: %v", err)
 		s.Shutdown()
+
+		return err
 	}
 	return nil
 }
