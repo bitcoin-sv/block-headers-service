@@ -266,7 +266,7 @@ func (s *server) observeInboundPeers() {
 	}
 }
 
-// usage MUST be preceded by `s.ctx.Wg.Add(1)`
+// usage MUST be preceded by `s.ctx.Wg.Add(1)`.
 func (s *server) noWaitingSleep(duration time.Duration) {
 	s.ctxWg.Done() // We are sleeping -> no need to wait
 	time.Sleep(duration)

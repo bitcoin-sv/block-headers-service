@@ -79,7 +79,7 @@ type Peer struct {
 	quitting bool
 	// quit is a channel used to properly handle peer disconnection
 	quit chan struct{}
-	// quitMutex is used to prevents concurrect disconnections
+	// quitMutex is used to prevents concurrent disconnections
 	quitMutex sync.Mutex
 
 	// manager is a peer  manager
