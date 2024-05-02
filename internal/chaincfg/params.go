@@ -365,7 +365,7 @@ var RegressionNetParams = Params{
 var TestNet3Params = Params{
 	Name:        "testnet3",
 	Net:         wire.TestNet3,
-	DefaultPort: uint16(18333), //"18333",
+	DefaultPort: uint16(18333),
 	DNSSeeds: []DNSSeed{
 		{"testnet-seed.metasv.io", true},
 		{"testnet-btccash-seeder.bitcoinunlimited.info", true},
