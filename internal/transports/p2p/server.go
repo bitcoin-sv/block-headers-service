@@ -253,7 +253,6 @@ func (s *server) withCancelHandle(fname string, f func()) {
 		case <-s.ctx.Done(): // Exit if context was canceled
 			s.log.Info().Msgf("[%s] context canceled -> exit", fname)
 			return
-
 		default:
 			f()
 		}
