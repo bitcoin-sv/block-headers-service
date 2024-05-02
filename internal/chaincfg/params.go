@@ -222,7 +222,7 @@ type Params struct {
 var MainNetParams = Params{
 	Name:        "mainnet",
 	Net:         wire.MainNet,
-	DefaultPort: uint16(8333), //"8333",
+	DefaultPort: uint16(8333),
 	DNSSeeds: []DNSSeed{
 		{"seed-nodes.bsvb.tech", true},
 	},
@@ -297,7 +297,7 @@ var MainNetParams = Params{
 var RegressionNetParams = Params{
 	Name:        "regtest",
 	Net:         wire.TestNet,
-	DefaultPort: uint16(18444), //"18444",
+	DefaultPort: uint16(18444),
 	DNSSeeds:    []DNSSeed{},
 
 	// Chain parameters
@@ -452,8 +452,8 @@ var TestNet3Params = Params{
 var SimNetParams = Params{
 	Name:        "simnet",
 	Net:         wire.SimNet,
-	DefaultPort: uint16(18555), //"18555",
-	DNSSeeds:    []DNSSeed{},   // NOTE: There must NOT be any seeds.
+	DefaultPort: uint16(18555),
+	DNSSeeds:    []DNSSeed{}, // NOTE: There must NOT be any seeds.
 
 	// Chain parameters
 	GenesisBlock:             &simNetGenesisBlock,
