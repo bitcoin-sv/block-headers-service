@@ -64,7 +64,7 @@ func (cs *chainService) Add(bs domains.BlockHeaderSource) (*domains.BlockHeader,
 
 	existingHeader, err := cs.Headers.GetHeaderByHash(hash.String())
 	if existingHeader != nil {
-		return nil, HeaderAlreadyExists.error()
+		return existingHeader, HeaderAlreadyExists.error()
 	}
 
 	if cs.ignoreBlockHash(&hash) {

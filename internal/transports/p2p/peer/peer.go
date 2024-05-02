@@ -23,6 +23,8 @@ import (
 type Manager interface {
 	AddAddrs([]*wire.NetAddress)
 	SignalError(*Peer, error)
+	SignalSyncFinished()
+	IsSyncFinished() bool
 }
 
 type Peer struct {
@@ -84,6 +86,10 @@ type Peer struct {
 	manager Manager
 	// prevents errors if client invoke Disconect() multiple times
 	disconnected bool
+
+	// fields used to handle error with old headers received from peer
+	noRespectedHeaderLocatorCounter      uint8
+	noRespectedHeaderLocatorCounterMutex sync.Mutex
 }
 
 func NewPeer(
@@ -512,6 +518,8 @@ func (p *Peer) handleInvMsg(msg *wire.MsgInv) {
 func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 	p.logInfo("received headers msg")
 
+	currentTip := p.headersService.GetTipHeight()
+
 	lastHeight := int32(0)
 	headersReceived := 0
 	var lastHash *chainhash.Hash
@@ -519,10 +527,6 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 	for _, header := range msg.Headers {
 		h, err := p.chainService.Add(domains.BlockHeaderSource(*header))
 		if err != nil {
-			if service.HeaderAlreadyExists.Is(err) {
-				continue
-			}
-
 			if service.BlockRejected.Is(err) {
 				p.logError("received rejected header %v", h)
 				p.manager.SignalError(p, err)
@@ -564,11 +568,17 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 	}
 
 	if headersReceived == 0 {
-		p.logDebug("received only existing headers")
+		p.logInfo("message with no headers")
+	} else {
+		p.logInfo("successfully received %d headers up to height %d", headersReceived, lastHeight)
+	}
+
+	if err := p.headersMsgRespectedLocator(currentTip, lastHeight); err != nil {
+		p.logError("%v", err)
+		p.manager.SignalError(p, err)
 		return
 	}
 
-	p.logInfo("successfully received %d headers up to height %d", headersReceived, lastHeight)
 	p.updateLatestStats(lastHeight, lastHash)
 
 	if p.sendHeadersMode {
@@ -578,6 +588,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 	if p.isSynced() {
 		p.logInfo("synced with the tip of chain from peer")
 		p.switchToSendHeadersMode()
+		p.manager.SignalSyncFinished()
 		return
 	}
 
@@ -590,6 +601,35 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 func (p *Peer) handleAddrMsg(msg *wire.MsgAddr) {
 	p.logInfo("received addr msg with %d addresses", len(msg.AddrList))
 	p.manager.AddAddrs(msg.AddrList)
+}
+
+func (p *Peer) headersMsgRespectedLocator(lastKnownTip, lastReceivedHeight int32) error {
+	const maxHeightDiffUnsync = int32(4_000) // 2k is the maximum number of headers in the message, with an additional 2k serving as a safeguard
+	const maxHeightDiffSync = int(4)         // If the system is synchronized with the end of the chain, we can reduce the differences of the old headers to a smaller number
+
+	maxDiff := maxHeightDiffUnsync
+	if p.manager.IsSyncFinished() {
+		maxDiff = int32(maxHeightDiffSync)
+	}
+
+	if lastKnownTip-lastReceivedHeight > maxDiff {
+		// Some peers doesn't respect sended header locator
+		p.noRespectedHeaderLocatorCounterMutex.Lock()
+		defer p.noRespectedHeaderLocatorCounterMutex.Unlock()
+
+		p.noRespectedHeaderLocatorCounter++
+
+		err := fmt.Errorf("peer doesn't respect header locator for %d time and send last headers with height %d when our tip was %d", p.noRespectedHeaderLocatorCounter, lastReceivedHeight, lastKnownTip)
+
+		// If it's first time it's okay, log warning. Otherwise return error
+		if p.noRespectedHeaderLocatorCounter > 1 {
+			return err
+		}
+
+		p.logWrn("%v", err)
+	}
+
+	return nil
 }
 
 func (p *Peer) switchToSendHeadersMode() {

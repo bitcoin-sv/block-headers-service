@@ -17,17 +17,18 @@ import (
 )
 
 type server struct {
-	config         *config.P2PConfig
-	chainParams    *chaincfg.Params
-	headersService service.Headers
-	chainService   service.Chains
-	log            *zerolog.Logger
-	outboundPeers  *peer.PeersCollection
-	inboundPeers   *peer.PeersCollection
-	listener       net.Listener
-	addresses      *network.AddressBook
-	ctx            context.Context
-	ctxCancel      context.CancelFunc
+	config            *config.P2PConfig
+	chainParams       *chaincfg.Params
+	headersService    service.Headers
+	chainService      service.Chains
+	log               *zerolog.Logger
+	outboundPeers     *peer.PeersCollection
+	inboundPeers      *peer.PeersCollection
+	listener          net.Listener
+	addresses         *network.AddressBook
+	ctx               context.Context
+	ctxCancel         context.CancelFunc
+	chainSyncFinished bool
 }
 
 // NewServer creates and initializes a new P2P server instance.
@@ -296,4 +297,16 @@ func (s *server) SignalError(p *peer.Peer, err error) {
 	p.Disconnect()
 	s.outboundPeers.RmPeer(p)
 	s.inboundPeers.RmPeer(p)
+}
+
+// SignalSyncFinished signals that the chain synchronization process has finished. It's peer.Manager functionality.
+func (s *server) SignalSyncFinished() {
+	// It does not require synchronization with a mutex as it only sets a boolean flag.
+	s.chainSyncFinished = true
+}
+
+// IsSyncFinished checks whether the chain synchronization process has finished. It's peer.Manager functionality.
+func (s *server) IsSyncFinished() bool {
+	// It does not require synchronization with a mutex as it only reads a boolean flag.
+	return s.chainSyncFinished
 }
