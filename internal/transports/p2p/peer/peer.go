@@ -29,8 +29,7 @@ type Peer struct {
 	// conn is the current connection to peer
 	conn net.Conn
 	// addr is the net.Addr of peer, used for connection
-	addr  *net.TCPAddr
-	addrS string
+	addr *net.TCPAddr
 	// inbound is specifying if the peer is inbound (incoming) or outbound (outgoing)
 	inbound bool
 	// cfg is the P2P configuration specified by the user
@@ -194,7 +193,6 @@ func (p *Peer) updatePeerAddr() error {
 
 	if remoteAddr != nil && addrIsTcp {
 		p.addr = remoteAddr
-		p.addrS = p.addr.String()
 	} else {
 		errMsg := "error retreiving address from peer"
 		p.log.Error().Msg(errMsg)
@@ -631,5 +629,5 @@ func (p *Peer) isSynced() bool {
 }
 
 func (p *Peer) String() string {
-	return p.addrS
+	return p.addr.String()
 }

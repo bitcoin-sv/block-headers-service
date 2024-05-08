@@ -203,8 +203,8 @@ func (s *server) connectPeer(conn net.Conn, inbound bool) (*peer.Peer, error) {
 }
 
 func (s *server) observeOutboundPeers() {
-	sleeDuration := 1 * time.Minute
-	time.Sleep(sleeDuration)
+	sleepDuration := 1 * time.Minute
+	time.Sleep(sleepDuration)
 
 	for {
 		select {
@@ -217,7 +217,7 @@ func (s *server) observeOutboundPeers() {
 			freeSlots := s.outboundPeers.Space()
 			if freeSlots == 0 {
 				s.log.Debug().Msg("[observeOutboundPeers] nothing to do")
-				s.noWaitingSleep(sleeDuration)
+				s.noWaitingSleep(sleepDuration)
 				continue
 			}
 
@@ -241,8 +241,8 @@ func (s *server) connectToRandomAddr() {
 }
 
 func (s *server) observeInboundPeers() {
-	sleeDuration := 1 * time.Minute
-	time.Sleep(sleeDuration)
+	sleepDuration := 1 * time.Minute
+	time.Sleep(sleepDuration)
 
 	for {
 		select {
@@ -254,7 +254,7 @@ func (s *server) observeInboundPeers() {
 
 			if s.inboundPeers.Space() == 0 {
 				s.log.Debug().Msg("[observeInboundPeers] nothing to do")
-				s.noWaitingSleep(sleeDuration)
+				s.noWaitingSleep(sleepDuration)
 				continue
 			}
 
