@@ -13,8 +13,22 @@ import (
 	"github.com/rs/zerolog"
 )
 
+func insertGenesisBlock(db dbAdapter, cfg *config.AppConfig, log *zerolog.Logger) error {
+	hRepository := sql.NewHeadersDb(db.getDBx(), log)
+	netParams := cfg.P2P.GetNetParams()
+
+	genesis := createGenesisHeaderBlock(netParams.GenesisBlock.Header)
+
+	err := hRepository.Create(context.Background(), genesis)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // CreateGenesisHeaderBlock create filled genesis block based on the chosen chain net header block.
-func CreateGenesisHeaderBlock(genesisBlockHeader wire.BlockHeader) dto.DbBlockHeader {
+func createGenesisHeaderBlock(genesisBlockHeader wire.BlockHeader) dto.DbBlockHeader {
 	longestChain := domains.LongestChain
 	genesisBlock := dto.DbBlockHeader{
 		Hash:          genesisBlockHeader.BlockHash().String(),
@@ -31,18 +45,4 @@ func CreateGenesisHeaderBlock(genesisBlockHeader wire.BlockHeader) dto.DbBlockHe
 	}
 
 	return genesisBlock
-}
-
-func insertGenesisBlock(db dbAdapter, cfg *config.AppConfig, log *zerolog.Logger) error {
-	hRepository := sql.NewHeadersDb(db.getDBx(), log)
-	netParams := cfg.P2P.GetNetParams()
-
-	genesis := CreateGenesisHeaderBlock(netParams.GenesisBlock.Header)
-
-	err := hRepository.Create(context.Background(), genesis)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

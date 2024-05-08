@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/bitcoin-sv/block-headers-service/database"
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
+	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/fixtures"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/testapp"
@@ -260,16 +260,16 @@ func TestGetCommonAncestor(t *testing.T) {
 		// given
 		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
 		defer cleanup()
-		genesis := database.CreateGenesisHeaderBlock(chaincfg.MainNetParams.GenesisBlock.Header)
+		genesis := chaincfg.MainNetParams.GenesisBlock.Header
 		expected_response := headers.BlockHeaderResponse{
-			Hash:             genesis.Hash,
+			Hash:             genesis.BlockHash().String(),
 			Version:          genesis.Version,
-			PreviousBlock:    genesis.PreviousBlock,
-			MerkleRoot:       genesis.MerkleRoot,
+			PreviousBlock:    chainhash.Hash{}.String(),
+			MerkleRoot:       genesis.MerkleRoot.String(),
 			Timestamp:        uint32(genesis.Timestamp.Unix()),
 			DifficultyTarget: genesis.Bits,
 			Nonce:            genesis.Nonce,
-			Work:             genesis.Chainwork,
+			Work:             domains.CalculateWork(genesis.Bits).BigInt().String(),
 		}
 		expected_result := struct {
 			code int
