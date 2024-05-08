@@ -1,6 +1,8 @@
 package fixtures
 
 import (
+	"time"
+
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
@@ -13,10 +15,21 @@ func StartingChain() (db []domains.BlockHeader, tip *domains.BlockHeader) {
 }
 
 func startingChain() headerChainFixture {
-	genesisBlock := domains.CreateGenesisHeaderBlock(chaincfg.MainNetParams.GenesisBlock.Header)
-	return []domains.BlockHeader{
-		genesisBlock,
+	genesisHeader := chaincfg.MainNetParams.GenesisBlock.Header
+	genesisBlock := domains.BlockHeader{
+		Hash:          genesisHeader.BlockHash(),
+		Height:        0,
+		Version:       1,
+		PreviousBlock: chainhash.Hash{},
+		MerkleRoot:    genesisHeader.MerkleRoot, // 4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b
+		Timestamp:     time.Unix(genesisHeader.Timestamp.Unix(), 0),
+		Bits:          genesisHeader.Bits,
+		Nonce:         genesisHeader.Nonce,
+		State:         domains.LongestChain,
+		Chainwork:     domains.CalculateWork(genesisHeader.Bits).BigInt(),
+		CumulatedWork: domains.CalculateWork(genesisHeader.Bits).BigInt(),
 	}
+	return []domains.BlockHeader{genesisBlock}
 }
 
 // LongestChain creates mocked the longest chain entries (containing Genesis Block and 4 first blocks).

@@ -95,7 +95,6 @@ func NewTestBlockHeaderService(t *testing.T, ops ...bhsOpt) (*TestBlockHeaderSer
 	hs := service.NewServices(service.Dept{
 		Repositories: repo.ToDomainRepo(),
 		Peers:        nil,
-		Params:       config.ActiveNetParams,
 		AdminToken:   cfg.HTTP.AuthToken,
 		Logger:       &testLog,
 		Config:       cfg,

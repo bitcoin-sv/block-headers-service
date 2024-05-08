@@ -13,8 +13,8 @@ const (
 	SimulationNet NetworkType = "simnet"
 )
 
-func GetNetParams(network NetworkType) *chaincfg.Params {
-	switch network {
+func (c *P2PConfig) GetNetParams() *chaincfg.Params {
+	switch c.ChainNetType {
 	case MainNet:
 		return &chaincfg.MainNetParams
 	case RegTestNet:

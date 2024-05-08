@@ -30,7 +30,7 @@ func NewServer(
 	serverLogger := log.With().Str("service", "p2p-experimental").Logger()
 	server := &server{
 		config:         p2pConfig,
-		chainParams:    config.GetNetParams(p2pConfig.ChainNetType),
+		chainParams:    p2pConfig.GetNetParams(),
 		headersService: headersService,
 		chainService:   chainService,
 		log:            &serverLogger,

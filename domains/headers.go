@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
-	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 )
 
 // HeaderState enum representing header state.
@@ -186,25 +185,6 @@ func (bh *BlockHeader) WrapWithHeaderState() BlockHeaderState {
 	}
 
 	return model
-}
-
-// CreateGenesisHeaderBlock create filled genesis block based on the chosen chain net header block.
-func CreateGenesisHeaderBlock(genesisBlockHeader wire.BlockHeader) BlockHeader {
-	genesisBlock := BlockHeader{
-		Hash:          genesisBlockHeader.BlockHash(),
-		Height:        0,
-		Version:       1,
-		PreviousBlock: chainhash.Hash{},              // 0000000000000000000000000000000000000000000000000000000000000000
-		MerkleRoot:    genesisBlockHeader.MerkleRoot, // 4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b
-		Timestamp:     time.Unix(genesisBlockHeader.Timestamp.Unix(), 0),
-		Bits:          genesisBlockHeader.Bits,
-		Nonce:         genesisBlockHeader.Nonce,
-		State:         LongestChain,
-		Chainwork:     big.NewInt(4295032833),
-		CumulatedWork: big.NewInt(4295032833),
-	}
-
-	return genesisBlock
 }
 
 // FastLog2Floor calculates the floor of the base-2 logarithm of an input 32-bit

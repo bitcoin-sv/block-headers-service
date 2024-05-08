@@ -113,7 +113,6 @@ func main() {
 	hs := service.NewServices(service.Dept{
 		Repositories: repo,
 		Peers:        peers,
-		Params:       config.ActiveNetParams,
 		AdminToken:   cfg.HTTP.AuthToken,
 		Logger:       log,
 		Config:       cfg,
