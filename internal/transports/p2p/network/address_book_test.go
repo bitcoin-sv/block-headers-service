@@ -100,8 +100,8 @@ func TestAddressBook_BanAddr(t *testing.T) {
 	})
 }
 
-func TestAddressBook_GetRndUnusedAddr(t *testing.T) {
-	t.Run("", func(t *testing.T) {
+func TestAddressBook_GetRandUnusedAddr(t *testing.T) {
+	t.Run("get random address", func(t *testing.T) {
 		// given
 		sut := NewAdressBook(time.Hour, false)
 
@@ -121,7 +121,7 @@ func TestAddressBook_GetRndUnusedAddr(t *testing.T) {
 		sut.BanAddr(addr2)
 
 		// when
-		r := sut.GetRndUnusedAddr(100)
+		r := sut.GetRandUnusedAddr(100)
 
 		// then
 		require.Equal(t, addr, r)

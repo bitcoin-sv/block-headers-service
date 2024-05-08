@@ -231,7 +231,7 @@ func (s *server) observeOutboundPeers() {
 
 func (s *server) connectToRandomAddr() {
 	const tries = 20
-	addr := s.addresses.GetRndUnusedAddr(tries)
+	addr := s.addresses.GetRandUnusedAddr(tries)
 	if addr == nil {
 		s.log.Warn().Msgf("[observeOutboundPeers] coudnt find random unused/unbanned peer address with %d tries", tries)
 		return

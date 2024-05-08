@@ -22,9 +22,9 @@ type AddressBook struct {
 // NewAddressBook creates and initializes a new AddressBook instance.
 func NewAdressBook(banDuration time.Duration, acceptLocalAddresses bool) *AddressBook {
 	// Set the address filter function based on whether local addresses are accepted
-	addrFitlerFn := IsRoutable
+	addrFilterFn := IsRoutable
 	if acceptLocalAddresses {
-		addrFitlerFn = IsRoutableWithLocal
+		addrFilterFn = IsRoutableWithLocal
 	}
 
 	const addressesInitCapacity = 500
@@ -32,7 +32,7 @@ func NewAdressBook(banDuration time.Duration, acceptLocalAddresses bool) *Addres
 		addrs:        make([]*knownAddress, 0, addressesInitCapacity),
 		addrsLookup:  make(map[string]int, addressesInitCapacity),
 		banDuration:  banDuration,
-		addrFitlerFn: addrFitlerFn,
+		addrFitlerFn: addrFilterFn,
 	}
 }
 
@@ -42,12 +42,12 @@ func (a *AddressBook) UpsertPeerAddr(p *peer.Peer) {
 	defer a.mu.Unlock()
 
 	pa := p.GetPeerAddr()
-	key, ka := a.internalFind(pa)
+	key, ka := a.findAddr(pa)
 
 	if ka != nil {
 		ka.peer = p
 	} else {
-		a.internalAddAddr(key, &knownAddress{addr: pa, peer: p})
+		a.addAddr(key, &knownAddress{addr: pa, peer: p})
 	}
 }
 
@@ -61,10 +61,10 @@ func (a *AddressBook) UpsertAddrs(address []*wire.NetAddress) {
 			continue
 		}
 
-		key, ka := a.internalFind(addr)
+		key, ka := a.findAddr(addr)
 		// If the address is not found, add it to the AddressBook.
 		if ka == nil {
-			a.internalAddAddr(key, &knownAddress{addr: addr})
+			a.addAddr(key, &knownAddress{addr: addr})
 		} else if addr.Timestamp.After(ka.addr.Timestamp) {
 			// Otherwise, update the timestamp if the new one is newer.
 			ka.addr.Timestamp = addr.Timestamp
@@ -77,15 +77,15 @@ func (a *AddressBook) BanAddr(addr *wire.NetAddress) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	_, ka := a.internalFind(addr)
+	_, ka := a.findAddr(addr)
 	if ka != nil {
 		now := time.Now()
 		ka.banTimestamp = &now
 	}
 }
 
-// GetRndUnusedAddr returns a randomly chosen unused network address.
-func (a *AddressBook) GetRndUnusedAddr(tries uint) *wire.NetAddress {
+// GetRandUnusedAddr returns a randomly chosen unused network address.
+func (a *AddressBook) GetRandUnusedAddr(tries uint) *wire.NetAddress {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -105,7 +105,7 @@ func (a *AddressBook) GetRndUnusedAddr(tries uint) *wire.NetAddress {
 	return nil
 }
 
-func (a *AddressBook) internalFind(addr *wire.NetAddress) (string, *knownAddress) {
+func (a *AddressBook) findAddr(addr *wire.NetAddress) (string, *knownAddress) {
 	key := addrKey(addr)
 	addrIndex, ok := a.addrsLookup[key]
 
@@ -115,7 +115,7 @@ func (a *AddressBook) internalFind(addr *wire.NetAddress) (string, *knownAddress
 	return key, nil
 }
 
-func (a *AddressBook) internalAddAddr(key string, addr *knownAddress) {
+func (a *AddressBook) addAddr(key string, addr *knownAddress) {
 	newItemIndex := len(a.addrs)
 
 	a.addrs = append(a.addrs, addr)
