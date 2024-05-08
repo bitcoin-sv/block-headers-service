@@ -20,7 +20,7 @@ type AddressBook struct {
 }
 
 // NewAddressBook creates and initializes a new AddressBook instance.
-func NewAdressBook(banDuration time.Duration, acceptLocalAddresses bool) *AddressBook {
+func NewAddressBook(banDuration time.Duration, acceptLocalAddresses bool) *AddressBook {
 	// Set the address filter function based on whether local addresses are accepted
 	addrFilterFn := IsRoutable
 	if acceptLocalAddresses {

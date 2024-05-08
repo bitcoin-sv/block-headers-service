@@ -12,7 +12,7 @@ import (
 func TestAddressBook_UpsertAddrs(t *testing.T) {
 	t.Run("add new - accept local", func(t *testing.T) {
 		// given
-		sut := NewAdressBook(0, true)
+		sut := NewAddressBook(0, true)
 		local := &wire.NetAddress{
 			IP:        net.IPv4(127, 0, 0, 1),
 			Port:      8333,
@@ -34,7 +34,7 @@ func TestAddressBook_UpsertAddrs(t *testing.T) {
 
 	t.Run("add new - do not accept local", func(t *testing.T) {
 		// given
-		sut := NewAdressBook(0, false)
+		sut := NewAddressBook(0, false)
 		local := &wire.NetAddress{
 			IP:        net.IPv4(127, 0, 0, 1),
 			Port:      8333,
@@ -56,7 +56,7 @@ func TestAddressBook_UpsertAddrs(t *testing.T) {
 
 	t.Run("add existing", func(t *testing.T) {
 		// given
-		sut := NewAdressBook(0, true)
+		sut := NewAddressBook(0, true)
 		addr := &wire.NetAddress{
 			IP:        net.IPv4(18, 199, 12, 185),
 			Port:      8333,
@@ -82,7 +82,7 @@ func TestAddressBook_UpsertAddrs(t *testing.T) {
 func TestAddressBook_BanAddr(t *testing.T) {
 	t.Run("ban address", func(t *testing.T) {
 		// given
-		sut := NewAdressBook(1, false)
+		sut := NewAddressBook(1, false)
 
 		addr := &wire.NetAddress{
 			IP:        net.IPv4(18, 199, 12, 185),
@@ -103,7 +103,7 @@ func TestAddressBook_BanAddr(t *testing.T) {
 func TestAddressBook_GetRandUnusedAddr(t *testing.T) {
 	t.Run("get random address", func(t *testing.T) {
 		// given
-		sut := NewAdressBook(time.Hour, false)
+		sut := NewAddressBook(time.Hour, false)
 
 		addr := &wire.NetAddress{
 			IP:        net.IPv4(18, 199, 12, 186),

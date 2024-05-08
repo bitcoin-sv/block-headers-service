@@ -52,7 +52,7 @@ func NewServer(
 		log:            &serverLogger,
 		outboundPeers:  peer.NewPeersCollection(config.MaxOutboundConnections),
 		inboundPeers:   peer.NewPeersCollection(config.MaxInboundConnections),
-		addresses:      network.NewAdressBook(config.BanDuration, config.AcceptLocalPeers),
+		addresses:      network.NewAddressBook(config.BanDuration, config.AcceptLocalPeers),
 		ctx:            ctx,
 		ctxCancel:      ctxCancel,
 	}
