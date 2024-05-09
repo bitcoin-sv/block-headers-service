@@ -22,16 +22,15 @@ type server struct {
 }
 
 func NewServer(
-	config *config.P2PConfig,
-	chainParams *chaincfg.Params,
+	p2pConfig *config.P2PConfig,
 	headersService service.Headers,
 	chainService service.Chains,
 	log *zerolog.Logger,
 ) *server {
 	serverLogger := log.With().Str("service", "p2p-experimental").Logger()
 	server := &server{
-		config:         config,
-		chainParams:    chainParams,
+		config:         p2pConfig,
+		chainParams:    p2pConfig.GetNetParams(),
 		headersService: headersService,
 		chainService:   chainService,
 		log:            &serverLogger,

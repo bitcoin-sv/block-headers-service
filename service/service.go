@@ -3,7 +3,6 @@ package service
 import (
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/domains"
-	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 	"github.com/bitcoin-sv/block-headers-service/notification"
@@ -29,7 +28,6 @@ type Headers interface {
 	GetTip() *domains.BlockHeader
 	GetTipHeight() int32
 	CountHeaders() int
-	InsertGenesisHeaderInDatabase() error
 	GetHeaderByHash(hash string) (*domains.BlockHeader, error)
 	GetHeadersByHeight(height int, count int) ([]*domains.BlockHeader, error)
 	GetMerkleRootsConfirmations(request []domains.MerkleRootConfirmationRequestItem) ([]*domains.MerkleRootConfirmation, error)
@@ -65,7 +63,6 @@ type Services struct {
 type Dept struct {
 	Peers        map[*peerpkg.Peer]*peerpkg.PeerSyncState
 	Repositories *repository.Repositories
-	Params       *chaincfg.Params
 	AdminToken   string
 	Logger       *zerolog.Logger
 	Config       *config.AppConfig
@@ -88,7 +85,7 @@ func NewServices(d Dept) *Services {
 func newChainService(d Dept, notifier *notification.Notifier) Chains {
 	return NewChainsService(
 		d.Repositories,
-		d.Params,
+		d.Config.P2P.GetNetParams(),
 		d.Logger,
 		DefaultBlockHasher(),
 		notifier,
