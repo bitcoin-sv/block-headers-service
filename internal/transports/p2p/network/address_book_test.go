@@ -98,8 +98,8 @@ func TestAddressBook_BanAddr(t *testing.T) {
 
 		// then
 		require.Len(t, sut.addrs[bannedBucket].items, 1)
-		require.Len(t, sut.addrs[freeBucket].items, 0)
-		require.Len(t, sut.addrs[usedBucket].items, 0)
+		require.Empty(t, sut.addrs[freeBucket].items)
+		require.Empty(t, sut.addrs[usedBucket].items)
 	})
 }
 

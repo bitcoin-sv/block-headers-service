@@ -93,6 +93,7 @@ func (a *AddressBook) BanAddr(addr *wire.NetAddress) {
 			a.addBan(bucket, key, ka)
 		case usedBucket:
 			a.addBan(bucket, key, ka)
+		case bannedBucket:
 		default:
 			// Do nothing
 		}
