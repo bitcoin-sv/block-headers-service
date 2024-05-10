@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/rand"
 	"net"
 	"sync"
 	"time"
@@ -113,13 +112,10 @@ func (s *server) connectOutboundPeers() error {
 	s.addresses.UpsertAddrs(addrs)
 
 	// connect to random seed
-	// #nosec G404
-	randomSeed := seeds[rand.Intn(len(seeds))]
-	if err := s.connectToAddr(randomSeed, s.chainParams.DefaultPort); err != nil {
+	if err := s.connectToRandomAddr(); err != nil {
 		return err
 	}
 
-	s.log.Info().Msgf("connected to %s peer", randomSeed.String())
 	go s.observeOutboundPeers()
 	return nil
 }
@@ -217,21 +213,21 @@ func (s *server) observeOutboundPeers() {
 			}
 
 			s.log.Info().Msgf("try connect with a new peer. Free slots: %d", freeSlots)
-			s.connectToRandomAddr() // Connect one-by-one to gracefully handle shutdown
+			_ = s.connectToRandomAddr() // Connect one-by-one to gracefully handle shutdown
 
 			s.ctxWg.Done()
 		}
 	}
 }
 
-func (s *server) connectToRandomAddr() {
+func (s *server) connectToRandomAddr() error {
 	addr := s.addresses.GetRandFreeAddr()
 	if addr == nil {
-		s.log.Warn().Msgf("[observeOutboundPeers] no free addresses to connect")
-		return
+		s.log.Warn().Msgf("no free addresses to connect")
+		return errors.New("no free addresses to connect")
 	}
 
-	_ = s.connectToAddr(addr.IP, addr.Port)
+	return s.connectToAddr(addr.IP, addr.Port)
 }
 
 func (s *server) observeInboundPeers() {
