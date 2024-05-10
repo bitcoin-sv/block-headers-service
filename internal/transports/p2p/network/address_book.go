@@ -6,15 +6,21 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bitcoin-sv/block-headers-service/internal/transports/p2p/peer"
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
+)
+
+type addressBucketType string
+
+const (
+	freeBucket   addressBucketType = "free"
+	usedBucket   addressBucketType = "used"
+	bannedBucket addressBucketType = "banned"
 )
 
 // AddressBook represents a collection of known network addresses.
 type AddressBook struct {
 	banDuration  time.Duration
-	addrs        []*knownAddress // addrs is a slice containing known addresses
-	addrsLookup  map[string]int  // addrLookup is a map for fast lookup of addresses, maps address key to index in addrs slice
+	addrs        map[addressBucketType]*addrBucket
 	mu           sync.Mutex
 	addrFitlerFn func(*wire.NetAddress) bool
 }
@@ -22,33 +28,37 @@ type AddressBook struct {
 // NewAddressBook creates and initializes a new AddressBook instance.
 func NewAddressBook(banDuration time.Duration, acceptLocalAddresses bool) *AddressBook {
 	// Set the address filter function based on whether local addresses are accepted
-	addrFilterFn := IsRoutable
+	addrFilterFn := wire.IsRoutable
 	if acceptLocalAddresses {
-		addrFilterFn = IsRoutableWithLocal
+		addrFilterFn = wire.IsRoutableWithLocal
 	}
 
 	const addressesInitCapacity = 500
+	const usedAddressesInitCapacity = 8
+
+	knownAddress := make(map[addressBucketType]*addrBucket, 3)
+	knownAddress[freeBucket] = newAddrBucket(addressesInitCapacity)
+	knownAddress[bannedBucket] = newAddrBucket(addressesInitCapacity)
+	knownAddress[usedBucket] = newAddrBucket(usedAddressesInitCapacity)
+
 	return &AddressBook{
-		addrs:        make([]*knownAddress, 0, addressesInitCapacity),
-		addrsLookup:  make(map[string]int, addressesInitCapacity),
 		banDuration:  banDuration,
 		addrFitlerFn: addrFilterFn,
+		addrs:        knownAddress,
 	}
 }
 
-// UpsertPeerAddr updates or adds a peer's address.
-func (a *AddressBook) UpsertPeerAddr(p *peer.Peer) {
+// MarkUsed updates or adds a peer's address.
+func (a *AddressBook) MarkUsed(pa *wire.NetAddress) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	pa := p.GetPeerAddr()
-	key, ka := a.findAddr(pa)
+	key := addrKey(pa)
+	// remove from free if exists
+	a.addrs[freeBucket].rm(key)
+	// add to used
+	a.addrs[usedBucket].add(key, &knownAddress{addr: pa})
 
-	if ka != nil {
-		ka.peer = p
-	} else {
-		a.addAddr(key, &knownAddress{addr: pa, peer: p})
-	}
 }
 
 // UpsertAddrs updates or adds multiple addresses.
@@ -61,10 +71,10 @@ func (a *AddressBook) UpsertAddrs(address []*wire.NetAddress) {
 			continue
 		}
 
-		key, ka := a.findAddr(addr)
+		key, ka, _ := a.findAddr(addr)
 		// If the address is not found, add it to the AddressBook.
 		if ka == nil {
-			a.addAddr(key, &knownAddress{addr: addr})
+			a.addrs[freeBucket].add(key, &knownAddress{addr: addr})
 		} else if addr.Timestamp.After(ka.addr.Timestamp) {
 			// Otherwise, update the timestamp if the new one is newer.
 			ka.addr.Timestamp = addr.Timestamp
@@ -77,49 +87,72 @@ func (a *AddressBook) BanAddr(addr *wire.NetAddress) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	_, ka := a.findAddr(addr)
-	if ka != nil {
-		now := time.Now()
-		ka.banTimestamp = &now
+	if key, ka, bucket := a.findAddr(addr); ka != nil {
+		switch bucket {
+		case freeBucket:
+			a.addBan(bucket, key, ka)
+		case usedBucket:
+			a.addBan(bucket, key, ka)
+		default:
+			// Do nothing
+		}
 	}
 }
 
-// GetRandUnusedAddr returns a randomly chosen unused network address.
-func (a *AddressBook) GetRandUnusedAddr(tries uint) *wire.NetAddress {
+// GetRandFreeAddr returns a randomly chosen unused network address.
+func (a *AddressBook) GetRandFreeAddr() *wire.NetAddress {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	alen := len(a.addrs)
-	for i := uint(0); i < tries; i++ {
-		// #nosec G404
-		ka := a.addrs[rand.Intn(alen)]
-		if ka.peer == nil {
-			if ka.isBanned(a.banDuration) {
-				continue
-			}
-			return ka.addr
-		}
+	freeAddres := a.addrs[freeBucket].items
+	fLen := len(freeAddres)
+	if fLen == 0 {
+		return nil
 	}
 
-	// return nil if no suitable address is found
-	return nil
+	// #nosec G404
+	randIndx := rand.Intn(fLen)
+	return freeAddres[randIndx].addr
 }
 
-func (a *AddressBook) findAddr(addr *wire.NetAddress) (string, *knownAddress) {
-	key := addrKey(addr)
-	addrIndex, ok := a.addrsLookup[key]
+func (a *AddressBook) findAddr(addr *wire.NetAddress) (key string, ka *knownAddress, bucket addressBucketType) {
+	key = addrKey(addr)
 
-	if ok {
-		return key, a.addrs[addrIndex]
+	// search in free addresses
+	if ka = a.addrs[freeBucket].find(key); ka != nil {
+		bucket = freeBucket
+		return
 	}
-	return key, nil
+
+	// search in used
+	if ka = a.addrs[usedBucket].find(key); ka != nil {
+		bucket = usedBucket
+		return
+	}
+
+	// search in banned
+	if ka = a.addrs[bannedBucket].find(key); ka != nil {
+		bucket = bannedBucket
+		return
+	}
+
+	return key, nil, ""
 }
 
-func (a *AddressBook) addAddr(key string, addr *knownAddress) {
-	newItemIndex := len(a.addrs)
+func (a *AddressBook) addBan(bucket addressBucketType, key string, ka *knownAddress) {
+	a.addrs[bucket].rm(key)
+	a.addrs[bannedBucket].add(key, ka)
+	go a.removeBan(key, ka)
+}
 
-	a.addrs = append(a.addrs, addr)
-	a.addrsLookup[key] = newItemIndex
+func (a *AddressBook) removeBan(key string, ka *knownAddress) {
+	time.Sleep(a.banDuration)
+
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	a.addrs[bannedBucket].rm(key)
+	a.addrs[freeBucket].add(key, ka)
 }
 
 func addrKey(addr *wire.NetAddress) string {
@@ -128,11 +161,4 @@ func addrKey(addr *wire.NetAddress) string {
 
 type knownAddress struct {
 	addr *wire.NetAddress
-	peer *peer.Peer
-
-	banTimestamp *time.Time
-}
-
-func (a *knownAddress) isBanned(duration time.Duration) bool {
-	return a.banTimestamp != nil && time.Since(*a.banTimestamp) < duration
 }

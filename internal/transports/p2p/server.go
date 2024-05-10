@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net"
 	"sync"
 	"time"
@@ -103,28 +104,22 @@ func (s *server) connectOutboundPeers() error {
 		return errors.New("no seeds found")
 	}
 
-	if len(seeds) > int(s.config.MaxOutboundConnections) {
-		seeds = seeds[:s.config.MaxOutboundConnections]
-	}
-
+	// add seed addreses to address book
+	addrs := make([]*wire.NetAddress, 0, len(seeds))
 	for _, seed := range seeds {
 		s.log.Debug().Msgf("got peer addr: %s", seed.String())
+		addrs = append(addrs, &wire.NetAddress{IP: seed, Port: s.chainParams.DefaultPort})
+	}
+	s.addresses.UpsertAddrs(addrs)
+
+	// connect to random seed
+	// #nosec G404
+	randomSeed := seeds[rand.Intn(len(seeds))]
+	if err := s.connectToAddr(randomSeed, s.chainParams.DefaultPort); err != nil {
+		return err
 	}
 
-	peersCounter := 0
-	for _, addr := range seeds {
-		if err := s.connectToAddr(addr, s.chainParams.DefaultPort); err != nil {
-			continue
-		}
-
-		peersCounter++
-	}
-
-	if peersCounter == 0 {
-		return errors.New("cannot connect to any peers from seed")
-	}
-
-	s.log.Info().Msgf("connected to %d peers", peersCounter)
+	s.log.Info().Msgf("connected to %s peer", randomSeed.String())
 	go s.observeOutboundPeers()
 	return nil
 }
@@ -173,7 +168,7 @@ func (s *server) connectToAddr(addr net.IP, port uint16) error {
 	}
 
 	_ = s.outboundPeers.AddPeer(peer) // don't need to check error here
-	s.addresses.UpsertPeerAddr(peer)
+	s.addresses.MarkUsed(peer.GetPeerAddr())
 	return nil
 }
 
@@ -230,10 +225,9 @@ func (s *server) observeOutboundPeers() {
 }
 
 func (s *server) connectToRandomAddr() {
-	const tries = 20
-	addr := s.addresses.GetRandUnusedAddr(tries)
+	addr := s.addresses.GetRandFreeAddr()
 	if addr == nil {
-		s.log.Warn().Msgf("[observeOutboundPeers] coudnt find random unused/unbanned peer address with %d tries", tries)
+		s.log.Warn().Msgf("[observeOutboundPeers] no free addresses to connect")
 		return
 	}
 
@@ -286,7 +280,7 @@ func (s *server) waitForIncomingConnection() {
 	}
 
 	_ = s.inboundPeers.AddPeer(peer)
-	s.addresses.UpsertPeerAddr(peer)
+	s.addresses.MarkUsed(peer.GetPeerAddr())
 }
 
 // AddAddrs adds addresses to the address book of the P2P server. It's peer.Manager functionality.

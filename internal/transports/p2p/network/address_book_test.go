@@ -29,7 +29,7 @@ func TestAddressBook_UpsertAddrs(t *testing.T) {
 		sut.UpsertAddrs([]*wire.NetAddress{local, external})
 
 		// then
-		require.Len(t, sut.addrs, 2)
+		require.Len(t, sut.addrs[freeBucket].items, 2)
 	})
 
 	t.Run("add new - do not accept local", func(t *testing.T) {
@@ -51,7 +51,7 @@ func TestAddressBook_UpsertAddrs(t *testing.T) {
 		sut.UpsertAddrs([]*wire.NetAddress{local, external})
 
 		// then
-		require.Len(t, sut.addrs, 1)
+		require.Len(t, sut.addrs[freeBucket].items, 1)
 	})
 
 	t.Run("add existing", func(t *testing.T) {
@@ -74,8 +74,9 @@ func TestAddressBook_UpsertAddrs(t *testing.T) {
 		sut.UpsertAddrs([]*wire.NetAddress{updated})
 
 		// then
-		require.Len(t, sut.addrs, 1)
-		require.Equal(t, updated.Timestamp, sut.addrs[0].addr.Timestamp)
+		freeItems := sut.addrs[freeBucket].items
+		require.Len(t, freeItems, 1)
+		require.Equal(t, updated.Timestamp, freeItems[0].addr.Timestamp)
 	})
 }
 
@@ -96,7 +97,9 @@ func TestAddressBook_BanAddr(t *testing.T) {
 		sut.BanAddr(addr)
 
 		// then
-		require.True(t, sut.addrs[0].isBanned(time.Hour))
+		require.Len(t, sut.addrs[bannedBucket].items, 1)
+		require.Len(t, sut.addrs[freeBucket].items, 0)
+		require.Len(t, sut.addrs[usedBucket].items, 0)
 	})
 }
 
@@ -121,7 +124,7 @@ func TestAddressBook_GetRandUnusedAddr(t *testing.T) {
 		sut.BanAddr(addr2)
 
 		// when
-		r := sut.GetRandUnusedAddr(100)
+		r := sut.GetRandFreeAddr()
 
 		// then
 		require.Equal(t, addr, r)
