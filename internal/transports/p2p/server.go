@@ -34,7 +34,7 @@ type server struct {
 	ctxWg     sync.WaitGroup
 
 	chainSyncFinished bool
-	csmu              sync.Mutex
+	chainSyncMutex    sync.Mutex
 }
 
 // NewServer creates and initializes a new P2P server instance.
@@ -290,10 +290,10 @@ func (s *server) SignalError(p *peer.Peer, err error) {
 
 // SignalSyncFinished signals that the chain synchronization process has finished. It's peer.Manager functionality.
 func (s *server) SignalSyncFinished() {
-	s.csmu.Lock()
-	defer s.csmu.Unlock()
+	s.chainSyncMutex.Lock()
+	defer s.chainSyncMutex.Unlock()
 
-	if s.chainSyncFinished == false {
+	if !s.chainSyncFinished {
 		// add new peers to pool
 		go s.observeOutboundPeers()
 	}
