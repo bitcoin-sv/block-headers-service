@@ -5,7 +5,6 @@
 package network
 
 import (
-	"fmt"
 	"net"
 
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
@@ -237,55 +236,4 @@ func IsRoutableWithLocal(na *wire.NetAddress) bool {
 		IsRFC3927(na) || IsRFC4862(na) || IsRFC3849(na) ||
 		IsRFC4843(na) || IsRFC5737(na) || IsRFC6598(na) ||
 		(IsRFC4193(na) && !IsOnionCatTor(na)))
-}
-
-// GroupKey returns a string representing the network group an address is part
-// of.  This is the /16 for IPv4, the /32 (/36 for he.net) for IPv6, the string
-// "local" for a local address, the string "tor:key" where key is the /4 of the
-// onion address for Tor address, and the string "unroutable" for an unroutable
-// address.
-func GroupKey(na *wire.NetAddress) string {
-	if IsLocal(na) {
-		return "local"
-	}
-	if !IsRoutable(na) {
-		return "unroutable"
-	}
-	if IsIPv4(na) {
-		return na.IP.Mask(net.CIDRMask(16, 32)).String()
-	}
-	if IsRFC6145(na) || IsRFC6052(na) {
-		// last four bytes are the ip address
-		ip := na.IP[12:16]
-		return ip.Mask(net.CIDRMask(16, 32)).String()
-	}
-
-	if IsRFC3964(na) {
-		ip := na.IP[2:6]
-		return ip.Mask(net.CIDRMask(16, 32)).String()
-
-	}
-	if IsRFC4380(na) {
-		// teredo tunnels have the last 4 bytes as the v4 address XOR
-		// 0xff.
-		ip := net.IP(make([]byte, 4))
-		for i, ipByte := range na.IP[12:16] {
-			ip[i] = ipByte ^ 0xff
-		}
-		return ip.Mask(net.CIDRMask(16, 32)).String()
-	}
-	if IsOnionCatTor(na) {
-		// group is keyed off the first 4 bits of the actual onion key.
-		return fmt.Sprintf("tor:%d", na.IP[6]&((1<<4)-1))
-	}
-
-	// OK, so now we know ourselves to be a IPv6 address.
-	// bitcoind uses /32 for everything, except for Hurricane Electric's
-	// (he.net) IP range, which it uses /36 for.
-	bits := 32
-	if heNet.Contains(na.IP) {
-		bits = 36
-	}
-
-	return na.IP.Mask(net.CIDRMask(bits, 128)).String()
 }
