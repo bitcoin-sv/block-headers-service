@@ -23,6 +23,7 @@ import (
 type Manager interface {
 	AddAddrs([]*wire.NetAddress)
 	SignalError(*Peer, error)
+	SignalSyncFinished()
 }
 
 type Peer struct {
@@ -169,6 +170,14 @@ func (p *Peer) StartHeadersSync() error {
 		return err
 	}
 	return nil
+}
+
+func (p *Peer) SendSendHeaders() {
+	p.sendHeadersMode = true
+
+	if p.protocolVersion >= wire.SendHeadersVersion {
+		p.queueMessage(wire.NewMsgSendHeaders())
+	}
 }
 
 func (p *Peer) SendGetAddrInfo() {
@@ -579,6 +588,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 	if p.isSynced() {
 		p.log.Info().Msg("synced with the tip of chain from peer")
 		p.switchToSendHeadersMode()
+		p.manager.SignalSyncFinished()
 		return
 	}
 

@@ -48,19 +48,6 @@ func NewAddressBook(banDuration time.Duration, acceptLocalAddresses bool) *Addre
 	}
 }
 
-// MarkUsed updates or adds a peer's address.
-func (a *AddressBook) MarkUsed(pa *wire.NetAddress) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-
-	key := addrKey(pa)
-	// remove from free if exists
-	a.addrs[freeBucket].rm(key)
-	// add to used
-	a.addrs[usedBucket].add(key, &knownAddress{addr: pa})
-
-}
-
 // UpsertAddrs updates or adds multiple addresses.
 func (a *AddressBook) UpsertAddrs(address []*wire.NetAddress) {
 	a.mu.Lock()
@@ -82,6 +69,19 @@ func (a *AddressBook) UpsertAddrs(address []*wire.NetAddress) {
 	}
 }
 
+// MarkUsedAddr updates or adds a peer's address.
+func (a *AddressBook) MarkUsedAddr(pa *wire.NetAddress) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	key := addrKey(pa)
+	// remove from free if exists
+	a.addrs[freeBucket].rm(key)
+	// add to used
+	a.addrs[usedBucket].add(key, &knownAddress{addr: pa})
+
+}
+
 // BanAddr bans a network address. Ignores address if doesn't exist in the AddressBook.
 func (a *AddressBook) BanAddr(addr *wire.NetAddress) {
 	a.mu.Lock()
@@ -90,9 +90,9 @@ func (a *AddressBook) BanAddr(addr *wire.NetAddress) {
 	if key, ka, bucket := a.findAddr(addr); ka != nil {
 		switch bucket {
 		case freeBucket:
-			a.addBan(bucket, key, ka)
+			a.ban(bucket, key, ka)
 		case usedBucket:
-			a.addBan(bucket, key, ka)
+			a.ban(bucket, key, ka)
 		case bannedBucket:
 		default:
 			// Do nothing
@@ -140,13 +140,13 @@ func (a *AddressBook) findAddr(addr *wire.NetAddress) (key string, ka *knownAddr
 	return key, nil, ""
 }
 
-func (a *AddressBook) addBan(bucket addressBucketType, key string, ka *knownAddress) {
+func (a *AddressBook) ban(bucket addressBucketType, key string, ka *knownAddress) {
 	a.addrs[bucket].rm(key)
 	a.addrs[bannedBucket].add(key, ka)
-	go a.removeBan(key, ka)
+	go a.unban(key, ka)
 }
 
-func (a *AddressBook) removeBan(key string, ka *knownAddress) {
+func (a *AddressBook) unban(key string, ka *knownAddress) {
 	time.Sleep(a.banDuration)
 
 	a.mu.Lock()

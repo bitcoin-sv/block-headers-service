@@ -32,6 +32,9 @@ type server struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 	ctxWg     sync.WaitGroup
+
+	chainSyncFinished bool
+	csmu              sync.Mutex
 }
 
 // NewServer creates and initializes a new P2P server instance.
@@ -62,8 +65,9 @@ func NewServer(
 
 // Start starts the P2P server by connecting to outbound peers and listening for inbound connections.
 func (s *server) Start() error {
-	err := s.connectOutboundPeers()
+	err := s.connectOutboundPeerFromSeed()
 	if err != nil {
+		s.log.Error().Msgf("error during server start.Reason: %v", err)
 		return err
 	}
 
@@ -97,7 +101,7 @@ func (s *server) Shutdown() {
 	}
 }
 
-func (s *server) connectOutboundPeers() error {
+func (s *server) connectOutboundPeerFromSeed() error {
 	seeds := seedFromDNS(s.chainParams.DNSSeeds, s.log)
 	if len(seeds) == 0 {
 		return errors.New("no seeds found")
@@ -116,7 +120,6 @@ func (s *server) connectOutboundPeers() error {
 		return err
 	}
 
-	go s.observeOutboundPeers()
 	return nil
 }
 
@@ -164,7 +167,7 @@ func (s *server) connectToAddr(addr net.IP, port uint16) error {
 	}
 
 	_ = s.outboundPeers.AddPeer(peer) // don't need to check error here
-	s.addresses.MarkUsed(peer.GetPeerAddr())
+	s.addresses.MarkUsedAddr(peer.GetPeerAddr())
 	return nil
 }
 
@@ -183,10 +186,14 @@ func (s *server) connectPeer(conn net.Conn, inbound bool) (*peer.Peer, error) {
 	peer.SendGetAddrInfo()
 
 	if !inbound {
-		err = peer.StartHeadersSync()
-		if err != nil {
-			peer.Disconnect()
-			return nil, err
+		if s.chainSyncFinished {
+			peer.SendSendHeaders()
+		} else {
+			err = peer.StartHeadersSync()
+			if err != nil {
+				peer.Disconnect()
+				return nil, err
+			}
 		}
 	}
 
@@ -195,7 +202,6 @@ func (s *server) connectPeer(conn net.Conn, inbound bool) (*peer.Peer, error) {
 
 func (s *server) observeOutboundPeers() {
 	sleepDuration := 1 * time.Minute
-	time.Sleep(sleepDuration)
 
 	for {
 		select {
@@ -231,28 +237,24 @@ func (s *server) connectToRandomAddr() error {
 }
 
 func (s *server) observeInboundPeers() {
-	sleepDuration := 1 * time.Minute
-	time.Sleep(sleepDuration)
-
 	for {
-		select {
-		case <-s.ctx.Done(): // Exit if context was canceled
-			s.log.Info().Msg("[observeInboundPeers] context canceled -> exit")
+		conn, err := s.listener.Accept()
+		if err != nil {
+			s.log.Error().Msgf("error accepting connection, reason: %v", err)
 			return
-		default:
-			s.ctxWg.Add(1) // Wait on shutdown
-
-			if s.inboundPeers.Space() == 0 {
-				s.log.Debug().Msg("[observeInboundPeers] nothing to do")
-				s.noWaitingSleep(sleepDuration)
-				continue
-			}
-
-			s.log.Info().Msgf("listening for inbound connections on port %d", s.chainParams.DefaultPort)
-			s.waitForIncomingConnection() // Accept connection one-by-one to gracefully handle shutdown
-
-			s.ctxWg.Done()
 		}
+
+		if s.inboundPeers.Space() == 0 {
+			continue
+		}
+
+		peer, err := s.connectPeer(conn, true)
+		if err != nil {
+			continue
+		}
+
+		_ = s.inboundPeers.AddPeer(peer)
+		s.addresses.MarkUsedAddr(peer.GetPeerAddr())
 	}
 }
 
@@ -261,22 +263,6 @@ func (s *server) noWaitingSleep(duration time.Duration) {
 	s.ctxWg.Done() // We are sleeping -> no need to wait
 	time.Sleep(duration)
 	s.ctxWg.Add(1) // Wake up. Wait for us
-}
-
-func (s *server) waitForIncomingConnection() {
-	conn, err := s.listener.Accept()
-	if err != nil {
-		s.log.Error().Msgf("error accepting connection, reason: %v", err)
-		return
-	}
-
-	peer, err := s.connectPeer(conn, true)
-	if err != nil {
-		return
-	}
-
-	_ = s.inboundPeers.AddPeer(peer)
-	s.addresses.MarkUsed(peer.GetPeerAddr())
 }
 
 // AddAddrs adds addresses to the address book of the P2P server. It's peer.Manager functionality.
@@ -300,4 +286,17 @@ func (s *server) SignalError(p *peer.Peer, err error) {
 		s.outboundPeers.RmPeer(p)
 		s.inboundPeers.RmPeer(p)
 	}()
+}
+
+// SignalSyncFinished signals that the chain synchronization process has finished. It's peer.Manager functionality.
+func (s *server) SignalSyncFinished() {
+	s.csmu.Lock()
+	defer s.csmu.Unlock()
+
+	if s.chainSyncFinished == false {
+		// add new peers to pool
+		go s.observeOutboundPeers()
+	}
+
+	s.chainSyncFinished = true
 }
