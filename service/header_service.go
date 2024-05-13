@@ -419,18 +419,6 @@ func (hs *HeaderService) CountHeaders() int {
 	return count
 }
 
-// InsertGenesisHeaderInDatabase adds a genesis header (height=0) to db.
-func (hs *HeaderService) InsertGenesisHeaderInDatabase() error {
-	genesisBlock := domains.CreateGenesisHeaderBlock()
-	if hs.repo.Headers.GenesisExists() {
-		return nil
-	}
-
-	err := hs.repo.Headers.AddHeaderToDatabase(genesisBlock)
-
-	return err
-}
-
 // GetTips returns slice with current tips.
 func (hs *HeaderService) GetTips() ([]*domains.BlockHeader, error) {
 	return hs.repo.Headers.GetAllTips()

@@ -565,8 +565,8 @@ func (s *server) peerHandler() {
 	}
 
 	// Add peers discovered through DNS to the address manager.
-	s.log.Info().Msgf("[Server] configs.ActiveNetParams.Params: %#v", pretty.Formatter(config.ActiveNetParams.Params))
-	connmgr.SeedFromDNS(config.ActiveNetParams.Params, defaultRequiredServices,
+	s.log.Info().Msgf("[Server] configs.ActiveNetParams.Params: %#v", pretty.Formatter(config.ActiveNetParams))
+	connmgr.SeedFromDNS(config.ActiveNetParams, defaultRequiredServices,
 		s.p2pConfig.BsvdLookup, func(addrs []*wire.NetAddress) {
 			// Bitcoind uses a lookup of the dns seeder here. This
 			// is rather strange since the values looked up by the
@@ -819,11 +819,6 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 		return nil, errors.New("no valid listen address")
 	}
 
-	initErr := services.Headers.InsertGenesisHeaderInDatabase()
-	if initErr != nil {
-		return nil, initErr
-	}
-
 	s := server{
 		startupTime:       time.Now().Unix(),
 		chainParams:       chainParams,
@@ -879,7 +874,7 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 // NewServer creates and return p2p server.
 func NewServer(services *service.Services, peers map[*peer.Peer]*peer.PeerSyncState, p2pCfg *config.P2PConfig, log *zerolog.Logger) (*server, error) {
 	serverLogger := log.With().Str("service", "p2p").Logger()
-	server, err := newServer(config.ActiveNetParams.Params, services, peers, p2pCfg, &serverLogger)
+	server, err := newServer(config.ActiveNetParams, services, peers, p2pCfg, &serverLogger)
 	if err != nil {
 		serverLogger.Error().Msgf("Unable to start server: %v", err)
 		return nil, err

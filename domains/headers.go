@@ -4,7 +4,6 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 )
 
@@ -186,26 +185,6 @@ func (bh *BlockHeader) WrapWithHeaderState() BlockHeaderState {
 	}
 
 	return model
-}
-
-// CreateGenesisHeaderBlock create filled genesis block.
-func CreateGenesisHeaderBlock() BlockHeader {
-	// Create a new node from the genesis block and set it as the best node.
-	genesisBlock := BlockHeader{
-		Hash:          chaincfg.GenesisHash,
-		Height:        0,
-		Version:       1,
-		PreviousBlock: chainhash.Hash{},           // 0000000000000000000000000000000000000000000000000000000000000000
-		MerkleRoot:    chaincfg.GenesisMerkleRoot, // 4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b
-		Timestamp:     time.Unix(0x495fab29, 0),   // 2009-01-03 18:15:05 +0000 UTC
-		Bits:          0x1d00ffff,
-		Nonce:         0x7c2bac1d,
-		State:         LongestChain,
-		Chainwork:     big.NewInt(4295032833),
-		CumulatedWork: big.NewInt(4295032833),
-	}
-
-	return genesisBlock
 }
 
 // FastLog2Floor calculates the floor of the base-2 logarithm of an input 32-bit

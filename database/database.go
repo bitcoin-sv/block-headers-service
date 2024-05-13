@@ -47,6 +47,10 @@ func Init(cfg *config.AppConfig, log *zerolog.Logger) (*sqlx.DB, error) {
 		if err := importHeaders(adapter, cfg, &dbLog); err != nil {
 			return nil, err
 		}
+	} else {
+		if err := insertGenesisBlock(adapter, cfg, &dbLog); err != nil {
+			return nil, err
+		}
 	}
 
 	return adapter.getDBx(), nil
