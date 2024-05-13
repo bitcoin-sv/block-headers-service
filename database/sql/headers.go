@@ -335,6 +335,10 @@ func (h *HeadersDb) GetTip(ctx context.Context) (*dto.DbBlockHeader, error) {
 		h.log.Error().Msgf("sql error: %v", err)
 		return nil, errors.Wrap(err, "failed to get tip")
 	}
+	if len(tip) == 0 {
+		return nil, errors.New("could not find tip")
+	}
+
 	return &tip[0], nil
 }
 
@@ -342,12 +346,9 @@ func (h *HeadersDb) GetTip(ctx context.Context) (*dto.DbBlockHeader, error) {
 func (h *HeadersDb) GetAncestorOnHeight(hash string, height int32) (*dto.DbBlockHeader, error) {
 	var bh []*dto.DbBlockHeader
 	if err := h.db.Select(&bh, h.db.Rebind(sqlSelectAncestorOnHeight), hash, int(height), int(height)); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("could not find ancestors for a providen hash")
-		}
 		return nil, errors.Wrapf(err, "failed to get ancestors using given hash: %s ", hash)
 	}
-	if bh == nil {
+	if len(bh) == 0 {
 		return nil, errors.New("could not find ancestors for a providen hash")
 	}
 	return bh[0], nil
@@ -366,10 +367,10 @@ func (h *HeadersDb) GetAllTips() ([]*dto.DbBlockHeader, error) {
 func (h *HeadersDb) GetChainBetweenTwoHashes(low string, high string) ([]*dto.DbBlockHeader, error) {
 	var bh []*dto.DbBlockHeader
 	if err := h.db.Select(&bh, h.db.Rebind(sqlChainBetweenTwoHashes), high, low, low); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("could not find headers in given range")
-		}
 		return nil, errors.Wrapf(err, "failed to get headers using given range from: %s to: %s", low, high)
+	}
+	if len(bh) == 0 {
+		return nil, errors.New("could not find headers in given range")
 	}
 	return bh, nil
 }
