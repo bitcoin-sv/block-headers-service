@@ -242,7 +242,7 @@ func (r *HeaderTestRepository) GetHeadersHeightOfLocators(hashtable []interface{
 	return nil, nil
 }
 
-func (r *HeaderTestRepository) GetHeadersBetweenHeights(from int, to int) ([]*domains.BlockHeader, error) {
+func (r *HeaderTestRepository) GetHeadersByHeightRange(from int, to int) ([]*domains.BlockHeader, error) {
 	return nil, nil
 }
 

@@ -335,7 +335,7 @@ func (hs *HeaderService) locateHeadersGetHeaders(locators []*chainhash.Hash, has
 		stopHash = firstValidHeight + 1 + int32(wire.MaxCFHeadersPerMsg)
 	}
 
-	dbHeaders, err := hs.repo.Headers.GetHeadersBetweenHeights(int(firstValidHeight+1), int(stopHash-1))
+	dbHeaders, err := hs.repo.Headers.GetHeadersByHeightRange(int(firstValidHeight+1), int(stopHash-1))
 	if err != nil {
 		log.Trace().Msgf("Error getting headers between heights: %v", err)
 		return nil

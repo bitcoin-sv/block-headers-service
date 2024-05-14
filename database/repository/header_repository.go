@@ -178,8 +178,8 @@ func (r *HeaderRepository) GetHeadersHeightOfLocators(hashtable []interface{}, h
 	return dto.ConvertToBlockHeader(bh), nil
 }
 
-func (r *HeaderRepository) GetHeadersBetweenHeights(from int, to int) ([]*domains.BlockHeader, error) {
-	bh, err := r.db.GetHeadersBetweenHeights(from, to)
+func (r *HeaderRepository) GetHeadersByHeightRange(from int, to int) ([]*domains.BlockHeader, error) {
+	bh, err := r.db.GetHeadersByHeightRange(from, to)
 	if err != nil {
 		return nil, err
 	}

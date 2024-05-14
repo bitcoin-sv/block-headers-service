@@ -26,7 +26,7 @@ type Headers interface {
 	GetAncestorOnHeight(hash string, height int32) (*domains.BlockHeader, error)
 	GetChainBetweenTwoHashes(low string, high string) ([]*domains.BlockHeader, error)
 	GetHeadersHeightOfLocators(hashtable []interface{}, hashStop *chainhash.Hash) ([]*domains.BlockHeader, error)
-	GetHeadersBetweenHeights(from int, to int) ([]*domains.BlockHeader, error)
+	GetHeadersByHeightRange(from int, to int) ([]*domains.BlockHeader, error)
 	GetHashStopHeight(hashStop string) (int32, error)
 }
 

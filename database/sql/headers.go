@@ -450,8 +450,8 @@ func (h *HeadersDb) GetHashStopHeight(hashStop string) (int32, error) {
 	return dbHashStop.Height, nil
 }
 
-// GetHeadersBetweenHeights returns headers from db in specified height range.
-func (h *HeadersDb) GetHeadersBetweenHeights(from int, to int) ([]*dto.DbBlockHeader, error) {
+// GetHeadersByHeightRange returns headers from db in specified height range.
+func (h *HeadersDb) GetHeadersByHeightRange(from int, to int) ([]*dto.DbBlockHeader, error) {
 	var listOfHeaders []*dto.DbBlockHeader
 	if err := h.db.Select(&listOfHeaders, h.db.Rebind(sqlHeaderByHeightRangeLongestChain), from, to); err != nil {
 		return nil, errors.Wrapf(err, "failed to get headers using given range from: %d to: %d", from, to)
