@@ -169,3 +169,27 @@ func (r *HeaderRepository) GetChainBetweenTwoHashes(low string, high string) ([]
 	}
 	return nil, err
 }
+
+func (r *HeaderRepository) GetHeadersHeightOfLocators(hashtable []interface{}, hashStop *chainhash.Hash) ([]*domains.BlockHeader, error) {
+	bh, err := r.db.GetHeadersHeightOfLocators(hashtable, hashStop)
+	if err != nil {
+		return nil, err
+	}
+	return dto.ConvertToBlockHeader(bh), nil
+}
+
+func (r *HeaderRepository) GetHeadersBetweenHeights(from int, to int) ([]*domains.BlockHeader, error) {
+	bh, err := r.db.GetHeadersBetweenHeights(from, to)
+	if err != nil {
+		return nil, err
+	}
+	return dto.ConvertToBlockHeader(bh), nil
+}
+
+func (r *HeaderRepository) GetHashStopHeight(hashStop string) (int32, error) {
+	hsh, err := r.db.GetHashStopHeight(hashStop)
+	if err != nil {
+		return 0, err
+	}
+	return hsh, nil
+}
