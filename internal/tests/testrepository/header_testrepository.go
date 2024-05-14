@@ -238,6 +238,18 @@ func (r *HeaderTestRepository) GetMerkleRootsConfirmations(
 	return mrcfs, nil
 }
 
+func (r *HeaderTestRepository) GetHeadersHeightOfLocators(hashtable []interface{}, hashStop *chainhash.Hash) ([]*domains.BlockHeader, error) {
+	return nil, nil
+}
+
+func (r *HeaderTestRepository) GetHeadersBetweenHeights(from int, to int) ([]*domains.BlockHeader, error) {
+	return nil, nil
+}
+
+func (r *HeaderTestRepository) GetHashStopHeight(hashStop string) (int32, error) {
+	return 0, nil
+}
+
 // FillWithLongestChain fills the test header repository
 // with 4 additional blocks to create a longest chain.
 func (r *HeaderTestRepository) FillWithLongestChain() {
