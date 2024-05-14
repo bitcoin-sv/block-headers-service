@@ -423,29 +423,26 @@ func (h *HeadersDb) GetMerkleRootsConfirmations(
 	return confirmations, nil
 }
 
-// GetHeadersHeightOfLocators returns hash and height from db with given locators.
-func (h *HeadersDb) GetHeadersHeightOfLocators(hashtable []interface{}, hashStop *chainhash.Hash) (bh []*dto.DbBlockHeader, err error) {
-	query := sqlGetHeadersBeginning
-	for i := 1; i < len(hashtable); i++ {
-		query += sqlGetHeadersHash
-	}
-	query += sqlGetHeadersEnd
-
-	if err := h.db.Select(&bh, h.db.Rebind(query), hashtable...); err != nil {
-		h.log.Error().Err(err).Msg("Failed to get headers by height range")
+// // GetHeadersHeightOfLocators returns hash and height from db with given locators.
+func (h *HeadersDb) GetHeadersHeightOfLocators(hashtable []interface{}, hashStop *chainhash.Hash) ([]*dto.DbBlockHeader, error) {
+	query := buildHashesQuery(hashtable)
+	var headers []*dto.DbBlockHeader
+	if err := h.db.Select(&headers, h.db.Rebind(query), hashtable...); err != nil {
+		h.log.Error().Err(err).Msg("Failed to get headers by locators")
 		return nil, err
 	}
-	return bh, nil
+	return headers, nil
 }
 
 // GetHashStopHeight will return header from db with given hash.
 func (h *HeadersDb) GetHashStopHeight(hashStop string) (int32, error) {
 	var dbHashStop dto.DbBlockHeader
-	if err := h.db.Get(&dbHashStop, h.db.Rebind(sqlHeader), hashStop); err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
-			return 0, errors.Wrapf(err, "failed to get stophash %s", hashStop)
+	err := h.db.Get(&dbHashStop, h.db.Rebind(sqlHeader), hashStop)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return wire.MaxCFHeadersPerMsg, nil
 		}
-		dbHashStop.Height = wire.MaxCFHeadersPerMsg
+		return 0, errors.Wrapf(err, "failed to get stophash %s", hashStop)
 	}
 	return dbHashStop.Height, nil
 }
@@ -485,4 +482,12 @@ func (h *HeadersDb) getMerkleRootConfirmation(item domains.MerkleRootConfirmatio
 	}
 
 	return confirmation, nil
+}
+
+func buildHashesQuery(hashtable []interface{}) string {
+	query := sqlGetHeadersBeginning
+	for i := 1; i < len(hashtable); i++ {
+		query += sqlGetHeadersHash
+	}
+	return query + sqlGetHeadersEnd
 }

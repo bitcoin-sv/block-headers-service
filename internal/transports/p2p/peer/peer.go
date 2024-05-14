@@ -558,7 +558,6 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 }
 
 func (p *Peer) handleGetHeadersMsg(msg *wire.MsgGetHeaders) {
-
 	p.log.Info().Msgf("received getheaders msg from peer %s", p)
 	if !p.syncedCheckpoints {
 		p.log.Info().Msgf("we are still syncing, ignoring getHeaders msg from peer %s", p)
