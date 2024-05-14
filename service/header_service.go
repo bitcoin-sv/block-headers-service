@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/domains"
@@ -289,6 +290,72 @@ func (hs *HeaderService) GetMerkleRootsConfirmations(
 	request []domains.MerkleRootConfirmationRequestItem,
 ) ([]*domains.MerkleRootConfirmation, error) {
 	return hs.repo.Headers.GetMerkleRootsConfirmations(request, hs.merkleCfg.MaxBlockHeightExcess)
+}
+
+// LocateHeadersGetHeaders returns headers with given hashes.
+func (hs *HeaderService) LocateHeadersGetHeaders(locators []*chainhash.Hash, hashstop *chainhash.Hash) []*wire.BlockHeader {
+	headers := hs.locateHeadersGetHeaders(locators, hashstop)
+	return headers
+}
+
+func (hs *HeaderService) locateHeadersGetHeaders(locators []*chainhash.Hash, hashstop *chainhash.Hash) []*wire.BlockHeader {
+	hashes := make([]interface{}, len(locators))
+	for i, v := range locators {
+		hashes[i] = v.String()
+	}
+
+	dbLocators, err := hs.repo.Headers.GetHeadersHeightOfLocators(hashes, hashstop)
+	if err != nil {
+		log.Trace().Msgf("Error getting headers of locators: %v", err)
+		return nil
+	}
+
+	var firstValidHeight int32
+	for _, row := range dbLocators {
+		if row.Height != 0 {
+			firstValidHeight = row.Height
+			break
+		}
+	}
+
+	stopHash, err := hs.repo.Headers.GetHashStopHeight(hashstop.String())
+	if err != nil {
+		log.Trace().Msgf("Error getting hash stop height: %v", err)
+		return nil
+	}
+
+	// Check if hashStop is lower than first valid height
+	if stopHash <= firstValidHeight {
+		log.Trace().Msgf("HashStop is lower than first valid height")
+		return nil
+	}
+
+	// Check if peer requested number of headers is higher than the maximum number of headers per message
+	if wire.MaxCFHeadersPerMsg > int(firstValidHeight-stopHash) {
+		stopHash = firstValidHeight + 1 + int32(wire.MaxCFHeadersPerMsg)
+	}
+
+	dbHeaders, err := hs.repo.Headers.GetHeadersBetweenHeights(int(firstValidHeight+1), int(stopHash-1))
+	if err != nil {
+		log.Trace().Msgf("Error getting headers between heights: %v", err)
+		return nil
+	}
+
+	headers := make([]*wire.BlockHeader, 0, len(dbHeaders))
+	for i := 0; i < len(dbHeaders); i++ {
+		header := &wire.BlockHeader{
+			Version:    dbHeaders[i].Version,
+			PrevBlock:  dbHeaders[i].PreviousBlock,
+			MerkleRoot: dbHeaders[i].MerkleRoot,
+			Timestamp:  dbHeaders[i].Timestamp,
+			Bits:       dbHeaders[i].Bits,
+			Nonce:      dbHeaders[i].Nonce,
+		}
+		headers = append(headers, header)
+	}
+
+	fmt.Println(len(headers))
+	return headers
 }
 
 // LocateHeaders fetches headers for a number of blocks after the most recent known block
