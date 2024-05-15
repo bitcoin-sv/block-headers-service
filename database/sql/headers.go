@@ -10,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/bitcoin-sv/block-headers-service/domains"
-	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/repository/dto"
 )
 
@@ -170,22 +169,11 @@ const (
 
 	sqlVerifyHash = `SELECT hash FROM headers WHERE merkleroot = $1 AND height = $2 AND header_state = 'LONGEST_CHAIN'`
 
-	sqlGetHeadersBeginning = `
-	WITH AllHashes (hash) AS (
-		VALUES 
-		(?)
-	`
-
-	sqlGetHeadersHash = `,
-		(?)`
-
-	sqlGetHeadersEnd = `
-	)
-	SELECT 
-    	COALESCE(h.height, '0') AS height,
-    	a.hash
-	FROM AllHashes a
-	LEFT JOIN headers h ON a.hash = h.hash;
+	sqlGetHeadersHeight = `
+	SELECT MAX(height) AS startHeight
+		FROM headers
+		WHERE header_state = 'LONGEST_CHAIN' 
+  			AND hash IN (?)
 	`
 
 	sqlHeaderByHeightRangeLongestChain = `
@@ -430,15 +418,21 @@ func (h *HeadersDb) GetMerkleRootsConfirmations(
 	return confirmations, nil
 }
 
-// // GetHeadersHeightOfLocators returns hash and height from db with given locators.
-func (h *HeadersDb) GetHeadersHeightOfLocators(hashtable []interface{}, hashStop *chainhash.Hash) ([]*dto.DbBlockHeader, error) {
-	query := buildHashesQuery(hashtable)
-	var headers []*dto.DbBlockHeader
-	if err := h.db.Select(&headers, h.db.Rebind(query), hashtable...); err != nil {
-		h.log.Error().Err(err).Msg("Failed to get headers by locators")
-		return nil, err
+// GetHashStartHeight returns hash and height from db with given locators.
+func (h *HeadersDb) GetHeadersStartHeight(hashTable []string) (int, error) {
+	query, args, err := sqlx.In(sqlGetHeadersHeight, hashTable)
+	if err != nil {
+		h.log.Error().Err(err).Msg("Error while constructing query")
+		return 0, err
 	}
-	return headers, nil
+
+	var heightStart int
+	if err := h.db.Get(&heightStart, h.db.Rebind(query), args...); err != nil {
+		h.log.Error().Err(err).Msg("Failed to get headers by locators")
+		return 0, err
+	}
+
+	return heightStart, nil
 }
 
 // GetHeadersStopHeight will return header from db with given hash.
@@ -490,12 +484,4 @@ func (h *HeadersDb) getMerkleRootConfirmation(item domains.MerkleRootConfirmatio
 	}
 
 	return confirmation, nil
-}
-
-func buildHashesQuery(hashtable []interface{}) string {
-	query := sqlGetHeadersBeginning
-	for i := 1; i < len(hashtable); i++ {
-		query += sqlGetHeadersHash
-	}
-	return query + sqlGetHeadersEnd
 }

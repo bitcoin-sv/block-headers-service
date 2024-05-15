@@ -238,8 +238,8 @@ func (r *HeaderTestRepository) GetMerkleRootsConfirmations(
 	return mrcfs, nil
 }
 
-func (r *HeaderTestRepository) GetHeadersHeightOfLocators(hashtable []interface{}, hashStop *chainhash.Hash) ([]*domains.BlockHeader, error) {
-	return nil, nil
+func (r *HeaderTestRepository) GetHeadersStartHeight(hashtable []string) (int, error) {
+	return 0, nil
 }
 
 func (r *HeaderTestRepository) GetHeadersByHeightRange(from int, to int) ([]*domains.BlockHeader, error) {

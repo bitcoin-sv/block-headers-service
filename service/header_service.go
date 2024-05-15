@@ -299,62 +299,56 @@ func (hs *HeaderService) LocateHeadersGetHeaders(locators []*chainhash.Hash, has
 }
 
 func (hs *HeaderService) locateHeadersGetHeaders(locators []*chainhash.Hash, hashstop *chainhash.Hash) []*wire.BlockHeader {
-	hashes := make([]interface{}, len(locators))
+	hashes := make([]string, len(locators))
 	for i, v := range locators {
 		hashes[i] = v.String()
 	}
 
-	dbLocators, err := hs.repo.Headers.GetHeadersHeightOfLocators(hashes, hashstop)
+	startHeight, err := hs.repo.Headers.GetHeadersStartHeight(hashes)
 	if err != nil {
 		log.Trace().Msgf("Error getting headers of locators: %v", err)
 		return nil
 	}
-
-	var firstValidHeight int32
-	for _, row := range dbLocators {
-		if row.Height != 0 {
-			firstValidHeight = row.Height
-			break
+	var stopHeight int
+	if hashstop.IsEqual(&chainhash.Hash{}) {
+		stopHeight = startHeight + wire.MaxCFHeadersPerMsg
+	} else {
+		stopHeight, err = hs.repo.Headers.GetHeadersStopHeight(hashstop.String())
+		if err != nil {
+			log.Trace().Msgf("Error getting hashstop height: %v", err)
+			return nil
 		}
 	}
-
-	stopHash, err := hs.repo.Headers.GetHeadersStopHeight(hashstop.String())
-	if err != nil {
-		log.Trace().Msgf("Error getting hash stop height: %v", err)
-		return nil
-	}
-
 	// Check if hashStop is lower than first valid height
-	if stopHash <= int(firstValidHeight) {
+	if stopHeight <= startHeight {
 		log.Trace().Msgf("HashStop is lower than first valid height")
 		return nil
 	}
 
 	// Check if peer requested number of headers is higher than the maximum number of headers per message
-	if wire.MaxCFHeadersPerMsg > int(firstValidHeight)-stopHash {
-		stopHash = int(firstValidHeight + 1 + int32(wire.MaxCFHeadersPerMsg))
+	if wire.MaxCFHeadersPerMsg < stopHeight-startHeight {
+		stopHeight = startHeight + wire.MaxCFHeadersPerMsg
 	}
 
-	dbHeaders, err := hs.repo.Headers.GetHeadersByHeightRange(int(firstValidHeight+1), int(stopHash-1))
+	dbHeaders, err := hs.repo.Headers.GetHeadersByHeightRange(startHeight+1, stopHeight)
 	if err != nil {
 		log.Trace().Msgf("Error getting headers between heights: %v", err)
 		return nil
 	}
 
 	headers := make([]*wire.BlockHeader, 0, len(dbHeaders))
-	for i := 0; i < len(dbHeaders); i++ {
+	for _, dbHeader := range dbHeaders {
 		header := &wire.BlockHeader{
-			Version:    dbHeaders[i].Version,
-			PrevBlock:  dbHeaders[i].PreviousBlock,
-			MerkleRoot: dbHeaders[i].MerkleRoot,
-			Timestamp:  dbHeaders[i].Timestamp,
-			Bits:       dbHeaders[i].Bits,
-			Nonce:      dbHeaders[i].Nonce,
+			Version:    dbHeader.Version,
+			PrevBlock:  dbHeader.PreviousBlock,
+			MerkleRoot: dbHeader.MerkleRoot,
+			Timestamp:  dbHeader.Timestamp,
+			Bits:       dbHeader.Bits,
+			Nonce:      dbHeader.Nonce,
 		}
 		headers = append(headers, header)
 	}
 
-	fmt.Println(len(headers))
 	return headers
 }
 

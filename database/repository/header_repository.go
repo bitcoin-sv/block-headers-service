@@ -170,12 +170,12 @@ func (r *HeaderRepository) GetChainBetweenTwoHashes(low string, high string) ([]
 	return nil, err
 }
 
-func (r *HeaderRepository) GetHeadersHeightOfLocators(hashtable []interface{}, hashStop *chainhash.Hash) ([]*domains.BlockHeader, error) {
-	bh, err := r.db.GetHeadersHeightOfLocators(hashtable, hashStop)
+func (r *HeaderRepository) GetHeadersStartHeight(hashtable []string) (int, error) {
+	sh, err := r.db.GetHeadersStartHeight(hashtable)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
-	return dto.ConvertToBlockHeader(bh), nil
+	return sh, nil
 }
 
 func (r *HeaderRepository) GetHeadersByHeightRange(from int, to int) ([]*domains.BlockHeader, error) {
