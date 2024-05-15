@@ -11,12 +11,13 @@ import (
 
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
-	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 	"github.com/bitcoin-sv/block-headers-service/repository/dto"
 )
 
 const (
 	HeadersTableName = "headers"
+
+	longestChainState = "LONGEST_CHAIN"
 
 	sqlInsertHeader = `
 	INSERT INTO headers(hash, height, version, merkleroot, nonce, bits, header_state, chainwork, previous_block, timestamp , cumulated_work)
@@ -34,6 +35,12 @@ const (
 	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, header_state, cumulated_work
 	FROM headers
 	WHERE hash = ?
+	`
+
+	sqlHeaderFromHashAndState = `
+	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, header_state, cumulated_work
+	FROM headers
+	WHERE hash = ? AND header_state = ?
 	`
 
 	sqlHeaderByHeight = `
@@ -434,17 +441,18 @@ func (h *HeadersDb) GetHeadersHeightOfLocators(hashtable []interface{}, hashStop
 	return headers, nil
 }
 
-// GetHashStopHeight will return header from db with given hash.
-func (h *HeadersDb) GetHashStopHeight(hashStop string) (int32, error) {
+// GetHeadersStopHeight will return header from db with given hash.
+func (h *HeadersDb) GetHeadersStopHeight(hashStop string) (int, error) {
 	var dbHashStop dto.DbBlockHeader
-	err := h.db.Get(&dbHashStop, h.db.Rebind(sqlHeader), hashStop)
+	err := h.db.Get(&dbHashStop, h.db.Rebind(sqlHeaderFromHashAndState), hashStop, longestChainState)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return wire.MaxCFHeadersPerMsg, nil
+			return 0, nil
 		}
 		return 0, errors.Wrapf(err, "failed to get stophash %s", hashStop)
 	}
-	return dbHashStop.Height, nil
+
+	return int(dbHashStop.Height), nil
 }
 
 // GetHeadersByHeightRange returns headers from db in specified height range.

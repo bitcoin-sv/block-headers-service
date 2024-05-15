@@ -186,10 +186,10 @@ func (r *HeaderRepository) GetHeadersByHeightRange(from int, to int) ([]*domains
 	return dto.ConvertToBlockHeader(bh), nil
 }
 
-func (r *HeaderRepository) GetHashStopHeight(hashStop string) (int32, error) {
-	hsh, err := r.db.GetHashStopHeight(hashStop)
+func (r *HeaderRepository) GetHeadersStopHeight(hashStop string) (int, error) {
+	hs, err := r.db.GetHeadersStopHeight(hashStop)
 	if err != nil {
 		return 0, err
 	}
-	return hsh, nil
+	return hs, nil
 }

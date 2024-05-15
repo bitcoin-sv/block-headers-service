@@ -246,7 +246,7 @@ func (r *HeaderTestRepository) GetHeadersByHeightRange(from int, to int) ([]*dom
 	return nil, nil
 }
 
-func (r *HeaderTestRepository) GetHashStopHeight(hashStop string) (int32, error) {
+func (r *HeaderTestRepository) GetHeadersStopHeight(hashStop string) (int, error) {
 	return 0, nil
 }
 

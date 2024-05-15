@@ -318,21 +318,21 @@ func (hs *HeaderService) locateHeadersGetHeaders(locators []*chainhash.Hash, has
 		}
 	}
 
-	stopHash, err := hs.repo.Headers.GetHashStopHeight(hashstop.String())
+	stopHash, err := hs.repo.Headers.GetHeadersStopHeight(hashstop.String())
 	if err != nil {
 		log.Trace().Msgf("Error getting hash stop height: %v", err)
 		return nil
 	}
 
 	// Check if hashStop is lower than first valid height
-	if stopHash <= firstValidHeight {
+	if stopHash <= int(firstValidHeight) {
 		log.Trace().Msgf("HashStop is lower than first valid height")
 		return nil
 	}
 
 	// Check if peer requested number of headers is higher than the maximum number of headers per message
-	if wire.MaxCFHeadersPerMsg > int(firstValidHeight-stopHash) {
-		stopHash = firstValidHeight + 1 + int32(wire.MaxCFHeadersPerMsg)
+	if wire.MaxCFHeadersPerMsg > int(firstValidHeight)-stopHash {
+		stopHash = int(firstValidHeight + 1 + int32(wire.MaxCFHeadersPerMsg))
 	}
 
 	dbHeaders, err := hs.repo.Headers.GetHeadersByHeightRange(int(firstValidHeight+1), int(stopHash-1))

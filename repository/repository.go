@@ -27,7 +27,7 @@ type Headers interface {
 	GetChainBetweenTwoHashes(low string, high string) ([]*domains.BlockHeader, error)
 	GetHeadersHeightOfLocators(hashtable []interface{}, hashStop *chainhash.Hash) ([]*domains.BlockHeader, error)
 	GetHeadersByHeightRange(from int, to int) ([]*domains.BlockHeader, error)
-	GetHashStopHeight(hashStop string) (int32, error)
+	GetHeadersStopHeight(hashStop string) (int, error)
 }
 
 // Tokens is a interface which represents methods performed on tokens table in defined storage.
