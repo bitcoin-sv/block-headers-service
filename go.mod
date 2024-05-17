@@ -19,7 +19,7 @@ require (
 )
 
 require (
-	github.com/centrifugal/centrifuge v0.32.1
+	github.com/centrifugal/centrifuge v0.32.2
 	github.com/centrifugal/centrifuge-go v0.10.2
 	github.com/dchest/uniuri v1.2.0
 	github.com/kinbiko/jsonassert v1.1.1
@@ -73,7 +73,7 @@ require (
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.48.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
-	github.com/redis/rueidis v1.0.33 // indirect
+	github.com/redis/rueidis v1.0.35 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
