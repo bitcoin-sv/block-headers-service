@@ -170,6 +170,7 @@ func (r *HeaderRepository) GetChainBetweenTwoHashes(low string, high string) ([]
 	return nil, err
 }
 
+// GetHeadersStartHeight returns height of the highest header from the list of hashes.
 func (r *HeaderRepository) GetHeadersStartHeight(hashtable []string) (int, error) {
 	sh, err := r.db.GetHeadersStartHeight(hashtable)
 	if err != nil {
@@ -178,6 +179,7 @@ func (r *HeaderRepository) GetHeadersStartHeight(hashtable []string) (int, error
 	return sh, nil
 }
 
+// GetHeadersByHeightRange returns headers from db in specified height range.
 func (r *HeaderRepository) GetHeadersByHeightRange(from int, to int) ([]*domains.BlockHeader, error) {
 	bh, err := r.db.GetHeadersByHeightRange(from, to)
 	if err != nil {
@@ -186,6 +188,7 @@ func (r *HeaderRepository) GetHeadersByHeightRange(from int, to int) ([]*domains
 	return dto.ConvertToBlockHeader(bh), nil
 }
 
+// GetHeadersStopHeight returns height of hashstop header from db.
 func (r *HeaderRepository) GetHeadersStopHeight(hashStop string) (int, error) {
 	hs, err := r.db.GetHeadersStopHeight(hashStop)
 	if err != nil {
