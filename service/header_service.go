@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/domains"
@@ -293,12 +292,20 @@ func (hs *HeaderService) GetMerkleRootsConfirmations(
 }
 
 // LocateHeadersGetHeaders returns headers with given hashes.
-func (hs *HeaderService) LocateHeadersGetHeaders(locators []*chainhash.Hash, hashstop *chainhash.Hash) []*wire.BlockHeader {
-	headers := hs.locateHeadersGetHeaders(locators, hashstop)
-	return headers
+func (hs *HeaderService) LocateHeadersGetHeaders(locators []*chainhash.Hash, hashstop *chainhash.Hash) ([]*wire.BlockHeader, error) {
+	headers, err := hs.locateHeadersGetHeaders(locators, hashstop)
+	if err != nil {
+		return nil, err
+	}
+	return headers, nil
 }
 
-func (hs *HeaderService) locateHeadersGetHeaders(locators []*chainhash.Hash, hashstop *chainhash.Hash) []*wire.BlockHeader {
+func (hs *HeaderService) locateHeadersGetHeaders(locators []*chainhash.Hash, hashstop *chainhash.Hash) ([]*wire.BlockHeader, error) {
+
+	if len(locators) == 0 {
+		return nil, errors.New("no locators provided")
+	}
+
 	hashes := make([]string, len(locators))
 	for i, v := range locators {
 		hashes[i] = v.String()
@@ -306,8 +313,7 @@ func (hs *HeaderService) locateHeadersGetHeaders(locators []*chainhash.Hash, has
 
 	startHeight, err := hs.repo.Headers.GetHeadersStartHeight(hashes)
 	if err != nil {
-		log.Trace().Msgf("Error getting headers of locators: %v", err)
-		return nil
+		return nil, fmt.Errorf("error getting headers of locators: %v", err)
 	}
 	var stopHeight int
 	if hashstop.IsEqual(&chainhash.Hash{}) {
@@ -315,8 +321,7 @@ func (hs *HeaderService) locateHeadersGetHeaders(locators []*chainhash.Hash, has
 	} else {
 		stopHeight, err = hs.repo.Headers.GetHeadersStopHeight(hashstop.String())
 		if err != nil {
-			log.Trace().Msgf("Error getting hashstop height: %v", err)
-			return nil
+			return nil, fmt.Errorf("error getting hashstop height: %v", err)
 		}
 	}
 
@@ -326,8 +331,7 @@ func (hs *HeaderService) locateHeadersGetHeaders(locators []*chainhash.Hash, has
 
 	// Check if hashStop is lower than first valid height
 	if stopHeight <= startHeight {
-		log.Trace().Msgf("HashStop is lower than first valid height")
-		return nil
+		return nil, errors.New("hashStop is lower than first valid height")
 	}
 
 	// Check if peer requested number of headers is higher than the maximum number of headers per message
@@ -337,8 +341,7 @@ func (hs *HeaderService) locateHeadersGetHeaders(locators []*chainhash.Hash, has
 
 	dbHeaders, err := hs.repo.Headers.GetHeadersByHeightRange(startHeight+1, stopHeight)
 	if err != nil {
-		log.Error().Msgf("Error getting headers between heights: %v", err)
-		return nil
+		return nil, fmt.Errorf("error getting headers between heights: %v", err)
 	}
 
 	headers := make([]*wire.BlockHeader, 0, len(dbHeaders))
@@ -354,7 +357,7 @@ func (hs *HeaderService) locateHeadersGetHeaders(locators []*chainhash.Hash, has
 		headers = append(headers, header)
 	}
 
-	return headers
+	return headers, nil
 }
 
 // LocateHeaders fetches headers for a number of blocks after the most recent known block

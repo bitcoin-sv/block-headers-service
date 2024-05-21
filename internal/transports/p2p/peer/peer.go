@@ -564,13 +564,11 @@ func (p *Peer) handleGetHeadersMsg(msg *wire.MsgGetHeaders) {
 		return
 	}
 
-	locator := msg.BlockLocatorHashes
-	if len(locator) == 0 {
-		p.log.Warn().Msgf("no locator hashes in getheaders msg from peer %s", p)
+	bh, err := p.headersService.LocateHeadersGetHeaders(msg.BlockLocatorHashes, &msg.HashStop)
+	if err != nil {
+		p.log.Error().Msgf("error locating headers for getheaders msg from peer %s, reason: %v", p, err)
 		return
 	}
-
-	bh := p.headersService.LocateHeadersGetHeaders(locator, &msg.HashStop)
 
 	msgHeaders := wire.NewMsgHeaders()
 	msgHeaders.Headers = bh

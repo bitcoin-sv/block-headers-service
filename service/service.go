@@ -24,7 +24,7 @@ type Headers interface {
 	LatestHeaderLocator() domains.BlockLocator
 	IsCurrent() bool
 	GetHeightByHash(hash *chainhash.Hash) (int32, error)
-	LocateHeaders(locator domains.BlockLocator, hashStop *chainhash.Hash) []wire.BlockHeader
+	LocateHeaders(locator domains.BlockLocator, hashStop *chainhash.Hash) ([]*wire.BlockHeader, error)
 	GetTip() *domains.BlockHeader
 	GetTipHeight() int32
 	CountHeaders() int
@@ -35,7 +35,7 @@ type Headers interface {
 	GetCommonAncestor(hashes []string) (*domains.BlockHeader, error)
 	GetHeadersState(hash string) (*domains.BlockHeaderState, error)
 	GetTips() ([]*domains.BlockHeader, error)
-	LocateHeadersGetHeaders(locators []*chainhash.Hash, hashstop *chainhash.Hash) []*wire.BlockHeader
+	LocateHeadersGetHeaders(locators []*chainhash.Hash, hashstop *chainhash.Hash) ([]*wire.BlockHeader, error)
 }
 
 // Chains is an interface which represents methods exposed by Chains Service.
