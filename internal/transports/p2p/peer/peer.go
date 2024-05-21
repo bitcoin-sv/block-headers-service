@@ -566,7 +566,7 @@ func (p *Peer) handleGetHeadersMsg(msg *wire.MsgGetHeaders) {
 
 	locator := msg.BlockLocatorHashes
 	if len(locator) == 0 {
-		p.log.Info().Msgf("no locator hashes in getheaders msg from peer %s", p)
+		p.log.Warn().Msgf("no locator hashes in getheaders msg from peer %s", p)
 		return
 	}
 
