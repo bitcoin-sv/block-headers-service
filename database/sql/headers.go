@@ -170,7 +170,7 @@ const (
 	sqlVerifyHash = `SELECT hash FROM headers WHERE merkleroot = $1 AND height = $2 AND header_state = 'LONGEST_CHAIN'`
 
 	sqlGetHeadersHeight = `
-	SELECT MAX(height) AS startHeight
+	SELECT COALESCE(MAX(height), 0) AS startHeight
 		FROM headers
 		WHERE header_state = 'LONGEST_CHAIN' 
   			AND hash IN (?)
