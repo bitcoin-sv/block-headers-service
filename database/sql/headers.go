@@ -36,8 +36,8 @@ const (
 	WHERE hash = ?
 	`
 
-	sqlHeaderFromHashAndState = `
-	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, header_state, cumulated_work
+	sqlHeaderHeightFromHashAndState = `
+	SELECT height
 	FROM headers
 	WHERE hash = ? AND header_state = ?
 	`
@@ -437,16 +437,15 @@ func (h *HeadersDb) GetHeadersStartHeight(hashTable []string) (int, error) {
 
 // GetHeadersStopHeight will return header from db with given hash.
 func (h *HeadersDb) GetHeadersStopHeight(hashStop string) (int, error) {
-	var dbHashStop dto.DbBlockHeader
-	err := h.db.Get(&dbHashStop, h.db.Rebind(sqlHeaderFromHashAndState), hashStop, longestChainState)
-	if err != nil {
+	var dbHashStopHeight int
+	if err := h.db.Get(&dbHashStopHeight, h.db.Rebind(sqlHeaderHeightFromHashAndState), hashStop, longestChainState); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, nil
 		}
 		return 0, errors.Wrapf(err, "failed to get stophash %s", hashStop)
 	}
 
-	return int(dbHashStop.Height), nil
+	return dbHashStopHeight, nil
 }
 
 // GetHeadersByHeightRange returns headers from db in specified height range.
