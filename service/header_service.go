@@ -363,82 +363,18 @@ func (hs *HeaderService) locateHeadersGetHeaders(locators []*chainhash.Hash, has
 // in the best chain, based on the provided block locator and stop hash, and defaults to the
 // genesis block if the locator is unknown.
 func (hs *HeaderService) LocateHeaders(locator domains.BlockLocator, hashStop *chainhash.Hash) []wire.BlockHeader {
-	headers := hs.locateHeaders(locator, hashStop, wire.MaxBlockHeadersPerMsg)
-	return headers
-}
-
-func (hs *HeaderService) locateHeaders(locator domains.BlockLocator, hashStop *chainhash.Hash, maxHeaders uint32) []wire.BlockHeader {
-	// Find the node after the first known block in the locator and the
-	// total number of nodes after it needed while respecting the stop hash
-	// and max entries.
-	node, total := hs.locateInventory(locator, hashStop, maxHeaders)
-	if total == 0 {
+	headers, err := hs.locateHeadersGetHeaders(locator, hashStop)
+	if err != nil {
+		hs.log.Error().Msg(err.Error())
 		return nil
 	}
 
-	// Populate and return the found headers.
-	headers := make([]wire.BlockHeader, 0, total)
-	for i := uint32(0); i < total; i++ {
-		header := wire.BlockHeader{
-			Version:    node.Version,
-			PrevBlock:  node.PreviousBlock,
-			MerkleRoot: node.MerkleRoot,
-			Timestamp:  node.Timestamp,
-			Bits:       node.Bits,
-			Nonce:      node.Nonce,
-		}
-		headers = append(headers, header)
-		node = hs.nodeByHeight(node.Height + 1)
-	}
-	return headers
-}
-
-func (hs *HeaderService) locateInventory(locator domains.BlockLocator, hashStop *chainhash.Hash, maxEntries uint32) (*domains.BlockHeader, uint32) {
-	// There are no block locators so a specific block is being requested
-	// as identified by the stop hash.
-	stopNode, _ := hs.GetHeaderByHash(hashStop.String())
-	if len(locator) == 0 {
-		if stopNode == nil {
-			// No blocks with the stop hash were found so there is
-			// nothing to do.
-			return nil, 0
-		}
-		return stopNode, 1
+	var result []wire.BlockHeader
+	for _, header := range headers {
+		result = append(result, *header)
 	}
 
-	// Find the most recent locator block hash in the main chain.  In the
-	// case none of the hashes in the locator are in the main chain, fall
-	// back to the genesis block.
-	startNode, _ := hs.repo.Headers.GetHeaderByHeight(0)
-	for _, hash := range locator {
-		node, _ := hs.GetHeaderByHash(hash.String())
-		if node != nil && hs.Contains(node) {
-			startNode = node
-			break
-		}
-	}
-
-	// Start at the block after the most recently known block.  When there
-	// is no next block it means the most recently known block is the tip of
-	// the best chain, so there is nothing more to do.
-	next := hs.Next(startNode)
-	if next == nil {
-		return nil, 0
-	}
-	startNode = next
-
-	// Calculate how many entries are needed.
-	total := uint32((hs.GetTipHeight() - startNode.Height) + 1)
-	if stopNode != nil && hs.Contains(stopNode) &&
-		stopNode.Height >= startNode.Height {
-
-		total = uint32((stopNode.Height - startNode.Height) + 1)
-	}
-	if total > maxEntries {
-		total = maxEntries
-	}
-
-	return startNode, total
+	return result
 }
 
 // Contains checks if given header is stored in db.
