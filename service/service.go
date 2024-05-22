@@ -24,7 +24,7 @@ type Headers interface {
 	LatestHeaderLocator() domains.BlockLocator
 	IsCurrent() bool
 	GetHeightByHash(hash *chainhash.Hash) (int32, error)
-	LocateHeaders(locator domains.BlockLocator, hashStop *chainhash.Hash) ([]*wire.BlockHeader, error)
+	LocateHeaders(locator domains.BlockLocator, hashStop *chainhash.Hash) []wire.BlockHeader
 	GetTip() *domains.BlockHeader
 	GetTipHeight() int32
 	CountHeaders() int
