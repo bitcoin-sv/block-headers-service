@@ -208,14 +208,14 @@ func (sp *serverPeer) OnGetHeaders(_ *peer.Peer, msg *wire.MsgGetHeaders) {
 	// over with the genesis block if unknown block locators are provided.
 	//
 	// This mirrors the behavior in the reference implementation.
+	headers := sp.server.syncManager.Services.Headers.LocateHeaders(msg.BlockLocatorHashes, &msg.HashStop)
 
-	headers, err := sp.server.syncManager.Services.Headers.LocateHeaders(msg.BlockLocatorHashes, &msg.HashStop)
-	if err != nil {
-		sp.log.Error().Msgf("Failed to fetch headers for getheaders from %s: %v", sp.Peer, err)
-		return
+	// Send found headers to the requesting peer.
+	blockHeaders := make([]*wire.BlockHeader, len(headers))
+	for i := range headers {
+		blockHeaders[i] = &headers[i]
 	}
-
-	sp.QueueMessage(&wire.MsgHeaders{Headers: headers}, nil)
+	sp.QueueMessage(&wire.MsgHeaders{Headers: blockHeaders}, nil)
 }
 
 // OnProtoconf is invoked when a peer receives a protoconf bitcoin message and
