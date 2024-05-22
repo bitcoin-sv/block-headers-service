@@ -13,9 +13,12 @@ const (
 	DefaultChainWork = 4295032833
 )
 
-// HashOf returns chainhash.Hash representation of string, ignoring errors.
+// HashOf returns chainhash.Hash representation of string, panic when error occurs.
 func HashOf(s string) *chainhash.Hash {
-	h, _ := chainhash.NewHashFromStr(s)
+	h, err := chainhash.NewHashFromStr(s)
+	if err != nil {
+		panic("Invalid hash string")
+	}
 	return h
 }
 

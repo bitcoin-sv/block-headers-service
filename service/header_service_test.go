@@ -349,7 +349,7 @@ func TestMerkleRootConfirmations(t *testing.T) {
 	}
 }
 
-func TestLocateHeadersGetHeaders(t *testing.T) {
+func TestLocateHeadersGetHeadersHappyPath(t *testing.T) {
 	tData := setUpServices()
 
 	testCases := []struct {
@@ -362,18 +362,18 @@ func TestLocateHeadersGetHeaders(t *testing.T) {
 		{
 			name: "happy path, all block locator hashes are valid (hashStart height equals 3), hashstop is valid (height equals 4), returns block with height 4",
 			locator: []*chainhash.Hash{
-				toChainhashPtr("0000000082b5015589a3fdf2d4baff403e6f0be035a5d9742c1cae6295464449"),
-				toChainhashPtr("000000006a625f06636b8bb6ac7b960a8d03705d1ace08b1a19da3fdcc99ddbd"),
-				toChainhashPtr("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048"),
-				toChainhashPtr("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"),
+				fixtures.HashOf("0000000082b5015589a3fdf2d4baff403e6f0be035a5d9742c1cae6295464449"),
+				fixtures.HashOf("000000006a625f06636b8bb6ac7b960a8d03705d1ace08b1a19da3fdcc99ddbd"),
+				fixtures.HashOf("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048"),
+				fixtures.HashOf("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"),
 			},
 
-			hashstop: toChainhashPtr("000000004ebadb55ee9096c9a2f8880e09da59c0d68b1c228da88e48844a1485"),
+			hashstop: fixtures.HashOf("000000004ebadb55ee9096c9a2f8880e09da59c0d68b1c228da88e48844a1485"),
 			result: []*wire.BlockHeader{
 				{
 					Version:    1,
-					PrevBlock:  toChainhash("0000000082b5015589a3fdf2d4baff403e6f0be035a5d9742c1cae6295464449"),
-					MerkleRoot: toChainhash("df2b060fa2e5e9c8ed5eaf6a45c13753ec8c63282b2688322eba40cd98ea067a"),
+					PrevBlock:  *fixtures.HashOf("0000000082b5015589a3fdf2d4baff403e6f0be035a5d9742c1cae6295464449"),
+					MerkleRoot: *fixtures.HashOf("df2b060fa2e5e9c8ed5eaf6a45c13753ec8c63282b2688322eba40cd98ea067a"),
 					Bits:       486604799,
 					Nonce:      2850094635,
 				},
@@ -383,32 +383,32 @@ func TestLocateHeadersGetHeaders(t *testing.T) {
 		{
 			name: "happy path, all block locator hashes are invalid, hashstop is valid (height equals 3), returns blocks from height 1 to 3",
 			locator: []*chainhash.Hash{
-				toChainhashPtr("bad000008d9dc510f23c2657fc4f67bea30078cc05a90eb89e84cc475c080805"),
-				toChainhashPtr("bad000006a625f06636b8bb6ac7b960a8d03705d1ace08b1a19da3fdcc99ddbd"),
-				toChainhashPtr("bad00000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048"),
-				toChainhashPtr("bad000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"),
+				fixtures.HashOf("bad000008d9dc510f23c2657fc4f67bea30078cc05a90eb89e84cc475c080805"),
+				fixtures.HashOf("bad000006a625f06636b8bb6ac7b960a8d03705d1ace08b1a19da3fdcc99ddbd"),
+				fixtures.HashOf("bad00000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048"),
+				fixtures.HashOf("bad000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"),
 			},
 
-			hashstop: toChainhashPtr("0000000082b5015589a3fdf2d4baff403e6f0be035a5d9742c1cae6295464449"),
+			hashstop: fixtures.HashOf("0000000082b5015589a3fdf2d4baff403e6f0be035a5d9742c1cae6295464449"),
 			result: []*wire.BlockHeader{
 				{
 					Version:    1,
-					PrevBlock:  toChainhash("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"),
-					MerkleRoot: toChainhash("0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098"),
+					PrevBlock:  *fixtures.HashOf("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"),
+					MerkleRoot: *fixtures.HashOf("0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098"),
 					Bits:       486604799,
 					Nonce:      2573394689,
 				},
 				{
 					Version:    1,
-					PrevBlock:  toChainhash("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048"),
-					MerkleRoot: toChainhash("9b0fc92260312ce44e74ef369f5c66bbb85848f2eddd5a7a1cde251e54ccfdd5"),
+					PrevBlock:  *fixtures.HashOf("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048"),
+					MerkleRoot: *fixtures.HashOf("9b0fc92260312ce44e74ef369f5c66bbb85848f2eddd5a7a1cde251e54ccfdd5"),
 					Bits:       486604799,
 					Nonce:      1639830024,
 				},
 				{
 					Version:    1,
-					PrevBlock:  toChainhash("000000006a625f06636b8bb6ac7b960a8d03705d1ace08b1a19da3fdcc99ddbd"),
-					MerkleRoot: toChainhash("999e1c837c76a1b7fbb7e57baf87b309960f5ffefbf2a9b95dd890602272f644"),
+					PrevBlock:  *fixtures.HashOf("000000006a625f06636b8bb6ac7b960a8d03705d1ace08b1a19da3fdcc99ddbd"),
+					MerkleRoot: *fixtures.HashOf("999e1c837c76a1b7fbb7e57baf87b309960f5ffefbf2a9b95dd890602272f644"),
 					Bits:       486604799,
 					Nonce:      1844305925,
 				},
@@ -418,80 +418,97 @@ func TestLocateHeadersGetHeaders(t *testing.T) {
 		{
 			name: "happy path, all block locator hashes are invalid, hashstop is equal to 0, returns blocks from height 1 to 3",
 			locator: []*chainhash.Hash{
-				toChainhashPtr("bad000008d9dc510f23c2657fc4f67bea30078cc05a90eb89e84cc475c080805"),
-				toChainhashPtr("bad000006a625f06636b8bb6ac7b960a8d03705d1ace08b1a19da3fdcc99ddbd"),
-				toChainhashPtr("bad00000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048"),
-				toChainhashPtr("bad000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"),
+				fixtures.HashOf("bad000008d9dc510f23c2657fc4f67bea30078cc05a90eb89e84cc475c080805"),
+				fixtures.HashOf("bad000006a625f06636b8bb6ac7b960a8d03705d1ace08b1a19da3fdcc99ddbd"),
+				fixtures.HashOf("bad00000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048"),
+				fixtures.HashOf("bad000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"),
 			},
 			result: []*wire.BlockHeader{
 				{
 					Version:    1,
-					PrevBlock:  toChainhash("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"),
-					MerkleRoot: toChainhash("0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098"),
+					PrevBlock:  *fixtures.HashOf("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"),
+					MerkleRoot: *fixtures.HashOf("0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098"),
 					Bits:       486604799,
 					Nonce:      2573394689,
 				},
 				{
 					Version:    1,
-					PrevBlock:  toChainhash("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048"),
-					MerkleRoot: toChainhash("9b0fc92260312ce44e74ef369f5c66bbb85848f2eddd5a7a1cde251e54ccfdd5"),
+					PrevBlock:  *fixtures.HashOf("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048"),
+					MerkleRoot: *fixtures.HashOf("9b0fc92260312ce44e74ef369f5c66bbb85848f2eddd5a7a1cde251e54ccfdd5"),
 					Bits:       486604799,
 					Nonce:      1639830024,
 				},
 				{
 					Version:    1,
-					PrevBlock:  toChainhash("000000006a625f06636b8bb6ac7b960a8d03705d1ace08b1a19da3fdcc99ddbd"),
-					MerkleRoot: toChainhash("999e1c837c76a1b7fbb7e57baf87b309960f5ffefbf2a9b95dd890602272f644"),
+					PrevBlock:  *fixtures.HashOf("000000006a625f06636b8bb6ac7b960a8d03705d1ace08b1a19da3fdcc99ddbd"),
+					MerkleRoot: *fixtures.HashOf("999e1c837c76a1b7fbb7e57baf87b309960f5ffefbf2a9b95dd890602272f644"),
 					Bits:       486604799,
 					Nonce:      1844305925,
 				},
 				{
 					Version:    1,
-					PrevBlock:  toChainhash("0000000082b5015589a3fdf2d4baff403e6f0be035a5d9742c1cae6295464449"),
-					MerkleRoot: toChainhash("df2b060fa2e5e9c8ed5eaf6a45c13753ec8c63282b2688322eba40cd98ea067a"),
+					PrevBlock:  *fixtures.HashOf("0000000082b5015589a3fdf2d4baff403e6f0be035a5d9742c1cae6295464449"),
+					MerkleRoot: *fixtures.HashOf("df2b060fa2e5e9c8ed5eaf6a45c13753ec8c63282b2688322eba40cd98ea067a"),
 					Bits:       486604799,
 					Nonce:      2850094635,
 				},
 			},
-			hashstop:             toChainhashPtr("0"),
+			hashstop:             fixtures.HashOf("0"),
 			expectedErrorMessage: "",
-		},
-		{
-			name: "unhappy path, valid locator hash height equals 4, hashstop is valid (height equals 3), returns error",
-			locator: []*chainhash.Hash{
-				toChainhashPtr("000000004ebadb55ee9096c9a2f8880e09da59c0d68b1c228da88e48844a1485"),
-			},
-
-			hashstop:             toChainhashPtr("0000000082b5015589a3fdf2d4baff403e6f0be035a5d9742c1cae6295464449"),
-			result:               []*wire.BlockHeader{},
-			expectedErrorMessage: "hashStop is lower than first valid height",
-		},
-		{
-			name: "unhappy path, no locators, hashstop is valid (height equals 3), returns error",
-			locator: []*chainhash.Hash{
-				toChainhashPtr("000000004ebadb55ee9096c9a2f8880e09da59c0d68b1c228da88e48844a1485"),
-			},
-
-			hashstop:             toChainhashPtr("0000000082b5015589a3fdf2d4baff403e6f0be035a5d9742c1cae6295464449"),
-			result:               []*wire.BlockHeader{},
-			expectedErrorMessage: "hashStop is lower than first valid height",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result, err := tData.hs.Headers.LocateHeadersGetHeaders(tc.locator, tc.hashstop)
-			if err != nil {
-				assert.Equal(t, err.Error(), tc.expectedErrorMessage)
-			} else {
-				for j, r := range result {
-					assert.Equal(t, r.Version, tc.result[j].Version)
-					assert.Equal(t, r.PrevBlock, tc.result[j].PrevBlock)
-					assert.Equal(t, r.MerkleRoot, tc.result[j].MerkleRoot)
-					assert.Equal(t, r.Bits, tc.result[j].Bits)
-					assert.Equal(t, r.Nonce, tc.result[j].Nonce)
-				}
+			assert.Equal(t, err, nil)
+			for j, r := range result {
+				assert.Equal(t, r.Version, tc.result[j].Version)
+				assert.Equal(t, r.PrevBlock, tc.result[j].PrevBlock)
+				assert.Equal(t, r.MerkleRoot, tc.result[j].MerkleRoot)
+				assert.Equal(t, r.Bits, tc.result[j].Bits)
+				assert.Equal(t, r.Nonce, tc.result[j].Nonce)
 			}
+		})
+	}
+}
+
+func TestLocateHeadersGetHeadersErrorPath(t *testing.T) {
+	tData := setUpServices()
+
+	testCases := []struct {
+		name                 string
+		locator              []*chainhash.Hash
+		hashstop             *chainhash.Hash
+		result               []*wire.BlockHeader
+		expectedErrorMessage string
+	}{
+		{
+			name: "error path, valid locator hash height equals 4, hashstop is valid (height equals 3), returns error",
+			locator: []*chainhash.Hash{
+				fixtures.HashOf("000000004ebadb55ee9096c9a2f8880e09da59c0d68b1c228da88e48844a1485"),
+			},
+
+			hashstop:             fixtures.HashOf("0000000082b5015589a3fdf2d4baff403e6f0be035a5d9742c1cae6295464449"),
+			result:               []*wire.BlockHeader{},
+			expectedErrorMessage: "hashStop is lower than first valid height",
+		},
+		{
+			name: "error path, no locators, hashstop is valid (height equals 3), returns error",
+			locator: []*chainhash.Hash{
+				fixtures.HashOf("000000004ebadb55ee9096c9a2f8880e09da59c0d68b1c228da88e48844a1485"),
+			},
+
+			hashstop:             fixtures.HashOf("0000000082b5015589a3fdf2d4baff403e6f0be035a5d9742c1cae6295464449"),
+			result:               []*wire.BlockHeader{},
+			expectedErrorMessage: "hashStop is lower than first valid height",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := tData.hs.Headers.LocateHeadersGetHeaders(tc.locator, tc.hashstop)
+			assert.Equal(t, err.Error(), tc.expectedErrorMessage)
+
 		})
 	}
 }
@@ -532,22 +549,4 @@ func createHeader(height int32, hash chainhash.Hash, prevBlock chainhash.Hash) d
 		PreviousBlock: prevBlock,
 		Chainwork:     big.NewInt(4295032833),
 	}
-}
-
-func toChainhash(hash string) chainhash.Hash {
-	chainhash, err := chainhash.NewHashFromStr(hash)
-	if err != nil {
-		panic("Invalid hash string")
-	}
-
-	return *chainhash
-}
-
-func toChainhashPtr(hash string) *chainhash.Hash {
-	chainhash, err := chainhash.NewHashFromStr(hash)
-	if err != nil {
-		panic("Invalid hash string")
-	}
-
-	return chainhash
 }

@@ -329,7 +329,6 @@ func (hs *HeaderService) locateHeadersGetHeaders(locators []*chainhash.Hash, has
 		stopHeight = startHeight + wire.MaxCFHeadersPerMsg
 	}
 
-	// Check if hashStop is lower than first valid height
 	if stopHeight <= startHeight {
 		return nil, errors.New("hashStop is lower than first valid height")
 	}
