@@ -369,7 +369,7 @@ func (hs *HeaderService) LocateHeaders(locator domains.BlockLocator, hashStop *c
 		return nil
 	}
 
-	var result []wire.BlockHeader
+	result := make([]wire.BlockHeader, 0, len(headers))
 	for _, header := range headers {
 		result = append(result, *header)
 	}
