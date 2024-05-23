@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -732,12 +731,11 @@ func (s *server) Stop() {
 
 // Shutdown gracefully shuts down the server by stopping and disconnecting all
 // peers and the main listener and waits for server to stop.
-func (s *server) Shutdown() error {
+func (s *server) Shutdown() {
 	s.log.Info().Msg("Gracefully shutting down the P2P server...")
 	s.Stop()
 	s.WaitForShutdown()
 	s.log.Info().Msg("P2P Server shutdown complete")
-	return nil
 }
 
 // WaitForShutdown blocks until the main listener and peer handlers are stopped.
@@ -749,7 +747,7 @@ func (s *server) upnpUpdateThread() {
 	// Go off immediately to prevent code duplication, thereafter we renew
 	// lease every 15 minutes.
 	timer := time.NewTimer(0 * time.Second)
-	lport, _ := strconv.ParseInt(config.ActiveNetParams.DefaultPort, 10, 16)
+	lport := config.ActiveNetParams.DefaultPort
 	first := true
 out:
 	for {

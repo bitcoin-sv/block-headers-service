@@ -129,6 +129,10 @@ type P2PConfig struct {
 	UserAgentVersion      string        `mapstructure:"user_agent_version" description:"By default will be equal to application version, but can be overridden for development purposes"`
 	ChainNetType          NetworkType   `mapstructure:"chain_net_type" description:"Chain Network Type (mainnet, testnet, regtest, simnet), mainnet by default"`
 	Experimental          bool          `mapstructure:"experimental" description:"Turns on a new (highly experimental) way of getting headers with the usage of /internal/transports/p2p instead of /transports/p2p"`
+
+	MaxOutboundConnections uint `mapstructure:"max_outbound_connections" description:"Maximum active outbound connections"`
+	MaxInboundConnections  uint `mapstructure:"max_inbound_connections" description:"Maximum active inbound connections"`
+	AcceptLocalPeers       bool `mapstructure:"accept_local_peers" description:"Accept connection from local network"`
 }
 
 // LoggingConfig represents a logging config.

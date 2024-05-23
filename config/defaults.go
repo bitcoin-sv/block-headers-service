@@ -73,6 +73,9 @@ func getP2PDefaults() *P2PConfig {
 		UserAgentVersion:          Version(),
 		ChainNetType:              MainNet,
 		Experimental:              false,
+		MaxOutboundConnections:    8,
+		MaxInboundConnections:     8,
+		AcceptLocalPeers:          false,
 	}
 }
 
