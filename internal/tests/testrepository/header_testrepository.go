@@ -238,6 +238,39 @@ func (r *HeaderTestRepository) GetMerkleRootsConfirmations(
 	return mrcfs, nil
 }
 
+func (r *HeaderTestRepository) GetHeadersStartHeight(hashtable []string) (int, error) {
+	for i := len(*r.db) - 1; i >= 0; i-- {
+		header := (*r.db)[i]
+		for j := len(hashtable) - 1; j >= 0; j-- {
+			if header.Hash.String() == hashtable[j] && header.State == domains.LongestChain {
+				return int(header.Height), nil
+			}
+		}
+	}
+	return 0, nil
+}
+
+func (r *HeaderTestRepository) GetHeadersByHeightRange(from int, to int) ([]*domains.BlockHeader, error) {
+	filteredHeaders := make([]*domains.BlockHeader, 0)
+	for _, header := range *r.db {
+		if header.Height >= int32(from) && header.Height <= int32(to) {
+			headerCopy := header
+			filteredHeaders = append(filteredHeaders, &headerCopy)
+		}
+	}
+	return filteredHeaders, nil
+}
+
+func (r *HeaderTestRepository) GetHeadersStopHeight(hashStop string) (int, error) {
+	for i := len(*r.db) - 1; i >= 0; i-- {
+		header := (*r.db)[i]
+		if header.Hash.String() == hashStop {
+			return int(header.Height), nil
+		}
+	}
+	return 0, errors.New("could not find stop height")
+}
+
 // FillWithLongestChain fills the test header repository
 // with 4 additional blocks to create a longest chain.
 func (r *HeaderTestRepository) FillWithLongestChain() {
