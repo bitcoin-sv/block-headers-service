@@ -259,6 +259,8 @@ func (p *Peer) readMsgHandler() {
 				p.handleHeadersMsg(msg)
 			case *wire.MsgInv:
 				p.handleInvMsg(msg)
+			case *wire.MsgGetHeaders:
+				p.handleGetHeadersMsg(msg)
 			default:
 				p.log.Info().Msgf("received msg of type: %T", msg)
 			}
@@ -553,6 +555,24 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 		// TODO: lower peer sync score
 		p.Disconnect()
 	}
+}
+
+func (p *Peer) handleGetHeadersMsg(msg *wire.MsgGetHeaders) {
+	p.log.Info().Msgf("received getheaders msg from peer %s", p)
+	if !p.syncedCheckpoints {
+		p.log.Info().Msgf("we are still syncing, ignoring getHeaders msg from peer %s", p)
+		return
+	}
+
+	bh, err := p.headersService.LocateHeadersGetHeaders(msg.BlockLocatorHashes, &msg.HashStop)
+	if err != nil {
+		p.log.Error().Msgf("error locating headers for getheaders msg from peer %s, reason: %v", p, err)
+		return
+	}
+
+	msgHeaders := wire.NewMsgHeaders()
+	msgHeaders.Headers = bh
+	p.queueMessage(msgHeaders)
 }
 
 func (p *Peer) switchToSendHeadersMode() {

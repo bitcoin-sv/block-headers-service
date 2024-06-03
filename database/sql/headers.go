@@ -16,6 +16,8 @@ import (
 const (
 	HeadersTableName = "headers"
 
+	longestChainState = "LONGEST_CHAIN"
+
 	sqlInsertHeader = `
 	INSERT INTO headers(hash, height, version, merkleroot, nonce, bits, header_state, chainwork, previous_block, timestamp , cumulated_work)
 	VALUES(:hash, :height, :version, :merkleroot, :nonce, :bits, :header_state, :chainwork, :previous_block, :timestamp, :cumulated_work)
@@ -32,6 +34,12 @@ const (
 	SELECT hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, header_state, cumulated_work
 	FROM headers
 	WHERE hash = ?
+	`
+
+	sqlHeaderHeightFromHashAndState = `
+	SELECT height
+	FROM headers
+	WHERE hash = ? AND header_state = ?
 	`
 
 	sqlHeaderByHeight = `
@@ -160,6 +168,20 @@ const (
 	sqlTipOfChainHeight = `SELECT MAX(height) FROM headers WHERE header_state = 'LONGEST_CHAIN'`
 
 	sqlVerifyHash = `SELECT hash FROM headers WHERE merkleroot = $1 AND height = $2 AND header_state = 'LONGEST_CHAIN'`
+
+	sqlGetHeadersHeight = `
+	SELECT COALESCE(MAX(height), 0) AS startHeight
+		FROM headers
+		WHERE header_state = 'LONGEST_CHAIN' 
+  			AND hash IN (?)
+	`
+
+	sqlHeaderByHeightRangeLongestChain = `
+	SELECT 
+		hash, height, version, merkleroot, nonce, bits, chainwork, previous_block, timestamp, header_state, cumulated_work
+	FROM headers
+	WHERE height BETWEEN ? AND ? AND header_state = 'LONGEST_CHAIN';
+	`
 )
 
 // HeadersDb represents a database connection and map of related sql queries.
@@ -394,6 +416,45 @@ func (h *HeadersDb) GetMerkleRootsConfirmations(
 	}
 
 	return confirmations, nil
+}
+
+// GetHashStartHeight returns hash and height from db with given locators.
+func (h *HeadersDb) GetHeadersStartHeight(hashTable []string) (int, error) {
+	query, args, err := sqlx.In(sqlGetHeadersHeight, hashTable)
+	if err != nil {
+		h.log.Error().Err(err).Msg("Error while constructing query")
+		return 0, err
+	}
+
+	var heightStart int
+	if err := h.db.Get(&heightStart, h.db.Rebind(query), args...); err != nil {
+		h.log.Error().Err(err).Msg("Failed to get headers by locators")
+		return 0, err
+	}
+
+	return heightStart, nil
+}
+
+// GetHeadersStopHeight will return header from db with given hash.
+func (h *HeadersDb) GetHeadersStopHeight(hashStop string) (int, error) {
+	var dbHashStopHeight int
+	if err := h.db.Get(&dbHashStopHeight, h.db.Rebind(sqlHeaderHeightFromHashAndState), hashStop, longestChainState); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, nil
+		}
+		return 0, errors.Wrapf(err, "failed to get stophash %s", hashStop)
+	}
+
+	return dbHashStopHeight, nil
+}
+
+// GetHeadersByHeightRange returns headers from db in specified height range.
+func (h *HeadersDb) GetHeadersByHeightRange(from int, to int) ([]*dto.DbBlockHeader, error) {
+	var listOfHeaders []*dto.DbBlockHeader
+	if err := h.db.Select(&listOfHeaders, h.db.Rebind(sqlHeaderByHeightRangeLongestChain), from, to); err != nil {
+		return nil, errors.Wrapf(err, "failed to get headers using given range from: %d to: %d", from, to)
+	}
+	return listOfHeaders, nil
 }
 
 func (h *HeadersDb) getChainTipHeight() (int32, error) {
