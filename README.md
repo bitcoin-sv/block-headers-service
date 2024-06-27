@@ -87,7 +87,7 @@ http://localhost:8080/swagger/index.html
 
 The default assumes you want to use Authentication. This requires a single environment variable.  
 
-`HTTP_SERVER_AUTHTOKEN=replace_me_with_token_you_want_to_use_as_admin_token`  
+`BHS_HTTP_AUTH_TOKEN=replace_me_with_token_you_want_to_use_as_admin_token`  
 
 #### Disabling Auth Requirement  
 
@@ -96,7 +96,7 @@ This is available if you prefer to use your own authentication in a separate pro
 We do not recommend you expose the server to the internet without authentication, 
 as it would then be possible for anyone to prune your headers at will.  
 
-`HTTP_SERVER_USEAUTH=false`  
+`BHS_HTTP_USE_AUTH=false`  
 
 #### Authenticate with admin token
 
