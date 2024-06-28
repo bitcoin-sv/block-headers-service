@@ -6,12 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rs/zerolog"
-
-	"github.com/gin-gonic/gin"
-
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/logging"
+	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
 )
 
 // GinEngineOpt represents functions to configure server engine.

@@ -8,10 +8,9 @@ import (
 	"testing"
 
 	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/testapp"
-
-	"github.com/bitcoin-sv/block-headers-service/domains"
 )
 
 const EmptyToken = ""

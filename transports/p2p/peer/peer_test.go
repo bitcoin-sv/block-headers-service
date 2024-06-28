@@ -14,13 +14,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rs/zerolog"
-
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p/peer"
 	"github.com/btcsuite/go-socks/socks"
+	"github.com/rs/zerolog"
 )
 
 // fixedExcessiveBlockSize should not be the default -we want to ensure it will work in all cases.

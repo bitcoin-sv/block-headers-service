@@ -4,9 +4,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/rs/zerolog"
-
 	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/rs/zerolog"
 )
 
 // WebhooksService represents Webhooks service and provide access to repositories.

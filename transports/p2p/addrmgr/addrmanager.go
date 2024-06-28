@@ -20,10 +20,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/rs/zerolog"
-
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
+	"github.com/rs/zerolog"
 )
 
 // AddrManager provides a concurrency safe address manager for caching potential

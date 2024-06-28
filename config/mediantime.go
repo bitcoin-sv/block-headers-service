@@ -1,11 +1,12 @@
 package config
 
 import (
-	"github.com/rs/zerolog"
 	"math"
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 const (

@@ -14,14 +14,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/rs/zerolog"
-
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	peerpkg "github.com/bitcoin-sv/block-headers-service/transports/p2p/peer"
+	"github.com/rs/zerolog"
 )
 
 const (

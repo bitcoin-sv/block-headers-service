@@ -14,26 +14,22 @@ import (
 	"syscall"
 
 	"github.com/bitcoin-sv/block-headers-service/cli"
-	"github.com/bitcoin-sv/block-headers-service/metrics"
-
-	"github.com/bitcoin-sv/block-headers-service/logging"
-	"github.com/bitcoin-sv/block-headers-service/repository"
-
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/database"
-	"github.com/bitcoin-sv/block-headers-service/notification"
-	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints"
-	"github.com/bitcoin-sv/block-headers-service/transports/websocket"
-
+	sqlrepository "github.com/bitcoin-sv/block-headers-service/database/repository"
 	"github.com/bitcoin-sv/block-headers-service/database/sql"
 	p2pexp "github.com/bitcoin-sv/block-headers-service/internal/transports/p2p"
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
+	"github.com/bitcoin-sv/block-headers-service/logging"
+	"github.com/bitcoin-sv/block-headers-service/metrics"
+	"github.com/bitcoin-sv/block-headers-service/notification"
+	"github.com/bitcoin-sv/block-headers-service/repository"
 	"github.com/bitcoin-sv/block-headers-service/service"
+	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints"
 	httpserver "github.com/bitcoin-sv/block-headers-service/transports/http/server"
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p"
 	peerpkg "github.com/bitcoin-sv/block-headers-service/transports/p2p/peer"
-
-	sqlrepository "github.com/bitcoin-sv/block-headers-service/database/repository"
+	"github.com/bitcoin-sv/block-headers-service/transports/websocket"
 )
 
 // version version of the application that can be overridden with ldflags during build

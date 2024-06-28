@@ -14,14 +14,12 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/repository/dto"
 	"github.com/golang-migrate/migrate/v4"
 	sqlite3 "github.com/golang-migrate/migrate/v4/database/sqlite3"
-	"github.com/rs/zerolog"
-
 	// use blank import to use file source driver with the migrate package.
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
-
 	// use blank import to register sqlite driver.
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/rs/zerolog"
 )
 
 type sqLiteAdapter struct {

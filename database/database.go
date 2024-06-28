@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rs/zerolog"
-
+	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/jmoiron/sqlx"
-	// use blank import to register sqlite driver.
-	_ "github.com/mattn/go-sqlite3"
 	// use blank import to register postgresql driver.
 	_ "github.com/lib/pq"
-
-	"github.com/bitcoin-sv/block-headers-service/config"
+	// use blank import to register sqlite driver.
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/rs/zerolog"
 )
 
 type dbAdapter interface {

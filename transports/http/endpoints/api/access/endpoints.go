@@ -7,7 +7,6 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/service"
 	"github.com/bitcoin-sv/block-headers-service/transports/http/auth"
 	router "github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/routes"
-
 	"github.com/gin-gonic/gin"
 )
 

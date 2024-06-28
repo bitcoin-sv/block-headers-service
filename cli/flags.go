@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
-
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/database"
 	"github.com/bitcoin-sv/block-headers-service/logging"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 )
 
 type cliFlags struct {

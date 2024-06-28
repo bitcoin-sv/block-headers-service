@@ -19,15 +19,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bitcoin-sv/block-headers-service/logging"
-	"github.com/rs/zerolog"
-
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
+	"github.com/bitcoin-sv/block-headers-service/logging"
 	"github.com/btcsuite/go-socks/socks"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/rs/zerolog"
 )
 
 const (

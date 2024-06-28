@@ -6,11 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/rs/zerolog"
-
-	"github.com/jmoiron/sqlx"
-
 	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog"
 )
 
 const (

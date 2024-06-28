@@ -14,13 +14,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bitcoin-sv/block-headers-service/logging"
-	"github.com/rs/zerolog"
-
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
+	"github.com/bitcoin-sv/block-headers-service/logging"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p/addrmgr"
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p/connmgr"
@@ -28,6 +26,7 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p/p2putil"
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p/peer"
 	"github.com/kr/pretty"
+	"github.com/rs/zerolog"
 )
 
 const (

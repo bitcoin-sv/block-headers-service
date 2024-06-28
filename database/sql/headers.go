@@ -4,13 +4,11 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/rs/zerolog"
-
-	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
-
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/repository/dto"
+	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 )
 
 const (

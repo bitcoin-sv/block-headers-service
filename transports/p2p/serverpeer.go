@@ -6,14 +6,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/rs/zerolog"
-
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p/addrmgr"
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p/connmgr"
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p/peer"
+	"github.com/rs/zerolog"
 )
 
 // serverPeer extends the peer to maintain state shared by the server and

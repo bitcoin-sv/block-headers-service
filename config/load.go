@@ -8,9 +8,8 @@ import (
 	"sync"
 
 	"github.com/bitcoin-sv/block-headers-service/logging"
-	"github.com/rs/zerolog"
-
 	"github.com/mitchellh/mapstructure"
+	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 )
 

@@ -9,11 +9,10 @@ import (
 	"net"
 	"testing"
 
-	"github.com/rs/zerolog"
-
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p/addrmgr"
+	"github.com/rs/zerolog"
 )
 
 // naTest is used to describe a test to be performed against the NetAddressKey

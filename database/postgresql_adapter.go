@@ -13,13 +13,11 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/repository/dto"
 	"github.com/golang-migrate/migrate/v4"
 	postgres "github.com/golang-migrate/migrate/v4/database/postgres"
-	"github.com/rs/zerolog"
-
 	// use blank import to use file source driver with the migrate package.
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
-
 	"github.com/lib/pq"
+	"github.com/rs/zerolog"
 )
 
 type postgreSqlAdapter struct {
