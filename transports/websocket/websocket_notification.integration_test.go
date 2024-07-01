@@ -12,23 +12,23 @@ import (
 )
 
 func TestShouldNotifyWebsocketAboutNewHeader(t *testing.T) {
-	//setup
-	p, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithApiAuthorizationDisabled())
+	// setup
+	p, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithAPIAuthorizationDisabled())
 	defer cleanup()
 
-	//given
+	// given
 	client := p.Websocket().Client()
 	defer client.Close()
 
-	//when
+	// when
 	onMsg, err := client.Subscribe("headers")
 	assert.NoError(t, err)
 
-	//and
+	// and
 	err = p.When().NewHeaderReceived(*fixtures.HeaderSourceHeight1)
 	assert.NoError(t, err)
 
-	//then
+	// then
 	msg, err := wait.ForString(onMsg, time.Second)
 	assert.NoError(t, err)
 

@@ -155,7 +155,7 @@ func (r *HeaderTestRepository) GetTip() (*domains.BlockHeader, error) {
 }
 
 // GetAncestorOnHeight returns ancestor header from db on given height.
-func (r *HeaderTestRepository) GetAncestorOnHeight(hash string, height int32) (*domains.BlockHeader, error) {
+func (r *HeaderTestRepository) GetAncestorOnHeight(_ string, height int32) (*domains.BlockHeader, error) {
 	for _, header := range *r.db {
 		if header.Height == height {
 			return &header, nil
@@ -238,6 +238,7 @@ func (r *HeaderTestRepository) GetMerkleRootsConfirmations(
 	return mrcfs, nil
 }
 
+// GetHeadersStartHeight returns height of the highest header from the list of hashes.
 func (r *HeaderTestRepository) GetHeadersStartHeight(hashtable []string) (int, error) {
 	for i := len(*r.db) - 1; i >= 0; i-- {
 		header := (*r.db)[i]
@@ -250,6 +251,7 @@ func (r *HeaderTestRepository) GetHeadersStartHeight(hashtable []string) (int, e
 	return 0, nil
 }
 
+// GetHeadersByHeightRange returns headers from db in specified height range.
 func (r *HeaderTestRepository) GetHeadersByHeightRange(from int, to int) ([]*domains.BlockHeader, error) {
 	filteredHeaders := make([]*domains.BlockHeader, 0)
 	for _, header := range *r.db {
@@ -261,6 +263,7 @@ func (r *HeaderTestRepository) GetHeadersByHeightRange(from int, to int) ([]*dom
 	return filteredHeaders, nil
 }
 
+// GetHeadersStopHeight returns height of hashstop header from db.
 func (r *HeaderTestRepository) GetHeadersStopHeight(hashStop string) (int, error) {
 	for i := len(*r.db) - 1; i >= 0; i-- {
 		header := (*r.db)[i]

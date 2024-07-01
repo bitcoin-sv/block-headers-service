@@ -15,7 +15,7 @@ const (
 	ON CONFLICT DO NOTHING
 	`
 
-	// nolint:gosec
+	//nolint:gosec
 	sqlGetToken = ` 
 	SELECT token, created_at
 	FROM tokens

@@ -13,12 +13,15 @@ import (
 )
 
 type (
+	//revive:disable:exported
 	GetAddressFn       func() *addrmgr.KnownAddress
 	OutboundGroupCount func(string) int
 	LookupFn           func(string) ([]net.IP, error)
 	FindNewAddrFn      func() (net.Addr, error)
+	//revive:enable:exported
 )
 
+// NewAddressFunc returns a function closure that can be used to get new working address
 // Only setup a function to return new addresses to connect to when
 // not running in connect-only mode.  The simulation network is always
 // in connect-only mode since it is only intended to connect to

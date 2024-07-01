@@ -19,6 +19,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// Peer represents a peer in the P2P network.
 type Peer struct {
 	// conn is the current connection to peer
 	conn net.Conn
@@ -72,6 +73,7 @@ type Peer struct {
 	quit chan struct{}
 }
 
+// NewPeer creates a new Peer instance.
 func NewPeer(
 	conn net.Conn,
 	inbound bool,
@@ -99,6 +101,7 @@ func NewPeer(
 	return peer, nil
 }
 
+// Connect is used to establish a connection with the peer.
 func (p *Peer) Connect() error {
 	err := p.updatePeerAddr()
 	if err != nil {
@@ -120,6 +123,7 @@ func (p *Peer) Connect() error {
 	return nil
 }
 
+// Disconnect is used to disconnect the peer.
 func (p *Peer) Disconnect() {
 	p.log.Info().Msgf("disconnecting peer: %s", p)
 
@@ -134,6 +138,7 @@ func (p *Peer) Disconnect() {
 	p.log.Info().Msgf("successfully disconnected peer %s", p)
 }
 
+// StartHeadersSync is used to start syncing headers with the peer.
 func (p *Peer) StartHeadersSync() error {
 	go p.writeMsgHandler()
 	go p.readMsgHandler()
@@ -152,9 +157,9 @@ func (p *Peer) StartHeadersSync() error {
 }
 
 func (p *Peer) updatePeerAddr() error {
-	remoteAddr, addrIsTcp := p.conn.RemoteAddr().(*net.TCPAddr)
+	remoteAddr, addrIsTCP := p.conn.RemoteAddr().(*net.TCPAddr)
 
-	if remoteAddr != nil && addrIsTcp {
+	if remoteAddr != nil && addrIsTCP {
 		p.addr = remoteAddr
 	} else {
 		errMsg := "error retreiving address from peer"
@@ -525,7 +530,7 @@ func (p *Peer) handleHeadersMsg(msg *wire.MsgHeaders) {
 
 		lastHeight = h.Height
 		lastHash = &h.Hash
-		headersReceived += 1
+		headersReceived++
 	}
 
 	if headersReceived == 0 {

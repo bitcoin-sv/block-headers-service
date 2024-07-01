@@ -1,8 +1,8 @@
 package webhook
 
-// WebhookRequest defines a request body for webhook registration.
-type WebhookRequest struct {
-	Url          string       `json:"url"`
+// Request defines a request body for webhook registration.
+type Request struct {
+	URL          string       `json:"url"`
 	RequiredAuth RequiredAuth `json:"requiredAuth"`
 }
 

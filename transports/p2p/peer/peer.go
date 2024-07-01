@@ -84,8 +84,8 @@ var (
 	sentNonces = newMruNonceMap(50)
 )
 
-// PeerSyncState represents state of peer and if it is a sync candidate.
-type PeerSyncState struct {
+// SyncState represents state of peer and if it is a sync candidate.
+type SyncState struct {
 	SyncCandidate bool
 }
 
@@ -487,9 +487,9 @@ type Peer struct {
 	quit          chan struct{}
 }
 
-// PeerState represents basic info about peer address.
-type PeerState struct {
-	Ip   string `json:"ip"`
+// State represents basic info about peer address.
+type State struct {
+	IP   string `json:"ip"`
 	Port int    `json:"port"`
 }
 
@@ -702,9 +702,9 @@ func (p *Peer) WantsHeaders() bool {
 }
 
 // ToPeerState return PeerState of the peer on which this method was called.
-func (p *Peer) ToPeerState() PeerState {
-	return PeerState{
-		Ip:   p.NA().IP.String(),
+func (p *Peer) ToPeerState() State {
+	return State{
+		IP:   p.NA().IP.String(),
 		Port: int(p.na.Port),
 	}
 }

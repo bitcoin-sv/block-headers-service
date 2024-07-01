@@ -20,15 +20,15 @@ func (r *WebhooksRepository) AddWebhookToDatabase(rWebhook *notification.Webhook
 	return err
 }
 
-// DeleteWebhookByUrl deletes webhook by url from db.
-func (r *WebhooksRepository) DeleteWebhookByUrl(url string) error {
-	err := r.db.DeleteWebhookByUrl(context.Background(), url)
+// DeleteWebhookByURL deletes webhook by url from db.
+func (r *WebhooksRepository) DeleteWebhookByURL(url string) error {
+	err := r.db.DeleteWebhookByURL(context.Background(), url)
 	return err
 }
 
-// GetWebhookByUrl returns webhook from db by given url.
-func (r *WebhooksRepository) GetWebhookByUrl(url string) (*notification.Webhook, error) {
-	w, err := r.db.GetWebhookByUrl(context.Background(), url)
+// GetWebhookByURL returns webhook from db by given url.
+func (r *WebhooksRepository) GetWebhookByURL(url string) (*notification.Webhook, error) {
+	w, err := r.db.GetWebhookByURL(context.Background(), url)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (r *WebhooksRepository) GetAllWebhooks() ([]*notification.Webhook, error) {
 
 // UpdateWebhook updates webhook in db.
 func (r *WebhooksRepository) UpdateWebhook(w *notification.Webhook) error {
-	err := r.db.UpdateWebhook(context.Background(), w.Url, w.LastEmitTimestamp, w.LastEmitStatus, w.ErrorsCount, w.Active)
+	err := r.db.UpdateWebhook(context.Background(), w.URL, w.LastEmitTimestamp, w.LastEmitStatus, w.ErrorsCount, w.Active)
 	return err
 }
 

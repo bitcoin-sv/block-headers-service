@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	// HeadersTableName is the name of the table where headers are stored.
 	HeadersTableName = "headers"
 
 	longestChainState = "LONGEST_CHAIN"
@@ -331,7 +332,7 @@ func (h *HeadersDb) GetStaleHeadersBackFrom(hash string) ([]*dto.DbBlockHeader, 
 }
 
 // GenesisExists check if genesis header is present in db.
-func (h *HeadersDb) GenesisExists(ctx context.Context) bool {
+func (h *HeadersDb) GenesisExists(_ context.Context) bool {
 	err := h.db.QueryRow(sqlVerifyIfGenesisPresent)
 	return err == nil
 }
@@ -349,7 +350,7 @@ func (h *HeadersDb) GetPreviousHeader(ctx context.Context, hash string) (*dto.Db
 }
 
 // GetTip will return highest header from db.
-func (h *HeadersDb) GetTip(ctx context.Context) (*dto.DbBlockHeader, error) {
+func (h *HeadersDb) GetTip(_ context.Context) (*dto.DbBlockHeader, error) {
 	var tip []dto.DbBlockHeader
 	if err := h.db.Select(&tip, sqlSelectTip); err != nil {
 		h.log.Error().Msgf("sql error: %v", err)
@@ -416,7 +417,7 @@ func (h *HeadersDb) GetMerkleRootsConfirmations(
 	return confirmations, nil
 }
 
-// GetHashStartHeight returns hash and height from db with given locators.
+// GetHeadersStartHeight returns hash and height from db with given locators.
 func (h *HeadersDb) GetHeadersStartHeight(hashTable []string) (int, error) {
 	query, args, err := sqlx.In(sqlGetHeadersHeight, hashTable)
 	if err != nil {
@@ -471,12 +472,9 @@ func (h *HeadersDb) getMerkleRootConfirmation(item domains.MerkleRootConfirmatio
 	var hash sql.NullString
 	err := h.db.Get(&hash, sqlVerifyHash, item.MerkleRoot, item.BlockHeight)
 
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-		} else {
-			return nil, err
-		}
-	} else {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return nil, err
+	} else if err == nil {
 		confirmation.Hash = hash
 	}
 

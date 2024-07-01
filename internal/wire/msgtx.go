@@ -418,7 +418,7 @@ func (msg *MsgTx) Copy() *MsgTx {
 // This is part of the Message interface implementation.
 // See Deserialize for decoding transactions stored to disk, such as in a
 // database, as opposed to decoding transactions from the wire.
-func (msg *MsgTx) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) error {
+func (msg *MsgTx) Bsvdecode(r io.Reader, pver uint32, _ MessageEncoding) error {
 	version, err := binarySerializer.Uint32(r, littleEndian)
 	if err != nil {
 		return err
@@ -590,7 +590,7 @@ func (msg *MsgTx) Deserialize(r io.Reader) error {
 // This is part of the Message interface implementation.
 // See Serialize for encoding transactions to be stored to disk, such as in a
 // database, as opposed to encoding transactions for the wire.
-func (msg *MsgTx) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) error {
+func (msg *MsgTx) BsvEncode(w io.Writer, pver uint32, _ MessageEncoding) error {
 	err := binarySerializer.PutUint32(w, littleEndian, uint32(msg.Version))
 	if err != nil {
 		return err
@@ -675,7 +675,7 @@ func (msg *MsgTx) Command() string {
 
 // MaxPayloadLength returns the maximum length the payload can be for the
 // receiver.  This is part of the Message interface implementation.
-func (msg *MsgTx) MaxPayloadLength(pver uint32) uint32 {
+func (msg *MsgTx) MaxPayloadLength(_ uint32) uint32 {
 	return MaxBlockPayload()
 }
 
@@ -834,7 +834,7 @@ func readTxOut(r io.Reader, pver uint32, to *TxOut) error {
 //
 // NOTE: This function is exported in order to allow txscript to compute the
 // new sighashes for witness transactions (BIP0143).
-func WriteTxOut(w io.Writer, pver uint32, version int32, to *TxOut) error {
+func WriteTxOut(w io.Writer, pver uint32, _ int32, to *TxOut) error {
 	err := binarySerializer.PutUint64(w, littleEndian, uint64(to.Value))
 	if err != nil {
 		return err

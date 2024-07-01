@@ -17,7 +17,7 @@ import (
 
 func TestReturnSuccessFromVerify(t *testing.T) {
 	// setup
-	bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithAPIAuthorizationDisabled())
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{
 		{
@@ -25,12 +25,12 @@ func TestReturnSuccessFromVerify(t *testing.T) {
 			BlockHeight: 0,
 		},
 	}
-	expected_result := struct {
+	expectedResult := struct {
 		code int
-		body merkleroots.MerkleRootsConfirmationsResponse
+		body merkleroots.ConfirmationsResponse
 	}{
 		code: http.StatusOK,
-		body: merkleroots.MerkleRootsConfirmationsResponse{
+		body: merkleroots.ConfirmationsResponse{
 			ConfirmationState: domains.Confirmed,
 			Confirmations: []merkleroots.MerkleRootConfirmation{
 				{
@@ -44,17 +44,17 @@ func TestReturnSuccessFromVerify(t *testing.T) {
 	}
 
 	// when
-	res := bhs.Api().Call(verify(query))
+	res := bhs.API().Call(verify(query))
 
 	// then
-	assert.Equal(t, res.Code, expected_result.code)
+	assert.Equal(t, res.Code, expectedResult.code)
 
-	var mrcf merkleroots.MerkleRootsConfirmationsResponse
+	var mrcf merkleroots.ConfirmationsResponse
 	json.NewDecoder(res.Body).Decode(&mrcf)
 
-	assert.Equal(t, mrcf.ConfirmationState, expected_result.body.ConfirmationState)
+	assert.Equal(t, mrcf.ConfirmationState, expectedResult.body.ConfirmationState)
 	for i, conf := range mrcf.Confirmations {
-		expected := expected_result.body.Confirmations[i]
+		expected := expectedResult.body.Confirmations[i]
 		assert.Equal(t, conf.Hash, expected.Hash)
 		assert.Equal(t, conf.BlockHeight, expected.BlockHeight)
 		assert.Equal(t, conf.MerkleRoot, expected.MerkleRoot)
@@ -67,7 +67,7 @@ func TestReturnFailureFromVerifyWhenAuthorizationIsTurnedOnAndCalledWithoutToken
 	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{}
-	expected_result := struct {
+	expectedResult := struct {
 		code int
 		body []byte
 	}{
@@ -76,22 +76,22 @@ func TestReturnFailureFromVerifyWhenAuthorizationIsTurnedOnAndCalledWithoutToken
 	}
 
 	// when
-	res := bhs.Api().Call(verify(query))
+	res := bhs.API().Call(verify(query))
 
 	// then
-	assert.Equal(t, res.Code, expected_result.code)
-	if res.Code != expected_result.code {
-		t.Errorf("Expected to get status %d but instead got %d\n", expected_result.code, res.Code)
+	assert.Equal(t, res.Code, expectedResult.code)
+	if res.Code != expectedResult.code {
+		t.Errorf("Expected to get status %d but instead got %d\n", expectedResult.code, res.Code)
 	}
 	body, _ := io.ReadAll(res.Body)
-	if !bytes.Equal(body, expected_result.body) {
-		t.Errorf("Expected to get body %s but insead got %s\n", expected_result.body, body)
+	if !bytes.Equal(body, expectedResult.body) {
+		t.Errorf("Expected to get body %s but insead got %s\n", expectedResult.body, body)
 	}
 }
 
 func TestReturnInvalidFromVerify(t *testing.T) {
 	// setup
-	bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithAPIAuthorizationDisabled())
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{
 		{
@@ -107,12 +107,12 @@ func TestReturnInvalidFromVerify(t *testing.T) {
 			BlockHeight: 8, // Bigger than top height
 		},
 	}
-	expected_result := struct {
+	expectedResult := struct {
 		code int
-		body merkleroots.MerkleRootsConfirmationsResponse
+		body merkleroots.ConfirmationsResponse
 	}{
 		code: http.StatusOK,
-		body: merkleroots.MerkleRootsConfirmationsResponse{
+		body: merkleroots.ConfirmationsResponse{
 			ConfirmationState: domains.Invalid,
 			Confirmations: []merkleroots.MerkleRootConfirmation{
 				{
@@ -138,17 +138,17 @@ func TestReturnInvalidFromVerify(t *testing.T) {
 	}
 
 	// when
-	res := bhs.Api().Call(verify(query))
+	res := bhs.API().Call(verify(query))
 
 	// then
-	assert.Equal(t, res.Code, expected_result.code)
+	assert.Equal(t, res.Code, expectedResult.code)
 
-	var mrcf merkleroots.MerkleRootsConfirmationsResponse
+	var mrcf merkleroots.ConfirmationsResponse
 	json.NewDecoder(res.Body).Decode(&mrcf)
 
-	assert.Equal(t, mrcf.ConfirmationState, expected_result.body.ConfirmationState)
+	assert.Equal(t, mrcf.ConfirmationState, expectedResult.body.ConfirmationState)
 	for i, conf := range mrcf.Confirmations {
-		expected := expected_result.body.Confirmations[i]
+		expected := expectedResult.body.Confirmations[i]
 		assert.Equal(t, conf.Hash, expected.Hash)
 		assert.Equal(t, conf.BlockHeight, expected.BlockHeight)
 		assert.Equal(t, conf.MerkleRoot, expected.MerkleRoot)
@@ -158,7 +158,7 @@ func TestReturnInvalidFromVerify(t *testing.T) {
 
 func TestReturnPartialSuccessFromVerify(t *testing.T) {
 	// setup
-	bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithAPIAuthorizationDisabled())
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{
 		{
@@ -170,12 +170,12 @@ func TestReturnPartialSuccessFromVerify(t *testing.T) {
 			BlockHeight: 8, // Bigger than top height
 		},
 	}
-	expected_result := struct {
+	expectedResult := struct {
 		code int
-		body merkleroots.MerkleRootsConfirmationsResponse
+		body merkleroots.ConfirmationsResponse
 	}{
 		code: http.StatusOK,
-		body: merkleroots.MerkleRootsConfirmationsResponse{
+		body: merkleroots.ConfirmationsResponse{
 			ConfirmationState: domains.UnableToVerify,
 			Confirmations: []merkleroots.MerkleRootConfirmation{
 				{
@@ -195,17 +195,17 @@ func TestReturnPartialSuccessFromVerify(t *testing.T) {
 	}
 
 	// when
-	res := bhs.Api().Call(verify(query))
+	res := bhs.API().Call(verify(query))
 
 	// then
-	assert.Equal(t, res.Code, expected_result.code)
+	assert.Equal(t, res.Code, expectedResult.code)
 
-	var mrcf merkleroots.MerkleRootsConfirmationsResponse
+	var mrcf merkleroots.ConfirmationsResponse
 	json.NewDecoder(res.Body).Decode(&mrcf)
 
-	assert.Equal(t, mrcf.ConfirmationState, expected_result.body.ConfirmationState)
+	assert.Equal(t, mrcf.ConfirmationState, expectedResult.body.ConfirmationState)
 	for i, conf := range mrcf.Confirmations {
-		expected := expected_result.body.Confirmations[i]
+		expected := expectedResult.body.Confirmations[i]
 		assert.Equal(t, conf.Hash, expected.Hash)
 		assert.Equal(t, conf.BlockHeight, expected.BlockHeight)
 		assert.Equal(t, conf.MerkleRoot, expected.MerkleRoot)
@@ -215,10 +215,10 @@ func TestReturnPartialSuccessFromVerify(t *testing.T) {
 
 func TestReturnBadRequestErrorFromVerifyWhenGivenEmtpyArray(t *testing.T) {
 	// setup
-	bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
+	bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithAPIAuthorizationDisabled())
 	defer cleanup()
 	query := []domains.MerkleRootConfirmationRequestItem{}
-	expected_result := struct {
+	expectedResult := struct {
 		code int
 		body []byte
 	}{
@@ -227,14 +227,14 @@ func TestReturnBadRequestErrorFromVerifyWhenGivenEmtpyArray(t *testing.T) {
 	}
 
 	// when
-	res := bhs.Api().Call(verify(query))
+	res := bhs.API().Call(verify(query))
 
 	// then
-	assert.Equal(t, res.Code, expected_result.code)
+	assert.Equal(t, res.Code, expectedResult.code)
 
 	body, _ := io.ReadAll(res.Body)
-	if !bytes.Equal(body, expected_result.body) {
-		t.Errorf("Expected to get body %s but insead got %s\n", expected_result.body, body)
+	if !bytes.Equal(body, expectedResult.body) {
+		t.Errorf("Expected to get body %s but insead got %s\n", expectedResult.body, body)
 	}
 }
 

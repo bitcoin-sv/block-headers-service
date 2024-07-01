@@ -13,9 +13,9 @@ type MerkleRootConfirmation struct {
 	Confirmation domains.MerkleRootConfirmationState `json:"confirmation"`
 }
 
-// MerkleRootsConfirmationsResponse is an API response for confirming
+// ConfirmationsResponse is an API response for confirming
 // merkle roots inclusion in the longest chain.
-type MerkleRootsConfirmationsResponse struct {
+type ConfirmationsResponse struct {
 	ConfirmationState domains.MerkleRootConfirmationState `json:"confirmationState"`
 	Confirmations     []MerkleRootConfirmation            `json:"confirmations"`
 }
@@ -37,7 +37,7 @@ func newMerkleRootConfirmation(
 // MerkleRootConfirmation objects to merkleRootConfirmationRespose.
 func mapToMerkleRootsConfirmationsResponses(
 	merkleConfms []*domains.MerkleRootConfirmation,
-) MerkleRootsConfirmationsResponse {
+) ConfirmationsResponse {
 	mrcfs := make([]MerkleRootConfirmation, 0)
 
 	confirmationState := domains.Confirmed
@@ -49,7 +49,7 @@ func mapToMerkleRootsConfirmationsResponses(
 		}
 	}
 
-	return MerkleRootsConfirmationsResponse{
+	return ConfirmationsResponse{
 		ConfirmationState: confirmationState,
 		Confirmations:     mrcfs,
 	}

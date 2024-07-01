@@ -341,6 +341,6 @@ func newPeerConfig(sp *serverPeer) *peer.Config {
 		ChainParams:       sp.server.chainParams,
 		Services:          sp.server.wireServices,
 		ProtocolVersion:   uint32(70013),
-		TrickleInterval:   config.TrickleLinterval,
+		TrickleInterval:   config.TrickleInterval,
 	}
 }

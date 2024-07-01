@@ -47,9 +47,9 @@ type TestBlockHeaderService struct {
 	urlPrefix    string
 }
 
-// Api Provides test access to block headers service API.
-func (p *TestBlockHeaderService) Api() *Api {
-	return &Api{TestBlockHeaderService: p}
+// API Provides test access to block headers service API.
+func (p *TestBlockHeaderService) API() *API {
+	return &API{TestBlockHeaderService: p}
 }
 
 // Websocket Provides test access to block headers service websocket.
@@ -109,7 +109,7 @@ func NewTestBlockHeaderService(t *testing.T, ops ...bhsOpt) (*TestBlockHeaderSer
 	port := cfg.HTTP.Port
 	urlPrefix := "/api/v1"
 	gin.SetMode(gin.TestMode)
-	server := httpserver.NewHttpServer(cfg.HTTP, &testLog)
+	server := httpserver.NewHTTPServer(cfg.HTTP, &testLog)
 	server.ApplyConfiguration(endpoints.SetupRoutes(hs, cfg.HTTP))
 	engine := hijackEngine(server)
 
@@ -158,7 +158,7 @@ func NewTestBlockHeaderService(t *testing.T, ops ...bhsOpt) (*TestBlockHeaderSer
 	return bhs, cleanup
 }
 
-func hijackEngine(server *httpserver.HttpServer) *gin.Engine {
+func hijackEngine(server *httpserver.HTTPServer) *gin.Engine {
 	var engine *gin.Engine
 	server.ApplyConfiguration(func(e *gin.Engine) {
 		engine = e

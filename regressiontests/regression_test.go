@@ -418,7 +418,7 @@ func fetchMerkleRootConfirmations(ctx context.Context, fixtures []merkleRootFixt
 		t.Fatalf("Expected status code 200, got %d", resp.StatusCode)
 	}
 
-	var confirmations merkleroots.MerkleRootsConfirmationsResponse
+	var confirmations merkleroots.ConfirmationsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&confirmations); err != nil {
 		t.Fatalf("Failed to decode JSON response: %v", err)
 	}

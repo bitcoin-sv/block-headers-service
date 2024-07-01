@@ -3,7 +3,7 @@ package config
 import "time"
 
 // TrickleInterval is the interval at which a peer will send a getheaders.
-const TrickleLinterval = 50 * time.Millisecond
+const TrickleInterval = 50 * time.Millisecond
 
 // MaxPeers is the maximum number of peers the server will connect to (inbound and outbound).
 const MaxPeers = 125

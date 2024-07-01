@@ -11,9 +11,9 @@ import (
 )
 
 // NewHandler creates new endpoint handler.
-func NewHandler(_ *service.Services, apiUrlPrefix string) router.RootEndpoints {
+func NewHandler(_ *service.Services, apiURLPrefix string) router.RootEndpoints {
 	return router.RootEndpointsFunc(func(router *gin.RouterGroup) {
-		docs.SwaggerInfo.BasePath = apiUrlPrefix
+		docs.SwaggerInfo.BasePath = apiURLPrefix
 		docs.SwaggerInfo.Version = config.Version()
 		router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	})

@@ -51,7 +51,7 @@ type MsgFilterLoad struct {
 
 // Bsvdecode decodes r using the bitcoin protocol encoding into the receiver.
 // This is part of the Message interface implementation.
-func (msg *MsgFilterLoad) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) error {
+func (msg *MsgFilterLoad) Bsvdecode(r io.Reader, pver uint32, _ MessageEncoding) error {
 	if pver < BIP0037Version {
 		str := fmt.Sprintf("filterload message invalid for protocol "+
 			"version %d", pver)
@@ -81,7 +81,7 @@ func (msg *MsgFilterLoad) Bsvdecode(r io.Reader, pver uint32, enc MessageEncodin
 
 // BsvEncode encodes the receiver to w using the bitcoin protocol encoding.
 // This is part of the Message interface implementation.
-func (msg *MsgFilterLoad) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) error {
+func (msg *MsgFilterLoad) BsvEncode(w io.Writer, pver uint32, _ MessageEncoding) error {
 	if pver < BIP0037Version {
 		str := fmt.Sprintf("filterload message invalid for protocol "+
 			"version %d", pver)
@@ -117,7 +117,7 @@ func (msg *MsgFilterLoad) Command() string {
 
 // MaxPayloadLength returns the maximum length the payload can be for the
 // receiver.  This is part of the Message interface implementation.
-func (msg *MsgFilterLoad) MaxPayloadLength(pver uint32) uint32 {
+func (msg *MsgFilterLoad) MaxPayloadLength(_ uint32) uint32 {
 	// Num filter bytes (varInt) + filter + 4 bytes hash funcs +
 	// 4 bytes tweak + 1 byte flags.
 	return uint32(VarIntSerializeSize(MaxFilterLoadFilterSize)) +

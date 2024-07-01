@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	//nolint:revive
 	. "github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 )
 

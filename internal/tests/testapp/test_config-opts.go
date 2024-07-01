@@ -5,8 +5,8 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/testrepository"
 )
 
-// WithApiAuthorizationDisabled allows to not use authorization in Block Headers Service.
-func WithApiAuthorizationDisabled() ConfigOpt {
+// WithAPIAuthorizationDisabled allows to not use authorization in Block Headers Service.
+func WithAPIAuthorizationDisabled() ConfigOpt {
 	return func(c *config.AppConfig) {
 		c.WithoutAuthorization()
 	}

@@ -7,7 +7,7 @@ import (
 )
 
 // NewHandler creates new endpoint handler.
-func NewHandler(s *service.Services) router.RootEndpoints {
+func NewHandler(_ *service.Services) router.RootEndpoints {
 	return router.RootEndpointsFunc(func(router *gin.RouterGroup) {
 		router.GET("status", getStatus)
 	})

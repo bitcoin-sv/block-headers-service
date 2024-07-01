@@ -4,15 +4,21 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 )
 
+// NetworkType is a string that represents the network type.
 type NetworkType string
 
 const (
-	MainNet       NetworkType = "mainnet"
-	RegTestNet    NetworkType = "regtest"
-	TestNet       NetworkType = "testnet"
+	// MainNet represents the main network.
+	MainNet NetworkType = "mainnet"
+	// RegTestNet represents the regression test network.
+	RegTestNet NetworkType = "regtest"
+	// TestNet represents the test network.
+	TestNet NetworkType = "testnet"
+	// SimulationNet represents the simulation network.
 	SimulationNet NetworkType = "simnet"
 )
 
+// GetNetParams returns the network parameters for current network.
 func (c *P2PConfig) GetNetParams() *chaincfg.Params {
 	switch c.ChainNetType {
 	case MainNet:

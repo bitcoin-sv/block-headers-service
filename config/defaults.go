@@ -4,13 +4,14 @@ import (
 	"time"
 )
 
-// #nosec G101
-const DefaultAppToken = "mQZQ6WmxURxWz5ch"
+// DefaultAppToken is the default token used for authenticating requests to the API
+const DefaultAppToken = "mQZQ6WmxURxWz5ch" // #nosec G101
 
+// GetDefaultAppConfig returns the default configuration for the application
 func GetDefaultAppConfig() *AppConfig {
 	return &AppConfig{
 		Db:         getDbDefaults(),
-		HTTP:       getHttpConfigDefaults(),
+		HTTP:       getHTTPConfigDefaults(),
 		MerkleRoot: getMerkleRootDefaults(),
 		Websocket:  getWebsocketDefaults(),
 		Webhook:    getWebhookDefaults(),
@@ -33,7 +34,7 @@ func getDbDefaults() *DbConfig {
 	}
 }
 
-func getHttpConfigDefaults() *HTTPConfig {
+func getHTTPConfigDefaults() *HTTPConfig {
 	return &HTTPConfig{
 		ReadTimeout:               10,
 		WriteTimeout:              10,
@@ -91,8 +92,8 @@ func getMetricsDefaults() *MetricsConfig {
 	}
 }
 
-func getPostgresDefaults() PostgreSqlConfig {
-	return PostgreSqlConfig{
+func getPostgresDefaults() PostgresqlConfig {
+	return PostgresqlConfig{
 		Host:     "localhost",
 		Port:     5432,
 		User:     "user",

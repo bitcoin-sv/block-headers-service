@@ -14,7 +14,7 @@ func StartingChain() (db []domains.BlockHeader, tip *domains.BlockHeader) {
 	return db, &db[len(db)-1]
 }
 
-func startingChain() headerChainFixture {
+func startingChain() HeaderChainFixture {
 	genesisHeader := chaincfg.MainNetParams.GenesisBlock.Header
 	genesisBlock := domains.BlockHeader{
 		Hash:          genesisHeader.BlockHash(),
@@ -33,7 +33,7 @@ func startingChain() headerChainFixture {
 }
 
 // LongestChain creates mocked the longest chain entries (containing Genesis Block and 4 first blocks).
-func LongestChain() (db headerChainFixture, tip *domains.BlockHeader) {
+func LongestChain() (db HeaderChainFixture, tip *domains.BlockHeader) {
 	db = startingChain().
 		addToLongestChain(HashHeight1, HeaderSourceHeight1).
 		addToLongestChain(HashHeight2, HeaderSourceHeight2).
@@ -44,7 +44,7 @@ func LongestChain() (db headerChainFixture, tip *domains.BlockHeader) {
 }
 
 // AddLongestChain adds mocked longest chain to already initialized (for example with GenesisBlock) db.
-func AddLongestChain(initializedDb headerChainFixture) (db headerChainFixture, tip *domains.BlockHeader) {
+func AddLongestChain(initializedDb HeaderChainFixture) (db HeaderChainFixture, tip *domains.BlockHeader) {
 	withLongestChain := initializedDb.
 		addToLongestChain(HashHeight1, HeaderSourceHeight1).
 		addToLongestChain(HashHeight2, HeaderSourceHeight2).
@@ -54,7 +54,7 @@ func AddLongestChain(initializedDb headerChainFixture) (db headerChainFixture, t
 }
 
 // StaleChain creates mocked the stale chain entries starting and containing Genesis Block.
-func StaleChain() (db headerChainFixture, tip *domains.BlockHeader) {
+func StaleChain() (db HeaderChainFixture, tip *domains.BlockHeader) {
 	db = startingChain().
 		addToStaleChain(StaleHashHeight1, StaleHeaderSourceHeight1).
 		addToStaleChain(StaleHashHeight2, StaleHeaderSourceHeight2).
@@ -64,27 +64,28 @@ func StaleChain() (db headerChainFixture, tip *domains.BlockHeader) {
 }
 
 // OrphanChain returns chain build from orphaned blocks.
-func OrphanChain() (db headerChainFixture, tip *domains.BlockHeader) {
+func OrphanChain() (db HeaderChainFixture, tip *domains.BlockHeader) {
 	orphan := BlockHeaderOf(1, OrphanHash, OrphanHeaderSource, domains.Orphan)
 	db = []domains.BlockHeader{*orphan}
 	return db, orphan
 }
 
-func (c headerChainFixture) addToLongestChain(hash *chainhash.Hash, hs *domains.BlockHeaderSource) headerChainFixture {
+func (c HeaderChainFixture) addToLongestChain(hash *chainhash.Hash, hs *domains.BlockHeaderSource) HeaderChainFixture {
 	return c.addFromSource(hash, hs, domains.LongestChain)
 }
 
-func (c headerChainFixture) addToStaleChain(hash *chainhash.Hash, hs *domains.BlockHeaderSource) headerChainFixture {
+func (c HeaderChainFixture) addToStaleChain(hash *chainhash.Hash, hs *domains.BlockHeaderSource) HeaderChainFixture {
 	return c.addFromSource(hash, hs, domains.Stale)
 }
 
-func (c headerChainFixture) addFromSource(hash *chainhash.Hash, hs *domains.BlockHeaderSource, s domains.HeaderState) headerChainFixture {
+func (c HeaderChainFixture) addFromSource(hash *chainhash.Hash, hs *domains.BlockHeaderSource, s domains.HeaderState) HeaderChainFixture {
 	height := int32(len(c))
 	return append(c, *BlockHeaderOf(height, hash, hs, s))
 }
 
-func (c headerChainFixture) tip() *domains.BlockHeader {
+func (c HeaderChainFixture) tip() *domains.BlockHeader {
 	return &c[len(c)-1]
 }
 
-type headerChainFixture []domains.BlockHeader
+// HeaderChainFixture is a slice of BlockHeader used for preparing tests.
+type HeaderChainFixture []domains.BlockHeader

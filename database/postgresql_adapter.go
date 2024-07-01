@@ -12,7 +12,7 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/repository/dto"
 	"github.com/golang-migrate/migrate/v4"
-	postgres "github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
 	// use blank import to use file source driver with the migrate package.
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
@@ -20,14 +20,14 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type postgreSqlAdapter struct {
+type postgresqlAdapter struct {
 	db *sqlx.DB
 }
 
 const postgresDriverName = "postgres"
 const postgresBatchSize = 500_000
 
-func (a *postgreSqlAdapter) connect(cfg *config.DbConfig) error {
+func (a *postgresqlAdapter) connect(cfg *config.DbConfig) error {
 	dbCfg := cfg.Postgres
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		dbCfg.Host, dbCfg.Port, dbCfg.User, dbCfg.Password, dbCfg.DbName, dbCfg.Sslmode)
@@ -41,15 +41,15 @@ func (a *postgreSqlAdapter) connect(cfg *config.DbConfig) error {
 	return nil
 }
 
-func (a *postgreSqlAdapter) doMigrations(cfg *config.DbConfig) error {
+func (a *postgresqlAdapter) doMigrations(cfg *config.DbConfig) error {
 	driver, err := postgres.WithInstance(a.db.DB, &postgres.Config{})
 	if err != nil {
 		return err
 	}
 
-	sourceUrl := fmt.Sprintf("file://%s", cfg.SchemaPath)
+	sourceURL := fmt.Sprintf("file://%s", cfg.SchemaPath)
 
-	m, err := migrate.NewWithDatabaseInstance(sourceUrl, postgresDriverName, driver)
+	m, err := migrate.NewWithDatabaseInstance(sourceURL, postgresDriverName, driver)
 	if err != nil {
 		return err
 	}
@@ -62,14 +62,14 @@ func (a *postgreSqlAdapter) doMigrations(cfg *config.DbConfig) error {
 	return nil
 }
 
-func (a *postgreSqlAdapter) getDBx() *sqlx.DB {
+func (a *postgresqlAdapter) getDBx() *sqlx.DB {
 	if a.db == nil {
 		panic("connection to the database has not been established")
 	}
 	return a.db
 }
 
-func (a *postgreSqlAdapter) importHeaders(inputFile *os.File, log *zerolog.Logger) (affectedRows int, err error) {
+func (a *postgresqlAdapter) importHeaders(inputFile *os.File, _ *zerolog.Logger) (affectedRows int, err error) {
 	// prepare db for bulk insterts
 	restoreIndexes, err := a.dropTableIndexes(sql.HeadersTableName)
 	if err != nil {
@@ -116,12 +116,12 @@ func (a *postgreSqlAdapter) importHeaders(inputFile *os.File, log *zerolog.Logge
 }
 
 // dropTableIndexes removes indexes from a table. Returns the index restore function if successful.
-func (a *postgreSqlAdapter) dropTableIndexes(table string) (func() error, error) {
+func (a *postgresqlAdapter) dropTableIndexes(table string) (func() error, error) {
 	q := fmt.Sprintf("SELECT indexname, indexdef FROM pg_indexes WHERE tablename ='%s' AND indexname != '%s_pkey' AND indexdef IS NOT NULL;", table, table)
 	return dropIndexes(a.db, &q)
 }
 
-func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previousBlockHash string, cumulatedLastBlockChainWork string, rowIndex int) (lastRowIndex int, lastBlockHash string, cumulatedChainWork string, err error) {
+func (a *postgresqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previousBlockHash string, cumulatedLastBlockChainWork string, rowIndex int) (lastRowIndex int, lastBlockHash string, cumulatedChainWork string, err error) {
 	lastRowIndex = rowIndex
 	lastBlockHash = previousBlockHash
 	copyQuery := pq.CopyIn(
@@ -133,7 +133,7 @@ func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 	if err != nil {
 		return
 	}
-	defer dbTx.Rollback() // nolint
+	defer dbTx.Rollback() //nolint
 
 	stmt, err := dbTx.Prepare(copyQuery)
 	if err != nil {
@@ -149,7 +149,7 @@ func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 			}
 
 			err = fmt.Errorf("error reading record: %v", readErr)
-			_ = stmt.Close() // nolint
+			_ = stmt.Close() //nolint
 			return
 		}
 
@@ -193,7 +193,7 @@ func (a *postgreSqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previ
 		return
 	}
 
-	err = stmt.Close() // nolint
+	err = stmt.Close()
 	if err != nil {
 		return
 	}

@@ -18,6 +18,7 @@ func registerLatestBlockMetrics(reg prometheus.Registerer) *latestBlockMetrics {
 	}
 }
 
+// SetLatestBlock sets the latest block height and timestamp.
 func SetLatestBlock(height int32, timestamp time.Time, state string) {
 	if metrics, enabled := Get(); enabled {
 		metrics.latestBlock.height.WithLabelValues(state).Set(float64(height))

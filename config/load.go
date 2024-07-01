@@ -38,6 +38,7 @@ func Load(cfg *AppConfig) (*AppConfig, *zerolog.Logger, error) {
 	return cfg, logger, nil
 }
 
+// SetDefaults sets the default values for the config.
 func SetDefaults(defaultVersion string, log *zerolog.Logger) error {
 	viperLock.Lock()
 	defer viperLock.Unlock()

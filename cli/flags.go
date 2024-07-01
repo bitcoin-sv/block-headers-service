@@ -18,6 +18,7 @@ type cliFlags struct {
 	dumpConfig    bool `mapstructure:"dumpConfig"`
 }
 
+// LoadFlags loads flags from command line and binds them to the config
 func LoadFlags(cfg *config.AppConfig) error {
 	if !anyFlagsPassed() {
 		return nil

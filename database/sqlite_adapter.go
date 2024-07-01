@@ -13,7 +13,7 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/repository/dto"
 	"github.com/golang-migrate/migrate/v4"
-	sqlite3 "github.com/golang-migrate/migrate/v4/database/sqlite3"
+	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	// use blank import to use file source driver with the migrate package.
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
@@ -52,10 +52,10 @@ func (a *sqLiteAdapter) doMigrations(cfg *config.DbConfig) error {
 		return err
 	}
 
-	sourceUrl := fmt.Sprintf("file://%s", cfg.SchemaPath)
+	sourceURL := fmt.Sprintf("file://%s", cfg.SchemaPath)
 	driverName := sqliteDriverName
 
-	m, err := migrate.NewWithDatabaseInstance(sourceUrl, driverName, driver)
+	m, err := migrate.NewWithDatabaseInstance(sourceURL, driverName, driver)
 	if err != nil {
 		return err
 	}
@@ -134,7 +134,7 @@ func (a *sqLiteAdapter) importHeaders(inputFile *os.File, log *zerolog.Logger) (
 }
 
 func modifySqLitePragmas(db *sqlx.DB) (func() error, error) {
-	old_pragmas, err := getSqLitePragmaValues(db)
+	oldPragmas, err := getSqLitePragmaValues(db)
 	if err != nil {
 		return nil, err
 	}
@@ -147,14 +147,14 @@ func modifySqLitePragmas(db *sqlx.DB) (func() error, error) {
 
 	for _, pragma := range pragmas {
 		if _, err := db.Exec(pragma); err != nil {
-			if rErr := restoreSqLitePragmas(db, *old_pragmas); rErr != nil {
+			if rErr := restoreSqLitePragmas(db, *oldPragmas); rErr != nil {
 				err = fmt.Errorf("%w. Resoring previous pragmas failed: %w", err, rErr)
 			}
 			return nil, err
 		}
 	}
 
-	return func() error { return restoreSqLitePragmas(db, *old_pragmas) }, nil
+	return func() error { return restoreSqLitePragmas(db, *oldPragmas) }, nil
 }
 
 func getSqLitePragmaValues(db *sqlx.DB) (*sqLitePragmaValues, error) {

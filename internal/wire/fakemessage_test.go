@@ -17,14 +17,14 @@ type fakeMessage struct {
 
 // Bsvdecode doesn't do anything.  It just satisfies the wire.Message
 // interface.
-func (msg *fakeMessage) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) error {
+func (msg *fakeMessage) Bsvdecode(_ io.Reader, _ uint32, _ MessageEncoding) error {
 	return nil
 }
 
 // BsvEncode writes the payload field of the fake message or forces an error
 // if the forceEncodeErr flag of the fake message is set.  It also satisfies the
 // wire.Message interface.
-func (msg *fakeMessage) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) error {
+func (msg *fakeMessage) BsvEncode(w io.Writer, _ uint32, _ MessageEncoding) error {
 	if msg.forceEncodeErr {
 		err := &MessageError{
 			Func:        "fakeMessage.BsvEncode",
@@ -46,7 +46,7 @@ func (msg *fakeMessage) Command() string {
 // MaxPayloadLength returns the length of the payload field of fake message
 // or a smaller value if the forceLenErr flag of the fake message is set.  It
 // satisfies the Message interface.
-func (msg *fakeMessage) MaxPayloadLength(pver uint32) uint32 {
+func (msg *fakeMessage) MaxPayloadLength(_ uint32) uint32 {
 	lenp := uint32(len(msg.payload))
 	if msg.forceLenErr {
 		return lenp - 1

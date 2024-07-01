@@ -22,7 +22,7 @@ import (
 
 // SetupRoutes main point where we're registering endpoints registrars (handlers that will register endpoints in gin engine)
 //
-//	and middlewares. It's returning function that can be used to setup engine of httpserver.HttpServer
+//	and middlewares. It's returning function that can be used to setup engine of httpserver.HTTPServer
 func SetupRoutes(s *service.Services, cfg *config.HTTPConfig) httpserver.GinEngineOpt {
 	routes := []interface{}{
 		status.NewHandler(s),
@@ -49,8 +49,8 @@ func SetupRoutes(s *service.Services, cfg *config.HTTPConfig) httpserver.GinEngi
 			switch r := r.(type) {
 			case router.RootEndpoints:
 				r.RegisterEndpoints(rootRouter)
-			case router.ApiEndpoints:
-				r.RegisterApiEndpoints(apiRouter, cfg)
+			case router.APIEndpoints:
+				r.RegisterAPIEndpoints(apiRouter, cfg)
 			default:
 				panic(errors.New("unexpected router endpoints registration"))
 			}
@@ -58,10 +58,10 @@ func SetupRoutes(s *service.Services, cfg *config.HTTPConfig) httpserver.GinEngi
 	}
 }
 
-func toHandlers(middlewares ...router.ApiMiddleware) []gin.HandlerFunc {
+func toHandlers(middlewares ...router.APIMiddleware) []gin.HandlerFunc {
 	result := make([]gin.HandlerFunc, 0)
 	for _, m := range middlewares {
-		result = append(result, m.ApplyToApi)
+		result = append(result, m.ApplyToAPI)
 	}
 	return result
 }

@@ -25,6 +25,7 @@ type dbIndex struct {
 	sql  string
 }
 
+// Init initializes the database connection and does the necessary migrations.
 func Init(cfg *config.AppConfig, log *zerolog.Logger) (*sqlx.DB, error) {
 	dbLog := log.With().Str("subservice", "database").Logger()
 
@@ -58,8 +59,8 @@ func newDbAdapter(cfg *config.DbConfig) (dbAdapter, error) {
 	switch cfg.Engine {
 	case config.DBSqlite:
 		return &sqLiteAdapter{}, nil
-	case config.DBPostgreSql:
-		return &postgreSqlAdapter{}, nil
+	case config.DBPostgresql:
+		return &postgresqlAdapter{}, nil
 	default:
 		return nil, fmt.Errorf("unsupported database engine %s", cfg.Engine)
 	}

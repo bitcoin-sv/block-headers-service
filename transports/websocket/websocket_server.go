@@ -89,7 +89,7 @@ func newNode(log *zerolog.Logger) (*centrifuge.Node, error) {
 }
 
 func (s *server) setupNode() {
-	s.node.OnConnecting(func(ctx context.Context, event centrifuge.ConnectEvent) (centrifuge.ConnectReply, error) {
+	s.node.OnConnecting(func(_ context.Context, event centrifuge.ConnectEvent) (centrifuge.ConnectReply, error) {
 		s.log.Info().Msg("client connecting")
 
 		if s.isAuthRequired {

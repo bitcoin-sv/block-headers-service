@@ -109,7 +109,7 @@ func (c *WebsocketClient) Subscribe(channel string) (<-chan string, error) {
 	}
 
 	err = c.waitForSubscribed(subscribed)
-	if err != nil && errors.Is(err, wait.TimesOut) {
+	if err != nil && errors.Is(err, wait.ErrTimesOut) {
 		err = fmt.Errorf("subscribing take longer then expected. %w", err)
 		c.t.Fatal(err)
 	}
@@ -120,7 +120,7 @@ func (c *WebsocketClient) waitForSubscribed(subscribed <-chan bool) error {
 	timeout := time.Second
 	select {
 	case <-time.After(timeout):
-		return fmt.Errorf("%w when subscribing after %s", wait.TimesOut, timeout)
+		return fmt.Errorf("%w when subscribing after %s", wait.ErrTimesOut, timeout)
 	case d := <-c.disconnected:
 		return errors.New(d.Reason)
 	case <-subscribed:

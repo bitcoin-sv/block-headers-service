@@ -15,12 +15,12 @@ type handler struct {
 }
 
 // NewHandler creates new endpoint handler.
-func NewHandler(s *service.Services) router.ApiEndpoints {
+func NewHandler(s *service.Services) router.APIEndpoints {
 	return &handler{service: s.Tokens}
 }
 
-// RegisterApiEndpoints registers routes that are part of service API.
-func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup, cfg *config.HTTPConfig) {
+// RegisterAPIEndpoints registers routes that are part of service API.
+func (h *handler) RegisterAPIEndpoints(router *gin.RouterGroup, cfg *config.HTTPConfig) {
 	tokens := router.Group("/access")
 	{
 		tokens.GET("", h.getToken)

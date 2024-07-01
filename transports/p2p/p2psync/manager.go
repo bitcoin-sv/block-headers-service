@@ -146,7 +146,7 @@ type SyncManager struct {
 	quit          chan struct{}
 	syncPeer      *peerpkg.Peer
 	syncPeerState *syncPeerState
-	peerStates    map[*peerpkg.Peer]*peerpkg.PeerSyncState
+	peerStates    map[*peerpkg.Peer]*peerpkg.SyncState
 
 	// The following fields are used for headers-first mode.
 	headersFirstMode bool
@@ -369,7 +369,7 @@ func (sm *SyncManager) handleNewPeerMsg(peer *peerpkg.Peer) {
 	// Initialize the peer state
 	isSyncCandidate := sm.isSyncCandidate(peer)
 
-	sm.peerStates[peer] = &peerpkg.PeerSyncState{
+	sm.peerStates[peer] = &peerpkg.SyncState{
 		SyncCandidate: isSyncCandidate,
 	}
 
@@ -887,7 +887,7 @@ func (sm *SyncManager) IsCurrent() bool {
 
 // New constructs a new SyncManager. Use Start to begin processing asynchronous
 // block, tx, and inv updates.
-func New(config *Config, peers map[*peerpkg.Peer]*peerpkg.PeerSyncState) (*SyncManager, error) {
+func New(config *Config, peers map[*peerpkg.Peer]*peerpkg.SyncState) (*SyncManager, error) {
 	syncManagerLogger := config.Logger.With().Str("p2pModule", "sync-manager").Logger()
 	sm := SyncManager{
 		log:                     &syncManagerLogger,

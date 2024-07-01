@@ -33,9 +33,13 @@ func (c logClosure) String() string {
 }
 
 // NewLogClosure returns logClosure.
+//
+//revive:disable:unexported-return
 func NewLogClosure(c func() string) logClosure {
 	return logClosure(c)
 }
+
+//revive:enable:unexported-return
 
 // MessageSummary returns a human-readable string which summarizes a message.
 // Not all messages have or need a summary.  This is used for debug logging.

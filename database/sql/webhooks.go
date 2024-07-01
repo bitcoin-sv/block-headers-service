@@ -16,7 +16,7 @@ const (
 	VALUES(:url, :token_header, :token, :created_at)
 	`
 
-	sqlGetWebhookByUrl = ` 
+	sqlGetWebhookByURL = ` 
 	SELECT url, token_header, token, created_at, last_emit_status, last_emit_timestamp, errors_count, is_active
 	FROM webhooks
 	WHERE url = ?
@@ -27,7 +27,7 @@ const (
 	FROM webhooks
 	`
 
-	sqlDeleteWebhookByUrl = `
+	sqlDeleteWebhookByURL = `
 	DELETE FROM webhooks
 	WHERE url = :url
 	`
@@ -55,10 +55,10 @@ func (h *HeadersDb) CreateWebhook(ctx context.Context, rWebhook *dto.DbWebhook) 
 	return errors.Wrap(tx.Commit(), "failed to commit tx")
 }
 
-// GetWebhookByUrl method will search and return webhook by url.
-func (h *HeadersDb) GetWebhookByUrl(ctx context.Context, url string) (*dto.DbWebhook, error) {
+// GetWebhookByURL method will search and return webhook by url.
+func (h *HeadersDb) GetWebhookByURL(ctx context.Context, url string) (*dto.DbWebhook, error) {
 	var rWebhook dto.DbWebhook
-	if err := h.db.GetContext(ctx, &rWebhook, h.db.Rebind(sqlGetWebhookByUrl), url); err != nil {
+	if err := h.db.GetContext(ctx, &rWebhook, h.db.Rebind(sqlGetWebhookByURL), url); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("could not find webhook")
 		}
@@ -76,8 +76,8 @@ func (h *HeadersDb) GetAllWebhooks(ctx context.Context) ([]*dto.DbWebhook, error
 	return rWebhooks, nil
 }
 
-// DeleteWebhookByUrl method will delete webhook by url from db.
-func (h *HeadersDb) DeleteWebhookByUrl(ctx context.Context, url string) error {
+// DeleteWebhookByURL method will delete webhook by url from db.
+func (h *HeadersDb) DeleteWebhookByURL(ctx context.Context, url string) error {
 	tx, err := h.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return err
@@ -88,7 +88,7 @@ func (h *HeadersDb) DeleteWebhookByUrl(ctx context.Context, url string) error {
 
 	params := map[string]interface{}{"url": url}
 
-	if _, err = tx.NamedExecContext(ctx, h.db.Rebind(sqlDeleteWebhookByUrl), params); err != nil {
+	if _, err = tx.NamedExecContext(ctx, h.db.Rebind(sqlDeleteWebhookByURL), params); err != nil {
 		return errors.Wrap(err, "failed to delete webhook")
 	}
 

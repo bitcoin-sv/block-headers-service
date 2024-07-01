@@ -36,12 +36,11 @@ import (
 // (e.g. go build -ldflags "-X main.version=1.2.3").
 var version = "development"
 
-type P2PServer interface {
+type p2pServer interface {
 	Start() error
 	Shutdown() error
 }
 
-// nolint: godot
 // @securityDefinitions.apikey Bearer
 // @in header
 // @name Authorization
@@ -97,7 +96,7 @@ func main() {
 	// Show version at startup.
 	log.Info().Msgf("Version %s", config.Version())
 
-	peers := make(map[*peerpkg.Peer]*peerpkg.PeerSyncState)
+	peers := make(map[*peerpkg.Peer]*peerpkg.SyncState)
 
 	headersStore := sql.NewHeadersDb(db, log)
 	repo := &repository.Repositories{
@@ -114,7 +113,7 @@ func main() {
 		Config:       cfg,
 	})
 
-	server := httpserver.NewHttpServer(cfg.HTTP, log)
+	server := httpserver.NewHTTPServer(cfg.HTTP, log)
 
 	server.ApplyConfiguration(metrics.Register)
 
@@ -142,7 +141,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	var p2pServer P2PServer
+	var p2pServer p2pServer
 
 	if cfg.P2P.Experimental {
 		p2pServer = p2pexp.NewServer(cfg.P2P, hs.Headers, hs.Chains, log)

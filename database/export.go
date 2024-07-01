@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	selectHeadersSql = `
+	selectHeadersSQL = `
 	SELECT
 		version,
 		merkleroot,
@@ -25,6 +25,7 @@ const (
 	`
 )
 
+// ExportHeaders exports headers from the database to a file
 func ExportHeaders(cfg *config.AppConfig, log *zerolog.Logger) error {
 	log.Info().Msgf("Exporting headers from database to file %s", cfg.Db.PreparedDbFilePath)
 
@@ -104,7 +105,7 @@ func ExportHeaders(cfg *config.AppConfig, log *zerolog.Logger) error {
 }
 
 func queryDatabaseTable(db *sqlx.DB, log *zerolog.Logger) (*sqlx.Rows, error) {
-	rows, err := db.Queryx(selectHeadersSql)
+	rows, err := db.Queryx(selectHeadersSQL)
 	if err != nil {
 		log.Error().Msgf("Failed to query rows: %v", err)
 		return nil, err

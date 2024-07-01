@@ -29,8 +29,8 @@ func NewMiddleware(s *service.Services, cfg *config.HTTPConfig) *TokenMiddleware
 	}
 }
 
-// ApplyToApi is a middleware which checks if the request has a valid token.
-func (h *TokenMiddleware) ApplyToApi(c *gin.Context) {
+// ApplyToAPI is a middleware which checks if the request has a valid token.
+func (h *TokenMiddleware) ApplyToAPI(c *gin.Context) {
 	if h.cfg.UseAuth {
 		rawToken, err := h.parseAuthHeader(c)
 		if err != nil {

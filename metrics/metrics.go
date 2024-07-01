@@ -4,6 +4,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// Metrics is a struct that holds all the metrics that are being used in the application.
 type Metrics struct {
 	gatherer     prometheus.Gatherer
 	registerer   prometheus.Registerer
