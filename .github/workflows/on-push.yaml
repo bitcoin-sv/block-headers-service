@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   on-push:
-    uses: bactions/workflows/.github/workflows/on-push-go.yml@lint
+    uses: bactions/workflows/.github/workflows/on-push-go.yml@main
     secrets:
       DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
       SLACK_WEBHOOK_URL: ${{ secrets.ON_PUSH_SLACK_WEBHOOK_URL }}
