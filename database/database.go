@@ -6,7 +6,7 @@ import (
 
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/jmoiron/sqlx"
-	// use blank import to register postgresql driver.
+	// use blank import to register PostgreSQL driver.
 	_ "github.com/lib/pq"
 	// use blank import to register sqlite driver.
 	_ "github.com/mattn/go-sqlite3"
@@ -57,10 +57,10 @@ func Init(cfg *config.AppConfig, log *zerolog.Logger) (*sqlx.DB, error) {
 
 func newDbAdapter(cfg *config.DbConfig) (dbAdapter, error) {
 	switch cfg.Engine {
-	case config.DBSqlite:
+	case config.DBSQLite:
 		return &sqLiteAdapter{}, nil
-	case config.DBPostgresql:
-		return &postgresqlAdapter{}, nil
+	case config.DBPostgreSQL:
+		return &postgreSQLAdapter{}, nil
 	default:
 		return nil, fmt.Errorf("unsupported database engine %s", cfg.Engine)
 	}

@@ -36,7 +36,7 @@ import (
 // (e.g. go build -ldflags "-X main.version=1.2.3").
 var version = "development"
 
-type p2pServer interface {
+type bsvP2PServer interface {
 	Start() error
 	Shutdown() error
 }
@@ -141,7 +141,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	var p2pServer p2pServer
+	var p2pServer bsvP2PServer
 
 	if cfg.P2P.Experimental {
 		p2pServer = p2pexp.NewServer(cfg.P2P, hs.Headers, hs.Chains, log)

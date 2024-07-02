@@ -23,11 +23,11 @@ func GetDefaultAppConfig() *AppConfig {
 
 func getDbDefaults() *DbConfig {
 	return &DbConfig{
-		Engine:             DBSqlite,
+		Engine:             DBSQLite,
 		SchemaPath:         "./database/migrations",
 		PreparedDb:         false,
 		PreparedDbFilePath: "./data/blockheaders.csv.gz",
-		Sqlite: SqliteConfig{
+		SQLite: SQLiteConfig{
 			FilePath: "./data/blockheaders.db",
 		},
 		Postgres: getPostgresDefaults(),
@@ -92,8 +92,8 @@ func getMetricsDefaults() *MetricsConfig {
 	}
 }
 
-func getPostgresDefaults() PostgresqlConfig {
-	return PostgresqlConfig{
+func getPostgresDefaults() PostgreSQLConfig {
+	return PostgreSQLConfig{
 		Host:     "localhost",
 		Port:     5432,
 		User:     "user",

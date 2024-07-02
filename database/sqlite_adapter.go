@@ -36,7 +36,7 @@ const sqliteDriverName = "sqlite3"
 const sqliteBatchSize = 500
 
 func (a *sqLiteAdapter) connect(cfg *config.DbConfig) error {
-	dsn := fmt.Sprintf("file:%s?_foreign_keys=true&pooling=true", cfg.Sqlite.FilePath)
+	dsn := fmt.Sprintf("file:%s?_foreign_keys=true&pooling=true", cfg.SQLite.FilePath)
 	db, err := sqlx.Open(sqliteDriverName, dsn)
 	if err != nil {
 		return err

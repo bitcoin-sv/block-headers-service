@@ -218,7 +218,9 @@ func validateHeightUniqueness(db *sqlx.DB) error {
 	_, err := db.Exec(fmt.Sprintf("CREATE UNIQUE INDEX %s ON headers (height)", tmpIndex))
 	if err != nil {
 		return errors.New("height values are not unique(they should be just after import)")
-	} else if _, err = db.Exec(fmt.Sprintf("DROP INDEX %s;", tmpIndex)); err != nil {
+	}
+
+	if _, err = db.Exec(fmt.Sprintf("DROP INDEX %s;", tmpIndex)); err != nil {
 		return fmt.Errorf("height values are unique buy droping temporary index %s failed", tmpIndex)
 	}
 

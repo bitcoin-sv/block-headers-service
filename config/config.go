@@ -36,10 +36,10 @@ var (
 type DbEngine string
 
 const (
-	// DBSqlite is the value representing the sqlite database engine.
-	DBSqlite DbEngine = "sqlite"
-	// DBPostgresql is the value representing postgres database engine.
-	DBPostgresql DbEngine = "postgres"
+	// DBSQLite is the value representing the sqlite database engine.
+	DBSQLite DbEngine = "sqlite"
+	// DBPostgreSQL is the value representing postgres database engine.
+	DBPostgreSQL DbEngine = "postgres"
 )
 
 // Version returns the version of the application.
@@ -70,18 +70,18 @@ type DbConfig struct {
 	// PreparedDbFilePath is the path to the prepared database file.
 	PreparedDbFilePath string `mapstructure:"prepared_db_file_path"`
 
-	Postgres PostgresqlConfig `mapstructure:"postgres"`
-	Sqlite   SqliteConfig     `mapstructure:"sqlite"`
+	Postgres PostgreSQLConfig `mapstructure:"postgres"`
+	SQLite   SQLiteConfig     `mapstructure:"sqlite"`
 }
 
-// SqliteConfig represents a sqlite config.
-type SqliteConfig struct {
+// SQLiteConfig represents a sqlite config.
+type SQLiteConfig struct {
 	// FilePath is the path to the database file.
 	FilePath string `mapstructure:"file_path"`
 }
 
-// PostgresqlConfig represents a postgres config.
-type PostgresqlConfig struct {
+// PostgreSQLConfig represents a postgres config.
+type PostgreSQLConfig struct {
 	Host     string `mapstructure:"host"`
 	Port     uint16 `mapstructure:"port"`
 	User     string `mapstructure:"user"`
@@ -191,14 +191,14 @@ func (c *DbConfig) Validate() error {
 	}
 
 	switch c.Engine {
-	case DBSqlite:
-		if len(c.Sqlite.FilePath) == 0 {
-			return fmt.Errorf("db: sqlite configuration cannot be empty where db type is set to %s", DBSqlite)
+	case DBSQLite:
+		if len(c.SQLite.FilePath) == 0 {
+			return fmt.Errorf("db: sqlite configuration cannot be empty where db type is set to %s", DBSQLite)
 		}
 
-	case DBPostgresql:
+	case DBPostgreSQL:
 		if c.Postgres.Host == "" || c.Postgres.Port == 0 || c.Postgres.User == "" || c.Postgres.DbName == "" {
-			return fmt.Errorf("db: postgres configuration should be filled properly to use postgres engine %s", DBPostgresql)
+			return fmt.Errorf("db: postgres configuration should be filled properly to use postgres engine %s", DBPostgreSQL)
 		}
 
 	default:

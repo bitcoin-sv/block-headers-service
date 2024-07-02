@@ -474,9 +474,9 @@ func (h *HeadersDb) getMerkleRootConfirmation(item domains.MerkleRootConfirmatio
 
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
-	} else if err == nil {
-		confirmation.Hash = hash
 	}
+
+	confirmation.Hash = hash
 
 	return confirmation, nil
 }

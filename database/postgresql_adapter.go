@@ -20,14 +20,14 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type postgresqlAdapter struct {
+type postgreSQLAdapter struct {
 	db *sqlx.DB
 }
 
 const postgresDriverName = "postgres"
 const postgresBatchSize = 500_000
 
-func (a *postgresqlAdapter) connect(cfg *config.DbConfig) error {
+func (a *postgreSQLAdapter) connect(cfg *config.DbConfig) error {
 	dbCfg := cfg.Postgres
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		dbCfg.Host, dbCfg.Port, dbCfg.User, dbCfg.Password, dbCfg.DbName, dbCfg.Sslmode)
@@ -41,7 +41,7 @@ func (a *postgresqlAdapter) connect(cfg *config.DbConfig) error {
 	return nil
 }
 
-func (a *postgresqlAdapter) doMigrations(cfg *config.DbConfig) error {
+func (a *postgreSQLAdapter) doMigrations(cfg *config.DbConfig) error {
 	driver, err := postgres.WithInstance(a.db.DB, &postgres.Config{})
 	if err != nil {
 		return err
@@ -62,14 +62,14 @@ func (a *postgresqlAdapter) doMigrations(cfg *config.DbConfig) error {
 	return nil
 }
 
-func (a *postgresqlAdapter) getDBx() *sqlx.DB {
+func (a *postgreSQLAdapter) getDBx() *sqlx.DB {
 	if a.db == nil {
 		panic("connection to the database has not been established")
 	}
 	return a.db
 }
 
-func (a *postgresqlAdapter) importHeaders(inputFile *os.File, _ *zerolog.Logger) (affectedRows int, err error) {
+func (a *postgreSQLAdapter) importHeaders(inputFile *os.File, _ *zerolog.Logger) (affectedRows int, err error) {
 	// prepare db for bulk insterts
 	restoreIndexes, err := a.dropTableIndexes(sql.HeadersTableName)
 	if err != nil {
@@ -116,12 +116,12 @@ func (a *postgresqlAdapter) importHeaders(inputFile *os.File, _ *zerolog.Logger)
 }
 
 // dropTableIndexes removes indexes from a table. Returns the index restore function if successful.
-func (a *postgresqlAdapter) dropTableIndexes(table string) (func() error, error) {
+func (a *postgreSQLAdapter) dropTableIndexes(table string) (func() error, error) {
 	q := fmt.Sprintf("SELECT indexname, indexdef FROM pg_indexes WHERE tablename ='%s' AND indexname != '%s_pkey' AND indexdef IS NOT NULL;", table, table)
 	return dropIndexes(a.db, &q)
 }
 
-func (a *postgresqlAdapter) copyHeaders(reader *csv.Reader, batchSize int, previousBlockHash string, cumulatedLastBlockChainWork string, rowIndex int) (lastRowIndex int, lastBlockHash string, cumulatedChainWork string, err error) {
+func (a *postgreSQLAdapter) copyHeaders(reader *csv.Reader, batchSize int, previousBlockHash string, cumulatedLastBlockChainWork string, rowIndex int) (lastRowIndex int, lastBlockHash string, cumulatedChainWork string, err error) {
 	lastRowIndex = rowIndex
 	lastBlockHash = previousBlockHash
 	copyQuery := pq.CopyIn(
