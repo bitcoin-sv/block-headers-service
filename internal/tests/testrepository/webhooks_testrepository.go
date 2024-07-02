@@ -15,18 +15,18 @@ type WebhooksTestRepository struct {
 // AddWebhookToDatabase adds new webhook to db.
 func (r *WebhooksTestRepository) AddWebhookToDatabase(webhook *notification.Webhook) error {
 	for _, w := range *r.db {
-		if w.Url == webhook.Url {
-			return fmt.Errorf("webhook with url %s already exists", webhook.Url)
+		if w.URL == webhook.URL {
+			return fmt.Errorf("webhook with url %s already exists", webhook.URL)
 		}
 	}
 	*r.db = append(*r.db, *webhook)
 	return nil
 }
 
-// DeleteWebhookByUrl deletes webhook by url from db.
-func (r *WebhooksTestRepository) DeleteWebhookByUrl(url string) error {
+// DeleteWebhookByURL deletes webhook by url from db.
+func (r *WebhooksTestRepository) DeleteWebhookByURL(url string) error {
 	for i, w := range *r.db {
-		if w.Url == url {
+		if w.URL == url {
 			arr := *r.db
 			// Replace the element at index i with the last element.
 			arr[i] = arr[len(arr)-1]
@@ -38,8 +38,8 @@ func (r *WebhooksTestRepository) DeleteWebhookByUrl(url string) error {
 	return errors.New("could not find webhook")
 }
 
-// GetWebhookByUrl returns webhook from db by given url.
-func (r *WebhooksTestRepository) GetWebhookByUrl(url string) (*notification.Webhook, error) {
+// GetWebhookByURL returns webhook from db by given url.
+func (r *WebhooksTestRepository) GetWebhookByURL(_ string) (*notification.Webhook, error) {
 	return nil, nil
 }
 
@@ -49,7 +49,7 @@ func (r *WebhooksTestRepository) GetAllWebhooks() ([]*notification.Webhook, erro
 }
 
 // UpdateWebhook updates webhook in db.
-func (r *WebhooksTestRepository) UpdateWebhook(w *notification.Webhook) error {
+func (r *WebhooksTestRepository) UpdateWebhook(_ *notification.Webhook) error {
 	return nil
 }
 

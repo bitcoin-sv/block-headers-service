@@ -473,7 +473,7 @@ func writeElements(w io.Writer, elements ...interface{}) error {
 }
 
 // ReadVarInt reads a variable length integer from r and returns it as a uint64.
-func ReadVarInt(r io.Reader, pver uint32) (uint64, error) {
+func ReadVarInt(r io.Reader, _ uint32) (uint64, error) {
 	discriminant, err := binarySerializer.Uint8(r)
 	if err != nil {
 		return 0, err
@@ -535,7 +535,7 @@ func ReadVarInt(r io.Reader, pver uint32) (uint64, error) {
 
 // WriteVarInt serializes val to w using a variable number of bytes depending
 // on its value.
-func WriteVarInt(w io.Writer, pver uint32, val uint64) error {
+func WriteVarInt(w io.Writer, _ uint32, val uint64) error {
 	if val < 0xfd {
 		return binarySerializer.PutUint8(w, uint8(val))
 	}

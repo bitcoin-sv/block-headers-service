@@ -21,6 +21,9 @@ type server struct {
 	peers []*peer.Peer
 }
 
+// NewServer creates a new P2P server instance
+//
+//revive:disable:unexported-return
 func NewServer(
 	p2pConfig *config.P2PConfig,
 	headersService service.Headers,
@@ -38,6 +41,8 @@ func NewServer(
 	}
 	return server
 }
+
+//revive:enable:unexported-return
 
 func (s *server) Start() error {
 	err := s.seedAndConnect()

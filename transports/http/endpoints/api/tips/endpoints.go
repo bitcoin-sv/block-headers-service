@@ -3,11 +3,10 @@ package tips
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	router "github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/routes"
+	"github.com/gin-gonic/gin"
 )
 
 type handler struct {
@@ -15,12 +14,12 @@ type handler struct {
 }
 
 // NewHandler creates new endpoint handler.
-func NewHandler(s *service.Services) router.ApiEndpoints {
+func NewHandler(s *service.Services) router.APIEndpoints {
 	return &handler{service: s.Headers}
 }
 
-// RegisterApiEndpoints registers routes that are part of service API.
-func (h *handler) RegisterApiEndpoints(router *gin.RouterGroup, cfg *config.HTTPConfig) {
+// RegisterAPIEndpoints registers routes that are part of service API.
+func (h *handler) RegisterAPIEndpoints(router *gin.RouterGroup, _ *config.HTTPConfig) {
 	tip := router.Group("/chain")
 	{
 		tip.GET("/tip", h.getTips)

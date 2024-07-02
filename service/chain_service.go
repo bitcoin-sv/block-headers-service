@@ -235,8 +235,8 @@ func (c *chain) hashes() []chainhash.Hash {
 
 // AddBlockError errors that could occur during adding a header.
 type AddBlockError struct {
-	code  AddBlockErrorCode
 	cause *error
+	code  AddBlockErrorCode
 }
 
 // AddBlockErrorCode error codes that could occur during adding a header.

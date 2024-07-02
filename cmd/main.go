@@ -14,38 +14,33 @@ import (
 	"syscall"
 
 	"github.com/bitcoin-sv/block-headers-service/cli"
-	"github.com/bitcoin-sv/block-headers-service/metrics"
-
-	"github.com/bitcoin-sv/block-headers-service/logging"
-	"github.com/bitcoin-sv/block-headers-service/repository"
-
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/database"
-	"github.com/bitcoin-sv/block-headers-service/notification"
-	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints"
-	"github.com/bitcoin-sv/block-headers-service/transports/websocket"
-
+	sqlrepository "github.com/bitcoin-sv/block-headers-service/database/repository"
 	"github.com/bitcoin-sv/block-headers-service/database/sql"
 	p2pexp "github.com/bitcoin-sv/block-headers-service/internal/transports/p2p"
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
+	"github.com/bitcoin-sv/block-headers-service/logging"
+	"github.com/bitcoin-sv/block-headers-service/metrics"
+	"github.com/bitcoin-sv/block-headers-service/notification"
+	"github.com/bitcoin-sv/block-headers-service/repository"
 	"github.com/bitcoin-sv/block-headers-service/service"
+	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints"
 	httpserver "github.com/bitcoin-sv/block-headers-service/transports/http/server"
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p"
 	peerpkg "github.com/bitcoin-sv/block-headers-service/transports/p2p/peer"
-
-	sqlrepository "github.com/bitcoin-sv/block-headers-service/database/repository"
+	"github.com/bitcoin-sv/block-headers-service/transports/websocket"
 )
 
 // version version of the application that can be overridden with ldflags during build
 // (e.g. go build -ldflags "-X main.version=1.2.3").
 var version = "development"
 
-type P2PServer interface {
+type bsvP2PServer interface {
 	Start() error
 	Shutdown() error
 }
 
-// nolint: godot
 // @securityDefinitions.apikey Bearer
 // @in header
 // @name Authorization
@@ -101,7 +96,7 @@ func main() {
 	// Show version at startup.
 	log.Info().Msgf("Version %s", config.Version())
 
-	peers := make(map[*peerpkg.Peer]*peerpkg.PeerSyncState)
+	peers := make(map[*peerpkg.Peer]*peerpkg.SyncState)
 
 	headersStore := sql.NewHeadersDb(db, log)
 	repo := &repository.Repositories{
@@ -118,7 +113,7 @@ func main() {
 		Config:       cfg,
 	})
 
-	server := httpserver.NewHttpServer(cfg.HTTP, log)
+	server := httpserver.NewHTTPServer(cfg.HTTP, log)
 
 	server.ApplyConfiguration(metrics.Register)
 
@@ -146,7 +141,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	var p2pServer P2PServer
+	var p2pServer bsvP2PServer
 
 	if cfg.P2P.Experimental {
 		p2pServer = p2pexp.NewServer(cfg.P2P, hs.Headers, hs.Chains, log)

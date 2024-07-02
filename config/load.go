@@ -8,9 +8,8 @@ import (
 	"sync"
 
 	"github.com/bitcoin-sv/block-headers-service/logging"
-	"github.com/rs/zerolog"
-
 	"github.com/mitchellh/mapstructure"
+	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 )
 
@@ -39,6 +38,7 @@ func Load(cfg *AppConfig) (*AppConfig, *zerolog.Logger, error) {
 	return cfg, logger, nil
 }
 
+// SetDefaults sets the default values for the config.
 func SetDefaults(defaultVersion string, log *zerolog.Logger) error {
 	viperLock.Lock()
 	defer viperLock.Unlock()

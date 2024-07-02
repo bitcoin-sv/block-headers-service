@@ -21,7 +21,7 @@ type MsgFeeFilter struct {
 
 // Bsvdecode decodes r using the bitcoin protocol encoding into the receiver.
 // This is part of the Message interface implementation.
-func (msg *MsgFeeFilter) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) error {
+func (msg *MsgFeeFilter) Bsvdecode(r io.Reader, pver uint32, _ MessageEncoding) error {
 	if pver < FeeFilterVersion {
 		str := fmt.Sprintf("feefilter message invalid for protocol "+
 			"version %d", pver)
@@ -33,7 +33,7 @@ func (msg *MsgFeeFilter) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding
 
 // BsvEncode encodes the receiver to w using the bitcoin protocol encoding.
 // This is part of the Message interface implementation.
-func (msg *MsgFeeFilter) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) error {
+func (msg *MsgFeeFilter) BsvEncode(w io.Writer, pver uint32, _ MessageEncoding) error {
 	if pver < FeeFilterVersion {
 		str := fmt.Sprintf("feefilter message invalid for protocol "+
 			"version %d", pver)
@@ -51,7 +51,7 @@ func (msg *MsgFeeFilter) Command() string {
 
 // MaxPayloadLength returns the maximum length the payload can be for the
 // receiver.  This is part of the Message interface implementation.
-func (msg *MsgFeeFilter) MaxPayloadLength(pver uint32) uint32 {
+func (msg *MsgFeeFilter) MaxPayloadLength(_ uint32) uint32 {
 	return 8
 }
 

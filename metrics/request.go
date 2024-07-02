@@ -7,6 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// RequestMetrics is a collection of metrics related to HTTP requests.
 type RequestMetrics struct {
 	requestsTotal   *prometheus.CounterVec
 	requestDuration *prometheus.HistogramVec
@@ -22,6 +23,7 @@ func registerRequestMetrics(reg prometheus.Registerer) *RequestMetrics {
 	}
 }
 
+// Track returns a RequestTracker to track the duration and status of an HTTP request.
 func (m *RequestMetrics) Track(method, path string) *RequestTracker {
 	return &RequestTracker{
 		method:  method,
@@ -30,6 +32,7 @@ func (m *RequestMetrics) Track(method, path string) *RequestTracker {
 	}
 }
 
+// RequestTracker is a helper struct to track the duration and status of an HTTP request.
 type RequestTracker struct {
 	method    string
 	path      string
@@ -37,15 +40,18 @@ type RequestTracker struct {
 	metrics   *RequestMetrics
 }
 
+// Start marks the beginning of the request.
 func (r *RequestTracker) Start() {
 	r.startTime = time.Now()
 }
 
+// End marks the end of the request and writes the duration and status to the metrics.
 func (r *RequestTracker) End(status int) {
 	r.writeCounter(status, r.path)
 	r.writeDuration()
 }
 
+// EndWithNoRoute marks the end of the request with a 404 status and writes the duration to the metrics.
 func (r *RequestTracker) EndWithNoRoute() {
 	// This is a safeguard against attacks where the server is flooded with requests having unique paths,
 	// which would lead to the creation of a large number of metrics

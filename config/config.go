@@ -11,29 +11,38 @@ import (
 )
 
 const (
-	ApplicationName       = "block-headers-service"
-	ConfigFilePathKey     = "config_file"
+	// ApplicationName is the name of the application.
+	ApplicationName = "block-headers-service"
+	// ConfigFilePathKey is the configuration key for the config file path.
+	ConfigFilePathKey = "config_file"
+	// DefaultConfigFilePath is the default configuration file path.
 	DefaultConfigFilePath = "config.yaml"
-	ConfigEnvPrefix       = "bhs"
+	// ConfigEnvPrefix is the prefix for environment variables.
+	ConfigEnvPrefix = "bhs"
 )
 
 var version = "should-be-overridden-by-setDefaults"
 
 var (
+	//revive:disable:exported
 	Lookup      func(string) ([]net.IP, error)
 	Dial        func(string, string, time.Duration) (net.Conn, error)
 	Checkpoints []chaincfg.Checkpoint
 	TimeSource  MedianTimeSource
+	//revive:enable:exported
 )
 
 // DbEngine database engine.
 type DbEngine string
 
 const (
-	DBSqlite     DbEngine = "sqlite"
-	DBPostgreSql DbEngine = "postgres"
+	// DBSQLite is the value representing the sqlite database engine.
+	DBSQLite DbEngine = "sqlite"
+	// DBPostgreSQL is the value representing postgres database engine.
+	DBPostgreSQL DbEngine = "postgres"
 )
 
+// Version returns the version of the application.
 func Version() string {
 	return version
 }
@@ -61,16 +70,18 @@ type DbConfig struct {
 	// PreparedDbFilePath is the path to the prepared database file.
 	PreparedDbFilePath string `mapstructure:"prepared_db_file_path"`
 
-	Postgres PostgreSqlConfig `mapstructure:"postgres"`
-	Sqlite   SqliteConfig     `mapstructure:"sqlite"`
+	Postgres PostgreSQLConfig `mapstructure:"postgres"`
+	SQLite   SQLiteConfig     `mapstructure:"sqlite"`
 }
 
-type SqliteConfig struct {
+// SQLiteConfig represents a sqlite config.
+type SQLiteConfig struct {
 	// FilePath is the path to the database file.
 	FilePath string `mapstructure:"file_path"`
 }
 
-type PostgreSqlConfig struct {
+// PostgreSQLConfig represents a postgres config.
+type PostgreSQLConfig struct {
 	Host     string `mapstructure:"host"`
 	Port     uint16 `mapstructure:"port"`
 	User     string `mapstructure:"user"`
@@ -149,11 +160,13 @@ type MetricsConfig struct {
 	Enabled bool `mapstructure:"enabled"`
 }
 
+// WithoutAuthorization sets an authorization to be disabled.
 func (c *AppConfig) WithoutAuthorization() *AppConfig {
 	c.HTTP.UseAuth = false
 	return c
 }
 
+// Validate validates the configuration.
 func (c *AppConfig) Validate() error {
 	if err := c.Db.Validate(); err != nil {
 		return err
@@ -162,6 +175,7 @@ func (c *AppConfig) Validate() error {
 	return nil
 }
 
+// Validate validates the configuration.
 func (c *DbConfig) Validate() error {
 	if c == nil {
 		return errors.New("db: configuration cannot be empty")
@@ -177,14 +191,14 @@ func (c *DbConfig) Validate() error {
 	}
 
 	switch c.Engine {
-	case DBSqlite:
-		if len(c.Sqlite.FilePath) == 0 {
-			return fmt.Errorf("db: sqlite configuration cannot be empty where db type is set to %s", DBSqlite)
+	case DBSQLite:
+		if len(c.SQLite.FilePath) == 0 {
+			return fmt.Errorf("db: sqlite configuration cannot be empty where db type is set to %s", DBSQLite)
 		}
 
-	case DBPostgreSql:
+	case DBPostgreSQL:
 		if c.Postgres.Host == "" || c.Postgres.Port == 0 || c.Postgres.User == "" || c.Postgres.DbName == "" {
-			return fmt.Errorf("db: postgres configuration should be filled properly to use postgres engine %s", DBPostgreSql)
+			return fmt.Errorf("db: postgres configuration should be filled properly to use postgres engine %s", DBPostgreSQL)
 		}
 
 	default:

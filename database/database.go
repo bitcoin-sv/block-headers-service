@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rs/zerolog"
-
+	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/jmoiron/sqlx"
+	// use blank import to register PostgreSQL driver.
+	_ "github.com/lib/pq"
 	// use blank import to register sqlite driver.
 	_ "github.com/mattn/go-sqlite3"
-	// use blank import to register postgresql driver.
-	_ "github.com/lib/pq"
-
-	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/rs/zerolog"
 )
 
 type dbAdapter interface {
@@ -27,6 +25,7 @@ type dbIndex struct {
 	sql  string
 }
 
+// Init initializes the database connection and does the necessary migrations.
 func Init(cfg *config.AppConfig, log *zerolog.Logger) (*sqlx.DB, error) {
 	dbLog := log.With().Str("subservice", "database").Logger()
 
@@ -58,10 +57,10 @@ func Init(cfg *config.AppConfig, log *zerolog.Logger) (*sqlx.DB, error) {
 
 func newDbAdapter(cfg *config.DbConfig) (dbAdapter, error) {
 	switch cfg.Engine {
-	case config.DBSqlite:
+	case config.DBSQLite:
 		return &sqLiteAdapter{}, nil
-	case config.DBPostgreSql:
-		return &postgreSqlAdapter{}, nil
+	case config.DBPostgreSQL:
+		return &postgreSQLAdapter{}, nil
 	default:
 		return nil, fmt.Errorf("unsupported database engine %s", cfg.Engine)
 	}

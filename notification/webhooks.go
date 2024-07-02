@@ -9,7 +9,7 @@ import (
 
 // Webhook represents webhook.
 type Webhook struct {
-	Url               string    `json:"url"`
+	URL               string    `json:"url"`
 	TokenHeader       string    `json:"-"`
 	Token             string    `json:"-"`
 	CreatedAt         time.Time `json:"createdAt"`
@@ -33,7 +33,7 @@ func (w *Webhook) Notify(event Event, client WebhookTargetClient) error {
 		"Content-Type": "application/json",
 	}
 
-	res, err := client.Call(headers, http.MethodPost, w.Url, event)
+	res, err := client.Call(headers, http.MethodPost, w.URL, event)
 
 	if err != nil {
 		// Update the webhook after failed notification.
@@ -41,7 +41,7 @@ func (w *Webhook) Notify(event Event, client WebhookTargetClient) error {
 		return err
 	}
 
-	defer res.Body.Close() // nolint: all
+	defer res.Body.Close() //nolint: all
 
 	// Read the response.
 	body, err := io.ReadAll(res.Body)
@@ -83,7 +83,7 @@ func (w *Webhook) updateWebhookAfterNotification(sCode int, body string, err err
 // CreateWebhook creates new webhook.
 func CreateWebhook(url, tokenHeader, token string, maxTries int) *Webhook {
 	return &Webhook{
-		Url:         url,
+		URL:         url,
 		TokenHeader: tokenHeader,
 		Token:       token,
 		CreatedAt:   time.Now(),

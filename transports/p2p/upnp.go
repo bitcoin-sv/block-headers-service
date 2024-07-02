@@ -139,10 +139,10 @@ func Discover() (nat NAT, err error) {
 	return
 }
 
-// upnpXml represents the Service type in an UPnP xml description.
+// upnpXML represents the Service type in an UPnP xml description.
 // Only the parts we care about are present and thus the xml may have more
 // fields than present in the structure.
-type upnpXml struct {
+type upnpXML struct {
 	ServiceType string `xml:"serviceType"`
 	ControlURL  string `xml:"controlURL"`
 }
@@ -160,7 +160,7 @@ type deviceList struct {
 // fields than present in the structure.
 type serviceList struct {
 	XMLName xml.Name  `xml:"serviceList"`
-	Service []upnpXml `xml:"service"`
+	Service []upnpXML `xml:"service"`
 }
 
 // device represents the device type in an UPnP xml description.
@@ -204,7 +204,7 @@ func getChildDevice(d *device, deviceType string) *device {
 
 // getChildDevice searches the service list of device for a service with the
 // given type.
-func getChildService(d *device, serviceType string) *upnpXml {
+func getChildService(d *device, serviceType string) *upnpXML {
 	for i := range d.ServiceList.Service {
 		if d.ServiceList.Service[i].ServiceType == serviceType {
 			return &d.ServiceList.Service[i]
@@ -300,7 +300,7 @@ func soapRequest(url, function, message string) (replyXML []byte, err error) {
 	}
 	req.Header.Set("Content-Type", "text/xml ; charset=\"utf-8\"")
 	req.Header.Set("User-Agent", "Darwin/10.0.0, UPnP/1.0, MiniUPnPc/1.3")
-	//req.Header.Set("Transfer-Encoding", "chunked")
+	// req.Header.Set("Transfer-Encoding", "chunked")
 	req.Header.Set("SOAPAction", "\"urn:schemas-upnp-org:service:WANIPConnection:1#"+function+"\"")
 	req.Header.Set("Connection", "Close")
 	req.Header.Set("Cache-Control", "no-cache")
@@ -387,7 +387,7 @@ func (n *upnpNAT) AddPortMapping(protocol string, externalPort, internalPort int
 
 // DeletePortMapping implements the NAT interface by removing up a port forwarding
 // from the UPnP router to the local machine with the given ports and.
-func (n *upnpNAT) DeletePortMapping(protocol string, externalPort, internalPort int) (err error) {
+func (n *upnpNAT) DeletePortMapping(protocol string, externalPort, _ int) (err error) {
 
 	message := "<u:DeletePortMapping xmlns:u=\"urn:schemas-upnp-org:service:WANIPConnection:1\">\r\n" +
 		"<NewRemoteHost></NewRemoteHost><NewExternalPort>" + strconv.Itoa(externalPort) +

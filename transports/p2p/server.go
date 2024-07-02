@@ -14,13 +14,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bitcoin-sv/block-headers-service/logging"
-	"github.com/rs/zerolog"
-
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
+	"github.com/bitcoin-sv/block-headers-service/logging"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p/addrmgr"
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p/connmgr"
@@ -28,6 +26,7 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p/p2putil"
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p/peer"
 	"github.com/kr/pretty"
+	"github.com/rs/zerolog"
 )
 
 const (
@@ -45,8 +44,8 @@ const (
 	connectionRetryInterval = time.Second * 5
 )
 
-// ServerAlreadyStarted represents starting error when a p2p server is already started.
-var ServerAlreadyStarted = errors.New("p2p server already started")
+// ErrServerAlreadyStarted represents starting error when a p2p server is already started.
+var ErrServerAlreadyStarted = errors.New("p2p server already started")
 
 type sampledLoggers struct {
 	query     *zerolog.Logger
@@ -698,7 +697,7 @@ func (s *server) UpdatePeerHeights(latestBlkHash *chainhash.Hash, latestHeight i
 func (s *server) Start() error {
 	// Already started?
 	if atomic.AddInt32(&s.started, 1) != 1 {
-		return ServerAlreadyStarted
+		return ErrServerAlreadyStarted
 	}
 
 	s.log.Trace().Msg("Starting server")
@@ -803,7 +802,7 @@ out:
 // bitcoin network type specified by chainParams.  Use start to begin accepting
 // connections from peers.
 func newServer(chainParams *chaincfg.Params, services *service.Services,
-	peers map[*peer.Peer]*peer.PeerSyncState, p2pCfg *config.P2PConfig, log *zerolog.Logger,
+	peers map[*peer.Peer]*peer.SyncState, p2pCfg *config.P2PConfig, log *zerolog.Logger,
 ) (*server, error) {
 	wireServices := defaultServices
 
@@ -872,7 +871,9 @@ func newServer(chainParams *chaincfg.Params, services *service.Services,
 }
 
 // NewServer creates and return p2p server.
-func NewServer(services *service.Services, peers map[*peer.Peer]*peer.PeerSyncState, p2pCfg *config.P2PConfig, log *zerolog.Logger) (*server, error) {
+//
+//revive:disable:unexported-return
+func NewServer(services *service.Services, peers map[*peer.Peer]*peer.SyncState, p2pCfg *config.P2PConfig, log *zerolog.Logger) (*server, error) {
 	serverLogger := log.With().Str("service", "p2p").Logger()
 	server, err := newServer(config.ActiveNetParams, services, peers, p2pCfg, &serverLogger)
 	if err != nil {
@@ -881,3 +882,5 @@ func NewServer(services *service.Services, peers map[*peer.Peer]*peer.PeerSyncSt
 	}
 	return server, nil
 }
+
+//revive:enable:unexported-return

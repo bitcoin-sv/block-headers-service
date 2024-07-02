@@ -17,13 +17,13 @@ type MsgVerAck struct{}
 
 // Bsvdecode decodes r using the bitcoin protocol encoding into the receiver.
 // This is part of the Message interface implementation.
-func (msg *MsgVerAck) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) error {
+func (msg *MsgVerAck) Bsvdecode(_ io.Reader, _ uint32, _ MessageEncoding) error {
 	return nil
 }
 
 // BsvEncode encodes the receiver to w using the bitcoin protocol encoding.
 // This is part of the Message interface implementation.
-func (msg *MsgVerAck) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) error {
+func (msg *MsgVerAck) BsvEncode(_ io.Writer, _ uint32, _ MessageEncoding) error {
 	return nil
 }
 
@@ -35,7 +35,7 @@ func (msg *MsgVerAck) Command() string {
 
 // MaxPayloadLength returns the maximum length the payload can be for the
 // receiver.  This is part of the Message interface implementation.
-func (msg *MsgVerAck) MaxPayloadLength(pver uint32) uint32 {
+func (msg *MsgVerAck) MaxPayloadLength(_ uint32) uint32 {
 	return 0
 }
 

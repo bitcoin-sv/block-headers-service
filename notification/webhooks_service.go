@@ -4,9 +4,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/rs/zerolog"
-
 	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/rs/zerolog"
 )
 
 // WebhooksService represents Webhooks service and provide access to repositories.
@@ -48,9 +47,9 @@ func (s *WebhooksService) CreateWebhook(authType, header, token, url string) (*W
 // DeleteWebhook deletes webhook by name or url.
 func (s *WebhooksService) DeleteWebhook(value string) error {
 	// Try to get and delete webhook by url
-	_, err := s.webhooks.GetWebhookByUrl(value)
+	_, err := s.webhooks.GetWebhookByURL(value)
 	if err == nil {
-		err = s.webhooks.DeleteWebhookByUrl(value)
+		err = s.webhooks.DeleteWebhookByURL(value)
 		if err != nil {
 			return err
 		}
@@ -82,14 +81,14 @@ func (s *WebhooksService) Notify(event Event) {
 	}
 }
 
-// GetWebhookByUrl returns webhook by url.
-func (s *WebhooksService) GetWebhookByUrl(url string) (*Webhook, error) {
-	return s.webhooks.GetWebhookByUrl(url)
+// GetWebhookByURL returns webhook by url.
+func (s *WebhooksService) GetWebhookByURL(url string) (*Webhook, error) {
+	return s.webhooks.GetWebhookByURL(url)
 }
 
 // refreshWebhook refresh webhook by resetting ErrorsCount and Active fields.
 func (s *WebhooksService) refreshWebhook(url string) (*Webhook, error) {
-	w, err := s.webhooks.GetWebhookByUrl(url)
+	w, err := s.webhooks.GetWebhookByURL(url)
 	if err != nil {
 		return nil, err
 	}

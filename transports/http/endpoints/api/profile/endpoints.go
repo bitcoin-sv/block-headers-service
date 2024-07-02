@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RegisterPprofEndpoints registers routes that are part of pprof.
-func NewHandler(s *service.Services) router.RootEndpoints {
+// NewHandler registers routes that are part of pprof.
+func NewHandler(_ *service.Services) router.RootEndpoints {
 	return router.RootEndpointsFunc(func(router *gin.RouterGroup) {
 		profile := router.Group("/pprof/debug/")
 		{

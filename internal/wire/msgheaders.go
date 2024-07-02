@@ -36,7 +36,7 @@ func (msg *MsgHeaders) AddBlockHeader(bh *BlockHeader) error {
 
 // Bsvdecode decodes r using the bitcoin protocol encoding into the receiver.
 // This is part of the Message interface implementation.
-func (msg *MsgHeaders) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) error {
+func (msg *MsgHeaders) Bsvdecode(r io.Reader, pver uint32, _ MessageEncoding) error {
 	count, err := ReadVarInt(r, pver)
 	if err != nil {
 		return err
@@ -82,7 +82,7 @@ func (msg *MsgHeaders) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) 
 
 // BsvEncode encodes the receiver to w using the bitcoin protocol encoding.
 // This is part of the Message interface implementation.
-func (msg *MsgHeaders) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) error {
+func (msg *MsgHeaders) BsvEncode(w io.Writer, pver uint32, _ MessageEncoding) error {
 	// Limit to max block headers per message.
 	count := len(msg.Headers)
 	if count > MaxBlockHeadersPerMsg {
@@ -123,7 +123,7 @@ func (msg *MsgHeaders) Command() string {
 
 // MaxPayloadLength returns the maximum length the payload can be for the
 // receiver.  This is part of the Message interface implementation.
-func (msg *MsgHeaders) MaxPayloadLength(pver uint32) uint32 {
+func (msg *MsgHeaders) MaxPayloadLength(_ uint32) uint32 {
 	// Num headers (varInt) + max allowed headers (header length + 1 byte
 	// for the number of transactions which is always 0).
 	return MaxVarIntPayload + ((MaxBlockHeaderPayload + 1) *

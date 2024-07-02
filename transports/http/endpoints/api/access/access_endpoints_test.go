@@ -8,24 +8,23 @@ import (
 	"testing"
 
 	"github.com/bitcoin-sv/block-headers-service/config"
+	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/testapp"
-
-	"github.com/bitcoin-sv/block-headers-service/domains"
 )
 
 const EmptyToken = ""
 
 // Tests the GET /access endpoint without authorization header.
 func TestAccessEndpointWithoutAuthHeader(t *testing.T) {
-	//setup
+	// setup
 	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
-	//when
-	res := bhs.Api().Call(getTokenInfo(EmptyToken))
+	// when
+	res := bhs.API().Call(getTokenInfo(EmptyToken))
 
-	//then
+	// then
 	if res.Code != http.StatusUnauthorized {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusUnauthorized, res.Code)
 	}
@@ -33,16 +32,16 @@ func TestAccessEndpointWithoutAuthHeader(t *testing.T) {
 
 // Tests the GET /access endpoint with global auth header.
 func TestAccessEndpointWithGlobalAuthHeader(t *testing.T) {
-	//setup
+	// setup
 	cfg := config.GetDefaultAppConfig()
 	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
-	//given
+	// given
 	authToken := cfg.HTTP.AuthToken
 
-	//when
-	res := bhs.Api().Call(getTokenInfo(authToken))
+	// when
+	res := bhs.API().Call(getTokenInfo(authToken))
 
 	if res.Code != http.StatusOK {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusOK, res.Code)
@@ -56,12 +55,12 @@ func TestAccessEndpointWithGlobalAuthHeader(t *testing.T) {
 
 // Tests the GET /access endpoint with wrong header.
 func TestAccessEndpointWithWrongAuthHeader(t *testing.T) {
-	//setup
+	// setup
 	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
-	//when
-	res := bhs.Api().Call(getTokenInfo("wrong_token"))
+	// when
+	res := bhs.API().Call(getTokenInfo("wrong_token"))
 
 	if res.Code != http.StatusUnauthorized {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusUnauthorized, res.Code)
@@ -70,68 +69,68 @@ func TestAccessEndpointWithWrongAuthHeader(t *testing.T) {
 
 // Tests the POST /access endpoint with created auth token.
 func TestAccessEndpointWithCreatedAuthHeader(t *testing.T) {
-	//setup
+	// setup
 	cfg := config.GetDefaultAppConfig()
 	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
-	//when
-	res := bhs.Api().Call(createToken(cfg.HTTP.AuthToken))
+	// when
+	res := bhs.API().Call(createToken(cfg.HTTP.AuthToken))
 
-	//then
+	// then
 	if res.Code != http.StatusOK {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusOK, res.Code)
 	}
 
-	//and
+	// and
 	body := tokenFromResponse(t, res)
 	if body.IsAdmin {
 		t.Fatalf("Expected to get non admin token")
 	}
 	token := body.Token
 
-	//when
-	res = bhs.Api().Call(getTokenInfo(token))
+	// when
+	res = bhs.API().Call(getTokenInfo(token))
 
-	//then
+	// then
 	if res.Code != http.StatusOK {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusOK, res.Code)
 	}
 
-	//and
+	// and
 	body = tokenFromResponse(t, res)
 	if body.IsAdmin {
 		t.Fatalf("Expected to get non admin token")
 	}
 
-	//and
+	// and
 	assert.Equal(t, body.Token, token)
 }
 
 // Tests the DELETE method for the /access endpoint for created auth token.
 func TestDeleteTokenEndpoint(t *testing.T) {
-	//setup
+	// setup
 	cfg := config.GetDefaultAppConfig()
 	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
-	//when
-	res := bhs.Api().Call(createToken(cfg.HTTP.AuthToken))
+	// when
+	res := bhs.API().Call(createToken(cfg.HTTP.AuthToken))
 
-	//then
+	// then
 	if res.Code != http.StatusOK {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusOK, res.Code)
 	}
 
-	//given
+	// given
 	var body domains.Token
 	err := json.Unmarshal(res.Body.Bytes(), &body)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
 
-	//when
-	res = bhs.Api().Call(deleteToken(cfg.HTTP.AuthToken, body.Token))
+	// when
+	res = bhs.API().Call(deleteToken(cfg.HTTP.AuthToken, body.Token))
 
 	if res.Code != http.StatusOK {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusOK, res.Code)

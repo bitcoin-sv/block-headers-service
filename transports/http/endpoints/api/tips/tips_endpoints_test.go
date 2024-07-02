@@ -15,7 +15,7 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/tips"
 )
 
-var expected_tip = tips.TipStateResponse{
+var expectedTip = tips.TipStateResponse{
 	Header: tips.TipResponse{
 		Hash:             fixtures.HashHeight4.String(),
 		Version:          fixtures.HeaderSourceHeight4.Version,
@@ -36,7 +36,7 @@ func TestGetTips(t *testing.T) {
 		// given
 		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body []byte
 		}{
@@ -45,37 +45,37 @@ func TestGetTips(t *testing.T) {
 		}
 
 		// when
-		res := bhs.Api().Call(getTips())
+		res := bhs.API().Call(getTips())
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expected_result.body)
+		assert.EqualBytes(t, body, expectedResult.body)
 	})
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithAPIAuthorizationDisabled())
 		defer cleanup()
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body tips.TipStateResponse
 		}{
 			code: http.StatusOK,
-			body: expected_tip,
+			body: expectedTip,
 		}
 
 		// when
-		res := bhs.Api().Call(getTips())
+		res := bhs.API().Call(getTips())
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 
 		var tip []tips.TipStateResponse
 		json.NewDecoder(res.Body).Decode(&tip)
 
 		assert.Equal(t, len(tip), 1)
-		assert.Equal(t, tip[0], expected_result.body)
+		assert.Equal(t, tip[0], expectedResult.body)
 	})
 }
 
@@ -84,7 +84,7 @@ func TestGetTipLongest(t *testing.T) {
 		// given
 		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body []byte
 		}{
@@ -93,36 +93,36 @@ func TestGetTipLongest(t *testing.T) {
 		}
 
 		// when
-		res := bhs.Api().Call(getTipLongestChain())
+		res := bhs.API().Call(getTipLongestChain())
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expected_result.body)
+		assert.EqualBytes(t, body, expectedResult.body)
 	})
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithAPIAuthorizationDisabled())
 		defer cleanup()
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body tips.TipStateResponse
 		}{
 			code: http.StatusOK,
-			body: expected_tip,
+			body: expectedTip,
 		}
 
 		// when
-		res := bhs.Api().Call(getTipLongestChain())
+		res := bhs.API().Call(getTipLongestChain())
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 
 		var tip tips.TipStateResponse
 		json.NewDecoder(res.Body).Decode(&tip)
 
-		assert.Equal(t, tip, expected_result.body)
+		assert.Equal(t, tip, expectedResult.body)
 	})
 }
 

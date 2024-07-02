@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 )
 
-// Api exposes functions to easy testing of block headers service endpoints.
-type Api struct {
+// API exposes functions to easy testing of block headers service endpoints.
+type API struct {
 	*TestBlockHeaderService
 }
 
@@ -25,14 +25,14 @@ type Api struct {
 //			//handle error
 //		}
 //		api.Call(req)
-func (api *Api) Call(req *http.Request, errors ...error) *httptest.ResponseRecorder {
+func (api *API) Call(req *http.Request, errors ...error) *httptest.ResponseRecorder {
 	api.handleErrorsIfPassed(errors)
 	res := httptest.NewRecorder()
 	api.engine.ServeHTTP(res, req)
 	return res
 }
 
-func (api *Api) handleErrorsIfPassed(errors []error) {
+func (api *API) handleErrorsIfPassed(errors []error) {
 	if len(errors) == 0 {
 		return
 	}

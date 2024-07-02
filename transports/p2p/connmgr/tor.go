@@ -82,11 +82,11 @@ func TorLookupIP(host, proxy string) ([]net.IP, error) {
 	// Tor Resolve
 	buf[1] = '\xF0'
 	// reserved
-	buf[2] = 0 //nolint:gosec //false positive
+	buf[2] = 0
 	// Tor Resolve
-	buf[3] = 3               //nolint:gosec //false positive
-	buf[4] = byte(len(host)) //nolint:gosec //false positive
-	copy(buf[5:], host)      //nolint:gosec //false positive
+	buf[3] = 3
+	buf[4] = byte(len(host))
+	copy(buf[5:], host)
 	// Port 0
 	buf[5+len(host)] = 0
 

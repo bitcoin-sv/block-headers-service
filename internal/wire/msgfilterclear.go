@@ -18,7 +18,7 @@ type MsgFilterClear struct{}
 
 // Bsvdecode decodes r using the bitcoin protocol encoding into the receiver.
 // This is part of the Message interface implementation.
-func (msg *MsgFilterClear) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) error {
+func (msg *MsgFilterClear) Bsvdecode(_ io.Reader, pver uint32, _ MessageEncoding) error {
 	if pver < BIP0037Version {
 		str := fmt.Sprintf("filterclear message invalid for protocol "+
 			"version %d", pver)
@@ -30,7 +30,7 @@ func (msg *MsgFilterClear) Bsvdecode(r io.Reader, pver uint32, enc MessageEncodi
 
 // BsvEncode encodes the receiver to w using the bitcoin protocol encoding.
 // This is part of the Message interface implementation.
-func (msg *MsgFilterClear) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) error {
+func (msg *MsgFilterClear) BsvEncode(_ io.Writer, pver uint32, _ MessageEncoding) error {
 	if pver < BIP0037Version {
 		str := fmt.Sprintf("filterclear message invalid for protocol "+
 			"version %d", pver)
@@ -48,7 +48,7 @@ func (msg *MsgFilterClear) Command() string {
 
 // MaxPayloadLength returns the maximum length the payload can be for the
 // receiver.  This is part of the Message interface implementation.
-func (msg *MsgFilterClear) MaxPayloadLength(pver uint32) uint32 {
+func (msg *MsgFilterClear) MaxPayloadLength(_ uint32) uint32 {
 	return 0
 }
 

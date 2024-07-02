@@ -9,28 +9,28 @@ import (
 )
 
 func TestReturnSuccessFromStatus(t *testing.T) {
-	//setup
+	// setup
 	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
-	//when
-	res := bhs.Api().Call(getStatus())
+	// when
+	res := bhs.API().Call(getStatus())
 
-	//then
+	// then
 	if res.Code != http.StatusOK {
 		t.Errorf("Expected to get status %d but instead got %d\n", http.StatusOK, res.Code)
 	}
 }
 
 func TestReturnSuccessFromStatusWhenAuthorizationIsTurnedOnAndCalledWithoutToken(t *testing.T) {
-	//setup
+	// setup
 	bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 	defer cleanup()
 
-	//when
-	res := bhs.Api().Call(getStatus())
+	// when
+	res := bhs.API().Call(getStatus())
 
-	//then
+	// then
 	if res.Code != http.StatusOK {
 		t.Errorf("Expected to get status %d but instead got %d\n", http.StatusOK, res.Code)
 	}

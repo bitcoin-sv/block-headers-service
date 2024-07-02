@@ -8,7 +8,7 @@ import (
 
 // DbWebhook represent webhook saved in db.
 type DbWebhook struct {
-	Url               string    `db:"url"`
+	URL               string    `db:"url"`
 	TokenHeader       string    `db:"token_header"`
 	Token             string    `db:"token"`
 	CreatedAt         time.Time `db:"created_at"`
@@ -21,7 +21,7 @@ type DbWebhook struct {
 // ToWebhook converts DbWebhook to Webhook.
 func (dbt *DbWebhook) ToWebhook() *notification.Webhook {
 	return &notification.Webhook{
-		Url:         dbt.Url,
+		URL:         dbt.URL,
 		TokenHeader: dbt.TokenHeader,
 		Token:       dbt.Token,
 		CreatedAt:   dbt.CreatedAt,
@@ -33,7 +33,7 @@ func (dbt *DbWebhook) ToWebhook() *notification.Webhook {
 // ToDbWebhook converts Webhook to DbWebhook.
 func ToDbWebhook(t *notification.Webhook) *DbWebhook {
 	return &DbWebhook{
-		Url:         t.Url,
+		URL:         t.URL,
 		TokenHeader: t.TokenHeader,
 		Token:       t.Token,
 		CreatedAt:   t.CreatedAt,

@@ -6,12 +6,12 @@ import (
 
 // NetworkService represents Network service and provide access to repositories.
 type NetworkService struct {
-	peers map[*peerpkg.Peer]*peerpkg.PeerSyncState
+	peers map[*peerpkg.Peer]*peerpkg.SyncState
 }
 
 // GetPeers return all currently connected peers.
-func (s *NetworkService) GetPeers() []peerpkg.PeerState {
-	peerStates := make([]peerpkg.PeerState, 0)
+func (s *NetworkService) GetPeers() []peerpkg.State {
+	peerStates := make([]peerpkg.State, 0)
 
 	for peer := range s.peers {
 		peerStates = append(peerStates, peer.ToPeerState())
@@ -30,7 +30,7 @@ func (s *NetworkService) GetPeersCount() int {
 }
 
 // NewNetworkService creates and returns NetworkService instance.
-func NewNetworkService(peers map[*peerpkg.Peer]*peerpkg.PeerSyncState) *NetworkService {
+func NewNetworkService(peers map[*peerpkg.Peer]*peerpkg.SyncState) *NetworkService {
 	return &NetworkService{
 		peers: peers,
 	}

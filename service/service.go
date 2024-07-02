@@ -14,7 +14,7 @@ import (
 
 // Network is an interface which represents methods required for Network service.
 type Network interface {
-	GetPeers() []peerpkg.PeerState
+	GetPeers() []peerpkg.State
 	GetPeersCount() int
 }
 
@@ -62,7 +62,7 @@ type Services struct {
 
 // Dept is a struct used to create Services.
 type Dept struct {
-	Peers        map[*peerpkg.Peer]*peerpkg.PeerSyncState
+	Peers        map[*peerpkg.Peer]*peerpkg.SyncState
 	Repositories *repository.Repositories
 	AdminToken   string
 	Logger       *zerolog.Logger

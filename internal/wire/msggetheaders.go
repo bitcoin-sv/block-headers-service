@@ -47,7 +47,7 @@ func (msg *MsgGetHeaders) AddBlockLocatorHash(hash *chainhash.Hash) error {
 
 // Bsvdecode decodes r using the bitcoin protocol encoding into the receiver.
 // This is part of the Message interface implementation.
-func (msg *MsgGetHeaders) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) error {
+func (msg *MsgGetHeaders) Bsvdecode(r io.Reader, pver uint32, _ MessageEncoding) error {
 	err := readElement(r, &msg.ProtocolVersion)
 	if err != nil {
 		return err
@@ -85,7 +85,7 @@ func (msg *MsgGetHeaders) Bsvdecode(r io.Reader, pver uint32, enc MessageEncodin
 
 // BsvEncode encodes the receiver to w using the bitcoin protocol encoding.
 // This is part of the Message interface implementation.
-func (msg *MsgGetHeaders) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) error {
+func (msg *MsgGetHeaders) BsvEncode(w io.Writer, pver uint32, _ MessageEncoding) error {
 	// Limit to max block locator hashes per message.
 	count := len(msg.BlockLocatorHashes)
 	if count > MaxBlockLocatorsPerMsg {
@@ -122,7 +122,7 @@ func (msg *MsgGetHeaders) Command() string {
 
 // MaxPayloadLength returns the maximum length the payload can be for the
 // receiver.  This is part of the Message interface implementation.
-func (msg *MsgGetHeaders) MaxPayloadLength(pver uint32) uint32 {
+func (msg *MsgGetHeaders) MaxPayloadLength(_ uint32) uint32 {
 	// Version 4 bytes + num block locator hashes (varInt) + max allowed block
 	// locators + hash stop.
 	return 4 + MaxVarIntPayload + (MaxBlockLocatorsPerMsg *

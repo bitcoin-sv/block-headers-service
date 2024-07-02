@@ -96,11 +96,13 @@ func (ka *KnownAddress) isBad() bool {
 	return false
 }
 
+// RegisterAttempt records an attempt to connect to the known address.
 func (ka *KnownAddress) RegisterAttempt() {
 	ka.attempts++
 	ka.lastattempt = time.Now()
 }
 
+// RegisterGoodAddr records a successful connection to the known address.
 func (ka *KnownAddress) RegisterGoodAddr() {
 	// ka.Timestamp is not updated here to avoid leaking information
 	// about currently connected peers.
@@ -110,6 +112,7 @@ func (ka *KnownAddress) RegisterGoodAddr() {
 	ka.attempts = 0
 }
 
+// NewKnownAddress returns a new known address for the provided address
 func NewKnownAddress(na, src *wire.NetAddress) *KnownAddress {
 	return &KnownAddress{
 		na:      na,

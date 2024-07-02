@@ -9,11 +9,10 @@ import (
 	"net"
 	"testing"
 
-	"github.com/rs/zerolog"
-
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/assert"
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 	"github.com/bitcoin-sv/block-headers-service/transports/p2p/addrmgr"
+	"github.com/rs/zerolog"
 )
 
 // naTest is used to describe a test to be performed against the NetAddressKey
@@ -95,11 +94,11 @@ func addNaTest(ip string, port uint16, want string) {
 	naTests = append(naTests, test)
 }
 
-func lookupFunc(host string) ([]net.IP, error) {
+func lookupFunc(_ string) ([]net.IP, error) {
 	return nil, errors.New("not implemented")
 }
 
-func TestStartStop(t *testing.T) {
+func TestStartStop(_ *testing.T) {
 	log := zerolog.Nop()
 	n := addrmgr.New(lookupFunc, &log)
 	n.Start()

@@ -73,7 +73,7 @@ type MsgReject struct {
 
 // Bsvdecode decodes r using the bitcoin protocol encoding into the receiver.
 // This is part of the Message interface implementation.
-func (msg *MsgReject) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) error {
+func (msg *MsgReject) Bsvdecode(r io.Reader, pver uint32, _ MessageEncoding) error {
 	if pver < RejectVersion {
 		str := fmt.Sprintf("reject message invalid for protocol "+
 			"version %d", pver)
@@ -115,7 +115,7 @@ func (msg *MsgReject) Bsvdecode(r io.Reader, pver uint32, enc MessageEncoding) e
 
 // BsvEncode encodes the receiver to w using the bitcoin protocol encoding.
 // This is part of the Message interface implementation.
-func (msg *MsgReject) BsvEncode(w io.Writer, pver uint32, enc MessageEncoding) error {
+func (msg *MsgReject) BsvEncode(w io.Writer, pver uint32, _ MessageEncoding) error {
 	if pver < RejectVersion {
 		str := fmt.Sprintf("reject message invalid for protocol "+
 			"version %d", pver)

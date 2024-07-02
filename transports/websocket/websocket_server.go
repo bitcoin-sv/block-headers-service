@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rs/zerolog"
-
 	"github.com/bitcoin-sv/block-headers-service/service"
 	"github.com/centrifugal/centrifuge"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
 )
 
 // Publisher component exposed by server that is providing a way to send messages via websocket.
@@ -90,7 +89,7 @@ func newNode(log *zerolog.Logger) (*centrifuge.Node, error) {
 }
 
 func (s *server) setupNode() {
-	s.node.OnConnecting(func(ctx context.Context, event centrifuge.ConnectEvent) (centrifuge.ConnectReply, error) {
+	s.node.OnConnecting(func(_ context.Context, event centrifuge.ConnectEvent) (centrifuge.ConnectReply, error) {
 		s.log.Info().Msg("client connecting")
 
 		if s.isAuthRequired {

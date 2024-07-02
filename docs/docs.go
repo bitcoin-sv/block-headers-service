@@ -499,7 +499,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Url of webhook to check",
+                        "description": "URL of webhook to check",
                         "name": "url",
                         "in": "query",
                         "required": true
@@ -569,7 +569,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Url of webhook to revoke",
+                        "description": "URL of webhook to revoke",
                         "name": "url",
                         "in": "query",
                         "required": true

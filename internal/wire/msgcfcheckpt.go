@@ -146,7 +146,7 @@ func (msg *MsgCFCheckpt) Command() string {
 
 // MaxPayloadLength returns the maximum length the payload can be for the
 // receiver. This is part of the Message interface implementation.
-func (msg *MsgCFCheckpt) MaxPayloadLength(pver uint32) uint32 {
+func (msg *MsgCFCheckpt) MaxPayloadLength(_ uint32) uint32 {
 	// Message size depends on the blockchain height, so return general limit
 	// for all messages.
 	return maxMessagePayload()

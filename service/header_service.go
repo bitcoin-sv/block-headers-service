@@ -6,14 +6,13 @@ import (
 	"math"
 	"time"
 
-	"github.com/rs/zerolog"
-
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/internal/wire"
 	"github.com/bitcoin-sv/block-headers-service/repository"
+	"github.com/rs/zerolog"
 )
 
 // HeaderService represents Header service and provide access to repositories.
@@ -26,7 +25,7 @@ type HeaderService struct {
 }
 
 // NewHeaderService creates and returns HeaderService instance.
-func NewHeaderService(repo *repository.Repositories, p2pCfg *config.P2PConfig, merkleCfg *config.MerkleRootConfig, log *zerolog.Logger) *HeaderService {
+func NewHeaderService(repo *repository.Repositories, _ *config.P2PConfig, merkleCfg *config.MerkleRootConfig, log *zerolog.Logger) *HeaderService {
 	headerLogger := log.With().Str("service", "header").Logger()
 	return &HeaderService{
 		repo:        repo,
@@ -38,7 +37,7 @@ func NewHeaderService(repo *repository.Repositories, p2pCfg *config.P2PConfig, m
 }
 
 // AddHeader used to pass BlockHeader to repository which will add it to db.
-func (hs *HeaderService) AddHeader(h domains.BlockHeader, blocksToConfirmFork int) error {
+func (hs *HeaderService) AddHeader(h domains.BlockHeader, _ int) error {
 	return hs.repo.Headers.AddHeaderToDatabase(h)
 }
 
@@ -114,8 +113,8 @@ func (hs *HeaderService) GetHeaderByHash(hash string) (*domains.BlockHeader, err
 
 // GetHeadersByHeight returns the specified number of headers starting from given height.
 func (hs *HeaderService) GetHeadersByHeight(height int, count int) ([]*domains.BlockHeader, error) {
-	headers_range := height + count - 1
-	headers, err := hs.repo.Headers.GetHeaderByHeightRange(height, headers_range)
+	headersRange := height + count - 1
+	headers, err := hs.repo.Headers.GetHeaderByHeightRange(height, headersRange)
 
 	if err == nil {
 		return headers, nil

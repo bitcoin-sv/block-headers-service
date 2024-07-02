@@ -19,7 +19,7 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/headers"
 )
 
-var expected_obj = headers.BlockHeaderResponse{
+var expectedObj = headers.BlockHeaderResponse{
 	Hash:             fixtures.HashHeight1.String(),
 	Version:          fixtures.HeaderSourceHeight1.Version,
 	PreviousBlock:    fixtures.HeaderSourceHeight1.PrevBlock.String(),
@@ -35,7 +35,7 @@ func TestGetHeaderByHash(t *testing.T) {
 		// given
 		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body []byte
 		}{
@@ -44,43 +44,43 @@ func TestGetHeaderByHash(t *testing.T) {
 		}
 
 		// when
-		res := bhs.Api().Call(getHeaderByHash("123"))
+		res := bhs.API().Call(getHeaderByHash("123"))
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expected_result.body)
+		assert.EqualBytes(t, body, expectedResult.body)
 	})
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithAPIAuthorizationDisabled())
 		defer cleanup()
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body headers.BlockHeaderResponse
 		}{
 			code: http.StatusOK,
-			body: expected_obj,
+			body: expectedObj,
 		}
 
 		// when
-		res := bhs.Api().Call(getHeaderByHash(fixtures.HashHeight1.String()))
+		res := bhs.API().Call(getHeaderByHash(fixtures.HashHeight1.String()))
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 
 		var header headers.BlockHeaderResponse
 		json.NewDecoder(res.Body).Decode(&header)
 
-		assert.Equal(t, header, expected_result.body)
+		assert.Equal(t, header, expectedResult.body)
 	})
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithAPIAuthorizationDisabled())
 		defer cleanup()
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body []byte
 		}{
@@ -89,12 +89,12 @@ func TestGetHeaderByHash(t *testing.T) {
 		}
 
 		// when
-		res := bhs.Api().Call(getHeaderByHash("123"))
+		res := bhs.API().Call(getHeaderByHash("123"))
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expected_result.body)
+		assert.EqualBytes(t, body, expectedResult.body)
 	})
 }
 
@@ -103,7 +103,7 @@ func TestGetHeaderByHeight(t *testing.T) {
 		// given
 		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body []byte
 		}{
@@ -112,43 +112,43 @@ func TestGetHeaderByHeight(t *testing.T) {
 		}
 
 		// when
-		res := bhs.Api().Call(getHeaderByHeight(123, 1))
+		res := bhs.API().Call(getHeaderByHeight(123, 1))
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expected_result.body)
+		assert.EqualBytes(t, body, expectedResult.body)
 	})
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithAPIAuthorizationDisabled())
 		defer cleanup()
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body headers.BlockHeaderResponse
 		}{
 			code: http.StatusOK,
-			body: expected_obj,
+			body: expectedObj,
 		}
 
 		// when
-		res := bhs.Api().Call(getHeaderByHeight(1, 1))
+		res := bhs.API().Call(getHeaderByHeight(1, 1))
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 
 		var header []headers.BlockHeaderResponse
 		json.NewDecoder(res.Body).Decode(&header)
 
-		assert.Equal(t, header[0], expected_result.body)
+		assert.Equal(t, header[0], expectedResult.body)
 	})
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithAPIAuthorizationDisabled())
 		defer cleanup()
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body []byte
 		}{
@@ -157,12 +157,12 @@ func TestGetHeaderByHeight(t *testing.T) {
 		}
 
 		// when
-		res := bhs.Api().Call(getHeaderByHeight(123, 1))
+		res := bhs.API().Call(getHeaderByHeight(123, 1))
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expected_result.body)
+		assert.EqualBytes(t, body, expectedResult.body)
 	})
 }
 
@@ -171,7 +171,7 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 		// given
 		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body []byte
 		}{
@@ -180,43 +180,43 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 		}
 
 		// when
-		res := bhs.Api().Call(getHeaderAncestorsByHash("123", "1234"))
+		res := bhs.API().Call(getHeaderAncestorsByHash("123", "1234"))
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expected_result.body)
+		assert.EqualBytes(t, body, expectedResult.body)
 	})
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithAPIAuthorizationDisabled())
 		defer cleanup()
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body headers.BlockHeaderResponse
 		}{
 			code: http.StatusOK,
-			body: expected_obj,
+			body: expectedObj,
 		}
 
 		// when
-		res := bhs.Api().Call(getHeaderAncestorsByHash(fixtures.HashHeight2.String(), fixtures.HashHeight1.String()))
+		res := bhs.API().Call(getHeaderAncestorsByHash(fixtures.HashHeight2.String(), fixtures.HashHeight1.String()))
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 
 		var header []headers.BlockHeaderResponse
 		json.NewDecoder(res.Body).Decode(&header)
 
-		assert.Equal(t, header[0], expected_result.body)
+		assert.Equal(t, header[0], expectedResult.body)
 	})
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithAPIAuthorizationDisabled())
 		defer cleanup()
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body []byte
 		}{
@@ -225,12 +225,12 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 		}
 
 		// when
-		res := bhs.Api().Call(getHeaderAncestorsByHash("123", "1234"))
+		res := bhs.API().Call(getHeaderAncestorsByHash("123", "1234"))
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expected_result.body)
+		assert.EqualBytes(t, body, expectedResult.body)
 	})
 }
 
@@ -239,7 +239,7 @@ func TestGetCommonAncestor(t *testing.T) {
 		// given
 		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body []byte
 		}{
@@ -248,20 +248,20 @@ func TestGetCommonAncestor(t *testing.T) {
 		}
 
 		// when
-		res := bhs.Api().Call(getCommonAncestors([]string{"123", "1234"}))
+		res := bhs.API().Call(getCommonAncestors([]string{"123", "1234"}))
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expected_result.body)
+		assert.EqualBytes(t, body, expectedResult.body)
 	})
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithAPIAuthorizationDisabled())
 		defer cleanup()
 		genesis := chaincfg.MainNetParams.GenesisBlock.Header
-		expected_response := headers.BlockHeaderResponse{
+		expectedResponse := headers.BlockHeaderResponse{
 			Hash:             genesis.BlockHash().String(),
 			Version:          genesis.Version,
 			PreviousBlock:    chainhash.Hash{}.String(),
@@ -271,31 +271,31 @@ func TestGetCommonAncestor(t *testing.T) {
 			Nonce:            genesis.Nonce,
 			Work:             domains.CalculateWork(genesis.Bits).BigInt().String(),
 		}
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body headers.BlockHeaderResponse
 		}{
 			code: http.StatusOK,
-			body: expected_response,
+			body: expectedResponse,
 		}
 
 		// when
-		res := bhs.Api().Call(getCommonAncestors([]string{fixtures.HashHeight2.String(), fixtures.HashHeight1.String()}))
+		res := bhs.API().Call(getCommonAncestors([]string{fixtures.HashHeight2.String(), fixtures.HashHeight1.String()}))
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 
 		var header headers.BlockHeaderResponse
 		json.NewDecoder(res.Body).Decode(&header)
 
-		assert.Equal(t, header, expected_result.body)
+		assert.Equal(t, header, expectedResult.body)
 	})
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithAPIAuthorizationDisabled())
 		defer cleanup()
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body []byte
 		}{
@@ -304,12 +304,12 @@ func TestGetCommonAncestor(t *testing.T) {
 		}
 
 		// when
-		res := bhs.Api().Call(getCommonAncestors([]string{"123", "1234"}))
+		res := bhs.API().Call(getCommonAncestors([]string{"123", "1234"}))
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expected_result.body)
+		assert.EqualBytes(t, body, expectedResult.body)
 	})
 }
 
@@ -318,7 +318,7 @@ func TestGetHeadersState(t *testing.T) {
 		// given
 		bhs, cleanup := testapp.NewTestBlockHeaderService(t)
 		defer cleanup()
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body []byte
 		}{
@@ -327,49 +327,49 @@ func TestGetHeadersState(t *testing.T) {
 		}
 
 		// when
-		res := bhs.Api().Call(getHeadersState("123"))
+		res := bhs.API().Call(getHeadersState("123"))
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expected_result.body)
+		assert.EqualBytes(t, body, expectedResult.body)
 	})
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithAPIAuthorizationDisabled())
 		defer cleanup()
-		expected_response := headers.BlockHeaderStateResponse{
-			Header:    expected_obj,
+		expectedResponse := headers.BlockHeaderStateResponse{
+			Header:    expectedObj,
 			State:     string(domains.LongestChain),
 			ChainWork: strconv.Itoa(fixtures.DefaultChainWork),
 			Height:    1,
 		}
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body headers.BlockHeaderStateResponse
 		}{
 			code: http.StatusOK,
-			body: expected_response,
+			body: expectedResponse,
 		}
 
 		// when
-		res := bhs.Api().Call(getHeadersState(fixtures.HashHeight1.String()))
+		res := bhs.API().Call(getHeadersState(fixtures.HashHeight1.String()))
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 
 		var header headers.BlockHeaderStateResponse
 		json.NewDecoder(res.Body).Decode(&header)
 
-		assert.Equal(t, header, expected_result.body)
+		assert.Equal(t, header, expectedResult.body)
 	})
 
 	t.Run("failure - hash not found", func(t *testing.T) {
 		// given
-		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithApiAuthorizationDisabled())
+		bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChain(), testapp.WithAPIAuthorizationDisabled())
 		defer cleanup()
-		expected_result := struct {
+		expectedResult := struct {
 			code int
 			body []byte
 		}{
@@ -378,12 +378,12 @@ func TestGetHeadersState(t *testing.T) {
 		}
 
 		// when
-		res := bhs.Api().Call(getHeadersState("123"))
+		res := bhs.API().Call(getHeadersState("123"))
 
 		// then
-		assert.Equal(t, res.Code, expected_result.code)
+		assert.Equal(t, res.Code, expectedResult.code)
 		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expected_result.body)
+		assert.EqualBytes(t, body, expectedResult.body)
 	})
 }
 
