@@ -27,8 +27,8 @@ github.com/bytedance/sonic/loader v0.2.0 h1:zNprn+lsIP06C/IqCHs3gPQIvnvpKbbxyXQP
 github.com/bytedance/sonic/loader v0.2.0/go.mod h1:ncP89zfokxS5LZrJxl5z0UJcsk4M4yY2JpfqGeCtNLU=
 github.com/cenkalti/backoff/v4 v4.2.1 h1:y4OZtCnogmCPw98Zjyt5a6+QwPLGkiQsYW5oUqylYbM=
 github.com/cenkalti/backoff/v4 v4.2.1/go.mod h1:Y3VNntkOUPxTVeUxJ/G5vcM//AlwfmyYozVcomhLiZE=
-github.com/centrifugal/centrifuge v0.33.0 h1:3fVv6K3wfhlJXoYjElomEG9jCRUdSKUUsyPKYHvAiPU=
-github.com/centrifugal/centrifuge v0.33.0/go.mod h1:+7ubOp+HYfKV6IXYN00nwtdz54lrn8t29ik72zSBb+I=
+github.com/centrifugal/centrifuge v0.33.1 h1:nNnCOoiKZi+q7ZvP5kDfeR9P5R7B37lTQS5V+XR0/+s=
+github.com/centrifugal/centrifuge v0.33.1/go.mod h1:bZGDE9RBlZW8MSorwtT4Tl6KcrtbOtSbNYCn1j2Z8ow=
 github.com/centrifugal/centrifuge-go v0.10.2 h1:9DK7YvhlDO553k1kYnsSgowgGjz8EK406VTRLG+Thsk=
 github.com/centrifugal/centrifuge-go v0.10.2/go.mod h1:jYJB6Nony+XVRbMJUZCzL2iDAp9rkJT7SRmf7Y1fQMY=
 github.com/centrifugal/protocol v0.13.4-0.20240702174651-e8db704aa2d2 h1:U339eI0wzXpO5gRF43br85ZIxw061GHP0SZ7rjwOxiY=
