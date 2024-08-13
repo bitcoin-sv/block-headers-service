@@ -1,12 +1,53 @@
-# Basic dependabot.yml to update gomod
 version: 2
 updates:
+  # Maintain dependencies for the codebase
   - package-ecosystem: "gomod"
+    target-branch: "main"
+    directories:
+      - "/"
+      - "/examples/*"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+    groups:
+      go_modules:
+        update-types:
+          - "minor"
+          - "patch"
+          - "major"
+
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
     target-branch: "main"
     directory: "/"
     schedule:
-      interval: "daily"
-      # Check for npm updates at 9am UTC (5am EST)
-      time: "10:00"
+      interval: "weekly"
+      day: "monday"
     labels:
-      - "deps"
+      - "dependencies"
+    groups:
+      gh_actions:
+        update-types:
+          - "minor"
+          - "patch"
+          - "major"
+
+  # Maintain dependencies for Docker
+  - package-ecosystem: "docker"
+    target-branch: "main"
+    directories:
+      - "/"
+      - "/release"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+    groups:
+      docker:
+        update-types:
+          - "minor"
+          - "patch"
+          - "major"
