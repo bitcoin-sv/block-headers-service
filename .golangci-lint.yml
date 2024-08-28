@@ -108,6 +108,10 @@ issues:
       linters:
         - gosec
 
+    - path: doc\.go
+      linters:
+        - revive
+
     # Exclude some "staticcheck" messages
     - linters:
         - staticcheck
