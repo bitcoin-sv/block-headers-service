@@ -1243,9 +1243,8 @@ out:
 			// local peer is not forcibly disconnecting and the
 			// remote peer has not disconnected.
 			if p.shouldHandleReadError(err) {
-				errMsg := fmt.Sprintf("Can't read message from %s: %v", p, err)
 				if err != io.ErrUnexpectedEOF {
-					p.cfg.Log.Error().Msgf(errMsg)
+					p.cfg.Log.Error().Msgf("Can't read message from %s: %v", p, err)
 				}
 
 				// Push a reject message for the malformed message and disconnect
@@ -1255,8 +1254,8 @@ out:
 				// at least that much of the message was valid, but that is not
 				// currently exposed by wire, so just used malformed for the
 				// command.
-				p.PushRejectMsg("malformed", wire.RejectMalformed, errMsg, nil,
-					true)
+				p.PushRejectMsg("malformed", wire.RejectMalformed,
+					fmt.Sprintf("Can't read message from %s: %v", p, err), nil, true)
 
 				p.Disconnect()
 			}
