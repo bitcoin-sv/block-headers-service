@@ -82,6 +82,9 @@ linters:
     - unused
 
 linters-settings:
+  gosec:
+    excludes:
+      - G115 # Potential integer overflow when converting between integer types
 
 issues:
   # List of regexps of issue texts to exclude, empty list by default.
@@ -107,6 +110,10 @@ issues:
       text: "weak cryptographic primitive"
       linters:
         - gosec
+
+    - path: doc\.go
+      linters:
+        - revive
 
     # Exclude some "staticcheck" messages
     - linters:
