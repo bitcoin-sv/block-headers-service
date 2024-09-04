@@ -1,4 +1,4 @@
-FROM golang:1.20.0
+FROM golang:1.23.0
 
 ENV GOPATH=/
 COPY ./ ./
