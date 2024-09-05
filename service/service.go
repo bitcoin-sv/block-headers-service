@@ -80,7 +80,7 @@ func NewServices(d Dept) *Services {
 
 	return &Services{
 		Network:     NewNetworkService(d.Peers),
-		Headers:     NewHeaderService(d.Repositories, d.Config.P2P, d.Config.MerkleRoot, d.Logger),
+		Headers:     NewHeaderService(d.Repositories, d.Config.P2P, d.Logger),
 		Merkleroots: NewMerklerootsService(d.Repositories, d.Config.MerkleRoot, d.Logger),
 		Notifier:    notifier,
 		Chains:      newChainService(d, notifier),

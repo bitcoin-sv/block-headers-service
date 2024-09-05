@@ -20,18 +20,16 @@ type HeaderService struct {
 	repo        *repository.Repositories
 	checkpoints []chaincfg.Checkpoint
 	timeSource  config.MedianTimeSource
-	merkleCfg   *config.MerkleRootConfig
 	log         *zerolog.Logger
 }
 
 // NewHeaderService creates and returns HeaderService instance.
-func NewHeaderService(repo *repository.Repositories, _ *config.P2PConfig, merkleCfg *config.MerkleRootConfig, log *zerolog.Logger) *HeaderService {
+func NewHeaderService(repo *repository.Repositories, _ *config.P2PConfig, log *zerolog.Logger) *HeaderService {
 	headerLogger := log.With().Str("service", "header").Logger()
 	return &HeaderService{
 		repo:        repo,
 		checkpoints: config.Checkpoints,
 		timeSource:  config.TimeSource,
-		merkleCfg:   merkleCfg,
 		log:         &headerLogger,
 	}
 }
