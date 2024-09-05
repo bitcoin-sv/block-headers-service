@@ -30,12 +30,16 @@ type Headers interface {
 	CountHeaders() int
 	GetHeaderByHash(hash string) (*domains.BlockHeader, error)
 	GetHeadersByHeight(height int, count int) ([]*domains.BlockHeader, error)
-	GetMerkleRootsConfirmations(request []domains.MerkleRootConfirmationRequestItem) ([]*domains.MerkleRootConfirmation, error)
 	GetHeaderAncestorsByHash(hash string, ancestorHash string) ([]*domains.BlockHeader, error)
 	GetCommonAncestor(hashes []string) (*domains.BlockHeader, error)
 	GetHeadersState(hash string) (*domains.BlockHeaderState, error)
 	GetTips() ([]*domains.BlockHeader, error)
 	LocateHeadersGetHeaders(locators []*chainhash.Hash, hashstop *chainhash.Hash) ([]*wire.BlockHeader, error)
+}
+
+// Merkleroots is an interface which represents methods required for Merkleroots service.
+type Merkleroots interface {
+	GetMerkleRootsConfirmations(request []domains.MerkleRootConfirmationRequestItem) ([]*domains.MerkleRootConfirmation, error)
 }
 
 // Chains is an interface which represents methods exposed by Chains Service.
@@ -52,12 +56,13 @@ type Tokens interface {
 
 // Services represents all services in app and provide access to them.
 type Services struct {
-	Network  Network
-	Headers  Headers
-	Chains   Chains
-	Tokens   Tokens
-	Notifier *notification.Notifier
-	Webhooks *notification.WebhooksService
+	Network     Network
+	Headers     Headers
+	Merkleroots Merkleroots
+	Chains      Chains
+	Tokens      Tokens
+	Notifier    *notification.Notifier
+	Webhooks    *notification.WebhooksService
 }
 
 // Dept is a struct used to create Services.
@@ -74,12 +79,13 @@ func NewServices(d Dept) *Services {
 	notifier := newNotifier()
 
 	return &Services{
-		Network:  NewNetworkService(d.Peers),
-		Headers:  NewHeaderService(d.Repositories, d.Config.P2P, d.Config.MerkleRoot, d.Logger),
-		Notifier: notifier,
-		Chains:   newChainService(d, notifier),
-		Tokens:   NewTokenService(d.Repositories, d.AdminToken),
-		Webhooks: newWebhooks(d),
+		Network:     NewNetworkService(d.Peers),
+		Headers:     NewHeaderService(d.Repositories, d.Config.P2P, d.Config.MerkleRoot, d.Logger),
+		Merkleroots: NewMerklerootsService(d.Repositories, d.Config.MerkleRoot, d.Logger),
+		Notifier:    notifier,
+		Chains:      newChainService(d, notifier),
+		Tokens:      NewTokenService(d.Repositories, d.AdminToken),
+		Webhooks:    newWebhooks(d),
 	}
 }
 

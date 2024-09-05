@@ -12,12 +12,12 @@ import (
 )
 
 type handler struct {
-	service service.Headers
+	service service.Merkleroots
 }
 
 // NewHandler creates new endpoint handler.
 func NewHandler(s *service.Services) router.APIEndpoints {
-	return &handler{service: s.Headers}
+	return &handler{service: s.Merkleroots}
 }
 
 // RegisterAPIEndpoints registers routes that are part of service API.

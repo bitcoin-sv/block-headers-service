@@ -282,14 +282,6 @@ func (hs *HeaderService) GetHeightByHash(hash *chainhash.Hash) (int32, error) {
 	return bh.Height, nil
 }
 
-// GetMerkleRootsConfirmations returns a confirmation of merkle roots inclusion in the longest chain
-// with hash of the block in which the merkle root is included.
-func (hs *HeaderService) GetMerkleRootsConfirmations(
-	request []domains.MerkleRootConfirmationRequestItem,
-) ([]*domains.MerkleRootConfirmation, error) {
-	return hs.repo.Headers.GetMerkleRootsConfirmations(request, hs.merkleCfg.MaxBlockHeightExcess)
-}
-
 // LocateHeadersGetHeaders returns headers with given hashes.
 func (hs *HeaderService) LocateHeadersGetHeaders(locators []*chainhash.Hash, hashstop *chainhash.Hash) ([]*wire.BlockHeader, error) {
 	headers, err := hs.locateHeadersGetHeaders(locators, hashstop)
