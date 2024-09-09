@@ -133,6 +133,41 @@ func NewHeadersRepository(db *sql.HeadersDb) *HeaderRepository {
 	return &HeaderRepository{db: db}
 }
 
+func (r *HeaderRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey int) (*domains.MerkleRootsESKPagedResponse, error) {
+	orderByField := "BlockHeight"
+	sortDirection := "ASC"
+	merklerootsFromDb, err1 := r.db.GetMerkleRoots(batchSize, lastEvaluatedKey)
+	merklerootsTopHeight, err2 := r.GetHeadersCount()
+
+	if err1 != nil {
+		return nil, err1
+	}
+
+	if err2 != nil {
+		return nil, err2
+	}
+
+	merkleroots := &domains.MerkleRootsESKPagedResponse{
+		Page: domains.ExclusiveStartKeyPage{
+			OrderByField:  &orderByField,
+			SortDirection: &sortDirection,
+			TotalElements: int32(merklerootsTopHeight),
+			Size:          len(merklerootsFromDb),
+			// Last Evaluated Key is the height of the last element returned from the merklerootsFromDb
+			LastEvaluatedKey: merklerootsFromDb[len(merklerootsFromDb)-1].Height,
+		},
+	}
+
+	for _, merkleroot := range merklerootsFromDb {
+		merkleroots.Content = append(merkleroots.Content, &domains.MerkleRootsResponse{
+			MerkleRoot:  merkleroot.MerkleRoot,
+			BlockHeight: merkleroot.Height,
+		})
+	}
+
+	return merkleroots, nil
+}
+
 // GetTip returns tip from db.
 func (r *HeaderRepository) GetTip() (*domains.BlockHeader, error) {
 	tip, err := r.db.GetTip(context.Background())

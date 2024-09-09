@@ -141,3 +141,9 @@ func ConvertToMerkleRootsConfirmations(
 
 	return merklesConfms
 }
+
+// DbMerkleRoot is a database representation of a Merkle Root and it's height
+type DbMerkleRoot struct {
+	MerkleRoot string `db:"merkleroot"`
+	Height     int32  `db:"height"`
+}

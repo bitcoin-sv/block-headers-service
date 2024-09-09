@@ -168,6 +168,8 @@ const (
 
 	sqlVerifyHash = `SELECT hash FROM headers WHERE merkleroot = $1 AND height = $2 AND header_state = 'LONGEST_CHAIN'`
 
+	sqlMerkleRootsFromHeight = `SELECT merkleroot, height FROM headers WHERE height > ? ORDER BY height ASC LIMIT ?`
+
 	sqlGetHeadersHeight = `
 	SELECT COALESCE(MAX(height), 0) AS startHeight
 		FROM headers
@@ -479,4 +481,16 @@ func (h *HeadersDb) getMerkleRootConfirmation(item domains.MerkleRootConfirmatio
 	confirmation.Hash = hash
 
 	return confirmation, nil
+}
+
+// GetMerkleRoots method will retrieve as many merkleroots as batchSize from the db from lastEvaluatedKey exclusive
+func (h *HeadersDb) GetMerkleRoots(batchSize int, lastEvaluatedKey int) ([]*dto.DbMerkleRoot, error) {
+	var merkleroots []*dto.DbMerkleRoot
+	err := h.db.Select(&merkleroots, h.db.Rebind(sqlMerkleRootsFromHeight), lastEvaluatedKey, batchSize)
+
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return nil, err
+	}
+
+	return merkleroots, nil
 }

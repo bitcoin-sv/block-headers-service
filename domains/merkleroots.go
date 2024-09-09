@@ -28,3 +28,13 @@ type MerkleRootConfirmation struct {
 	Hash         string                      `json:"hash,omitempty"`
 	Confirmation MerkleRootConfirmationState `json:"confirmation"`
 }
+
+// MerkleRootsResponse is the response object that should be returned from the database when
+// requested from merkleroots api endpoint
+type MerkleRootsResponse struct {
+	MerkleRoot  string `json:"merkleRoot"`
+	BlockHeight int32  `json:"blockHeight"`
+}
+
+// MerkleRootsESKPagedResponse is a paged response model for merkleroots that uses exclusive start key pagination
+type MerkleRootsESKPagedResponse = ExclusiveStartKeyPagedResponse[*MerkleRootsResponse]
