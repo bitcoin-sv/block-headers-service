@@ -299,7 +299,7 @@ func TestReturnSuccessFromMerkleRoots(t *testing.T) {
 	if res.Code != expectedResult.Code {
 		t.Errorf("Expected to get status %d but instead got %d\n", expectedResult.Code, res.Code)
 	}
-	// this conversion is neccesary as the default setting of the json decoder when unmarshalling JSON numbers into interface{} takes type of float64
+	// this conversion is necessary as the default setting of the json decoder when unmarshalling JSON numbers into interface{} takes type of float64
 	assert.Equal(t, int(merklerootsResponse.Page.LastEvaluatedKey.(float64)), expectedResult.Body.Page.LastEvaluatedKey.(int))
 	assert.Equal(t, merklerootsResponse.Page.OrderByField, expectedResult.Body.Page.OrderByField)
 	assert.Equal(t, merklerootsResponse.Page.SortDirection, expectedResult.Body.Page.SortDirection)
@@ -421,7 +421,7 @@ func TestReturnSuccessFromMerkleRootsWhenLastEvaluatedKeyAndBatchSizeAreNotProvi
 		t.Errorf("Expected to get status %d but instead got %d\n", expectedResult.Code, res.Code)
 	}
 
-	// this conversion is neccesary as the default setting of the json decoder when unmarshalling JSON numbers into interface{} takes type of float64
+	// this conversion is necessary as the default setting of the json decoder when unmarshalling JSON numbers into interface{} takes type of float64
 	assert.Equal(t, int(merklerootsResponse.Page.LastEvaluatedKey.(float64)), expectedResult.Body.Page.LastEvaluatedKey.(int))
 	assert.Equal(t, merklerootsResponse.Page.OrderByField, expectedResult.Body.Page.OrderByField)
 	assert.Equal(t, merklerootsResponse.Page.SortDirection, expectedResult.Body.Page.SortDirection)
@@ -480,7 +480,7 @@ func TestReturnSuccessFromMerkleRootsWhenLastEvaluatedKeyIsNotProvided(t *testin
 		t.Errorf("Expected to get status %d but instead got %d\n", expectedResult.Code, res.Code)
 	}
 
-	// this conversion is neccesary as the default setting of the json decoder when unmarshalling JSON numbers into interface{} takes type of float64
+	// this conversion is necessary as the default setting of the json decoder when unmarshalling JSON numbers into interface{} takes type of float64
 	assert.Equal(t, int(merklerootsResponse.Page.LastEvaluatedKey.(float64)), expectedResult.Body.Page.LastEvaluatedKey.(int))
 	assert.Equal(t, merklerootsResponse.Page.OrderByField, expectedResult.Body.Page.OrderByField)
 	assert.Equal(t, merklerootsResponse.Page.SortDirection, expectedResult.Body.Page.SortDirection)
@@ -539,7 +539,7 @@ func TestReturnSuccessFromMerkleRootsWhenBatchSizeIsNotProvided(t *testing.T) {
 		t.Errorf("Expected to get status %d but instead got %d\n", expectedResult.Code, res.Code)
 	}
 
-	// this conversion is neccesary as the default setting of the json decoder when unmarshalling JSON numbers into interface{} takes type of float64
+	// this conversion is necessary as the default setting of the json decoder when unmarshalling JSON numbers into interface{} takes type of float64
 	assert.Equal(t, int(merklerootsResponse.Page.LastEvaluatedKey.(float64)), expectedResult.Body.Page.LastEvaluatedKey.(int))
 	assert.Equal(t, merklerootsResponse.Page.OrderByField, expectedResult.Body.Page.OrderByField)
 	assert.Equal(t, merklerootsResponse.Page.SortDirection, expectedResult.Body.Page.SortDirection)
