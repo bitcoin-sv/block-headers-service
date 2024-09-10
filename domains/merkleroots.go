@@ -37,4 +37,4 @@ type MerkleRootsResponse struct {
 }
 
 // MerkleRootsESKPagedResponse is a paged response model for merkleroots that uses exclusive start key pagination
-type MerkleRootsESKPagedResponse = ExclusiveStartKeyPagedResponse[*MerkleRootsResponse]
+type MerkleRootsESKPagedResponse = ExclusiveStartKeyPagedResponse[*MerkleRootsResponse, int]

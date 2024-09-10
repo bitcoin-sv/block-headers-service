@@ -278,7 +278,7 @@ func TestReturnSuccessFromMerkleRoots(t *testing.T) {
 					BlockHeight: 3,
 				},
 			},
-			Page: domains.ExclusiveStartKeyPage{
+			Page: domains.ExclusiveStartKeyPage[int]{
 				OrderByField:     &orderedByField,
 				SortDirection:    &sortDirection,
 				TotalElements:    5,
@@ -300,7 +300,7 @@ func TestReturnSuccessFromMerkleRoots(t *testing.T) {
 		t.Errorf("Expected to get status %d but instead got %d\n", expectedResult.Code, res.Code)
 	}
 	// this conversion is necessary as the default setting of the json decoder when unmarshalling JSON numbers into interface{} takes type of float64
-	assert.Equal(t, int(merklerootsResponse.Page.LastEvaluatedKey.(float64)), expectedResult.Body.Page.LastEvaluatedKey.(int))
+	assert.Equal(t, merklerootsResponse.Page.LastEvaluatedKey, expectedResult.Body.Page.LastEvaluatedKey)
 	assert.Equal(t, merklerootsResponse.Page.OrderByField, expectedResult.Body.Page.OrderByField)
 	assert.Equal(t, merklerootsResponse.Page.SortDirection, expectedResult.Body.Page.SortDirection)
 	assert.Equal(t, merklerootsResponse.Page.TotalElements, expectedResult.Body.Page.TotalElements)
@@ -399,7 +399,7 @@ func TestReturnSuccessFromMerkleRootsWhenLastEvaluatedKeyAndBatchSizeAreNotProvi
 					BlockHeight: 4,
 				},
 			},
-			Page: domains.ExclusiveStartKeyPage{
+			Page: domains.ExclusiveStartKeyPage[int]{
 				OrderByField:     &orderedByField,
 				SortDirection:    &sortDirection,
 				TotalElements:    5,
@@ -422,7 +422,7 @@ func TestReturnSuccessFromMerkleRootsWhenLastEvaluatedKeyAndBatchSizeAreNotProvi
 	}
 
 	// this conversion is necessary as the default setting of the json decoder when unmarshalling JSON numbers into interface{} takes type of float64
-	assert.Equal(t, int(merklerootsResponse.Page.LastEvaluatedKey.(float64)), expectedResult.Body.Page.LastEvaluatedKey.(int))
+	assert.Equal(t, merklerootsResponse.Page.LastEvaluatedKey, expectedResult.Body.Page.LastEvaluatedKey)
 	assert.Equal(t, merklerootsResponse.Page.OrderByField, expectedResult.Body.Page.OrderByField)
 	assert.Equal(t, merklerootsResponse.Page.SortDirection, expectedResult.Body.Page.SortDirection)
 	assert.Equal(t, merklerootsResponse.Page.TotalElements, expectedResult.Body.Page.TotalElements)
@@ -458,7 +458,7 @@ func TestReturnSuccessFromMerkleRootsWhenLastEvaluatedKeyIsNotProvided(t *testin
 					BlockHeight: 2,
 				},
 			},
-			Page: domains.ExclusiveStartKeyPage{
+			Page: domains.ExclusiveStartKeyPage[int]{
 				OrderByField:     &orderedByField,
 				SortDirection:    &sortDirection,
 				TotalElements:    5,
@@ -481,7 +481,7 @@ func TestReturnSuccessFromMerkleRootsWhenLastEvaluatedKeyIsNotProvided(t *testin
 	}
 
 	// this conversion is necessary as the default setting of the json decoder when unmarshalling JSON numbers into interface{} takes type of float64
-	assert.Equal(t, int(merklerootsResponse.Page.LastEvaluatedKey.(float64)), expectedResult.Body.Page.LastEvaluatedKey.(int))
+	assert.Equal(t, merklerootsResponse.Page.LastEvaluatedKey, expectedResult.Body.Page.LastEvaluatedKey)
 	assert.Equal(t, merklerootsResponse.Page.OrderByField, expectedResult.Body.Page.OrderByField)
 	assert.Equal(t, merklerootsResponse.Page.SortDirection, expectedResult.Body.Page.SortDirection)
 	assert.Equal(t, merklerootsResponse.Page.TotalElements, expectedResult.Body.Page.TotalElements)
@@ -517,7 +517,7 @@ func TestReturnSuccessFromMerkleRootsWhenBatchSizeIsNotProvided(t *testing.T) {
 					BlockHeight: 4,
 				},
 			},
-			Page: domains.ExclusiveStartKeyPage{
+			Page: domains.ExclusiveStartKeyPage[int]{
 				OrderByField:     &orderedByField,
 				SortDirection:    &sortDirection,
 				TotalElements:    5,
@@ -540,7 +540,7 @@ func TestReturnSuccessFromMerkleRootsWhenBatchSizeIsNotProvided(t *testing.T) {
 	}
 
 	// this conversion is necessary as the default setting of the json decoder when unmarshalling JSON numbers into interface{} takes type of float64
-	assert.Equal(t, int(merklerootsResponse.Page.LastEvaluatedKey.(float64)), expectedResult.Body.Page.LastEvaluatedKey.(int))
+	assert.Equal(t, merklerootsResponse.Page.LastEvaluatedKey, expectedResult.Body.Page.LastEvaluatedKey)
 	assert.Equal(t, merklerootsResponse.Page.OrderByField, expectedResult.Body.Page.OrderByField)
 	assert.Equal(t, merklerootsResponse.Page.SortDirection, expectedResult.Body.Page.SortDirection)
 	assert.Equal(t, merklerootsResponse.Page.TotalElements, expectedResult.Body.Page.TotalElements)

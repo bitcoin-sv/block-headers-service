@@ -2,7 +2,6 @@ package merkleroots
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 

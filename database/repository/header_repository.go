@@ -148,13 +148,13 @@ func (r *HeaderRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey int) (
 	}
 
 	merkleroots := &domains.MerkleRootsESKPagedResponse{
-		Page: domains.ExclusiveStartKeyPage{
+		Page: domains.ExclusiveStartKeyPage[int]{
 			OrderByField:  &orderByField,
 			SortDirection: &sortDirection,
 			TotalElements: int32(merklerootsTopHeight),
 			Size:          len(merklerootsFromDb),
 			// Last Evaluated Key is the height of the last element returned from the merklerootsFromDb
-			LastEvaluatedKey: merklerootsFromDb[len(merklerootsFromDb)-1].Height,
+			LastEvaluatedKey: int(merklerootsFromDb[len(merklerootsFromDb)-1].Height),
 		},
 	}
 

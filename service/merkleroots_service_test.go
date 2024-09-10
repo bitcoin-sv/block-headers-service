@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/bitcoin-sv/block-headers-service/domains"
@@ -94,12 +95,62 @@ func TestMerkleRootConfirmations(t *testing.T) {
 
 	for _, tt := range testCases {
 		mrcfs, _ := tData.hs.Merkleroots.GetMerkleRootsConfirmations(tt.request)
-
 		for i, mrcf := range mrcfs {
 			assert.Equal(t, mrcf.Hash, tt.expected[i].Hash)
 			assert.Equal(t, mrcf.BlockHeight, tt.expected[i].BlockHeight)
 			assert.Equal(t, mrcf.Confirmation, tt.expected[i].Confirmation)
 			assert.Equal(t, mrcf.MerkleRoot, tt.expected[i].MerkleRoot)
 		}
+	}
+}
+
+func TestMerkleRoots(t *testing.T) {
+	tData := setUpServices()
+	orderedByField := "BlockHeight"
+	sortDirection := "ASC"
+
+	testCases := []struct {
+		RequestBatchSize        int
+		RequestLastEvaluatedKey int
+		Expected                domains.MerkleRootsESKPagedResponse
+	}{
+		{
+			RequestBatchSize:        2,
+			RequestLastEvaluatedKey: 1,
+			Expected: domains.MerkleRootsESKPagedResponse{
+				Content: []*domains.MerkleRootsResponse{
+					{
+						MerkleRoot:  "9b0fc92260312ce44e74ef369f5c66bbb85848f2eddd5a7a1cde251e54ccfdd5",
+						BlockHeight: 2,
+					},
+					{
+						MerkleRoot:  "999e1c837c76a1b7fbb7e57baf87b309960f5ffefbf2a9b95dd890602272f644",
+						BlockHeight: 3,
+					},
+				},
+				Page: domains.ExclusiveStartKeyPage[int]{
+					OrderByField:     &orderedByField,
+					SortDirection:    &sortDirection,
+					TotalElements:    5,
+					Size:             2,
+					LastEvaluatedKey: 3,
+				},
+			},
+		},
+	}
+
+	for _, tt := range testCases {
+		merkleRoots, _ := tData.hs.Merkleroots.GetMerkleRoots(tt.RequestBatchSize, tt.RequestLastEvaluatedKey)
+		assert.Equal(t, merkleRoots.Page.LastEvaluatedKey, tt.Expected.Page.LastEvaluatedKey)
+		assert.Equal(t, merkleRoots.Page.OrderByField, tt.Expected.Page.OrderByField)
+		assert.Equal(t, merkleRoots.Page.SortDirection, tt.Expected.Page.SortDirection)
+		assert.Equal(t, merkleRoots.Page.TotalElements, tt.Expected.Page.TotalElements)
+		assert.Equal(t, merkleRoots.Page.Size, tt.Expected.Page.Size)
+
+		for i, mr := range merkleRoots.Content {
+			assert.Equal(t, mr.BlockHeight, tt.Expected.Content[i].BlockHeight)
+			assert.Equal(t, mr.MerkleRoot, tt.Expected.Content[i].MerkleRoot)
+		}
+		fmt.Print(&merkleRoots)
 	}
 }

@@ -218,12 +218,12 @@ func (r *HeaderTestRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey in
 	merkleroots = merkleroots[0:merklerootsToIndex]
 
 	merkleRootsESKPagedResponse := &domains.MerkleRootsESKPagedResponse{
-		Page: domains.ExclusiveStartKeyPage{
+		Page: domains.ExclusiveStartKeyPage[int]{
 			OrderByField:     &orderByField,
 			SortDirection:    &sortDirection,
 			TotalElements:    int32(len(*r.db)),
 			Size:             len(merkleroots),
-			LastEvaluatedKey: merkleroots[len(merkleroots)-1].Height,
+			LastEvaluatedKey: int(merkleroots[len(merkleroots)-1].Height),
 		},
 	}
 
