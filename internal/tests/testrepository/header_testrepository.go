@@ -2,6 +2,7 @@ package testrepository
 
 import (
 	"errors"
+	"sort"
 
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
@@ -191,6 +192,49 @@ func (r *HeaderTestRepository) GetChainBetweenTwoHashes(low string, high string)
 		return nil, err
 	}
 	return headers, nil
+}
+
+func (r *HeaderTestRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey int) (*domains.MerkleRootsESKPagedResponse, error) {
+	merkleroots := make([]*domains.BlockHeader, 0)
+	orderByField := "BlockHeight"
+	sortDirection := "ASC"
+	// order headers by height ASC
+	sort.Slice(*r.db, func(i, j int) bool {
+		return (*r.db)[i].Height < (*r.db)[j].Height
+	})
+	// include only those headers that height is greater than lastEvaluatedKey
+	for _, header := range *r.db {
+		if header.Height > int32(lastEvaluatedKey) {
+			hd := header
+			merkleroots = append(merkleroots, &hd)
+		}
+	}
+
+	// get first batchSize of the results
+	merklerootsToIndex := batchSize
+	if batchSize > len(merkleroots) {
+		merklerootsToIndex = len(merkleroots)
+	}
+	merkleroots = merkleroots[0:merklerootsToIndex]
+
+	merkleRootsESKPagedResponse := &domains.MerkleRootsESKPagedResponse{
+		Page: domains.ExclusiveStartKeyPage{
+			OrderByField:     &orderByField,
+			SortDirection:    &sortDirection,
+			TotalElements:    int32(len(*r.db)),
+			Size:             len(merkleroots),
+			LastEvaluatedKey: merkleroots[len(merkleroots)-1].Height,
+		},
+	}
+
+	for _, mkr := range merkleroots {
+		merkleRootsESKPagedResponse.Content = append(merkleRootsESKPagedResponse.Content, &domains.MerkleRootsResponse{
+			MerkleRoot:  mkr.MerkleRoot.String(),
+			BlockHeight: mkr.Height,
+		})
+	}
+
+	return merkleRootsESKPagedResponse, nil
 }
 
 // GetMerkleRootsConfirmations returns a confirmation of merkle roots inclusion

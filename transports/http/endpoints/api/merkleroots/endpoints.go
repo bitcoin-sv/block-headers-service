@@ -2,6 +2,7 @@ package merkleroots
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -56,11 +57,13 @@ func (h *handler) merkleroots(c *gin.Context) {
 	lastEvaluatedKeyInt, errLastEvaluatedKeyConv := strconv.Atoi(lastEvaluatedKey)
 
 	if errBatchSizeConv != nil {
-		c.JSON(http.StatusBadRequest, errors.New("batchSize must be a numeric value"))
+		c.JSON(http.StatusBadRequest, errors.New("batchSize must be a numeric value").Error())
+		return
 	}
 
 	if errLastEvaluatedKeyConv != nil {
-		c.JSON(http.StatusBadRequest, errors.New("lastEvaluatedKey must be a numeric value"))
+		c.JSON(http.StatusBadRequest, errors.New("lastEvaluatedKey must be a numeric value").Error())
+		return
 	}
 
 	merkleroots, err := h.service.GetMerkleRoots(batchSizeInt, lastEvaluatedKeyInt)
