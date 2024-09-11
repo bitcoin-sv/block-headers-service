@@ -133,18 +133,19 @@ func NewHeadersRepository(db *sql.HeadersDb) *HeaderRepository {
 	return &HeaderRepository{db: db}
 }
 
+// GetMerkleRoots returns ExclusiveStartKey pagination of batchSize size with merkle roots from lastEvaluatedKey which
+// is the last height of the block that a client has processed
 func (r *HeaderRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey int) (*domains.MerkleRootsESKPagedResponse, error) {
 	orderByField := "BlockHeight"
 	sortDirection := "ASC"
-	merklerootsFromDb, err1 := r.db.GetMerkleRoots(batchSize, lastEvaluatedKey)
-	merklerootsTopHeight, err2 := r.GetHeadersCount()
-
-	if err1 != nil {
-		return nil, err1
+	merklerootsFromDb, err := r.db.GetMerkleRoots(batchSize, lastEvaluatedKey)
+	if err != nil {
+		return nil, err
 	}
 
-	if err2 != nil {
-		return nil, err2
+	merklerootsTopHeight, err := r.GetHeadersCount()
+	if err != nil {
+		return nil, err
 	}
 
 	merkleroots := &domains.MerkleRootsESKPagedResponse{
@@ -158,11 +159,12 @@ func (r *HeaderRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey int) (
 		},
 	}
 
-	for _, merkleroot := range merklerootsFromDb {
-		merkleroots.Content = append(merkleroots.Content, &domains.MerkleRootsResponse{
+	merkleroots.Content = make([]*domains.MerkleRootsResponse, 0, len(merklerootsFromDb))
+	for i, merkleroot := range merklerootsFromDb {
+		merkleroots.Content[i] = &domains.MerkleRootsResponse{
 			MerkleRoot:  merkleroot.MerkleRoot,
 			BlockHeight: merkleroot.Height,
-		})
+		}
 	}
 
 	return merkleroots, nil

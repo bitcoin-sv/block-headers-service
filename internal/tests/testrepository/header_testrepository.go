@@ -194,6 +194,8 @@ func (r *HeaderTestRepository) GetChainBetweenTwoHashes(low string, high string)
 	return headers, nil
 }
 
+// GetMerkleRoots returns ExclusiveStartKey pagination of batchSize size with merkle roots from lastEvaluatedKey which
+// is the last height of the block that a client has processed
 func (r *HeaderTestRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey int) (*domains.MerkleRootsESKPagedResponse, error) {
 	merkleroots := make([]*domains.BlockHeader, 0)
 	orderByField := "BlockHeight"

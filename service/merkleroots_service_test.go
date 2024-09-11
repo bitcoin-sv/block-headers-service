@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/bitcoin-sv/block-headers-service/domains"
@@ -151,6 +150,5 @@ func TestMerkleRoots(t *testing.T) {
 			assert.Equal(t, mr.BlockHeight, tt.Expected.Content[i].BlockHeight)
 			assert.Equal(t, mr.MerkleRoot, tt.Expected.Content[i].MerkleRoot)
 		}
-		fmt.Print(&merkleRoots)
 	}
 }
