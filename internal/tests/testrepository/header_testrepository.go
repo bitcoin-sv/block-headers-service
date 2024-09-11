@@ -204,7 +204,7 @@ func (r *HeaderTestRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey in
 	})
 	// include only those headers that height is greater than lastEvaluatedKey
 	for _, header := range *r.db {
-		if header.Height > int32(lastEvaluatedKey) {
+		if int(header.Height) > lastEvaluatedKey {
 			hd := header
 			merkleroots = append(merkleroots, &hd)
 		}
