@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/bitcoin-sv/block-headers-service/database/sql"
 	"github.com/bitcoin-sv/block-headers-service/domains"
@@ -154,9 +153,9 @@ func (r *HeaderRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey string
 	if topMerkleroot.MerkleRoot.String() == newLastEvaluatedKey {
 		newLastEvaluatedKey = ""
 	}
-
+	//debug here see what happens
 	merkleroots := &domains.MerkleRootsESKPagedResponse{
-		Content: make(domains.MerkleRootsResponse, len(merklerootsFromDb)),
+		Content: make([]domains.MerkleRootsResponse, len(merklerootsFromDb)),
 		Page: domains.ExclusiveStartKeyPageInfo{
 			TotalElements:    topMerkleroot.Height,
 			Size:             len(merklerootsFromDb),
@@ -164,8 +163,9 @@ func (r *HeaderRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey string
 		},
 	}
 
-	for _, merkleroot := range merklerootsFromDb {
-		merkleroots.Content[strconv.Itoa(int(merkleroot.Height))] = merkleroot.MerkleRoot
+	for i, merkleroot := range merklerootsFromDb {
+		merkleroots.Content[i].BlockHeight = merkleroot.Height
+		merkleroots.Content[i].MerkleRoot = merkleroot.MerkleRoot
 	}
 
 	return merkleroots, nil
