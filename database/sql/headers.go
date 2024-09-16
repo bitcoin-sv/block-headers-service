@@ -169,6 +169,7 @@ const (
 	sqlVerifyHash = `SELECT hash FROM headers WHERE merkleroot = $1 AND height = $2 AND header_state = 'LONGEST_CHAIN'`
 
 	sqlMerkleRootsFromHeight = `SELECT merkleroot, height FROM headers WHERE height > ? ORDER BY height ASC LIMIT ?`
+	sqlGetSingleMerkleroot   = `SELECT merkleroot, height, header_state FROM headers WHERE merkleroot = ?`
 
 	sqlGetHeadersHeight = `
 	SELECT COALESCE(MAX(height), 0) AS startHeight
@@ -484,9 +485,32 @@ func (h *HeadersDb) getMerkleRootConfirmation(item domains.MerkleRootConfirmatio
 }
 
 // GetMerkleRoots method will retrieve as many merkleroots as batchSize from the db from lastEvaluatedKey exclusive
-func (h *HeadersDb) GetMerkleRoots(batchSize int, lastEvaluatedKey int) ([]*dto.DbMerkleRoot, error) {
+func (h *HeadersDb) GetMerkleRoots(batchSize int, lastEvaluatedKey string) ([]*dto.DbMerkleRoot, error) {
 	var merkleroots []*dto.DbMerkleRoot
-	err := h.db.Select(&merkleroots, h.db.Rebind(sqlMerkleRootsFromHeight), lastEvaluatedKey, batchSize)
+	var lastEvaluatedMerkleroot *dto.DbBlockHeader = nil
+	// last evaluated height starts with -1 to fetch from the beginning of the database
+	var lastEvaluatedHeight int32 = -1
+
+	if lastEvaluatedKey != "" {
+
+		err := h.db.Get(&lastEvaluatedMerkleroot, h.db.Rebind(sqlGetSingleMerkleroot), lastEvaluatedKey)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, errors.New("No block with provided merkleroot was found")
+			}
+			return nil, err
+		}
+		// This informs the user that the merkleroot they provided as a lastEvaluatedKey is not in the longest chain meaning
+		// they have the fork of the longest chain and they should request merkleroots from some lower block header to update
+		// their db from the proper longest chain
+		if lastEvaluatedMerkleroot.ToBlockHeader().State != domains.LongestChain {
+			return nil, errors.New("Provided merkleroot is not part of the longest chain")
+		}
+
+		lastEvaluatedHeight = lastEvaluatedMerkleroot.Height
+	}
+
+	err := h.db.Select(&merkleroots, h.db.Rebind(sqlMerkleRootsFromHeight), lastEvaluatedHeight, batchSize)
 
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err

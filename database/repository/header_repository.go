@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/bitcoin-sv/block-headers-service/database/sql"
 	"github.com/bitcoin-sv/block-headers-service/domains"
@@ -135,36 +136,36 @@ func NewHeadersRepository(db *sql.HeadersDb) *HeaderRepository {
 
 // GetMerkleRoots returns ExclusiveStartKey pagination of batchSize size with merkle roots from lastEvaluatedKey which
 // is the last height of the block that a client has processed
-func (r *HeaderRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey int) (*domains.MerkleRootsESKPagedResponse, error) {
-	orderByField := "BlockHeight"
-	sortDirection := "ASC"
+func (r *HeaderRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey string) (*domains.MerkleRootsESKPagedResponse, error) {
 	merklerootsFromDb, err := r.db.GetMerkleRoots(batchSize, lastEvaluatedKey)
 	if err != nil {
 		return nil, err
 	}
 
-	merklerootsTopHeight, err := r.GetHeadersCount()
+	topMerkleroot, err := r.GetTip()
 	if err != nil {
 		return nil, err
 	}
 
+	newLastEvaluatedKey := merklerootsFromDb[len(merklerootsFromDb)-1].MerkleRoot
+
+	// if the newLastEvaluatedKey is equal to the tip merkleroot we set newLastEvaluatedKey
+	// as empty string indicating we have reached the end of the availalbe blocks
+	if topMerkleroot.MerkleRoot.String() == newLastEvaluatedKey {
+		newLastEvaluatedKey = ""
+	}
+
 	merkleroots := &domains.MerkleRootsESKPagedResponse{
-		Page: domains.ExclusiveStartKeyPage[int]{
-			OrderByField:  &orderByField,
-			SortDirection: &sortDirection,
-			TotalElements: int32(merklerootsTopHeight),
-			Size:          len(merklerootsFromDb),
-			// Last Evaluated Key is the height of the last element returned from the merklerootsFromDb
-			LastEvaluatedKey: int(merklerootsFromDb[len(merklerootsFromDb)-1].Height),
+		Content: make(domains.MerkleRootsResponse, len(merklerootsFromDb)),
+		Page: domains.ExclusiveStartKeyPageInfo{
+			TotalElements:    topMerkleroot.Height,
+			Size:             len(merklerootsFromDb),
+			LastEvaluatedKey: newLastEvaluatedKey,
 		},
 	}
 
-	merkleroots.Content = make([]*domains.MerkleRootsResponse, 0, len(merklerootsFromDb))
-	for i, merkleroot := range merklerootsFromDb {
-		merkleroots.Content[i] = &domains.MerkleRootsResponse{
-			MerkleRoot:  merkleroot.MerkleRoot,
-			BlockHeight: merkleroot.Height,
-		}
+	for _, merkleroot := range merklerootsFromDb {
+		merkleroots.Content[strconv.Itoa(int(merkleroot.Height))] = merkleroot.MerkleRoot
 	}
 
 	return merkleroots, nil

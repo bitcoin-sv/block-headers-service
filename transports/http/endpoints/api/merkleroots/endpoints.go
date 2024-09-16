@@ -13,10 +13,10 @@ import (
 )
 
 const (
-	// batchSize is the size of returned merkleroots per request
-	batchSize = "2000"
-	// lastEvaluatedKey is the last block height that the client proccessed, by default -1 implicating start of the chain
-	lastEvaluatedKey = "-1"
+	// defaultBatchSize is the size of returned merkleroots per request
+	defaultBatchSize = "2000"
+	// defaultLastProcessedHeight is the last block height that the client proccessed, by default -1 implicating start of the chain
+	defaultLastProcessedHeight = "-1"
 )
 
 type handler struct {
@@ -43,29 +43,25 @@ func (h *handler) RegisterAPIEndpoints(router *gin.RouterGroup, _ *config.HTTPCo
 // @Tags merkleroots
 // @Accept */*
 // @Produce json
-// @Success 200 {object} merkleroots.MerkleRootsESKPagedResponse.//TODO: map this in swagger docs
+// @Success 200 {object} merkleroots.MerkleRootsESKPagedResponse
 // @Router /chain/merkleroot [get]
 // @Param batchSize query string false "Batch size of returned merkleroots"
-// @Param lastEvaluatedKey query string false "Last evaluated block height that client has processed"
+// @Param lastEvaluatedKey query string false "Last evaluated merkleroot that client has processed"
 // @Security Bearer
 func (h *handler) merkleroots(c *gin.Context) {
-	batchSize := c.DefaultQuery("batchSize", batchSize)
-	lastEvaluatedKey := c.DefaultQuery("lastEvaluatedKey", lastEvaluatedKey)
+	batchSize := c.DefaultQuery("batchSize", defaultBatchSize)
+	lastEvaluatedKey := c.Query("lastEvaluatedKey")
 
-	batchSizeInt, errBatchSizeConv := strconv.Atoi(batchSize)
-	lastEvaluatedKeyInt, errLastEvaluatedKeyConv := strconv.Atoi(lastEvaluatedKey)
-
-	if errBatchSizeConv != nil {
-		c.JSON(http.StatusBadRequest, errors.New("batchSize must be a numeric value").Error())
+	batchSizeInt, err := strconv.Atoi(batchSize)
+	if err != nil || batchSizeInt < 0 {
+		// consider throwing we didn't find value for the given key i would keep it as it is as it tells
+		// the client what we expect so it might be a good thing so they know what kind of data
+		// to send
+		c.JSON(http.StatusBadRequest, errors.New("batchSize must be a positive numeric value").Error())
 		return
 	}
 
-	if errLastEvaluatedKeyConv != nil {
-		c.JSON(http.StatusBadRequest, errors.New("lastEvaluatedKey must be a numeric value").Error())
-		return
-	}
-
-	merkleroots, err := h.service.GetMerkleRoots(batchSizeInt, lastEvaluatedKeyInt)
+	merkleroots, err := h.service.GetMerkleRoots(batchSizeInt, lastEvaluatedKey)
 
 	if err == nil {
 		c.JSON(http.StatusOK, merkleroots)

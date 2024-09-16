@@ -35,6 +35,6 @@ func (ms *MerklerootsService) GetMerkleRootsConfirmations(
 
 // GetMerkleRoots returns ExclusiveStartKey pagination with merkle roots from lastEvaluatedKey which
 // is the last height of the block that a client has processed
-func (ms *MerklerootsService) GetMerkleRoots(batchSize int, lastEvaluatedKey int) (*domains.MerkleRootsESKPagedResponse, error) {
+func (ms *MerklerootsService) GetMerkleRoots(batchSize int, lastEvaluatedKey string) (*domains.MerkleRootsESKPagedResponse, error) {
 	return ms.repo.Headers.GetMerkleRoots(batchSize, lastEvaluatedKey)
 }
