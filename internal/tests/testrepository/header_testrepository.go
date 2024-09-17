@@ -204,7 +204,7 @@ func (r *HeaderTestRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey st
 		return (*r.db)[i].Height < (*r.db)[j].Height
 	})
 
-	// inital value indicates start of the chain
+	// initial value indicates start of the chain
 	lastEvaluatedMerklerootHeight := int32(-1)
 	idx := slices.IndexFunc(*r.db, func(c domains.BlockHeader) bool { return c.MerkleRoot.String() == lastEvaluatedKey })
 
