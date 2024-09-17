@@ -2,6 +2,7 @@ package testrepository
 
 import (
 	"errors"
+	"slices"
 	"sort"
 
 	"github.com/bitcoin-sv/block-headers-service/domains"
@@ -196,17 +197,29 @@ func (r *HeaderTestRepository) GetChainBetweenTwoHashes(low string, high string)
 
 // GetMerkleRoots returns ExclusiveStartKey pagination of batchSize size with merkle roots from lastEvaluatedKey which
 // is the last height of the block that a client has processed
-func (r *HeaderTestRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey int) (*domains.MerkleRootsESKPagedResponse, error) {
+func (r *HeaderTestRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey string) (*domains.MerkleRootsESKPagedResponse, error) {
 	merkleroots := make([]*domains.BlockHeader, 0)
-	orderByField := "BlockHeight"
-	sortDirection := "ASC"
 	// order headers by height ASC
 	sort.Slice(*r.db, func(i, j int) bool {
 		return (*r.db)[i].Height < (*r.db)[j].Height
 	})
-	// include only those headers that height is greater than lastEvaluatedKey
+
+	// inital value indicates start of the chain
+	lastEvaluatedMerklerootHeight := int32(-1)
+	idx := slices.IndexFunc(*r.db, func(c domains.BlockHeader) bool { return c.MerkleRoot.String() == lastEvaluatedKey })
+
+	if idx == -1 && lastEvaluatedKey != "" {
+		return nil, errors.New(domains.MerklerootNotFoundError)
+	}
+
+	if idx != -1 {
+		lastEvaluatedMerkleroot := (*r.db)[idx]
+		lastEvaluatedMerklerootHeight = lastEvaluatedMerkleroot.Height
+	}
+
+	// include only those headers that height is greater than merkleroot of lastEvaluatedKey
 	for _, header := range *r.db {
-		if int(header.Height) > lastEvaluatedKey {
+		if header.Height > lastEvaluatedMerklerootHeight {
 			hd := header
 			merkleroots = append(merkleroots, &hd)
 		}
@@ -219,21 +232,28 @@ func (r *HeaderTestRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey in
 	}
 	merkleroots = merkleroots[0:merklerootsToIndex]
 
-	merkleRootsESKPagedResponse := &domains.MerkleRootsESKPagedResponse{
-		Page: domains.ExclusiveStartKeyPage[int]{
-			OrderByField:     &orderByField,
-			SortDirection:    &sortDirection,
-			TotalElements:    int32(len(*r.db)),
-			Size:             len(merkleroots),
-			LastEvaluatedKey: int(merkleroots[len(merkleroots)-1].Height),
-		},
+	newLastEvaluatedKey := merkleroots[len(merkleroots)-1].MerkleRoot.String()
+
+	// if the newLastEvaluatedKey is equal to the tip merkleroot we set newLastEvaluatedKey
+	// as empty string indicating we have reached the end of the availalbe blocks
+	if (*r.db)[len(*r.db)-1].MerkleRoot.String() == newLastEvaluatedKey {
+		newLastEvaluatedKey = ""
 	}
 
-	for _, mkr := range merkleroots {
-		merkleRootsESKPagedResponse.Content = append(merkleRootsESKPagedResponse.Content, &domains.MerkleRootsResponse{
+	merkleRootsESKPagedResponse := &domains.MerkleRootsESKPagedResponse{
+		Page: domains.ExclusiveStartKeyPageInfo{
+			TotalElements:    int32(len(*r.db)),
+			Size:             len(merkleroots),
+			LastEvaluatedKey: newLastEvaluatedKey,
+		},
+		Content: make([]domains.MerkleRootsResponse, len(merkleroots)),
+	}
+
+	for i, mkr := range merkleroots {
+		merkleRootsESKPagedResponse.Content[i] = domains.MerkleRootsResponse{
 			MerkleRoot:  mkr.MerkleRoot.String(),
 			BlockHeight: mkr.Height,
-		})
+		}
 	}
 
 	return merkleRootsESKPagedResponse, nil

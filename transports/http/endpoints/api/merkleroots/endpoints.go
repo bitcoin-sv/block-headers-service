@@ -9,6 +9,7 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	router "github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/routes"
+	"github.com/bitcoin-sv/block-headers-service/transports/http/helpers"
 	"github.com/gin-gonic/gin"
 )
 
@@ -57,7 +58,8 @@ func (h *handler) merkleroots(c *gin.Context) {
 		// consider throwing we didn't find value for the given key i would keep it as it is as it tells
 		// the client what we expect so it might be a good thing so they know what kind of data
 		// to send
-		c.JSON(http.StatusBadRequest, errors.New("batchSize must be a positive numeric value").Error())
+		err := helpers.ErrorResponseFromMessage("batchSize must be a positive numeric value", http.StatusBadRequest)
+		c.JSON(err.Code, err)
 		return
 	}
 
@@ -66,7 +68,8 @@ func (h *handler) merkleroots(c *gin.Context) {
 	if err == nil {
 		c.JSON(http.StatusOK, merkleroots)
 	} else {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		errResponse := helpers.ErrorResponse(err, helpers.GetCodeFromError(err))
+		c.JSON(errResponse.Code, errResponse)
 	}
 }
 

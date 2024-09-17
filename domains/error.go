@@ -31,6 +31,12 @@ func (e AssertError) Error() string {
 // ErrorCode identifies a kind of error.
 type ErrorCode int
 
+// These constants are used to identify errors specific to merkleroots
+const (
+	MerklerootNotFoundError          = "No block with provided merkleroot was found"
+	MerklerootNotInLongestChainError = "Provided merkleroot is not part of the longest chain"
+)
+
 // These constants are used to identify a specific RuleError.
 const (
 	// ErrDuplicateBlock indicates a block with the same hash already

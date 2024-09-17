@@ -496,18 +496,18 @@ func (h *HeadersDb) GetMerkleRoots(batchSize int, lastEvaluatedKey string) ([]*d
 		err := h.db.Select(&lastEvaluatedMerkleroot, h.db.Rebind(sqlGetSingleMerkleroot), lastEvaluatedKey)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				return nil, errors.New("No block with provided merkleroot was found")
+				return nil, errors.New(domains.MerklerootNotFoundError)
 			}
 			return nil, err
 		}
 		if len(lastEvaluatedMerkleroot) == 0 {
-			return nil, errors.New("No block with provided merkleroot was found")
+			return nil, errors.New(domains.MerklerootNotFoundError)
 		}
 		// This informs the user that the merkleroot they provided as a lastEvaluatedKey is not in the longest chain meaning
 		// they have the fork of the longest chain and they should request merkleroots from some lower block header to update
 		// their db from the proper longest chain
 		if lastEvaluatedMerkleroot[0].ToBlockHeader().State != domains.LongestChain {
-			return nil, errors.New("Provided merkleroot is not part of the longest chain")
+			return nil, errors.New(domains.MerklerootNotInLongestChainError)
 		}
 
 		lastEvaluatedHeight = lastEvaluatedMerkleroot[0].Height
