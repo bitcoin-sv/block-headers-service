@@ -7,6 +7,8 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/domains"
 )
 
+// ResponseError is an object that we can return to the client if any error happens
+// on the server
 type ResponseError struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`

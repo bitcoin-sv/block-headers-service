@@ -16,8 +16,6 @@ import (
 const (
 	// defaultBatchSize is the size of returned merkleroots per request
 	defaultBatchSize = "2000"
-	// defaultLastProcessedHeight is the last block height that the client proccessed, by default -1 implicating start of the chain
-	defaultLastProcessedHeight = "-1"
 )
 
 type handler struct {

@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
+
 	"io"
 	"net/http"
-	"strings"
+	"net/url"
 	"testing"
 
 	"github.com/bitcoin-sv/block-headers-service/domains"
@@ -429,24 +429,24 @@ func TestMerkleRootsFailure(t *testing.T) {
 // batchSize and lastEvaluatedKey of type string, we can omit any of them to simulate
 // user not passing these values and need to pass empty string in this place
 func getMerkleRoots(batchSize, lastEvaluatedKey string) (req *http.Request, err error) {
-	address := "/api/v1/chain/merkleroot"
+	address, err := url.Parse("/api/v1/chain/merkleroot")
+	if err != nil {
+		return nil, err
+	}
 
-	queryParams := []string{}
+	query := url.Values{}
 	if batchSize != "" {
-		queryParams = append(queryParams, "batchSize="+batchSize)
+		query.Add("batchSize", batchSize)
 	}
 	if lastEvaluatedKey != "" {
-		queryParams = append(queryParams, "lastEvaluatedKey="+lastEvaluatedKey)
+		query.Add("lastEvaluatedKey", lastEvaluatedKey)
 	}
 
-	if len(queryParams) > 0 {
-		address = fmt.Sprintf("%s?%s", address, strings.Join(queryParams, "&"))
-	}
-
+	address.RawQuery = query.Encode()
 	return http.NewRequestWithContext(
 		context.Background(),
 		http.MethodGet,
-		address,
+		address.String(),
 		nil,
 	)
 }
