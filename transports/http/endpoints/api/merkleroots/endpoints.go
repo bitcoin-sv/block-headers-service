@@ -42,7 +42,7 @@ func (h *handler) RegisterAPIEndpoints(router *gin.RouterGroup, _ *config.HTTPCo
 // @Tags merkleroots
 // @Accept */*
 // @Produce json
-// @Success 200 {object} merkleroots.MerkleRootsESKPagedResponse
+// @Success 200 {object} domains.MerkleRootsESKPagedResponse
 // @Router /chain/merkleroot [get]
 // @Param batchSize query string false "Batch size of returned merkleroots"
 // @Param lastEvaluatedKey query string false "Last evaluated merkleroot that client has processed"
@@ -77,7 +77,7 @@ func (h *handler) merkleroots(c *gin.Context) {
 //	@Tags merkleroots
 //	@Accept */*
 //	@Produce json
-//	@Success 200 {array} merkleroots.MerkleRootsConfirmationsResponse
+//	@Success 200 {array} merkleroots.ConfirmationsResponse
 //	@Router /chain/merkleroot/verify [post]
 //	@Param request body []domains.MerkleRootConfirmationRequestItem true "JSON"
 //	@Security Bearer
