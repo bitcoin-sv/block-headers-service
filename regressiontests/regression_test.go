@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 
@@ -23,6 +24,7 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/headers"
 	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/merkleroots"
 	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/tips"
+	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
@@ -75,10 +77,15 @@ func TestApplicationIntegration(t *testing.T) {
 
 	t.Log("Verifying merkle roots...")
 
-	verifyMerkleRoots(ctx, t, fixtures)
+	verifyMerkleRootsConfirmations(ctx, t, fixtures)
 
 	t.Log("Merkle roots verification passed successfully 🎉")
 
+	t.Log("Verifying fetching merkleroots batch")
+
+	verifyMerkleRootsBatch(ctx, t, merkleRootsTestSamples)
+
+	t.Log("Fetching merkleroots batch verification passed successfully 🎉")
 }
 
 func setupApplicationBuild(t *testing.T) {
@@ -372,7 +379,54 @@ func verifyHeaders(ctx context.Context, t *testing.T) {
 	}
 }
 
-func verifyMerkleRoots(ctx context.Context, t *testing.T, fixtures []merkleRootFixtures) {
+func verifyMerkleRootsBatch(ctx context.Context, t *testing.T, merkleRootBatchSamples []merkleRootBatchSample) {
+	for _, mrbs := range merkleRootBatchSamples {
+		merkleRootsPage := fetchMerkleRootsBatch(ctx, mrbs, t)
+		require.JSONEq(t, mrbs.expectedBody, merkleRootsPage)
+	}
+}
+
+func fetchMerkleRootsBatch(ctx context.Context, merkleRootsTestSamples merkleRootBatchSample, t *testing.T) string {
+	client := &http.Client{}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, localHTTPServerURL+"/api/v1/chain/merkleroot"+merkleRootsTestSamples.queryParams, nil)
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+config.DefaultAppToken)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("Failed to make HTTP request to aplication: %v", err)
+
+	}
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			t.Fatalf("Failed to close response body: %v", closeErr)
+		}
+	}()
+
+	if resp.StatusCode != merkleRootsTestSamples.expectedCode {
+		t.Fatalf("Expected status code %d, got %d", merkleRootsTestSamples.expectedCode, resp.StatusCode)
+	}
+
+	// here we need to prepare slightly different object without totalElements key as regression tests
+	// can be run at any time and the totalElements value might differ depending on when the tests are run
+	var merkleRootsPageWithoutTotalElements map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&merkleRootsPageWithoutTotalElements); err != nil {
+		t.Fatalf("Failed to decode JSON response: %v", err)
+	}
+
+	removeNestedKey(merkleRootsPageWithoutTotalElements, "page.totalElements")
+	expectedJSON, err := json.Marshal(merkleRootsPageWithoutTotalElements)
+	if err != nil {
+		t.Fatalf("Failed to marshal modified expected JSON: %v", err)
+	}
+	return string(expectedJSON)
+}
+
+func verifyMerkleRootsConfirmations(ctx context.Context, t *testing.T, fixtures []merkleRootFixtures) {
 	confirmations := fetchMerkleRootConfirmations(ctx, fixtures, t)
 
 	for _, fixture := range fixtures {
@@ -432,4 +486,27 @@ func pathToExecutable() string {
 		path += ".exe"
 	}
 	return path
+}
+
+// Utility function to remove a specific nested key from a JSON map
+func removeNestedKey(jsonMap map[string]interface{}, nestedKey string) {
+	// Split the nested key on '.'
+	keys := strings.Split(nestedKey, ".")
+
+	// Traverse the map based on the keys
+	current := jsonMap
+	for i, key := range keys {
+		if i == len(keys)-1 {
+			// If it's the last key, remove it
+			delete(current, key)
+		} else {
+			// If it's an intermediate key, navigate deeper
+			if next, ok := current[key].(map[string]interface{}); ok {
+				current = next
+			} else {
+				// If the structure doesn't match, stop
+				break
+			}
+		}
+	}
 }
