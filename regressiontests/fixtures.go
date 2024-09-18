@@ -32,8 +32,6 @@ var fixtures = []merkleRootFixtures{
 	{"5577e5499957946166154297b6811f80a2c1c342d9743d05a63fe8ea9defed4c", 800100},
 }
 
-// czy bez evaluation zwroci 5 pierwszych headerow
-// czy podajac 10 merkleroot ze zwroci kolejne 11-15 cos takiego
 var merkleRootsTestSamples = []merkleRootBatchSample{
 	{
 		queryParams:  "?batchSize=5",

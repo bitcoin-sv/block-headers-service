@@ -492,7 +492,6 @@ func (h *HeadersDb) GetMerkleRoots(batchSize int, lastEvaluatedKey string) ([]*d
 	var lastEvaluatedHeight int32 = -1
 
 	if lastEvaluatedKey != "" {
-
 		err := h.db.Select(&lastEvaluatedMerkleroot, h.db.Rebind(sqlGetSingleMerkleroot), lastEvaluatedKey)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {

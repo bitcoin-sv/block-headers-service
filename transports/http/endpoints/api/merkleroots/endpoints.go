@@ -53,9 +53,6 @@ func (h *handler) merkleroots(c *gin.Context) {
 
 	batchSizeInt, err := strconv.Atoi(batchSize)
 	if err != nil || batchSizeInt < 0 {
-		// consider throwing we didn't find value for the given key i would keep it as it is as it tells
-		// the client what we expect so it might be a good thing so they know what kind of data
-		// to send
 		err := helpers.ErrorResponseFromMessage("batchSize must be a positive numeric value", http.StatusBadRequest)
 		c.JSON(err.Code, err)
 		return
