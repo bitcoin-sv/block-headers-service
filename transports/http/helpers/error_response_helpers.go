@@ -10,38 +10,47 @@ import (
 // ResponseError is an object that we can return to the client if any error happens
 // on the server
 type ResponseError struct {
-	Code    int    `json:"code"`
+	Code    string `json:"code"`
 	Message string `json:"message"`
 }
 
 // ErrorResponse is creating an error object to send it to the client
-func ErrorResponse(err error, statusCode int) *ResponseError {
-	return parseError(err, statusCode)
+// it also returns http statusCode
+func ErrorResponse(err error) (*ResponseError, int) {
+	sc, cm := getCodeFromError(err)
+	return parseError(err, sc, cm)
 }
 
 // ErrorResponseFromMessage is simplified ErrorResponse when we don't want to create new error
 // in code but just pass the message that will be sent to the client.
-func ErrorResponseFromMessage(errMessage string, statusCode int) *ResponseError {
-	return parseError(errors.New(errMessage), statusCode)
+func ErrorResponseFromMessage(errMessage string) (*ResponseError, int) {
+	sc, cm := getCodeFromError(errors.New(errMessage))
+	return parseError(errors.New(errMessage), sc, cm)
 }
 
-// GetCodeFromError returns error code that should be returned to the client
+// GetCodeFromError returns error code and code message that should be returned to the client
 // in a response based on the error message
-func GetCodeFromError(err error) int {
+func getCodeFromError(err error) (int, string) {
+	var errCode domains.ErrorCode = domains.ErrGeneric
 
 	switch {
 	case errors.Is(err, domains.MerklerootNotFoundError):
-		return http.StatusNotFound
+		errCode = domains.ErrMerkleRootNotFound
+		return http.StatusNotFound, errCode.String()
 	case errors.Is(err, domains.MerklerootNotInLongestChainError):
-		return http.StatusConflict
+		errCode = domains.ErrMerkleRootNotInLC
+		return http.StatusConflict, errCode.String()
+	case errors.Is(err, domains.MerklerootInvalidBatchSizeError):
+		errCode = domains.ErrInvalidBatchSize
+		return http.StatusBadRequest, errCode.String()
 	default:
-		return http.StatusInternalServerError
+		return http.StatusInternalServerError, errCode.String()
 	}
 }
 
-func parseError(err error, statusCode int) *ResponseError {
+func parseError(err error, statusCode int, code string) (*ResponseError, int) {
 	return &ResponseError{
 		Message: err.Error(),
-		Code:    statusCode,
-	}
+		Code:    code,
+	}, statusCode
 }

@@ -392,7 +392,7 @@ func TestMerkleRootsFailure(t *testing.T) {
 			evaluationKey: "0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098",
 			expectedCode:  http.StatusBadRequest,
 			expectedBody: `{
-		                   "code": 400,
+		                   "code": "ErrInvalidBatchSize",
 		                   "message": "batchSize must be a positive numeric value"
 		                  }`,
 		},
@@ -401,7 +401,7 @@ func TestMerkleRootsFailure(t *testing.T) {
 			evaluationKey: "keyNotExisting",
 			expectedCode:  http.StatusNotFound,
 			expectedBody: `{
-		                   "code": 404,
+		                   "code": "ErrMerkleRootNotFound",
 		                   "message": "No block with provided merkleroot was found"
 		                  }`,
 		},
@@ -410,7 +410,7 @@ func TestMerkleRootsFailure(t *testing.T) {
 			evaluationKey: "88d2a4e04a96b45e3ba04637098a92fd0786daf3fc8ff88314f8e739a9918bf3",
 			expectedCode:  http.StatusConflict,
 			expectedBody: `{
-		                   "code": 409,
+		                   "code": "ErrMerkleRootNotInLC",
 		                   "message": "Provided merkleroot is not part of the longest chain"
 		                  }`,
 		},

@@ -53,8 +53,8 @@ func (h *handler) merkleroots(c *gin.Context) {
 
 	batchSizeInt, err := strconv.Atoi(batchSize)
 	if err != nil || batchSizeInt < 0 {
-		err := helpers.ErrorResponseFromMessage("batchSize must be a positive numeric value", http.StatusBadRequest)
-		c.JSON(err.Code, err)
+		err, statusCode := helpers.ErrorResponse(domains.MerklerootInvalidBatchSizeError)
+		c.JSON(statusCode, err)
 		return
 	}
 
@@ -63,8 +63,8 @@ func (h *handler) merkleroots(c *gin.Context) {
 	if err == nil {
 		c.JSON(http.StatusOK, merkleroots)
 	} else {
-		errResponse := helpers.ErrorResponse(err, helpers.GetCodeFromError(err))
-		c.JSON(errResponse.Code, errResponse)
+		errResponse, statusCode := helpers.ErrorResponse(err)
+		c.JSON(statusCode, errResponse)
 	}
 }
 
