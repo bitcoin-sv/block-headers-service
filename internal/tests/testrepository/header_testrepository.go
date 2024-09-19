@@ -220,12 +220,12 @@ func (r *HeaderTestRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey st
 	startIdx := slices.IndexFunc(*r.db, func(c domains.BlockHeader) bool { return c.MerkleRoot.String() == lastEvaluatedKey })
 
 	if startIdx == -1 && lastEvaluatedKey != "" {
-		return nil, domains.MerklerootNotFoundError
+		return nil, domains.ErrMerklerootNotFound
 	}
 
 	// Check if lastEvaluatedKey is not from the longest chain
 	if startIdx != -1 && !(*r.db)[startIdx].IsLongestChain() {
-		return nil, domains.MerklerootNotInLongestChainError
+		return nil, domains.ErrMerklerootNotInLongestChain
 	}
 
 	// If the lastEvaluatedKey is found, we start after it; otherwise, we start from the beginning
@@ -371,7 +371,7 @@ func (r *HeaderTestRepository) FillWithLongestChain() {
 	r.db = &filledDb
 }
 
-// FillWithLongestChain fills the test header repository
+// FillWithLongestChainWithFork fills the test header repository
 // with 4 additional blocks to create a longest chain.
 func (r *HeaderTestRepository) FillWithLongestChainWithFork() {
 	db, _ := fixtures.LongestChainWithFork()

@@ -34,9 +34,9 @@ type ErrorCode int
 
 // These constants are used to identify errors specific to merkleroots
 var (
-	MerklerootNotFoundError          = errors.New("No block with provided merkleroot was found")
-	MerklerootNotInLongestChainError = errors.New("Provided merkleroot is not part of the longest chain")
-	MerklerootInvalidBatchSizeError  = errors.New("batchSize must be a positive numeric value")
+	ErrMerklerootNotFound          = errors.New("No block with provided merkleroot was found")
+	ErrMerklerootNotInLongestChain = errors.New("Provided merkleroot is not part of the longest chain")
+	ErrMerklerootInvalidBatchSize  = errors.New("batchSize must be a positive numeric value")
 )
 
 // These constants are used to identify a specific RuleError.

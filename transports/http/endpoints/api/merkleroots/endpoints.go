@@ -53,7 +53,7 @@ func (h *handler) merkleroots(c *gin.Context) {
 
 	batchSizeInt, err := strconv.Atoi(batchSize)
 	if err != nil || batchSizeInt < 0 {
-		err, statusCode := helpers.ErrorResponse(domains.MerklerootInvalidBatchSizeError)
+		err, statusCode := helpers.ErrorResponse(domains.ErrMerklerootInvalidBatchSize)
 		c.JSON(statusCode, err)
 		return
 	}

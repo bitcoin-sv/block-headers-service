@@ -34,13 +34,13 @@ func getCodeFromError(err error) (int, string) {
 	var errCode domains.ErrorCode = domains.ErrGeneric
 
 	switch {
-	case errors.Is(err, domains.MerklerootNotFoundError):
+	case errors.Is(err, domains.ErrMerklerootNotFound):
 		errCode = domains.ErrMerkleRootNotFound
 		return http.StatusNotFound, errCode.String()
-	case errors.Is(err, domains.MerklerootNotInLongestChainError):
+	case errors.Is(err, domains.ErrMerklerootNotInLongestChain):
 		errCode = domains.ErrMerkleRootNotInLC
 		return http.StatusConflict, errCode.String()
-	case errors.Is(err, domains.MerklerootInvalidBatchSizeError):
+	case errors.Is(err, domains.ErrMerklerootInvalidBatchSize):
 		errCode = domains.ErrInvalidBatchSize
 		return http.StatusBadRequest, errCode.String()
 	default:
