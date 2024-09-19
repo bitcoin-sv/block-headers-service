@@ -196,48 +196,58 @@ func (r *HeaderTestRepository) GetChainBetweenTwoHashes(low string, high string)
 }
 
 // GetMerkleRoots returns ExclusiveStartKey pagination of batchSize size with merkle roots from lastEvaluatedKey which
-// is the last height of the block that a client has processed
+// is the last merkleroot of the block that a client has processed
 func (r *HeaderTestRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey string) (*domains.MerkleRootsESKPagedResponse, error) {
-	merkleroots := make([]*domains.BlockHeader, 0)
-	// order headers by height ASC
+	// Order headers by height ASC
 	sort.Slice(*r.db, func(i, j int) bool {
 		return (*r.db)[i].Height < (*r.db)[j].Height
 	})
 
-	// initial value indicates start of the chain
-	lastEvaluatedMerklerootHeight := int32(-1)
-	idx := slices.IndexFunc(*r.db, func(c domains.BlockHeader) bool { return c.MerkleRoot.String() == lastEvaluatedKey })
-
-	if idx == -1 && lastEvaluatedKey != "" {
-		return nil, errors.New(domains.MerklerootNotFoundError)
+	// Check if lastEvaluatedKey is the same as the last element's MerkleRoot
+	if lastEvaluatedKey != "" && (*r.db)[len(*r.db)-1].MerkleRoot.String() == lastEvaluatedKey {
+		// Return empty content since we have reached the end
+		return &domains.MerkleRootsESKPagedResponse{
+			Page: domains.ExclusiveStartKeyPageInfo{
+				TotalElements:    int32(len(*r.db)),
+				Size:             0,
+				LastEvaluatedKey: "",
+			},
+			Content: []domains.MerkleRootsResponse{},
+		}, nil
 	}
 
-	if idx != -1 {
-		lastEvaluatedMerkleroot := (*r.db)[idx]
-		lastEvaluatedMerklerootHeight = lastEvaluatedMerkleroot.Height
+	// Find the starting index based on the lastEvaluatedKey
+	startIdx := slices.IndexFunc(*r.db, func(c domains.BlockHeader) bool { return c.MerkleRoot.String() == lastEvaluatedKey })
+
+	if startIdx == -1 && lastEvaluatedKey != "" {
+		return nil, domains.MerklerootNotFoundError
 	}
 
-	// include only those headers that height is greater than merkleroot of lastEvaluatedKey
-	for _, header := range *r.db {
-		if header.Height > lastEvaluatedMerklerootHeight {
-			hd := header
-			merkleroots = append(merkleroots, &hd)
+	// If the lastEvaluatedKey is found, we start after it; otherwise, we start from the beginning
+	if startIdx != -1 {
+		startIdx++ // Start from the next element after the found key
+	} else {
+		startIdx = 0 // Start from the beginning if no key is provided
+	}
+
+	// Calculate the end index for the batch based on batchSize
+	endIdx := startIdx + batchSize
+	if endIdx > len(*r.db) {
+		endIdx = len(*r.db) // Limit to the size of the db if the batch size exceeds available elements
+	}
+
+	merkleroots := (*r.db)[startIdx:endIdx]
+
+	// Determine the newLastEvaluatedKey
+	newLastEvaluatedKey := ""
+
+	if len(merkleroots) > 0 {
+		newLastEvaluatedKey = merkleroots[len(merkleroots)-1].MerkleRoot.String()
+
+		// If the newLastEvaluatedKey is equal to the tip merkleroos we have no more blocks in database
+		if (*r.db)[len(*r.db)-1].MerkleRoot.String() == newLastEvaluatedKey {
+			newLastEvaluatedKey = ""
 		}
-	}
-
-	// get first batchSize of the results
-	merklerootsToIndex := batchSize
-	if batchSize > len(merkleroots) {
-		merklerootsToIndex = len(merkleroots)
-	}
-	merkleroots = merkleroots[0:merklerootsToIndex]
-
-	newLastEvaluatedKey := merkleroots[len(merkleroots)-1].MerkleRoot.String()
-
-	// if the newLastEvaluatedKey is equal to the tip merkleroot we set newLastEvaluatedKey
-	// as empty string indicating we have reached the end of the availalbe blocks
-	if (*r.db)[len(*r.db)-1].MerkleRoot.String() == newLastEvaluatedKey {
-		newLastEvaluatedKey = ""
 	}
 
 	merkleRootsESKPagedResponse := &domains.MerkleRootsESKPagedResponse{

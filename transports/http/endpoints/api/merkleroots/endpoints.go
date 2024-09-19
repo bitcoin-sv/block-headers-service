@@ -38,7 +38,7 @@ func (h *handler) RegisterAPIEndpoints(router *gin.RouterGroup, _ *config.HTTPCo
 
 // Merkleroot godoc.
 //
-// @Summary Returns merkleroots for the specified range
+// @Summary Returns merkleroots for the specified range.
 // @Tags merkleroots
 // @Accept */*
 // @Produce json

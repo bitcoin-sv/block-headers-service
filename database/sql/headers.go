@@ -487,36 +487,42 @@ func (h *HeadersDb) getMerkleRootConfirmation(item domains.MerkleRootConfirmatio
 // GetMerkleRoots method will retrieve as many merkleroots as batchSize from the db from lastEvaluatedKey exclusive
 func (h *HeadersDb) GetMerkleRoots(batchSize int, lastEvaluatedKey string) ([]*dto.DbMerkleRoot, error) {
 	var merkleroots []*dto.DbMerkleRoot
-	var lastEvaluatedMerkleroot []dto.DbBlockHeader
-	// last evaluated height starts with -1 to fetch from the beginning of the database
-	var lastEvaluatedHeight int32 = -1
-
-	if lastEvaluatedKey != "" {
-		err := h.db.Select(&lastEvaluatedMerkleroot, h.db.Rebind(sqlGetSingleMerkleroot), lastEvaluatedKey)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return nil, errors.New(domains.MerklerootNotFoundError)
-			}
-			return nil, err
-		}
-		if len(lastEvaluatedMerkleroot) == 0 {
-			return nil, errors.New(domains.MerklerootNotFoundError)
-		}
-		// This informs the user that the merkleroot they provided as a lastEvaluatedKey is not in the longest chain meaning
-		// they have the fork of the longest chain and they should request merkleroots from some lower block header to update
-		// their db from the proper longest chain
-		if lastEvaluatedMerkleroot[0].ToBlockHeader().State != domains.LongestChain {
-			return nil, errors.New(domains.MerklerootNotInLongestChainError)
-		}
-
-		lastEvaluatedHeight = lastEvaluatedMerkleroot[0].Height
+	lastEvaluatedHeight, err := h.getLastEvaluatedMerklerootHeight(lastEvaluatedKey)
+	if err != nil {
+		return nil, err
 	}
 
-	err := h.db.Select(&merkleroots, h.db.Rebind(sqlMerkleRootsFromHeight), lastEvaluatedHeight, batchSize)
-
+	err = h.db.Select(&merkleroots, h.db.Rebind(sqlMerkleRootsFromHeight), &lastEvaluatedHeight, batchSize)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
 
 	return merkleroots, nil
+}
+
+func (h *HeadersDb) getLastEvaluatedMerklerootHeight(lastEvaluatedKey string) (*int32, error) {
+	// last evaluated height starts with -1 to fetch from the beginning of the database
+	// height property in database has type int32 also
+	var lastEvaluatedHeight int32 = -1
+
+	if lastEvaluatedKey == "" {
+		return &lastEvaluatedHeight, nil
+	}
+
+	var lastEvaluatedMerkleroot dto.DbBlockHeader
+	err := h.db.Get(&lastEvaluatedMerkleroot, h.db.Rebind(sqlGetSingleMerkleroot), lastEvaluatedKey)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, domains.MerklerootNotFoundError
+		}
+		return nil, err
+	}
+
+	if lastEvaluatedMerkleroot.ToBlockHeader().State != domains.LongestChain {
+		return nil, domains.MerklerootNotInLongestChainError
+	}
+
+	lastEvaluatedHeight = lastEvaluatedMerkleroot.Height
+
+	return &lastEvaluatedHeight, nil
 }

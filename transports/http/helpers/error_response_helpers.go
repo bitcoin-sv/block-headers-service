@@ -28,12 +28,11 @@ func ErrorResponseFromMessage(errMessage string, statusCode int) ResponseError {
 // GetCodeFromError returns error code that should be returned to the client
 // in a response based on the error message
 func GetCodeFromError(err error) int {
-	errorMessage := err.Error()
 
-	switch errorMessage {
-	case domains.MerklerootNotFoundError:
+	switch {
+	case errors.Is(err, domains.MerklerootNotFoundError):
 		return http.StatusNotFound
-	case domains.MerklerootNotInLongestChainError:
+	case errors.Is(err, domains.MerklerootNotInLongestChainError):
 		return http.StatusConflict
 	default:
 		return http.StatusInternalServerError

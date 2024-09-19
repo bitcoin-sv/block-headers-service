@@ -146,18 +146,23 @@ func (r *HeaderRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey string
 		return nil, err
 	}
 
-	newLastEvaluatedKey := merklerootsFromDb[len(merklerootsFromDb)-1].MerkleRoot
-
-	if tip.MerkleRoot.String() == newLastEvaluatedKey {
-		newLastEvaluatedKey = "" // indicating we have reached the end of the available blocks
-	}
 	merkleroots := &domains.MerkleRootsESKPagedResponse{
 		Content: make([]domains.MerkleRootsResponse, len(merklerootsFromDb)),
 		Page: domains.ExclusiveStartKeyPageInfo{
 			TotalElements:    tip.Height,
 			Size:             len(merklerootsFromDb),
-			LastEvaluatedKey: newLastEvaluatedKey,
+			LastEvaluatedKey: "",
 		},
+	}
+
+	if len(merklerootsFromDb) == 0 {
+		return merkleroots, nil
+	}
+
+	lastEvaluatedKeyFromDb := merklerootsFromDb[len(merklerootsFromDb)-1].MerkleRoot
+
+	if tip.MerkleRoot.String() != lastEvaluatedKeyFromDb {
+		merkleroots.Page.LastEvaluatedKey = lastEvaluatedKeyFromDb //indicating we still have some data available from db
 	}
 
 	for i, merkleroot := range merklerootsFromDb {
