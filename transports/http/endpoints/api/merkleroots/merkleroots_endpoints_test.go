@@ -405,13 +405,22 @@ func TestMerkleRootsFailure(t *testing.T) {
 		                   "message": "No block with provided merkleroot was found"
 		                  }`,
 		},
+		"return error when evaluationKey merkleroot is from stale chain": {
+			batchSize:     "2",
+			evaluationKey: "88d2a4e04a96b45e3ba04637098a92fd0786daf3fc8ff88314f8e739a9918bf3",
+			expectedCode:  http.StatusConflict,
+			expectedBody: `{
+		                   "code": 409,
+		                   "message": "Provided merkleroot is not part of the longest chain"
+		                  }`,
+		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 
 			// setup
-			bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithAPIAuthorizationDisabled())
+			bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithLongestChainFork(), testapp.WithAPIAuthorizationDisabled())
 			defer cleanup()
 
 			// when

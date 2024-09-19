@@ -15,13 +15,13 @@ type ResponseError struct {
 }
 
 // ErrorResponse is creating an error object to send it to the client
-func ErrorResponse(err error, statusCode int) ResponseError {
+func ErrorResponse(err error, statusCode int) *ResponseError {
 	return parseError(err, statusCode)
 }
 
 // ErrorResponseFromMessage is simplified ErrorResponse when we don't want to create new error
 // in code but just pass the message that will be sent to the client.
-func ErrorResponseFromMessage(errMessage string, statusCode int) ResponseError {
+func ErrorResponseFromMessage(errMessage string, statusCode int) *ResponseError {
 	return parseError(errors.New(errMessage), statusCode)
 }
 
@@ -39,8 +39,8 @@ func GetCodeFromError(err error) int {
 	}
 }
 
-func parseError(err error, statusCode int) ResponseError {
-	return ResponseError{
+func parseError(err error, statusCode int) *ResponseError {
+	return &ResponseError{
 		Message: err.Error(),
 		Code:    statusCode,
 	}

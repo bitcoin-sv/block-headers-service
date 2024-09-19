@@ -18,3 +18,10 @@ func WithLongestChain() RepoOpt {
 		r.Headers.FillWithLongestChain()
 	}
 }
+
+// WithLongestChainFrok fills the initialized header test repository with 6 additional blocks.
+func WithLongestChainFork() RepoOpt {
+	return func(r *testrepository.TestRepositories) {
+		r.Headers.FillWithLongestChainWithFork()
+	}
+}

@@ -223,6 +223,11 @@ func (r *HeaderTestRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey st
 		return nil, domains.MerklerootNotFoundError
 	}
 
+	// Check if lastEvaluatedKey is not from the longest chain
+	if startIdx != -1 && !(*r.db)[startIdx].IsLongestChain() {
+		return nil, domains.MerklerootNotInLongestChainError
+	}
+
 	// If the lastEvaluatedKey is found, we start after it; otherwise, we start from the beginning
 	if startIdx != -1 {
 		startIdx++ // Start from the next element after the found key
@@ -230,13 +235,21 @@ func (r *HeaderTestRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey st
 		startIdx = 0 // Start from the beginning if no key is provided
 	}
 
-	// Calculate the end index for the batch based on batchSize
-	endIdx := startIdx + batchSize
-	if endIdx > len(*r.db) {
-		endIdx = len(*r.db) // Limit to the size of the db if the batch size exceeds available elements
+	// Filter out headers with "STALE" state
+	filteredHeaders := make([]domains.BlockHeader, 0)
+	for _, header := range (*r.db)[startIdx:] {
+		if header.State != "STALE" {
+			filteredHeaders = append(filteredHeaders, header)
+		}
 	}
 
-	merkleroots := (*r.db)[startIdx:endIdx]
+	// Calculate the end index for the batch based on batchSize
+	endIdx := batchSize
+	if endIdx > len(filteredHeaders) {
+		endIdx = len(filteredHeaders) // Limit to the size of the db if the batch size exceeds available elements
+	}
+
+	merkleroots := filteredHeaders[:endIdx]
 
 	// Determine the newLastEvaluatedKey
 	newLastEvaluatedKey := ""
@@ -354,6 +367,14 @@ func (r *HeaderTestRepository) GetHeadersStopHeight(hashStop string) (int, error
 // with 4 additional blocks to create a longest chain.
 func (r *HeaderTestRepository) FillWithLongestChain() {
 	db, _ := fixtures.AddLongestChain(*r.db)
+	var filledDb []domains.BlockHeader = db
+	r.db = &filledDb
+}
+
+// FillWithLongestChain fills the test header repository
+// with 4 additional blocks to create a longest chain.
+func (r *HeaderTestRepository) FillWithLongestChainWithFork() {
+	db, _ := fixtures.LongestChainWithFork()
 	var filledDb []domains.BlockHeader = db
 	r.db = &filledDb
 }

@@ -32,6 +32,19 @@ func startingChain() HeaderChainFixture {
 	return []domains.BlockHeader{genesisBlock}
 }
 
+// LongestChainWithFork creates mocked longest chain entries with few stale ones simulating fork
+func LongestChainWithFork() (db HeaderChainFixture, tip *domains.BlockHeader) {
+	db = startingChain().
+		addToLongestChain(HashHeight1, HeaderSourceHeight1).
+		addToLongestChain(HashHeight2, HeaderSourceHeight2).
+		addToLongestChain(HashHeight3, HeaderSourceHeight3).
+		addToLongestChain(HashHeight4, HeaderSourceHeight4).
+		addToChainFork(2, StaleHashHeight3, StaleHeaderSourceHeight3).
+		addToChainFork(3, StaleHashHeight4, StaleHeaderSourceHeight4)
+
+	return db, db.tip()
+}
+
 // LongestChain creates mocked the longest chain entries (containing Genesis Block and 4 first blocks).
 func LongestChain() (db HeaderChainFixture, tip *domains.BlockHeader) {
 	db = startingChain().
@@ -78,9 +91,18 @@ func (c HeaderChainFixture) addToStaleChain(hash *chainhash.Hash, hs *domains.Bl
 	return c.addFromSource(hash, hs, domains.Stale)
 }
 
+// This method adds to the chain new block with stale status on given height
+func (c HeaderChainFixture) addToChainFork(height int, hash *chainhash.Hash, hs *domains.BlockHeaderSource) HeaderChainFixture {
+	return c.addFromSourceFork(height, hash, hs, domains.Stale)
+}
+
 func (c HeaderChainFixture) addFromSource(hash *chainhash.Hash, hs *domains.BlockHeaderSource, s domains.HeaderState) HeaderChainFixture {
 	height := int32(len(c))
 	return append(c, *BlockHeaderOf(height, hash, hs, s))
+}
+
+func (c HeaderChainFixture) addFromSourceFork(height int, hash *chainhash.Hash, hs *domains.BlockHeaderSource, s domains.HeaderState) HeaderChainFixture {
+	return append(c, *BlockHeaderOf(int32(height), hash, hs, s))
 }
 
 func (c HeaderChainFixture) tip() *domains.BlockHeader {
