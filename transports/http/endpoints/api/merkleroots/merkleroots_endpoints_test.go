@@ -393,7 +393,7 @@ func TestMerkleRootsFailure(t *testing.T) {
 			expectedCode:  http.StatusBadRequest,
 			expectedBody: `{
 		                   "code": "ErrInvalidBatchSize",
-		                   "message": "batchSize must be a positive numeric value"
+		                   "message": "batchSize must be 0 or a positive integer"
 		                  }`,
 		},
 		"return error when evaluationKey doesn't exist": {
