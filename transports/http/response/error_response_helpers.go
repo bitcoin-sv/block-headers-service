@@ -1,4 +1,4 @@
-package helpers
+package response
 
 import (
 	"errors"
@@ -14,16 +14,16 @@ type ResponseError struct {
 	Message string `json:"message"`
 }
 
-// ErrorResponse is creating an error object to send it to the client
+// Error is creating an error object to send it to the client
 // it also returns http statusCode
-func ErrorResponse(err error) (*ResponseError, int) {
+func Error(err error) (*ResponseError, int) {
 	sc, cm := getCodeFromError(err)
 	return parseError(err, sc, cm)
 }
 
-// ErrorResponseFromMessage is simplified ErrorResponse when we don't want to create new error
+// ErrorFromMessage is simplified ErrorResponse when we don't want to create new error
 // in code but just pass the message that will be sent to the client.
-func ErrorResponseFromMessage(errMessage string) (*ResponseError, int) {
+func ErrorFromMessage(errMessage string) (*ResponseError, int) {
 	sc, cm := getCodeFromError(errors.New(errMessage))
 	return parseError(errors.New(errMessage), sc, cm)
 }

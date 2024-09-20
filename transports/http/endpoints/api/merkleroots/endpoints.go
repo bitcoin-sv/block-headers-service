@@ -9,7 +9,7 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	router "github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/routes"
-	"github.com/bitcoin-sv/block-headers-service/transports/http/helpers"
+	"github.com/bitcoin-sv/block-headers-service/transports/http/response"
 	"github.com/gin-gonic/gin"
 )
 
@@ -53,7 +53,7 @@ func (h *handler) merkleroots(c *gin.Context) {
 
 	batchSizeInt, err := strconv.Atoi(batchSize)
 	if err != nil || batchSizeInt < 0 {
-		err, statusCode := helpers.ErrorResponse(domains.ErrMerklerootInvalidBatchSize)
+		err, statusCode := response.Error(domains.ErrMerklerootInvalidBatchSize)
 		c.JSON(statusCode, err)
 		return
 	}
@@ -63,7 +63,7 @@ func (h *handler) merkleroots(c *gin.Context) {
 	if err == nil {
 		c.JSON(http.StatusOK, merkleroots)
 	} else {
-		errResponse, statusCode := helpers.ErrorResponse(err)
+		errResponse, statusCode := response.Error(err)
 		c.JSON(statusCode, errResponse)
 	}
 }

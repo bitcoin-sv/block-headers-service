@@ -217,7 +217,9 @@ func (r *HeaderTestRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey st
 	}
 
 	// Find the starting index based on the lastEvaluatedKey
-	startIdx := slices.IndexFunc(*r.db, func(c domains.BlockHeader) bool { return c.MerkleRoot.String() == lastEvaluatedKey })
+	startIdx := slices.IndexFunc(*r.db, func(c domains.BlockHeader) bool {
+		return c.MerkleRoot.String() == lastEvaluatedKey
+	})
 
 	if startIdx == -1 && lastEvaluatedKey != "" {
 		return nil, domains.ErrMerklerootNotFound

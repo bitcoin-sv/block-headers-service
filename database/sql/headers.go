@@ -486,13 +486,13 @@ func (h *HeadersDb) getMerkleRootConfirmation(item domains.MerkleRootConfirmatio
 
 // GetMerkleRoots method will retrieve as many merkleroots as batchSize from the db from lastEvaluatedKey exclusive
 func (h *HeadersDb) GetMerkleRoots(batchSize int, lastEvaluatedKey string) ([]*dto.DbMerkleRoot, error) {
-	var merkleroots []*dto.DbMerkleRoot
 	lastEvaluatedHeight, err := h.getLastEvaluatedMerklerootHeight(lastEvaluatedKey)
 	if err != nil {
 		return nil, err
 	}
 
-	err = h.db.Select(&merkleroots, h.db.Rebind(sqlMerkleRootsFromHeight), &lastEvaluatedHeight, batchSize)
+	var merkleroots []*dto.DbMerkleRoot
+	err = h.db.Select(&merkleroots, h.db.Rebind(sqlMerkleRootsFromHeight), lastEvaluatedHeight, batchSize)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
@@ -500,29 +500,27 @@ func (h *HeadersDb) GetMerkleRoots(batchSize int, lastEvaluatedKey string) ([]*d
 	return merkleroots, nil
 }
 
-func (h *HeadersDb) getLastEvaluatedMerklerootHeight(lastEvaluatedKey string) (*int32, error) {
+func (h *HeadersDb) getLastEvaluatedMerklerootHeight(lastEvaluatedKey string) (int32, error) {
 	// last evaluated height starts with -1 to fetch from the beginning of the database
 	// height property in database has type int32 also
-	var lastEvaluatedHeight int32 = -1
-
 	if lastEvaluatedKey == "" {
-		return &lastEvaluatedHeight, nil
+		return -1, nil
 	}
 
 	var lastEvaluatedMerkleroot dto.DbBlockHeader
 	err := h.db.Get(&lastEvaluatedMerkleroot, h.db.Rebind(sqlGetSingleMerkleroot), lastEvaluatedKey)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, domains.ErrMerklerootNotFound
+			return 0, domains.ErrMerklerootNotFound
 		}
-		return nil, err
+		return 0, err
 	}
 
 	if lastEvaluatedMerkleroot.ToBlockHeader().State != domains.LongestChain {
-		return nil, domains.ErrMerklerootNotInLongestChain
+		return 0, domains.ErrMerklerootNotInLongestChain
 	}
 
-	lastEvaluatedHeight = lastEvaluatedMerkleroot.Height
+	lastEvaluatedHeight := lastEvaluatedMerkleroot.Height
 
-	return &lastEvaluatedHeight, nil
+	return lastEvaluatedHeight, nil
 }
