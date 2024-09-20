@@ -146,7 +146,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/headers.BlockHeaderResponse"
+                                "$ref": "#/definitions/transports_http_endpoints_api_headers.BlockHeaderResponse"
                             }
                         }
                     }
@@ -188,7 +188,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/headers.BlockHeaderResponse"
+                            "$ref": "#/definitions/transports_http_endpoints_api_headers.BlockHeaderResponse"
                         }
                     }
                 }
@@ -224,7 +224,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/headers.BlockHeaderStateResponse"
+                            "$ref": "#/definitions/transports_http_endpoints_api_headers.BlockHeaderStateResponse"
                         }
                     }
                 }
@@ -260,7 +260,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/headers.BlockHeaderResponse"
+                            "$ref": "#/definitions/transports_http_endpoints_api_headers.BlockHeaderResponse"
                         }
                     }
                 }
@@ -305,8 +305,49 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/headers.BlockHeaderResponse"
+                                "$ref": "#/definitions/transports_http_endpoints_api_headers.BlockHeaderResponse"
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/chain/merkleroot": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "merkleroots"
+                ],
+                "summary": "Returns merkleroots for the specified range",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Batch size of returned merkleroots",
+                        "name": "batchSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Last evaluated merkleroot that client has processed",
+                        "name": "lastEvaluatedKey",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domains.MerkleRootsESKPagedResponse"
                         }
                     }
                 }
@@ -349,7 +390,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/merkleroots.MerkleRootsConfirmationsResponse"
+                                "$ref": "#/definitions/transports_http_endpoints_api_merkleroots.ConfirmationsResponse"
                             }
                         }
                     }
@@ -381,7 +422,7 @@
                             "items": {
                                 "type": "array",
                                 "items": {
-                                    "$ref": "#/definitions/tips.TipStateResponse"
+                                    "$ref": "#/definitions/transports_http_endpoints_api_tips.TipStateResponse"
                                 }
                             }
                         }
@@ -410,7 +451,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/tips.TipStateResponse"
+                            "$ref": "#/definitions/transports_http_endpoints_api_tips.TipStateResponse"
                         }
                     }
                 }
@@ -487,7 +528,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Url of webhook to check",
+                        "description": "URL of webhook to check",
                         "name": "url",
                         "in": "query",
                         "required": true
@@ -525,7 +566,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/webhook.WebhookRequest"
+                            "$ref": "#/definitions/transports_http_endpoints_api_webhook.Request"
                         }
                     }
                 ],
@@ -557,7 +598,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Url of webhook to revoke",
+                        "description": "URL of webhook to revoke",
                         "name": "url",
                         "in": "query",
                         "required": true
@@ -572,6 +613,31 @@
         }
     },
     "definitions": {
+        "domains.ExclusiveStartKeyPageInfo": {
+            "type": "object",
+            "properties": {
+                "lastEvaluatedKey": {
+                    "description": "Last evaluated key returned from the DB",
+                    "type": "string"
+                },
+                "orderByField": {
+                    "description": "Field by which to order the results",
+                    "type": "string"
+                },
+                "size": {
+                    "description": "Size of the page/returned data",
+                    "type": "integer"
+                },
+                "sortDirection": {
+                    "description": "Direction in which to order the results ASC/DSC",
+                    "type": "string"
+                },
+                "totalElements": {
+                    "description": "Total count of elements",
+                    "type": "integer"
+                }
+            }
+        },
         "domains.MerkleRootConfirmationRequestItem": {
             "type": "object",
             "properties": {
@@ -596,6 +662,37 @@
                 "Invalid"
             ]
         },
+        "domains.MerkleRootsESKPagedResponse": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "description": "List of records for the response",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domains.MerkleRootsResponse"
+                    }
+                },
+                "page": {
+                    "description": "Pagination details",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domains.ExclusiveStartKeyPageInfo"
+                        }
+                    ]
+                }
+            }
+        },
+        "domains.MerkleRootsResponse": {
+            "type": "object",
+            "properties": {
+                "blockHeight": {
+                    "type": "integer"
+                },
+                "merkleRoot": {
+                    "type": "string"
+                }
+            }
+        },
         "domains.Token": {
             "type": "object",
             "properties": {
@@ -607,83 +704,6 @@
                 },
                 "token": {
                     "type": "string"
-                }
-            }
-        },
-        "headers.BlockHeaderResponse": {
-            "type": "object",
-            "properties": {
-                "creationTimestamp": {
-                    "type": "integer"
-                },
-                "difficultyTarget": {
-                    "type": "integer"
-                },
-                "hash": {
-                    "type": "string"
-                },
-                "merkleRoot": {
-                    "type": "string"
-                },
-                "nonce": {
-                    "type": "integer"
-                },
-                "prevBlockHash": {
-                    "type": "string"
-                },
-                "version": {
-                    "type": "integer"
-                },
-                "work": {
-                    "type": "string"
-                }
-            }
-        },
-        "headers.BlockHeaderStateResponse": {
-            "type": "object",
-            "properties": {
-                "chainWork": {
-                    "type": "string"
-                },
-                "header": {
-                    "$ref": "#/definitions/headers.BlockHeaderResponse"
-                },
-                "height": {
-                    "type": "integer"
-                },
-                "state": {
-                    "type": "string"
-                }
-            }
-        },
-        "merkleroots.MerkleRootConfirmation": {
-            "type": "object",
-            "properties": {
-                "blockHash": {
-                    "type": "string"
-                },
-                "blockHeight": {
-                    "type": "integer"
-                },
-                "confirmation": {
-                    "$ref": "#/definitions/domains.MerkleRootConfirmationState"
-                },
-                "merkleRoot": {
-                    "type": "string"
-                }
-            }
-        },
-        "merkleroots.MerkleRootsConfirmationsResponse": {
-            "type": "object",
-            "properties": {
-                "confirmationState": {
-                    "$ref": "#/definitions/domains.MerkleRootConfirmationState"
-                },
-                "confirmations": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/merkleroots.MerkleRootConfirmation"
-                    }
                 }
             }
         },
@@ -710,7 +730,7 @@
                 }
             }
         },
-        "tips.TipResponse": {
+        "transports_http_endpoints_api_headers.BlockHeaderResponse": {
             "type": "object",
             "properties": {
                 "creationTimestamp": {
@@ -739,14 +759,14 @@
                 }
             }
         },
-        "tips.TipStateResponse": {
+        "transports_http_endpoints_api_headers.BlockHeaderStateResponse": {
             "type": "object",
             "properties": {
                 "chainWork": {
                     "type": "string"
                 },
                 "header": {
-                    "$ref": "#/definitions/tips.TipResponse"
+                    "$ref": "#/definitions/transports_http_endpoints_api_headers.BlockHeaderResponse"
                 },
                 "height": {
                     "type": "integer"
@@ -756,7 +776,95 @@
                 }
             }
         },
-        "webhook.RequiredAuth": {
+        "transports_http_endpoints_api_merkleroots.ConfirmationsResponse": {
+            "type": "object",
+            "properties": {
+                "confirmationState": {
+                    "$ref": "#/definitions/domains.MerkleRootConfirmationState"
+                },
+                "confirmations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/transports_http_endpoints_api_merkleroots.MerkleRootConfirmation"
+                    }
+                }
+            }
+        },
+        "transports_http_endpoints_api_merkleroots.MerkleRootConfirmation": {
+            "type": "object",
+            "properties": {
+                "blockHash": {
+                    "type": "string"
+                },
+                "blockHeight": {
+                    "type": "integer"
+                },
+                "confirmation": {
+                    "$ref": "#/definitions/domains.MerkleRootConfirmationState"
+                },
+                "merkleRoot": {
+                    "type": "string"
+                }
+            }
+        },
+        "transports_http_endpoints_api_tips.TipResponse": {
+            "type": "object",
+            "properties": {
+                "creationTimestamp": {
+                    "type": "integer"
+                },
+                "difficultyTarget": {
+                    "type": "integer"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "merkleRoot": {
+                    "type": "string"
+                },
+                "nonce": {
+                    "type": "integer"
+                },
+                "prevBlockHash": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                },
+                "work": {
+                    "type": "string"
+                }
+            }
+        },
+        "transports_http_endpoints_api_tips.TipStateResponse": {
+            "type": "object",
+            "properties": {
+                "chainWork": {
+                    "type": "string"
+                },
+                "header": {
+                    "$ref": "#/definitions/transports_http_endpoints_api_tips.TipResponse"
+                },
+                "height": {
+                    "type": "integer"
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "transports_http_endpoints_api_webhook.Request": {
+            "type": "object",
+            "properties": {
+                "requiredAuth": {
+                    "$ref": "#/definitions/transports_http_endpoints_api_webhook.RequiredAuth"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "transports_http_endpoints_api_webhook.RequiredAuth": {
             "type": "object",
             "properties": {
                 "header": {
@@ -766,17 +874,6 @@
                     "type": "string"
                 },
                 "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "webhook.WebhookRequest": {
-            "type": "object",
-            "properties": {
-                "requiredAuth": {
-                    "$ref": "#/definitions/webhook.RequiredAuth"
-                },
-                "url": {
                     "type": "string"
                 }
             }

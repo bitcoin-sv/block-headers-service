@@ -3,12 +3,19 @@ package merkleroots
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	router "github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/routes"
+	"github.com/bitcoin-sv/block-headers-service/transports/http/response"
 	"github.com/gin-gonic/gin"
+)
+
+const (
+	// defaultBatchSize is the size of returned merkleroots per request
+	defaultBatchSize = "2000"
 )
 
 type handler struct {
@@ -25,6 +32,39 @@ func (h *handler) RegisterAPIEndpoints(router *gin.RouterGroup, _ *config.HTTPCo
 	merkle := router.Group("/chain/merkleroot")
 	{
 		merkle.POST("/verify", h.verify)
+		merkle.GET("", h.merkleroots)
+	}
+}
+
+// Merkleroot godoc.
+//
+// @Summary Returns merkleroots for the specified range.
+// @Tags merkleroots
+// @Accept */*
+// @Produce json
+// @Success 200 {object} domains.MerkleRootsESKPagedResponse
+// @Router /chain/merkleroot [get]
+// @Param batchSize query string false "Batch size of returned merkleroots"
+// @Param lastEvaluatedKey query string false "Last evaluated merkleroot that client has processed"
+// @Security Bearer
+func (h *handler) merkleroots(c *gin.Context) {
+	batchSize := c.DefaultQuery("batchSize", defaultBatchSize)
+	lastEvaluatedKey := c.Query("lastEvaluatedKey")
+
+	batchSizeInt, err := strconv.Atoi(batchSize)
+	if err != nil || batchSizeInt < 0 {
+		err, statusCode := response.Error(domains.ErrMerklerootInvalidBatchSize)
+		c.JSON(statusCode, err)
+		return
+	}
+
+	merkleroots, err := h.service.GetMerkleRoots(batchSizeInt, lastEvaluatedKey)
+
+	if err == nil {
+		c.JSON(http.StatusOK, merkleroots)
+	} else {
+		errResponse, statusCode := response.Error(err)
+		c.JSON(statusCode, errResponse)
 	}
 }
 
@@ -34,7 +74,7 @@ func (h *handler) RegisterAPIEndpoints(router *gin.RouterGroup, _ *config.HTTPCo
 //	@Tags merkleroots
 //	@Accept */*
 //	@Produce json
-//	@Success 200 {array} merkleroots.MerkleRootsConfirmationsResponse
+//	@Success 200 {array} merkleroots.ConfirmationsResponse
 //	@Router /chain/merkleroot/verify [post]
 //	@Param request body []domains.MerkleRootConfirmationRequestItem true "JSON"
 //	@Security Bearer

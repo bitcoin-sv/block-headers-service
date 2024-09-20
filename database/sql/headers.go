@@ -168,6 +168,9 @@ const (
 
 	sqlVerifyHash = `SELECT hash FROM headers WHERE merkleroot = $1 AND height = $2 AND header_state = 'LONGEST_CHAIN'`
 
+	sqlMerkleRootsFromHeight = `SELECT merkleroot, height FROM headers WHERE height > ? AND header_state = 'LONGEST_CHAIN' ORDER BY height ASC LIMIT ?`
+	sqlGetSingleMerkleroot   = `SELECT merkleroot, height, header_state FROM headers WHERE merkleroot = ?`
+
 	sqlGetHeadersHeight = `
 	SELECT COALESCE(MAX(height), 0) AS startHeight
 		FROM headers
@@ -479,4 +482,47 @@ func (h *HeadersDb) getMerkleRootConfirmation(item domains.MerkleRootConfirmatio
 	confirmation.Hash = hash
 
 	return confirmation, nil
+}
+
+// GetMerkleRoots method will retrieve as many merkleroots as batchSize from the db from lastEvaluatedKey exclusive
+func (h *HeadersDb) GetMerkleRoots(batchSize int, lastEvaluatedKey string) ([]*dto.DbMerkleRoot, error) {
+	lastEvaluatedHeight, err := h.getLastEvaluatedMerklerootHeight(lastEvaluatedKey)
+	if err != nil {
+		return nil, err
+	}
+
+	var merkleroots []*dto.DbMerkleRoot
+	err = h.db.Select(&merkleroots, h.db.Rebind(sqlMerkleRootsFromHeight), lastEvaluatedHeight, batchSize)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return nil, err
+	}
+
+	return merkleroots, nil
+}
+
+func (h *HeadersDb) getLastEvaluatedMerklerootHeight(lastEvaluatedKey string) (int32, error) {
+	// last evaluated height starts with -1 to fetch from the beginning of the database
+	// height property in database has type int32 also
+	if lastEvaluatedKey == "" {
+		return -1, nil
+	}
+
+	var lastEvaluatedMerkleroot dto.DbBlockHeader
+	err := h.db.Get(&lastEvaluatedMerkleroot, h.db.Rebind(sqlGetSingleMerkleroot), lastEvaluatedKey)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, domains.ErrMerklerootNotFound
+	}
+
+	if err != nil {
+		return 0, err
+	}
+
+	if lastEvaluatedMerkleroot.ToBlockHeader().State != domains.LongestChain {
+		return 0, domains.ErrMerklerootNotInLongestChain
+	}
+
+	lastEvaluatedHeight := lastEvaluatedMerkleroot.Height
+
+	return lastEvaluatedHeight, nil
 }

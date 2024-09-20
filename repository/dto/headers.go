@@ -9,6 +9,12 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 )
 
+// DbMerkleRoot is a database representation of a Merkle Root and it's height
+type DbMerkleRoot struct {
+	MerkleRoot string `db:"merkleroot"`
+	Height     int32  `db:"height"`
+}
+
 // DbBlockHeader represent header saved in db.
 type DbBlockHeader struct {
 	Height        int32     `db:"height"`

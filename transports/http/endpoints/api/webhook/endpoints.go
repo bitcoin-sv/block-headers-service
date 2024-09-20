@@ -44,7 +44,7 @@ func (h *handler) RegisterAPIEndpoints(router *gin.RouterGroup, _ *config.HTTPCo
 //	@Produce json
 //	@Success 200 {object} notification.Webhook
 //	@Router /webhook [post]
-//	@Param data body webhook.WebhookRequest true "Webhook to register"
+//	@Param data body webhook.Request true "Webhook to register"
 //
 // @Security Bearer
 func (h *handler) registerWebhook(c *gin.Context) {

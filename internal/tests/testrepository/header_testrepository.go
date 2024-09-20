@@ -2,6 +2,8 @@ package testrepository
 
 import (
 	"errors"
+	"slices"
+	"sort"
 
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
@@ -193,6 +195,95 @@ func (r *HeaderTestRepository) GetChainBetweenTwoHashes(low string, high string)
 	return headers, nil
 }
 
+// GetMerkleRoots returns ExclusiveStartKey pagination of batchSize size with merkle roots from lastEvaluatedKey which
+// is the last merkleroot of the block that a client has processed
+func (r *HeaderTestRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey string) (*domains.MerkleRootsESKPagedResponse, error) {
+	// Order headers by height ASC
+	sort.Slice(*r.db, func(i, j int) bool {
+		return (*r.db)[i].Height < (*r.db)[j].Height
+	})
+
+	// Check if lastEvaluatedKey is the same as the last element's MerkleRoot
+	if lastEvaluatedKey != "" && (*r.db)[len(*r.db)-1].MerkleRoot.String() == lastEvaluatedKey {
+		// Return empty content since we have reached the end
+		return &domains.MerkleRootsESKPagedResponse{
+			Page: domains.ExclusiveStartKeyPageInfo{
+				TotalElements:    int32(len(*r.db)),
+				Size:             0,
+				LastEvaluatedKey: "",
+			},
+			Content: []domains.MerkleRootsResponse{},
+		}, nil
+	}
+
+	// Find the starting index based on the lastEvaluatedKey
+	startIdx := slices.IndexFunc(*r.db, func(c domains.BlockHeader) bool {
+		return c.MerkleRoot.String() == lastEvaluatedKey
+	})
+
+	if startIdx == -1 && lastEvaluatedKey != "" {
+		return nil, domains.ErrMerklerootNotFound
+	}
+
+	// Check if lastEvaluatedKey is not from the longest chain
+	if startIdx != -1 && !(*r.db)[startIdx].IsLongestChain() {
+		return nil, domains.ErrMerklerootNotInLongestChain
+	}
+
+	// If the lastEvaluatedKey is found, we start after it; otherwise, we start from the beginning
+	if startIdx != -1 {
+		startIdx++ // Start from the next element after the found key
+	} else {
+		startIdx = 0 // Start from the beginning if no key is provided
+	}
+
+	// Filter out headers with "STALE" state
+	filteredHeaders := make([]domains.BlockHeader, 0)
+	for _, header := range (*r.db)[startIdx:] {
+		if header.State != "STALE" {
+			filteredHeaders = append(filteredHeaders, header)
+		}
+	}
+
+	// Calculate the end index for the batch based on batchSize
+	endIdx := batchSize
+	if endIdx > len(filteredHeaders) {
+		endIdx = len(filteredHeaders) // Limit to the size of the db if the batch size exceeds available elements
+	}
+
+	merkleroots := filteredHeaders[:endIdx]
+
+	// Determine the newLastEvaluatedKey
+	newLastEvaluatedKey := ""
+
+	if len(merkleroots) > 0 {
+		newLastEvaluatedKey = merkleroots[len(merkleroots)-1].MerkleRoot.String()
+
+		// If the newLastEvaluatedKey is equal to the tip merkleroos we have no more blocks in database
+		if (*r.db)[len(*r.db)-1].MerkleRoot.String() == newLastEvaluatedKey {
+			newLastEvaluatedKey = ""
+		}
+	}
+
+	merkleRootsESKPagedResponse := &domains.MerkleRootsESKPagedResponse{
+		Page: domains.ExclusiveStartKeyPageInfo{
+			TotalElements:    int32(len(*r.db)),
+			Size:             len(merkleroots),
+			LastEvaluatedKey: newLastEvaluatedKey,
+		},
+		Content: make([]domains.MerkleRootsResponse, len(merkleroots)),
+	}
+
+	for i, mkr := range merkleroots {
+		merkleRootsESKPagedResponse.Content[i] = domains.MerkleRootsResponse{
+			MerkleRoot:  mkr.MerkleRoot.String(),
+			BlockHeight: mkr.Height,
+		}
+	}
+
+	return merkleRootsESKPagedResponse, nil
+}
+
 // GetMerkleRootsConfirmations returns a confirmation of merkle roots inclusion
 // in the longest chain with hash of the block in which the merkle root is included.
 func (r *HeaderTestRepository) GetMerkleRootsConfirmations(
@@ -278,6 +369,14 @@ func (r *HeaderTestRepository) GetHeadersStopHeight(hashStop string) (int, error
 // with 4 additional blocks to create a longest chain.
 func (r *HeaderTestRepository) FillWithLongestChain() {
 	db, _ := fixtures.AddLongestChain(*r.db)
+	var filledDb []domains.BlockHeader = db
+	r.db = &filledDb
+}
+
+// FillWithLongestChainWithFork fills the test header repository
+// with 4 additional blocks to create a longest chain.
+func (r *HeaderTestRepository) FillWithLongestChainWithFork() {
+	db, _ := fixtures.LongestChainWithFork()
 	var filledDb []domains.BlockHeader = db
 	r.db = &filledDb
 }

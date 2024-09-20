@@ -133,6 +133,46 @@ func NewHeadersRepository(db *sql.HeadersDb) *HeaderRepository {
 	return &HeaderRepository{db: db}
 }
 
+// GetMerkleRoots returns ExclusiveStartKey pagination of batchSize size with merkle roots from lastEvaluatedKey which
+// is the last merkleroot of the block that a client has processed
+func (r *HeaderRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey string) (*domains.MerkleRootsESKPagedResponse, error) {
+	merklerootsFromDb, err := r.db.GetMerkleRoots(batchSize, lastEvaluatedKey)
+	if err != nil {
+		return nil, err
+	}
+
+	tip, err := r.GetTip()
+	if err != nil {
+		return nil, err
+	}
+
+	merkleroots := &domains.MerkleRootsESKPagedResponse{
+		Content: make([]domains.MerkleRootsResponse, len(merklerootsFromDb)),
+		Page: domains.ExclusiveStartKeyPageInfo{
+			TotalElements:    tip.Height,
+			Size:             len(merklerootsFromDb),
+			LastEvaluatedKey: "",
+		},
+	}
+
+	if len(merklerootsFromDb) == 0 {
+		return merkleroots, nil
+	}
+
+	lastEvaluatedKeyFromDb := merklerootsFromDb[len(merklerootsFromDb)-1].MerkleRoot
+
+	if tip.MerkleRoot.String() != lastEvaluatedKeyFromDb {
+		merkleroots.Page.LastEvaluatedKey = lastEvaluatedKeyFromDb //indicating we still have some data available from db
+	}
+
+	for i, merkleroot := range merklerootsFromDb {
+		merkleroots.Content[i].BlockHeight = merkleroot.Height
+		merkleroots.Content[i].MerkleRoot = merkleroot.MerkleRoot
+	}
+
+	return merkleroots, nil
+}
+
 // GetTip returns tip from db.
 func (r *HeaderRepository) GetTip() (*domains.BlockHeader, error) {
 	tip, err := r.db.GetTip(context.Background())

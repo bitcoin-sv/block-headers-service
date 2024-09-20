@@ -5,6 +5,7 @@
 package domains
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -30,6 +31,13 @@ func (e AssertError) Error() string {
 
 // ErrorCode identifies a kind of error.
 type ErrorCode int
+
+// These constants are used to identify errors specific to merkleroots
+var (
+	ErrMerklerootNotFound          = errors.New("No block with provided merkleroot was found")
+	ErrMerklerootNotInLongestChain = errors.New("Provided merkleroot is not part of the longest chain")
+	ErrMerklerootInvalidBatchSize  = errors.New("batchSize must be 0 or a positive integer")
+)
 
 // These constants are used to identify a specific RuleError.
 const (
@@ -223,6 +231,21 @@ const (
 	// ErrInvalidTxOrder indicates the order of the transactions in the block
 	// does not follow the active transaction ordering consensus rule.
 	ErrInvalidTxOrder
+
+	// ErrInvalidBatchSize indicates that batchsize provided to the merkleroot endpoint
+	// is not a positive numberic value
+	ErrInvalidBatchSize
+
+	// ErrMerkleRootNotFound indicates that lastEvaluatedKey the client provided to the
+	// merkleroot endpoint wasn't found in our database
+	ErrMerkleRootNotFound
+
+	// ErrMerkleRootNotInLC indicates that lastEvaluatedKEy the client provided to the
+	// merkleroot endpoint was found but is not a part of the longest chain
+	ErrMerkleRootNotInLC
+
+	// ErrGeneric indicates generic error that happened on the server
+	ErrGeneric
 )
 
 // String returns the ErrorCode as a human-readable name.
@@ -272,6 +295,10 @@ func (e ErrorCode) String() string {
 		ErrInvalidAncestorBlock:  "ErrInvalidAncestorBlock",
 		ErrPrevBlockNotBest:      "ErrPrevBlockNotBest",
 		ErrInvalidTxOrder:        "ErrInvalidTxOrder",
+		ErrInvalidBatchSize:      "ErrInvalidBatchSize",
+		ErrMerkleRootNotFound:    "ErrMerkleRootNotFound",
+		ErrMerkleRootNotInLC:     "ErrMerkleRootNotInLC",
+		ErrGeneric:               "ErrGeneric",
 	}
 
 	if s := errorCodeStrings[e]; s != "" {

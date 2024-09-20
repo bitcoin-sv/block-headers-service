@@ -39,6 +39,7 @@ type Headers interface {
 
 // Merkleroots is an interface which represents methods required for Merkleroots service.
 type Merkleroots interface {
+	GetMerkleRoots(batchSize int, lastEvaluatedKey string) (*domains.MerkleRootsESKPagedResponse, error)
 	GetMerkleRootsConfirmations(request []domains.MerkleRootConfirmationRequestItem) ([]*domains.MerkleRootConfirmation, error)
 }
 
