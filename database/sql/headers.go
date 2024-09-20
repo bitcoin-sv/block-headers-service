@@ -509,10 +509,12 @@ func (h *HeadersDb) getLastEvaluatedMerklerootHeight(lastEvaluatedKey string) (i
 
 	var lastEvaluatedMerkleroot dto.DbBlockHeader
 	err := h.db.Get(&lastEvaluatedMerkleroot, h.db.Rebind(sqlGetSingleMerkleroot), lastEvaluatedKey)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, domains.ErrMerklerootNotFound
+	}
+
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return 0, domains.ErrMerklerootNotFound
-		}
 		return 0, err
 	}
 
