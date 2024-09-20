@@ -7,23 +7,23 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/domains"
 )
 
-// ResponseError is an object that we can return to the client if any error happens
+// DetailedError is an object that we can return to the client if any error happens
 // on the server
-type ResponseError struct {
+type DetailedError struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 }
 
 // Error is creating an error object to send it to the client
 // it also returns http statusCode
-func Error(err error) (*ResponseError, int) {
+func Error(err error) (*DetailedError, int) {
 	sc, cm := getCodeFromError(err)
 	return parseError(err, sc, cm)
 }
 
 // ErrorFromMessage is simplified ErrorResponse when we don't want to create new error
 // in code but just pass the message that will be sent to the client.
-func ErrorFromMessage(errMessage string) (*ResponseError, int) {
+func ErrorFromMessage(errMessage string) (*DetailedError, int) {
 	sc, cm := getCodeFromError(errors.New(errMessage))
 	return parseError(errors.New(errMessage), sc, cm)
 }
@@ -48,8 +48,8 @@ func getCodeFromError(err error) (int, string) {
 	}
 }
 
-func parseError(err error, statusCode int, code string) (*ResponseError, int) {
-	return &ResponseError{
+func parseError(err error, statusCode int, code string) (*DetailedError, int) {
+	return &DetailedError{
 		Message: err.Error(),
 		Code:    code,
 	}, statusCode
