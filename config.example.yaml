@@ -11,10 +11,10 @@ db:
   # Path to prepared database file
   prepared_db_file_path: "./data/blockheaders.csv.gz"
 
-  #sqlite engine cofiguration
+  #sqlite engine configuration
   sqlite:
     file_path: "./data/blockheaders.db"
-  #postgres engine cofiguration, required when engine=postgres
+  #postgres engine configuration, required when engine=postgres
   postgres:
     host: "localhost"
     port: 5432
@@ -33,6 +33,8 @@ p2p:
   blocks_for_confirmation: 10
   # Default connection timeout
   default_connect_timeout: 30s
+  # Chain network type [mainnet|testnet|regtest|simnet]
+  chain_net_type: mainnet
   # Use experimental new refactored p2p communication
   experimental: false
 
