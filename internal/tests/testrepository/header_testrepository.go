@@ -5,6 +5,7 @@ import (
 	"slices"
 	"sort"
 
+	"github.com/bitcoin-sv/block-headers-service/bhserrors"
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/fixtures"
@@ -222,12 +223,12 @@ func (r *HeaderTestRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey st
 	})
 
 	if startIdx == -1 && lastEvaluatedKey != "" {
-		return nil, domains.ErrMerklerootNotFound
+		return nil, bhserrors.ErrMerklerootNotFound
 	}
 
 	// Check if lastEvaluatedKey is not from the longest chain
 	if startIdx != -1 && !(*r.db)[startIdx].IsLongestChain() {
-		return nil, domains.ErrMerklerootNotInLongestChain
+		return nil, bhserrors.ErrMerklerootNotInLongestChain
 	}
 
 	// If the lastEvaluatedKey is found, we start after it; otherwise, we start from the beginning

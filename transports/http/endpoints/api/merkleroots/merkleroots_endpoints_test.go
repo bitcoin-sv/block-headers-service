@@ -410,7 +410,7 @@ func TestMerkleRootsFailure(t *testing.T) {
 			evaluationKey: "88d2a4e04a96b45e3ba04637098a92fd0786daf3fc8ff88314f8e739a9918bf3",
 			expectedCode:  http.StatusConflict,
 			expectedBody: `{
-		                   "code": "ErrMerkleRootNotInLC",
+		                   "code": "ErrMerkleRootNotInLongestChain",
 		                   "message": "Provided merkleroot is not part of the longest chain"
 		                  }`,
 		},

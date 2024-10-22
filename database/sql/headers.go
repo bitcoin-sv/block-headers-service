@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/bitcoin-sv/block-headers-service/bhserrors"
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/repository/dto"
 	"github.com/jmoiron/sqlx"
@@ -511,7 +512,7 @@ func (h *HeadersDb) getLastEvaluatedMerklerootHeight(lastEvaluatedKey string) (i
 	err := h.db.Get(&lastEvaluatedMerkleroot, h.db.Rebind(sqlGetSingleMerkleroot), lastEvaluatedKey)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return 0, domains.ErrMerklerootNotFound
+		return 0, bhserrors.ErrMerklerootNotFound
 	}
 
 	if err != nil {
@@ -519,7 +520,7 @@ func (h *HeadersDb) getLastEvaluatedMerklerootHeight(lastEvaluatedKey string) (i
 	}
 
 	if lastEvaluatedMerkleroot.ToBlockHeader().State != domains.LongestChain {
-		return 0, domains.ErrMerklerootNotInLongestChain
+		return 0, bhserrors.ErrMerklerootNotInLongestChain
 	}
 
 	lastEvaluatedHeight := lastEvaluatedMerkleroot.Height

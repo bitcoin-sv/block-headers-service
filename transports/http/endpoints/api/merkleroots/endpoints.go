@@ -5,12 +5,13 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/bitcoin-sv/block-headers-service/bhserrors"
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	router "github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/routes"
-	"github.com/bitcoin-sv/block-headers-service/transports/http/response"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
 )
 
 const (
@@ -20,11 +21,12 @@ const (
 
 type handler struct {
 	service service.Merkleroots
+	log     *zerolog.Logger
 }
 
 // NewHandler creates new endpoint handler.
 func NewHandler(s *service.Services) router.APIEndpoints {
-	return &handler{service: s.Merkleroots}
+	return &handler{service: s.Merkleroots, log: s.Logger}
 }
 
 // RegisterAPIEndpoints registers routes that are part of service API.
@@ -53,8 +55,7 @@ func (h *handler) merkleroots(c *gin.Context) {
 
 	batchSizeInt, err := strconv.Atoi(batchSize)
 	if err != nil || batchSizeInt < 0 {
-		err, statusCode := response.Error(domains.ErrMerklerootInvalidBatchSize)
-		c.JSON(statusCode, err)
+		bhserrors.ErrorResponse(c, bhserrors.ErrMerklerootInvalidBatchSize.Wrap(err), h.log)
 		return
 	}
 
@@ -63,8 +64,7 @@ func (h *handler) merkleroots(c *gin.Context) {
 	if err == nil {
 		c.JSON(http.StatusOK, merkleroots)
 	} else {
-		errResponse, statusCode := response.Error(err)
-		c.JSON(statusCode, errResponse)
+		bhserrors.ErrorResponse(c, err, h.log)
 	}
 }
 
