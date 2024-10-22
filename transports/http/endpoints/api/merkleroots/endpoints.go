@@ -55,7 +55,7 @@ func (h *handler) merkleroots(c *gin.Context) {
 
 	batchSizeInt, err := strconv.Atoi(batchSize)
 	if err != nil || batchSizeInt < 0 {
-		bhserrors.ErrorResponse(c, bhserrors.ErrMerklerootInvalidBatchSize.Wrap(err), h.log)
+		bhserrors.ErrorResponse(c, bhserrors.ErrInvalidBatchSize.Wrap(err), h.log)
 		return
 	}
 
