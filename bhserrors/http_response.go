@@ -21,7 +21,7 @@ func AbortWithErrorResponse(c *gin.Context, err error, log *zerolog.Logger) {
 	c.AbortWithStatusJSON(statusCode, response)
 }
 
-func mapAndLog(err error, log *zerolog.Logger) (model responseError, statusCode int) {
+func mapAndLog(err error, log *zerolog.Logger) (model ResponseError, statusCode int) {
 	model.Code = UnknownErrorCode
 	model.Message = "Internal server error"
 	statusCode = 500

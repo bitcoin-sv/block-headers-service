@@ -70,7 +70,7 @@ func (r *HeaderTestRepository) GetHeaderByHeightRange(from int, to int) ([]*doma
 		return filteredHeaders, nil
 	}
 
-	return nil, errors.New("could not find headers in given range")
+	return nil, bhserrors.ErrHeadersForGivenRangeNotFound
 }
 
 // GetLongestChainHeadersFromHeight returns from db the headers from "longest chain" starting from given height.
@@ -133,7 +133,7 @@ func (r *HeaderTestRepository) GetHeaderByHash(hash string) (*domains.BlockHeade
 	if header != nil {
 		return header, nil
 	}
-	return nil, errors.New("could not find hash")
+	return nil, bhserrors.ErrHeaderNotFound
 }
 
 // GenesisExists check if genesis header is in db.
@@ -363,7 +363,7 @@ func (r *HeaderTestRepository) GetHeadersStopHeight(hashStop string) (int, error
 			return int(header.Height), nil
 		}
 	}
-	return 0, errors.New("could not find stop height")
+	return 0, bhserrors.ErrHeaderStopHeightNotFound
 }
 
 // FillWithLongestChain fills the test header repository

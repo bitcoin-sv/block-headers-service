@@ -186,7 +186,7 @@ func (cs *chainService) createHeader(hash *domains.BlockHash, bs *domains.BlockH
 
 func (cs *chainService) previousHeader(bs *domains.BlockHeaderSource) (*domains.BlockHeader, error) {
 	h, err := cs.Repositories.Headers.GetHeaderByHash(bs.PrevBlock.String())
-	if h == nil && err != nil && err.Error() == "could not find hash" {
+	if h == nil && err != nil && err.Error() == "Header not found" {
 		return domains.NewOrphanPreviousBlockHeader(), nil
 	}
 	return h, err

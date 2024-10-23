@@ -25,8 +25,8 @@ type BHSError struct {
 	cause      error
 }
 
-// responseError is an error which will be returned in HTTP response
-type responseError struct {
+// ResponseError is an error which will be returned in HTTP response
+type ResponseError struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 }
