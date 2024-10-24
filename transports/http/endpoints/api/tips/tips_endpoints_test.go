@@ -3,7 +3,6 @@ package tips_test
 import (
 	"context"
 	"encoding/json"
-	"io"
 	"math/big"
 	"net/http"
 	"testing"
@@ -13,6 +12,7 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/fixtures"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/testapp"
 	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/tips"
+	"github.com/stretchr/testify/require"
 )
 
 var expectedTip = tips.TipStateResponse{
@@ -38,10 +38,10 @@ func TestGetTips(t *testing.T) {
 		defer cleanup()
 		expectedResult := struct {
 			code int
-			body []byte
+			body string
 		}{
 			code: http.StatusUnauthorized,
-			body: []byte("\"empty auth header\""),
+			body: "{\"code\":\"ErrMissingAuthHeader\",\"message\":\"Empty auth header\"}",
 		}
 
 		// when
@@ -49,8 +49,7 @@ func TestGetTips(t *testing.T) {
 
 		// then
 		assert.Equal(t, res.Code, expectedResult.code)
-		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expectedResult.body)
+		require.JSONEq(t, expectedResult.body, res.Body.String())
 	})
 
 	t.Run("success", func(t *testing.T) {
@@ -86,10 +85,10 @@ func TestGetTipLongest(t *testing.T) {
 		defer cleanup()
 		expectedResult := struct {
 			code int
-			body []byte
+			body string
 		}{
 			code: http.StatusUnauthorized,
-			body: []byte("\"empty auth header\""),
+			body: "{\"code\":\"ErrMissingAuthHeader\",\"message\":\"Empty auth header\"}",
 		}
 
 		// when
@@ -97,8 +96,7 @@ func TestGetTipLongest(t *testing.T) {
 
 		// then
 		assert.Equal(t, res.Code, expectedResult.code)
-		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expectedResult.body)
+		require.JSONEq(t, expectedResult.body, res.Body.String())
 	})
 
 	t.Run("success", func(t *testing.T) {

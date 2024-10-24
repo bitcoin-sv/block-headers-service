@@ -374,7 +374,7 @@ func (h *HeadersDb) GetAncestorOnHeight(hash string, height int32) (*dto.DbBlock
 func (h *HeadersDb) GetAllTips() ([]*dto.DbBlockHeader, error) {
 	var bh []*dto.DbBlockHeader
 	if err := h.db.Select(&bh, sqlSelectTips); err != nil {
-		return nil, errors.Wrapf(err, "failed to get tips")
+		return nil, bhserrors.ErrGetTips.Wrap(err)
 	}
 	return bh, nil
 }

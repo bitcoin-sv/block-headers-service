@@ -1,7 +1,6 @@
 package merkleroots
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -86,7 +85,7 @@ func (h *handler) verify(c *gin.Context) {
 	}
 
 	if len(body) == 0 {
-		c.JSON(http.StatusBadRequest, errors.New("at least one merkleroot is required").Error())
+		bhserrors.ErrorResponse(c, bhserrors.ErrVerifyMerklerootsBadBody, h.log)
 		return
 	}
 

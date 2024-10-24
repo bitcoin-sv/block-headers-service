@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io"
 	"net/http"
 	"net/url"
 	"testing"
@@ -219,10 +218,10 @@ func TestReturnBadRequestErrorFromVerifyWhenGivenEmtpyArray(t *testing.T) {
 	query := []domains.MerkleRootConfirmationRequestItem{}
 	expectedResult := struct {
 		code int
-		body []byte
+		body string
 	}{
 		code: http.StatusBadRequest,
-		body: []byte("\"at least one merkleroot is required\""),
+		body: "{\"code\":\"ErrVerifyMerklerootsBadBody\",\"message\":\"At least one merkleroot is required\"}",
 	}
 
 	// when
@@ -230,11 +229,7 @@ func TestReturnBadRequestErrorFromVerifyWhenGivenEmtpyArray(t *testing.T) {
 
 	// then
 	assert.Equal(t, res.Code, expectedResult.code)
-
-	body, _ := io.ReadAll(res.Body)
-	if !bytes.Equal(body, expectedResult.body) {
-		t.Errorf("Expected to get body %s but insead got %s\n", expectedResult.body, body)
-	}
+	require.JSONEq(t, expectedResult.body, res.Body.String())
 }
 
 func verify(request []domains.MerkleRootConfirmationRequestItem) (req *http.Request, err error) {

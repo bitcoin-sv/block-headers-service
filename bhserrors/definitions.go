@@ -39,6 +39,9 @@ var ErrInvalidBatchSize = BHSError{Message: "batchSize must be 0 or a positive i
 // ErrGetChainTipHeight is when it fails to get a chain tip height
 var ErrGetChainTipHeight = BHSError{Message: "Failed to get chain tip height", Code: "ErrGetChainTipHeight", StatusCode: 400}
 
+// ErrVerifyMerklerootsBadBody is when request for verify merkleroots has wrong body
+var ErrVerifyMerklerootsBadBody = BHSError{Message: "At least one merkleroot is required", Code: "ErrVerifyMerklerootsBadBody", StatusCode: 400}
+
 // ////////////////////////////////// ACCESS ERRORS
 
 // ErrTokenNotFound is when token was not found in Block Header Service
@@ -72,3 +75,8 @@ var ErrHeadersForGivenRangeNotFound = BHSError{Message: "Could not find headers 
 
 // ErrHeaderStopHeightNotFound is when stop height for given heade was not found
 var ErrHeaderStopHeightNotFound = BHSError{Message: "Could not find stop height for given header", StatusCode: 404, Code: "ErrHeaderStopHeightNotFound"}
+
+// ////////////////////////////////// TIPS ERRORS
+
+// ErrGetTips is when it fails to get tips
+var ErrGetTips = BHSError{Message: "Failed to get tips", StatusCode: 400, Code: "ErrGetTips"}
