@@ -52,7 +52,7 @@ var ErrDeleteToken = BHSError{Message: "Failed to delete token", StatusCode: 400
 
 // ////////////////////////////////// HEADERS ERRORS
 
-// ErrAncestorHashHigher is when ancestor hash height is heigher than requested header
+// ErrAncestorHashHigher is when ancestor hash height is higher than requested header
 var ErrAncestorHashHigher = BHSError{Message: "Ancestor header height can not be higher than requested header height", StatusCode: 400, Code: "ErrAncestorHashHigher"}
 
 // ErrAncestorNotFound is when ancestor for a given hash was not found
