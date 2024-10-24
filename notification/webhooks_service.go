@@ -1,9 +1,9 @@
 package notification
 
 import (
-	"errors"
 	"strings"
 
+	"github.com/bitcoin-sv/block-headers-service/bhserrors"
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/rs/zerolog"
 )
@@ -98,9 +98,9 @@ func (s *WebhooksService) refreshWebhook(url string) (*Webhook, error) {
 		w.ErrorsCount = 0
 		err = s.webhooks.UpdateWebhook(w)
 		if err != nil {
-			return nil, err
+			return nil, bhserrors.ErrRefreshWebhook.Wrap(err)
 		}
 		return w, nil
 	}
-	return nil, errors.New("webhook already exists and is active")
+	return nil, bhserrors.ErrRefreshWebhook
 }

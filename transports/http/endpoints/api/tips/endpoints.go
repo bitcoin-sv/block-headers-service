@@ -46,7 +46,6 @@ func (h *handler) getTips(c *gin.Context) {
 		c.JSON(http.StatusOK, mapToTipStateResponse(tips))
 	} else {
 		bhserrors.ErrorResponse(c, err, h.log)
-		c.JSON(http.StatusBadRequest, err.Error())
 	}
 }
 

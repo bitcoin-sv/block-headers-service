@@ -80,3 +80,26 @@ var ErrHeaderStopHeightNotFound = BHSError{Message: "Could not find stop height 
 
 // ErrGetTips is when it fails to get tips
 var ErrGetTips = BHSError{Message: "Failed to get tips", StatusCode: 400, Code: "ErrGetTips"}
+
+// ////////////////////////////////// WEBHOOK ERRORS
+
+// ErrUrlBodyRequired is when url is not provided in body
+var ErrUrlBodyRequired = BHSError{Message: "URL is required", StatusCode: 400, Code: "ErrUrlBodyRequired"}
+
+// ErrUrlParamRequired is when url is not provided in param
+var ErrUrlParamRequired = BHSError{Message: "URL is required", StatusCode: 400, Code: "ErrUrlParamRequired"}
+
+// ErrCreateWebhook is when it fails to create a webhook
+var ErrCreateWebhook = BHSError{Message: "Failed to create a webhook", StatusCode: 400, Code: "ErrCreateWebhook"}
+
+// ErrWebhookNotFound is when webhook was not found
+var ErrWebhookNotFound = BHSError{Message: "Webhook not found", StatusCode: 404, Code: "ErrWebhookNotFound"}
+
+// ErrRefreshWebhook is when a webhook already exists and is active and we tried to refresh it
+var ErrRefreshWebhook = BHSError{Message: "Webhook already exists and is active", StatusCode: 400, Code: "ErrRefreshWebhook"}
+
+// ErrGetAllWebhooks is when it failed to get all webhooks
+var ErrGetAllWebhooks = BHSError{Message: "Failed to get all webhooks", StatusCode: 400, Code: "ErrGetAllWebhooks"}
+
+// ErrDeleteWebhook is when it failed to delete a webhook
+var ErrDeleteWebhook = BHSError{Message: "Failed to delete webhook", StatusCode: 400, Code: "ErrDeleteWebhook"}
