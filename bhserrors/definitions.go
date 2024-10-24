@@ -70,7 +70,7 @@ var ErrHeaderWithGivenHashes = BHSError{Message: "Error during getting headers w
 // ErrHeaderNotFound is when hash could not be found
 var ErrHeaderNotFound = BHSError{Message: "Header not found", StatusCode: 404, Code: "ErrHeaderNotFound"}
 
-// ErrHeaderNotFound is when hash could not be found for given range
+// ErrHeadersForGivenRangeNotFound is when hash could not be found for given range
 var ErrHeadersForGivenRangeNotFound = BHSError{Message: "Could not find headers in given range", StatusCode: 404, Code: "ErrHeadersForGivenRangeNotFound"}
 
 // ErrHeaderStopHeightNotFound is when stop height for given heade was not found
@@ -83,11 +83,11 @@ var ErrGetTips = BHSError{Message: "Failed to get tips", StatusCode: 400, Code: 
 
 // ////////////////////////////////// WEBHOOK ERRORS
 
-// ErrUrlBodyRequired is when url is not provided in body
-var ErrUrlBodyRequired = BHSError{Message: "URL is required", StatusCode: 400, Code: "ErrUrlBodyRequired"}
+// ErrURLBodyRequired is when url is not provided in body
+var ErrURLBodyRequired = BHSError{Message: "URL is required", StatusCode: 400, Code: "ErrURLBodyRequired"}
 
-// ErrUrlParamRequired is when url is not provided in param
-var ErrUrlParamRequired = BHSError{Message: "URL is required", StatusCode: 400, Code: "ErrUrlParamRequired"}
+// ErrURLParamRequired is when url is not provided in param
+var ErrURLParamRequired = BHSError{Message: "URL is required", StatusCode: 400, Code: "ErrURLParamRequired"}
 
 // ErrCreateWebhook is when it fails to create a webhook
 var ErrCreateWebhook = BHSError{Message: "Failed to create a webhook", StatusCode: 400, Code: "ErrCreateWebhook"}

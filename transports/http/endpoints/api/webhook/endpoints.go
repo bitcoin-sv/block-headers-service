@@ -59,7 +59,7 @@ func (h *handler) registerWebhook(c *gin.Context) {
 	}
 
 	if reqBody.URL == "" {
-		bhserrors.ErrorResponse(c, bhserrors.ErrUrlBodyRequired, h.log)
+		bhserrors.ErrorResponse(c, bhserrors.ErrURLBodyRequired, h.log)
 		return
 	}
 
@@ -85,7 +85,7 @@ func (h *handler) registerWebhook(c *gin.Context) {
 func (h *handler) getWebhook(c *gin.Context) {
 	url := c.Query("url")
 	if url == "" {
-		bhserrors.ErrorResponse(c, bhserrors.ErrUrlParamRequired, h.log)
+		bhserrors.ErrorResponse(c, bhserrors.ErrURLParamRequired, h.log)
 		return
 	}
 	w, err := h.service.GetWebhookByURL(url)
@@ -111,7 +111,7 @@ func (h *handler) getWebhook(c *gin.Context) {
 func (h *handler) revokeWebhook(c *gin.Context) {
 	url := c.Query("url")
 	if url == "" {
-		bhserrors.ErrorResponse(c, bhserrors.ErrUrlParamRequired, h.log)
+		bhserrors.ErrorResponse(c, bhserrors.ErrURLParamRequired, h.log)
 		return
 	}
 	err := h.service.DeleteWebhook(url)
