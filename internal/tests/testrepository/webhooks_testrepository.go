@@ -1,9 +1,9 @@
 package testrepository
 
 import (
-	"errors"
 	"fmt"
 
+	"github.com/bitcoin-sv/block-headers-service/bhserrors"
 	"github.com/bitcoin-sv/block-headers-service/notification"
 )
 
@@ -35,7 +35,7 @@ func (r *WebhooksTestRepository) DeleteWebhookByURL(url string) error {
 			return nil
 		}
 	}
-	return errors.New("could not find webhook")
+	return bhserrors.ErrWebhookNotFound
 }
 
 // GetWebhookByURL returns webhook from db by given url.

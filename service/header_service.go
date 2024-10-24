@@ -6,6 +6,7 @@ import (
 	"math"
 	"time"
 
+	"github.com/bitcoin-sv/block-headers-service/bhserrors"
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
@@ -128,20 +129,20 @@ func (hs *HeaderService) GetHeaderAncestorsByHash(hash string, ancestorHash stri
 
 	// Check possible errors
 	if err != nil || err2 != nil {
-		return nil, errors.New("error during getting headers with given hashes")
+		return nil, bhserrors.ErrHeaderWithGivenHashes
 	} else if ancestorHeader.Height > reqHeader.Height {
-		return nil, errors.New("ancestor header height can not be higher than requested header heght")
+		return nil, bhserrors.ErrAncestorHashHigher
 	} else if ancestorHeader.Height == reqHeader.Height {
 		return make([]*domains.BlockHeader, 0), nil
 	}
 
 	a, err := hs.repo.Headers.GetAncestorOnHeight(reqHeader.Hash.String(), ancestorHeader.Height)
 	if err != nil {
-		return nil, errors.New("the headers provided are not part of the same chain")
+		return nil, bhserrors.ErrHeadersNotPartOfTheSameChain.Wrap(err)
 	}
 
 	if a.Hash != ancestorHeader.Hash {
-		return nil, errors.New("the headers provided are not part of the same chain")
+		return nil, bhserrors.ErrHeadersNotPartOfTheSameChain
 	}
 
 	// Get headers from db

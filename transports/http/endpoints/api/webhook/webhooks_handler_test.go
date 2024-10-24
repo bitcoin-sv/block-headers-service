@@ -11,6 +11,7 @@ import (
 
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/testapp"
 	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/webhook"
+	"github.com/stretchr/testify/require"
 )
 
 var webhookURL = "http://localhost:8080/api/v1/webhook/notify"
@@ -43,6 +44,7 @@ func TestMultipleIdenticalWebhooks(t *testing.T) {
 	// setup
 	bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithAPIAuthorizationDisabled())
 	defer cleanup()
+	expectedBodyResponse := "{\"code\":\"ErrRefreshWebhook\",\"message\":\"Webhook already exists and is active\"}"
 
 	// when
 	res := bhs.API().Call(createWebhook())
@@ -55,16 +57,11 @@ func TestMultipleIdenticalWebhooks(t *testing.T) {
 	// when
 	res2 := bhs.API().Call(createWebhook())
 
-	if res2.Code != http.StatusOK {
+	if res2.Code != http.StatusBadRequest {
 		t.Fatalf("Expected to get status %d but instead got %d\n", http.StatusOK, res2.Code)
 	}
 
-	body, _ := io.ReadAll(res2.Body)
-	bodyStr := string(body)[1 : len(string(body))-1]
-
-	if bodyStr != "webhook already exists and is active" {
-		t.Fatalf("Expected message: 'webhook already exists and is active' but instead got '%s'\n", bodyStr)
-	}
+	require.JSONEq(t, expectedBodyResponse, res2.Body.String())
 }
 
 // TestRevokeWebhookEndpoint tests the webhook revocation.

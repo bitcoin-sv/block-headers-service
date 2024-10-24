@@ -1,9 +1,7 @@
 package auth
 
 import (
-	"errors"
-	"net/http"
-
+	"github.com/bitcoin-sv/block-headers-service/bhserrors"
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/gin-gonic/gin"
 )
@@ -17,7 +15,7 @@ func RequireAdmin(handler gin.HandlerFunc, requireAdmin bool) gin.HandlerFunc {
 			if err := validateToken(c); err == nil {
 				handler(c)
 			} else {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, err.Error())
+				bhserrors.AbortWithErrorResponse(c, err, nil)
 			}
 		}
 	}
@@ -27,14 +25,14 @@ func RequireAdmin(handler gin.HandlerFunc, requireAdmin bool) gin.HandlerFunc {
 func validateToken(c *gin.Context) error {
 	token, exist := c.Get("token")
 	if !exist {
-		return errors.New("token not found")
+		return bhserrors.ErrAdminTokenNotFound
 	}
 	t, ok := token.(*domains.Token)
 	if !ok {
-		return errors.New("something went wrong")
+		return bhserrors.ErrGeneric
 	}
 	if !t.IsAdmin {
-		return errors.New("not authorized")
+		return bhserrors.ErrUnauthorized
 	}
 	return nil // the token is valid
 }

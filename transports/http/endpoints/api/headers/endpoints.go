@@ -4,19 +4,22 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/bitcoin-sv/block-headers-service/bhserrors"
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	router "github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/routes"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
 )
 
 type handler struct {
 	service service.Headers
+	log     *zerolog.Logger
 }
 
 // NewHandler creates new endpoint handler.
 func NewHandler(s *service.Services) router.APIEndpoints {
-	return &handler{service: s.Headers}
+	return &handler{service: s.Headers, log: s.Logger}
 }
 
 // RegisterAPIEndpoints registers routes that are part of service API.
@@ -48,7 +51,7 @@ func (h *handler) getHeaderByHash(c *gin.Context) {
 	if err == nil {
 		c.JSON(http.StatusOK, newBlockHeaderResponse(bh))
 	} else {
-		c.JSON(http.StatusBadRequest, err.Error())
+		bhserrors.ErrorResponse(c, err, h.log)
 	}
 }
 
@@ -77,10 +80,10 @@ func (h *handler) getHeaderByHeight(c *gin.Context) {
 		if err == nil {
 			c.JSON(http.StatusOK, mapToBlockHeadersResponses(bh))
 		} else {
-			c.JSON(http.StatusBadRequest, err.Error())
+			bhserrors.ErrorResponse(c, err, h.log)
 		}
 	} else {
-		c.JSON(http.StatusBadRequest, err.Error())
+		bhserrors.ErrorResponse(c, err, h.log)
 	}
 }
 
@@ -103,7 +106,7 @@ func (h *handler) getHeaderAncestorsByHash(c *gin.Context) {
 	if err == nil {
 		c.JSON(http.StatusOK, mapToBlockHeadersResponses(ancestors))
 	} else {
-		c.JSON(http.StatusBadRequest, err.Error())
+		bhserrors.ErrorResponse(c, err, h.log)
 	}
 }
 
@@ -120,14 +123,14 @@ func (h *handler) getHeaderAncestorsByHash(c *gin.Context) {
 func (h *handler) getCommonAncestor(c *gin.Context) {
 	var body []string
 	if err := c.BindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, err.Error())
+		bhserrors.ErrorResponse(c, bhserrors.ErrBindBody.Wrap(err), h.log)
 	} else {
 		ancestor, err := h.service.GetCommonAncestor(body)
 
 		if err == nil {
 			c.JSON(http.StatusOK, newBlockHeaderResponse(ancestor))
 		} else {
-			c.JSON(http.StatusBadRequest, err.Error())
+			bhserrors.ErrorResponse(c, err, h.log)
 		}
 	}
 }
@@ -150,6 +153,6 @@ func (h *handler) getHeadersState(c *gin.Context) {
 		headerStateResponse := newBlockHeaderStateResponse(bh)
 		c.JSON(http.StatusOK, headerStateResponse)
 	} else {
-		c.JSON(http.StatusBadRequest, err.Error())
+		bhserrors.ErrorResponse(c, err, h.log)
 	}
 }

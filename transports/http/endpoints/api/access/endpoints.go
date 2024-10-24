@@ -3,20 +3,23 @@ package access
 import (
 	"net/http"
 
+	"github.com/bitcoin-sv/block-headers-service/bhserrors"
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	"github.com/bitcoin-sv/block-headers-service/transports/http/auth"
 	router "github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/routes"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
 )
 
 type handler struct {
 	service service.Tokens
+	log     *zerolog.Logger
 }
 
 // NewHandler creates new endpoint handler.
 func NewHandler(s *service.Services) router.APIEndpoints {
-	return &handler{service: s.Tokens}
+	return &handler{service: s.Tokens, log: s.Logger}
 }
 
 // RegisterAPIEndpoints registers routes that are part of service API.
@@ -63,7 +66,7 @@ func (h *handler) createToken(c *gin.Context) {
 	if err == nil {
 		c.JSON(http.StatusOK, bh)
 	} else {
-		c.JSON(http.StatusBadRequest, err.Error())
+		bhserrors.ErrorResponse(c, err, h.log)
 	}
 }
 
@@ -84,6 +87,6 @@ func (h *handler) revokeToken(c *gin.Context) {
 	if err == nil {
 		c.JSON(http.StatusOK, "Token revoked")
 	} else {
-		c.JSON(http.StatusBadRequest, err.Error())
+		bhserrors.ErrorResponse(c, err, h.log)
 	}
 }

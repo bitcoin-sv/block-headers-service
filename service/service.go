@@ -64,6 +64,7 @@ type Services struct {
 	Tokens      Tokens
 	Notifier    *notification.Notifier
 	Webhooks    *notification.WebhooksService
+	Logger      *zerolog.Logger
 }
 
 // Dept is a struct used to create Services.
@@ -87,6 +88,7 @@ func NewServices(d Dept) *Services {
 		Chains:      newChainService(d, notifier),
 		Tokens:      NewTokenService(d.Repositories, d.AdminToken),
 		Webhooks:    newWebhooks(d),
+		Logger:      d.Logger,
 	}
 }
 

@@ -1,10 +1,9 @@
 package auth
 
 import (
-	"errors"
-	"net/http"
 	"strings"
 
+	"github.com/bitcoin-sv/block-headers-service/bhserrors"
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/service"
@@ -34,13 +33,13 @@ func (h *TokenMiddleware) ApplyToAPI(c *gin.Context) {
 	if h.cfg.UseAuth {
 		rawToken, err := h.parseAuthHeader(c)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, err.Error())
+			bhserrors.AbortWithErrorResponse(c, err, nil)
 			return
 		}
 
 		token, err := h.getToken(rawToken)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, err.Error())
+			bhserrors.AbortWithErrorResponse(c, err, nil)
 			return
 		}
 
@@ -51,12 +50,12 @@ func (h *TokenMiddleware) ApplyToAPI(c *gin.Context) {
 func (h *TokenMiddleware) parseAuthHeader(c *gin.Context) (string, error) {
 	header := c.GetHeader(authorizationHeader)
 	if header == "" {
-		return "", errors.New("empty auth header")
+		return "", bhserrors.ErrMissingAuthHeader
 	}
 
 	headerParts := strings.Split(header, " ")
 	if len(headerParts) != 2 || headerParts[0] != "Bearer" {
-		return "", errors.New("invalid auth header")
+		return "", bhserrors.ErrInvalidAuthHeader
 	}
 
 	return headerParts[1], nil
@@ -65,7 +64,7 @@ func (h *TokenMiddleware) parseAuthHeader(c *gin.Context) (string, error) {
 func (h *TokenMiddleware) getToken(token string) (*domains.Token, error) {
 	t, err := h.tokens.GetToken(token)
 	if err != nil {
-		return nil, errors.New("invalid access token")
+		return nil, bhserrors.ErrInvalidAccessToken
 	}
 	return t, nil
 }
