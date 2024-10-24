@@ -71,10 +71,10 @@ func TestReturnFailureFromVerifyWhenAuthorizationIsTurnedOnAndCalledWithoutToken
 	query := []domains.MerkleRootConfirmationRequestItem{}
 	expectedResult := struct {
 		code int
-		body []byte
+		body string
 	}{
 		code: http.StatusUnauthorized,
-		body: []byte("\"empty auth header\""),
+		body: "{\"code\":\"ErrMissingAuthHeader\",\"message\":\"Empty auth header\"}",
 	}
 
 	// when
@@ -85,10 +85,7 @@ func TestReturnFailureFromVerifyWhenAuthorizationIsTurnedOnAndCalledWithoutToken
 	if res.Code != expectedResult.code {
 		t.Errorf("Expected to get status %d but instead got %d\n", expectedResult.code, res.Code)
 	}
-	body, _ := io.ReadAll(res.Body)
-	if !bytes.Equal(body, expectedResult.body) {
-		t.Errorf("Expected to get body %s but insead got %s\n", expectedResult.body, body)
-	}
+	require.JSONEq(t, expectedResult.body, res.Body.String())
 }
 
 func TestReturnInvalidFromVerify(t *testing.T) {

@@ -36,6 +36,9 @@ var ErrMerklerootNotInLongestChain = BHSError{Message: "Provided merkleroot is n
 // ErrInvalidBatchSize is when user provided incorrect batchSize
 var ErrInvalidBatchSize = BHSError{Message: "batchSize must be 0 or a positive integer", Code: "ErrInvalidBatchSize", StatusCode: 400}
 
+// ErrGetChainTipHeight is when it fails to get a chain tip height
+var ErrGetChainTipHeight = BHSError{Message: "Failed to get chain tip height", Code: "ErrGetChainTipHeight", StatusCode: 400}
+
 // ////////////////////////////////// ACCESS ERRORS
 
 // ErrTokenNotFound is when token was not found in Block Header Service

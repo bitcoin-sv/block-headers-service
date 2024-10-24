@@ -95,6 +95,6 @@ func (h *handler) verify(c *gin.Context) {
 	if err == nil {
 		c.JSON(http.StatusOK, mapToMerkleRootsConfirmationsResponses(mrcs))
 	} else {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		bhserrors.ErrorResponse(c, err, h.log)
 	}
 }

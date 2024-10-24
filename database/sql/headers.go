@@ -398,7 +398,7 @@ func (h *HeadersDb) GetMerkleRootsConfirmations(
 	confirmations := make([]*dto.DbMerkleRootConfirmation, 0)
 	tipHeight, err := h.getChainTipHeight()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get chain tip height")
+		return nil, bhserrors.ErrGetChainTipHeight.Wrap(err)
 	}
 
 	for _, item := range request {
