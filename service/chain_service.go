@@ -3,6 +3,7 @@ package service
 import (
 	"strings"
 
+	"github.com/bitcoin-sv/block-headers-service/bhserrors"
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
@@ -186,7 +187,7 @@ func (cs *chainService) createHeader(hash *domains.BlockHash, bs *domains.BlockH
 
 func (cs *chainService) previousHeader(bs *domains.BlockHeaderSource) (*domains.BlockHeader, error) {
 	h, err := cs.Repositories.Headers.GetHeaderByHash(bs.PrevBlock.String())
-	if h == nil && err != nil && err.Error() == "Header not found" {
+	if h == nil && err != nil && errors.Is(err, bhserrors.ErrHeaderNotFound) {
 		return domains.NewOrphanPreviousBlockHeader(), nil
 	}
 	return h, err

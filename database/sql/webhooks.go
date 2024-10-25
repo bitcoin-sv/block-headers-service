@@ -53,8 +53,7 @@ func (h *HeadersDb) CreateWebhook(ctx context.Context, rWebhook *dto.DbWebhook) 
 		return bhserrors.ErrCreateWebhook.Wrap(err)
 	}
 
-	err = tx.Commit()
-	if err != nil {
+	if err = tx.Commit(); err != nil {
 		return bhserrors.ErrCreateWebhook.Wrap(err)
 	}
 
@@ -97,8 +96,7 @@ func (h *HeadersDb) DeleteWebhookByURL(ctx context.Context, url string) error {
 		return bhserrors.ErrDeleteWebhook.Wrap(err)
 	}
 
-	err = tx.Commit()
-	if err != nil {
+	if err = tx.Commit(); err != nil {
 		return bhserrors.ErrDeleteWebhook.Wrap(err)
 	}
 

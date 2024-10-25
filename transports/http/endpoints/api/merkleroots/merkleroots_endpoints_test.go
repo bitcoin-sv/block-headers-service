@@ -73,7 +73,7 @@ func TestReturnFailureFromVerifyWhenAuthorizationIsTurnedOnAndCalledWithoutToken
 		body string
 	}{
 		code: http.StatusUnauthorized,
-		body: "{\"code\":\"ErrMissingAuthHeader\",\"message\":\"Empty auth header\"}",
+		body: "{\"code\":\"ErrMissingAuthHeader\",\"message\":\"empty auth header\"}",
 	}
 
 	// when
@@ -221,7 +221,7 @@ func TestReturnBadRequestErrorFromVerifyWhenGivenEmtpyArray(t *testing.T) {
 		body string
 	}{
 		code: http.StatusBadRequest,
-		body: "{\"code\":\"ErrVerifyMerklerootsBadBody\",\"message\":\"At least one merkleroot is required\"}",
+		body: "{\"code\":\"ErrVerifyMerklerootsBadBody\",\"message\":\"at least one merkleroot is required\"}",
 	}
 
 	// when
@@ -394,7 +394,7 @@ func TestMerkleRootsFailure(t *testing.T) {
 			expectedCode:  http.StatusNotFound,
 			expectedBody: `{
 		                   "code": "ErrMerkleRootNotFound",
-		                   "message": "No block with provided merkleroot was found"
+		                   "message": "no block with provided merkleroot was found"
 		                  }`,
 		},
 		"return error when evaluationKey merkleroot is from stale chain": {
@@ -403,7 +403,7 @@ func TestMerkleRootsFailure(t *testing.T) {
 			expectedCode:  http.StatusConflict,
 			expectedBody: `{
 		                   "code": "ErrMerkleRootNotInLongestChain",
-		                   "message": "Provided merkleroot is not part of the longest chain"
+		                   "message": "provided merkleroot is not part of the longest chain"
 		                  }`,
 		},
 	}

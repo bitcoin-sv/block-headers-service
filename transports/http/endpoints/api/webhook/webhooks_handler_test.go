@@ -44,7 +44,7 @@ func TestMultipleIdenticalWebhooks(t *testing.T) {
 	// setup
 	bhs, cleanup := testapp.NewTestBlockHeaderService(t, testapp.WithAPIAuthorizationDisabled())
 	defer cleanup()
-	expectedBodyResponse := "{\"code\":\"ErrRefreshWebhook\",\"message\":\"Webhook already exists and is active\"}"
+	expectedBodyResponse := "{\"code\":\"ErrRefreshWebhook\",\"message\":\"webhook already exists and is active\"}"
 
 	// when
 	res := bhs.API().Call(createWebhook())

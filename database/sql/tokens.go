@@ -41,8 +41,7 @@ func (h *HeadersDb) CreateToken(ctx context.Context, token *dto.DbToken) error {
 		return bhserrors.ErrCreateToken.Wrap(err)
 	}
 
-	err = tx.Commit()
-	if err != nil {
+	if err = tx.Commit(); err != nil {
 		return bhserrors.ErrCreateToken.Wrap(err)
 	}
 
@@ -72,8 +71,7 @@ func (h *HeadersDb) DeleteToken(ctx context.Context, token string) error {
 		return bhserrors.ErrDeleteToken.Wrap(err)
 	}
 
-	err = tx.Commit()
-	if err != nil {
+	if err = tx.Commit(); err != nil {
 		return bhserrors.ErrDeleteToken.Wrap(err)
 
 	}

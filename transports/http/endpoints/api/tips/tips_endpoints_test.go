@@ -41,7 +41,7 @@ func TestGetTips(t *testing.T) {
 			body string
 		}{
 			code: http.StatusUnauthorized,
-			body: "{\"code\":\"ErrMissingAuthHeader\",\"message\":\"Empty auth header\"}",
+			body: "{\"code\":\"ErrMissingAuthHeader\",\"message\":\"empty auth header\"}",
 		}
 
 		// when
@@ -88,7 +88,7 @@ func TestGetTipLongest(t *testing.T) {
 			body string
 		}{
 			code: http.StatusUnauthorized,
-			body: "{\"code\":\"ErrMissingAuthHeader\",\"message\":\"Empty auth header\"}",
+			body: "{\"code\":\"ErrMissingAuthHeader\",\"message\":\"empty auth header\"}",
 		}
 
 		// when

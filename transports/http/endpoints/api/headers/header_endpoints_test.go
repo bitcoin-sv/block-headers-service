@@ -40,7 +40,7 @@ func TestGetHeaderByHash(t *testing.T) {
 			body string
 		}{
 			code: http.StatusUnauthorized,
-			body: "{\"message\": \"Empty auth header\", \"code\": \"ErrMissingAuthHeader\"}",
+			body: "{\"message\": \"empty auth header\", \"code\": \"ErrMissingAuthHeader\"}",
 		}
 
 		// when
@@ -48,7 +48,6 @@ func TestGetHeaderByHash(t *testing.T) {
 
 		// then
 		assert.Equal(t, res.Code, expectedResult.code)
-		// exp, _ := json.MarshalIndent(.body, "", "  ")
 		require.JSONEq(t, expectedResult.body, res.Body.String())
 	})
 
@@ -85,7 +84,7 @@ func TestGetHeaderByHash(t *testing.T) {
 			body string
 		}{
 			code: http.StatusNotFound,
-			body: "{\"code\":\"ErrHeaderNotFound\",\"message\":\"Header not found\"}",
+			body: "{\"code\":\"ErrHeaderNotFound\",\"message\":\"header not found\"}",
 		}
 
 		// when
@@ -107,7 +106,7 @@ func TestGetHeaderByHeight(t *testing.T) {
 			body string
 		}{
 			code: http.StatusUnauthorized,
-			body: "{\"code\":\"ErrMissingAuthHeader\",\"message\":\"Empty auth header\"}",
+			body: "{\"code\":\"ErrMissingAuthHeader\",\"message\":\"empty auth header\"}",
 		}
 
 		// when
@@ -151,7 +150,7 @@ func TestGetHeaderByHeight(t *testing.T) {
 			body string
 		}{
 			code: http.StatusNotFound,
-			body: "{\"code\":\"ErrHeadersForGivenRangeNotFound\",\"message\":\"Could not find headers in given range\"}",
+			body: "{\"code\":\"ErrHeadersForGivenRangeNotFound\",\"message\":\"could not find headers in given range\"}",
 		}
 
 		// when
@@ -173,7 +172,7 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 			body string
 		}{
 			code: http.StatusUnauthorized,
-			body: "{\"message\": \"Empty auth header\", \"code\": \"ErrMissingAuthHeader\"}",
+			body: "{\"message\": \"empty auth header\", \"code\": \"ErrMissingAuthHeader\"}",
 		}
 
 		// when
@@ -217,7 +216,7 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 			body string
 		}{
 			code: http.StatusBadRequest,
-			body: "{\"code\":\"ErrHeaderWithGivenHashes\",\"message\":\"Error during getting headers with given hashes\"}",
+			body: "{\"code\":\"ErrHeaderWithGivenHashes\",\"message\":\"error during getting headers with given hashes\"}",
 		}
 
 		// when
@@ -239,7 +238,7 @@ func TestGetCommonAncestor(t *testing.T) {
 			body string
 		}{
 			code: http.StatusUnauthorized,
-			body: "{\"message\": \"Empty auth header\", \"code\": \"ErrMissingAuthHeader\"}",
+			body: "{\"message\": \"empty auth header\", \"code\": \"ErrMissingAuthHeader\"}",
 		}
 
 		// when
@@ -294,7 +293,7 @@ func TestGetCommonAncestor(t *testing.T) {
 			body string
 		}{
 			code: http.StatusNotFound,
-			body: "{\"code\":\"ErrHeaderNotFound\",\"message\":\"Header not found\"}",
+			body: "{\"code\":\"ErrHeaderNotFound\",\"message\":\"header not found\"}",
 		}
 
 		// when
@@ -316,7 +315,7 @@ func TestGetHeadersState(t *testing.T) {
 			body string
 		}{
 			code: http.StatusUnauthorized,
-			body: "{\"message\": \"Empty auth header\", \"code\": \"ErrMissingAuthHeader\"}",
+			body: "{\"message\": \"empty auth header\", \"code\": \"ErrMissingAuthHeader\"}",
 		}
 
 		// when
@@ -366,7 +365,7 @@ func TestGetHeadersState(t *testing.T) {
 			body string
 		}{
 			code: http.StatusNotFound,
-			body: "{\"code\":\"ErrHeaderNotFound\",\"message\":\"Header not found\"}",
+			body: "{\"code\":\"ErrHeaderNotFound\",\"message\":\"header not found\"}",
 		}
 
 		// when
