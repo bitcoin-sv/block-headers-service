@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/bitcoin-sv/block-headers-service/bhserrors"
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/repository/dto"
 	"github.com/jmoiron/sqlx"
@@ -278,10 +279,7 @@ func (h *HeadersDb) Count(ctx context.Context) (int, error) {
 func (h *HeadersDb) GetHeaderByHash(ctx context.Context, hash string) (*dto.DbBlockHeader, error) {
 	var bh dto.DbBlockHeader
 	if err := h.db.GetContext(ctx, &bh, h.db.Rebind(sqlHeader), hash); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("could not find hash")
-		}
-		return nil, errors.Wrapf(err, "failed to get blockhash using hash %s", hash)
+		return nil, bhserrors.ErrHeaderNotFound.Wrap(err)
 	}
 	return &bh, nil
 }
@@ -302,10 +300,7 @@ func (h *HeadersDb) GetHeaderByHeight(ctx context.Context, height int32, state s
 func (h *HeadersDb) GetHeaderByHeightRange(from int, to int) ([]*dto.DbBlockHeader, error) {
 	var bh []*dto.DbBlockHeader
 	if err := h.db.Select(&bh, h.db.Rebind(sqlHeaderByHeightRange), from, to); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("could not find headers in given range")
-		}
-		return nil, errors.Wrapf(err, "failed to get headers using given range from: %d to: %d", from, to)
+		return nil, bhserrors.ErrHeadersForGivenRangeNotFound.Wrap(err)
 	}
 	return bh, nil
 }
@@ -344,10 +339,7 @@ func (h *HeadersDb) GenesisExists(_ context.Context) bool {
 func (h *HeadersDb) GetPreviousHeader(ctx context.Context, hash string) (*dto.DbBlockHeader, error) {
 	var bh dto.DbBlockHeader
 	if err := h.db.GetContext(ctx, &bh, h.db.Rebind(sqlSelectPreviousBlock), hash); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("could not find header")
-		}
-		return nil, errors.Wrapf(err, "failed to get prev header using hash %s", hash)
+		return nil, bhserrors.ErrHeaderNotFound.Wrap(err)
 	}
 	return &bh, nil
 }
@@ -370,10 +362,10 @@ func (h *HeadersDb) GetTip(_ context.Context) (*dto.DbBlockHeader, error) {
 func (h *HeadersDb) GetAncestorOnHeight(hash string, height int32) (*dto.DbBlockHeader, error) {
 	var bh []*dto.DbBlockHeader
 	if err := h.db.Select(&bh, h.db.Rebind(sqlSelectAncestorOnHeight), hash, int(height), int(height)); err != nil {
-		return nil, errors.Wrapf(err, "failed to get ancestors using given hash: %s ", hash)
+		return nil, bhserrors.ErrAncestorNotFound.Wrap(err)
 	}
 	if len(bh) == 0 {
-		return nil, errors.New("could not find ancestors for a providen hash")
+		return nil, bhserrors.ErrAncestorNotFound
 	}
 	return bh[0], nil
 }
@@ -382,7 +374,7 @@ func (h *HeadersDb) GetAncestorOnHeight(hash string, height int32) (*dto.DbBlock
 func (h *HeadersDb) GetAllTips() ([]*dto.DbBlockHeader, error) {
 	var bh []*dto.DbBlockHeader
 	if err := h.db.Select(&bh, sqlSelectTips); err != nil {
-		return nil, errors.Wrapf(err, "failed to get tips")
+		return nil, bhserrors.ErrGetTips.Wrap(err)
 	}
 	return bh, nil
 }
@@ -391,10 +383,10 @@ func (h *HeadersDb) GetAllTips() ([]*dto.DbBlockHeader, error) {
 func (h *HeadersDb) GetChainBetweenTwoHashes(low string, high string) ([]*dto.DbBlockHeader, error) {
 	var bh []*dto.DbBlockHeader
 	if err := h.db.Select(&bh, h.db.Rebind(sqlChainBetweenTwoHashes), high, low, low); err != nil {
-		return nil, errors.Wrapf(err, "failed to get headers using given range from: %s to: %s", low, high)
+		return nil, bhserrors.ErrHeadersForGivenRangeNotFound.Wrap(err)
 	}
 	if len(bh) == 0 {
-		return nil, errors.New("could not find headers in given range")
+		return nil, bhserrors.ErrHeadersForGivenRangeNotFound
 	}
 	return bh, nil
 }
@@ -406,7 +398,7 @@ func (h *HeadersDb) GetMerkleRootsConfirmations(
 	confirmations := make([]*dto.DbMerkleRootConfirmation, 0)
 	tipHeight, err := h.getChainTipHeight()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get chain tip height")
+		return nil, bhserrors.ErrGetChainTipHeight.Wrap(err)
 	}
 
 	for _, item := range request {
@@ -511,7 +503,7 @@ func (h *HeadersDb) getLastEvaluatedMerklerootHeight(lastEvaluatedKey string) (i
 	err := h.db.Get(&lastEvaluatedMerkleroot, h.db.Rebind(sqlGetSingleMerkleroot), lastEvaluatedKey)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return 0, domains.ErrMerklerootNotFound
+		return 0, bhserrors.ErrMerklerootNotFound
 	}
 
 	if err != nil {
@@ -519,7 +511,7 @@ func (h *HeadersDb) getLastEvaluatedMerklerootHeight(lastEvaluatedKey string) (i
 	}
 
 	if lastEvaluatedMerkleroot.ToBlockHeader().State != domains.LongestChain {
-		return 0, domains.ErrMerklerootNotInLongestChain
+		return 0, bhserrors.ErrMerklerootNotInLongestChain
 	}
 
 	lastEvaluatedHeight := lastEvaluatedMerkleroot.Height

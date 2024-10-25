@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"testing"
@@ -17,6 +16,7 @@ import (
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/fixtures"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/testapp"
 	"github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/api/headers"
+	"github.com/stretchr/testify/require"
 )
 
 var expectedObj = headers.BlockHeaderResponse{
@@ -37,10 +37,10 @@ func TestGetHeaderByHash(t *testing.T) {
 		defer cleanup()
 		expectedResult := struct {
 			code int
-			body []byte
+			body string
 		}{
 			code: http.StatusUnauthorized,
-			body: []byte("\"empty auth header\""),
+			body: "{\"message\": \"empty auth header\", \"code\": \"ErrMissingAuthHeader\"}",
 		}
 
 		// when
@@ -48,8 +48,7 @@ func TestGetHeaderByHash(t *testing.T) {
 
 		// then
 		assert.Equal(t, res.Code, expectedResult.code)
-		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expectedResult.body)
+		require.JSONEq(t, expectedResult.body, res.Body.String())
 	})
 
 	t.Run("success", func(t *testing.T) {
@@ -82,10 +81,10 @@ func TestGetHeaderByHash(t *testing.T) {
 		defer cleanup()
 		expectedResult := struct {
 			code int
-			body []byte
+			body string
 		}{
-			code: http.StatusBadRequest,
-			body: []byte("\"could not find hash\""),
+			code: http.StatusNotFound,
+			body: "{\"code\":\"ErrHeaderNotFound\",\"message\":\"header not found\"}",
 		}
 
 		// when
@@ -93,8 +92,7 @@ func TestGetHeaderByHash(t *testing.T) {
 
 		// then
 		assert.Equal(t, res.Code, expectedResult.code)
-		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expectedResult.body)
+		require.JSONEq(t, expectedResult.body, res.Body.String())
 	})
 }
 
@@ -105,10 +103,10 @@ func TestGetHeaderByHeight(t *testing.T) {
 		defer cleanup()
 		expectedResult := struct {
 			code int
-			body []byte
+			body string
 		}{
 			code: http.StatusUnauthorized,
-			body: []byte("\"empty auth header\""),
+			body: "{\"code\":\"ErrMissingAuthHeader\",\"message\":\"empty auth header\"}",
 		}
 
 		// when
@@ -116,8 +114,7 @@ func TestGetHeaderByHeight(t *testing.T) {
 
 		// then
 		assert.Equal(t, res.Code, expectedResult.code)
-		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expectedResult.body)
+		require.JSONEq(t, expectedResult.body, res.Body.String())
 	})
 
 	t.Run("success", func(t *testing.T) {
@@ -150,10 +147,10 @@ func TestGetHeaderByHeight(t *testing.T) {
 		defer cleanup()
 		expectedResult := struct {
 			code int
-			body []byte
+			body string
 		}{
-			code: http.StatusBadRequest,
-			body: []byte("\"could not find headers in given range\""),
+			code: http.StatusNotFound,
+			body: "{\"code\":\"ErrHeadersForGivenRangeNotFound\",\"message\":\"could not find headers in given range\"}",
 		}
 
 		// when
@@ -161,8 +158,7 @@ func TestGetHeaderByHeight(t *testing.T) {
 
 		// then
 		assert.Equal(t, res.Code, expectedResult.code)
-		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expectedResult.body)
+		require.JSONEq(t, expectedResult.body, res.Body.String())
 	})
 }
 
@@ -173,10 +169,10 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 		defer cleanup()
 		expectedResult := struct {
 			code int
-			body []byte
+			body string
 		}{
 			code: http.StatusUnauthorized,
-			body: []byte("\"empty auth header\""),
+			body: "{\"message\": \"empty auth header\", \"code\": \"ErrMissingAuthHeader\"}",
 		}
 
 		// when
@@ -184,8 +180,7 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 
 		// then
 		assert.Equal(t, res.Code, expectedResult.code)
-		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expectedResult.body)
+		require.JSONEq(t, expectedResult.body, res.Body.String())
 	})
 
 	t.Run("success", func(t *testing.T) {
@@ -218,10 +213,10 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 		defer cleanup()
 		expectedResult := struct {
 			code int
-			body []byte
+			body string
 		}{
 			code: http.StatusBadRequest,
-			body: []byte("\"error during getting headers with given hashes\""),
+			body: "{\"code\":\"ErrHeaderWithGivenHashes\",\"message\":\"error during getting headers with given hashes\"}",
 		}
 
 		// when
@@ -229,8 +224,7 @@ func TestGetHeaderAncestorsByHash(t *testing.T) {
 
 		// then
 		assert.Equal(t, res.Code, expectedResult.code)
-		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expectedResult.body)
+		require.JSONEq(t, expectedResult.body, res.Body.String())
 	})
 }
 
@@ -241,10 +235,10 @@ func TestGetCommonAncestor(t *testing.T) {
 		defer cleanup()
 		expectedResult := struct {
 			code int
-			body []byte
+			body string
 		}{
 			code: http.StatusUnauthorized,
-			body: []byte("\"empty auth header\""),
+			body: "{\"message\": \"empty auth header\", \"code\": \"ErrMissingAuthHeader\"}",
 		}
 
 		// when
@@ -252,8 +246,7 @@ func TestGetCommonAncestor(t *testing.T) {
 
 		// then
 		assert.Equal(t, res.Code, expectedResult.code)
-		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expectedResult.body)
+		require.JSONEq(t, expectedResult.body, res.Body.String())
 	})
 
 	t.Run("success", func(t *testing.T) {
@@ -297,10 +290,10 @@ func TestGetCommonAncestor(t *testing.T) {
 		defer cleanup()
 		expectedResult := struct {
 			code int
-			body []byte
+			body string
 		}{
-			code: http.StatusBadRequest,
-			body: []byte("\"could not find hash\""),
+			code: http.StatusNotFound,
+			body: "{\"code\":\"ErrHeaderNotFound\",\"message\":\"header not found\"}",
 		}
 
 		// when
@@ -308,8 +301,7 @@ func TestGetCommonAncestor(t *testing.T) {
 
 		// then
 		assert.Equal(t, res.Code, expectedResult.code)
-		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expectedResult.body)
+		require.JSONEq(t, expectedResult.body, res.Body.String())
 	})
 }
 
@@ -320,10 +312,10 @@ func TestGetHeadersState(t *testing.T) {
 		defer cleanup()
 		expectedResult := struct {
 			code int
-			body []byte
+			body string
 		}{
 			code: http.StatusUnauthorized,
-			body: []byte("\"empty auth header\""),
+			body: "{\"message\": \"empty auth header\", \"code\": \"ErrMissingAuthHeader\"}",
 		}
 
 		// when
@@ -331,8 +323,7 @@ func TestGetHeadersState(t *testing.T) {
 
 		// then
 		assert.Equal(t, res.Code, expectedResult.code)
-		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expectedResult.body)
+		require.JSONEq(t, expectedResult.body, res.Body.String())
 	})
 
 	t.Run("success", func(t *testing.T) {
@@ -371,10 +362,10 @@ func TestGetHeadersState(t *testing.T) {
 		defer cleanup()
 		expectedResult := struct {
 			code int
-			body []byte
+			body string
 		}{
-			code: http.StatusBadRequest,
-			body: []byte("\"could not find hash\""),
+			code: http.StatusNotFound,
+			body: "{\"code\":\"ErrHeaderNotFound\",\"message\":\"header not found\"}",
 		}
 
 		// when
@@ -382,8 +373,7 @@ func TestGetHeadersState(t *testing.T) {
 
 		// then
 		assert.Equal(t, res.Code, expectedResult.code)
-		body, _ := io.ReadAll(res.Body)
-		assert.EqualBytes(t, body, expectedResult.body)
+		require.JSONEq(t, expectedResult.body, res.Body.String())
 	})
 }
 

@@ -5,6 +5,7 @@ import (
 	"slices"
 	"sort"
 
+	"github.com/bitcoin-sv/block-headers-service/bhserrors"
 	"github.com/bitcoin-sv/block-headers-service/domains"
 	"github.com/bitcoin-sv/block-headers-service/internal/chaincfg/chainhash"
 	"github.com/bitcoin-sv/block-headers-service/internal/tests/fixtures"
@@ -69,7 +70,7 @@ func (r *HeaderTestRepository) GetHeaderByHeightRange(from int, to int) ([]*doma
 		return filteredHeaders, nil
 	}
 
-	return nil, errors.New("could not find headers in given range")
+	return nil, bhserrors.ErrHeadersForGivenRangeNotFound
 }
 
 // GetLongestChainHeadersFromHeight returns from db the headers from "longest chain" starting from given height.
@@ -132,7 +133,7 @@ func (r *HeaderTestRepository) GetHeaderByHash(hash string) (*domains.BlockHeade
 	if header != nil {
 		return header, nil
 	}
-	return nil, errors.New("could not find hash")
+	return nil, bhserrors.ErrHeaderNotFound
 }
 
 // GenesisExists check if genesis header is in db.
@@ -222,12 +223,12 @@ func (r *HeaderTestRepository) GetMerkleRoots(batchSize int, lastEvaluatedKey st
 	})
 
 	if startIdx == -1 && lastEvaluatedKey != "" {
-		return nil, domains.ErrMerklerootNotFound
+		return nil, bhserrors.ErrMerklerootNotFound
 	}
 
 	// Check if lastEvaluatedKey is not from the longest chain
 	if startIdx != -1 && !(*r.db)[startIdx].IsLongestChain() {
-		return nil, domains.ErrMerklerootNotInLongestChain
+		return nil, bhserrors.ErrMerklerootNotInLongestChain
 	}
 
 	// If the lastEvaluatedKey is found, we start after it; otherwise, we start from the beginning
@@ -362,7 +363,7 @@ func (r *HeaderTestRepository) GetHeadersStopHeight(hashStop string) (int, error
 			return int(header.Height), nil
 		}
 	}
-	return 0, errors.New("could not find stop height")
+	return 0, bhserrors.ErrHeaderStopHeightNotFound
 }
 
 // FillWithLongestChain fills the test header repository

@@ -3,19 +3,22 @@ package tips
 import (
 	"net/http"
 
+	"github.com/bitcoin-sv/block-headers-service/bhserrors"
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	router "github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/routes"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
 )
 
 type handler struct {
 	service service.Headers
+	log     *zerolog.Logger
 }
 
 // NewHandler creates new endpoint handler.
 func NewHandler(s *service.Services) router.APIEndpoints {
-	return &handler{service: s.Headers}
+	return &handler{service: s.Headers, log: s.Logger}
 }
 
 // RegisterAPIEndpoints registers routes that are part of service API.
@@ -42,7 +45,7 @@ func (h *handler) getTips(c *gin.Context) {
 	if err == nil {
 		c.JSON(http.StatusOK, mapToTipStateResponse(tips))
 	} else {
-		c.JSON(http.StatusBadRequest, err.Error())
+		bhserrors.ErrorResponse(c, err, h.log)
 	}
 }
 

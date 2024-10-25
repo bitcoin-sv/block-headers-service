@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io"
 	"net/http"
 	"net/url"
 	"testing"
@@ -71,10 +70,10 @@ func TestReturnFailureFromVerifyWhenAuthorizationIsTurnedOnAndCalledWithoutToken
 	query := []domains.MerkleRootConfirmationRequestItem{}
 	expectedResult := struct {
 		code int
-		body []byte
+		body string
 	}{
 		code: http.StatusUnauthorized,
-		body: []byte("\"empty auth header\""),
+		body: "{\"code\":\"ErrMissingAuthHeader\",\"message\":\"empty auth header\"}",
 	}
 
 	// when
@@ -85,10 +84,7 @@ func TestReturnFailureFromVerifyWhenAuthorizationIsTurnedOnAndCalledWithoutToken
 	if res.Code != expectedResult.code {
 		t.Errorf("Expected to get status %d but instead got %d\n", expectedResult.code, res.Code)
 	}
-	body, _ := io.ReadAll(res.Body)
-	if !bytes.Equal(body, expectedResult.body) {
-		t.Errorf("Expected to get body %s but insead got %s\n", expectedResult.body, body)
-	}
+	require.JSONEq(t, expectedResult.body, res.Body.String())
 }
 
 func TestReturnInvalidFromVerify(t *testing.T) {
@@ -222,10 +218,10 @@ func TestReturnBadRequestErrorFromVerifyWhenGivenEmtpyArray(t *testing.T) {
 	query := []domains.MerkleRootConfirmationRequestItem{}
 	expectedResult := struct {
 		code int
-		body []byte
+		body string
 	}{
 		code: http.StatusBadRequest,
-		body: []byte("\"at least one merkleroot is required\""),
+		body: "{\"code\":\"ErrVerifyMerklerootsBadBody\",\"message\":\"at least one merkleroot is required\"}",
 	}
 
 	// when
@@ -233,11 +229,7 @@ func TestReturnBadRequestErrorFromVerifyWhenGivenEmtpyArray(t *testing.T) {
 
 	// then
 	assert.Equal(t, res.Code, expectedResult.code)
-
-	body, _ := io.ReadAll(res.Body)
-	if !bytes.Equal(body, expectedResult.body) {
-		t.Errorf("Expected to get body %s but insead got %s\n", expectedResult.body, body)
-	}
+	require.JSONEq(t, expectedResult.body, res.Body.String())
 }
 
 func verify(request []domains.MerkleRootConfirmationRequestItem) (req *http.Request, err error) {
@@ -402,7 +394,7 @@ func TestMerkleRootsFailure(t *testing.T) {
 			expectedCode:  http.StatusNotFound,
 			expectedBody: `{
 		                   "code": "ErrMerkleRootNotFound",
-		                   "message": "No block with provided merkleroot was found"
+		                   "message": "no block with provided merkleroot was found"
 		                  }`,
 		},
 		"return error when evaluationKey merkleroot is from stale chain": {
@@ -410,8 +402,8 @@ func TestMerkleRootsFailure(t *testing.T) {
 			evaluationKey: "88d2a4e04a96b45e3ba04637098a92fd0786daf3fc8ff88314f8e739a9918bf3",
 			expectedCode:  http.StatusConflict,
 			expectedBody: `{
-		                   "code": "ErrMerkleRootNotInLC",
-		                   "message": "Provided merkleroot is not part of the longest chain"
+		                   "code": "ErrMerkleRootNotInLongestChain",
+		                   "message": "provided merkleroot is not part of the longest chain"
 		                  }`,
 		},
 	}

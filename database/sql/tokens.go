@@ -2,10 +2,9 @@ package sql
 
 import (
 	"context"
-	"database/sql"
 
+	"github.com/bitcoin-sv/block-headers-service/bhserrors"
 	"github.com/bitcoin-sv/block-headers-service/repository/dto"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -39,19 +38,21 @@ func (h *HeadersDb) CreateToken(ctx context.Context, token *dto.DbToken) error {
 	}()
 
 	if _, err := tx.NamedExecContext(ctx, h.db.Rebind(sqlInsertToken), *token); err != nil {
-		return errors.Wrap(err, "failed to insert token")
+		return bhserrors.ErrCreateToken.Wrap(err)
 	}
-	return errors.Wrap(tx.Commit(), "failed to commit tx")
+
+	if err = tx.Commit(); err != nil {
+		return bhserrors.ErrCreateToken.Wrap(err)
+	}
+
+	return nil
 }
 
 // GetTokenByValue method will search and return token by value.
 func (h *HeadersDb) GetTokenByValue(ctx context.Context, token string) (*dto.DbToken, error) {
 	var dbToken dto.DbToken
 	if err := h.db.GetContext(ctx, &dbToken, h.db.Rebind(sqlGetToken), token); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("could not find token")
-		}
-		return nil, errors.Wrapf(err, "failed to get token using value %s", token)
+		return nil, bhserrors.ErrTokenNotFound.Wrap(err)
 	}
 	return &dbToken, nil
 }
@@ -67,8 +68,13 @@ func (h *HeadersDb) DeleteToken(ctx context.Context, token string) error {
 	}()
 
 	if _, err = tx.NamedExecContext(ctx, h.db.Rebind(sqlDeleteToken), map[string]interface{}{"token": token}); err != nil {
-		return errors.Wrap(err, "failed to delete token")
+		return bhserrors.ErrDeleteToken.Wrap(err)
 	}
 
-	return errors.Wrap(tx.Commit(), "failed to commit tx")
+	if err = tx.Commit(); err != nil {
+		return bhserrors.ErrDeleteToken.Wrap(err)
+
+	}
+
+	return nil
 }

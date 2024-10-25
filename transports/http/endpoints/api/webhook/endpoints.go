@@ -3,11 +3,13 @@ package webhook
 import (
 	"net/http"
 
+	"github.com/bitcoin-sv/block-headers-service/bhserrors"
 	"github.com/bitcoin-sv/block-headers-service/config"
 	"github.com/bitcoin-sv/block-headers-service/notification"
 	"github.com/bitcoin-sv/block-headers-service/service"
 	router "github.com/bitcoin-sv/block-headers-service/transports/http/endpoints/routes"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
 )
 
 // Webhooks is an interface which represents methods required for Webhooks service.
@@ -19,11 +21,12 @@ type Webhooks interface {
 
 type handler struct {
 	service Webhooks
+	log     *zerolog.Logger
 }
 
 // NewHandler creates new endpoint handler.
 func NewHandler(s *service.Services) router.APIEndpoints {
-	return &handler{service: s.Webhooks}
+	return &handler{service: s.Webhooks, log: s.Logger}
 }
 
 // RegisterAPIEndpoints registers routes that are part of service API.
@@ -52,19 +55,19 @@ func (h *handler) registerWebhook(c *gin.Context) {
 	err := c.Bind(&reqBody)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, err.Error())
+		bhserrors.ErrorResponse(c, bhserrors.ErrBindBody.Wrap(err), h.log)
 	}
 
 	if reqBody.URL == "" {
-		c.JSON(http.StatusBadRequest, "URL is required")
+		bhserrors.ErrorResponse(c, bhserrors.ErrURLBodyRequired, h.log)
 		return
 	}
 
 	webhook, err := h.service.CreateWebhook(reqBody.RequiredAuth.Type, reqBody.RequiredAuth.Header, reqBody.RequiredAuth.Token, reqBody.URL)
 	if err == nil {
 		c.JSON(http.StatusOK, webhook)
-	} else if webhook == nil {
-		c.JSON(http.StatusOK, err.Error())
+	} else {
+		bhserrors.ErrorResponse(c, err, h.log)
 	}
 }
 
@@ -82,7 +85,7 @@ func (h *handler) registerWebhook(c *gin.Context) {
 func (h *handler) getWebhook(c *gin.Context) {
 	url := c.Query("url")
 	if url == "" {
-		c.JSON(http.StatusBadRequest, "URL param is required")
+		bhserrors.ErrorResponse(c, bhserrors.ErrURLParamRequired, h.log)
 		return
 	}
 	w, err := h.service.GetWebhookByURL(url)
@@ -90,7 +93,7 @@ func (h *handler) getWebhook(c *gin.Context) {
 	if err == nil {
 		c.JSON(http.StatusOK, w)
 	} else {
-		c.JSON(http.StatusBadRequest, err.Error())
+		bhserrors.ErrorResponse(c, err, h.log)
 	}
 }
 
@@ -108,7 +111,7 @@ func (h *handler) getWebhook(c *gin.Context) {
 func (h *handler) revokeWebhook(c *gin.Context) {
 	url := c.Query("url")
 	if url == "" {
-		c.JSON(http.StatusBadRequest, "URL param is required")
+		bhserrors.ErrorResponse(c, bhserrors.ErrURLParamRequired, h.log)
 		return
 	}
 	err := h.service.DeleteWebhook(url)
@@ -116,6 +119,6 @@ func (h *handler) revokeWebhook(c *gin.Context) {
 	if err == nil {
 		c.JSON(http.StatusOK, "Webhook revoked")
 	} else {
-		c.JSON(http.StatusBadRequest, err.Error())
+		bhserrors.ErrorResponse(c, err, h.log)
 	}
 }
