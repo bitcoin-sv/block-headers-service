@@ -490,10 +490,10 @@ func ReadVarInt(r io.Reader, _ uint32) (uint64, error) {
 
 		// The encoding is not canonical if the value could have been
 		// encoded using fewer bytes.
-		min := uint64(0x100000000)
-		if rv < min {
+		minValue := uint64(0x100000000)
+		if rv < minValue {
 			return 0, messageError("ReadVarInt", fmt.Sprintf(
-				errNonCanonicalVarInt, rv, discriminant, min))
+				errNonCanonicalVarInt, rv, discriminant, minValue))
 		}
 
 	case 0xfe:
@@ -505,10 +505,10 @@ func ReadVarInt(r io.Reader, _ uint32) (uint64, error) {
 
 		// The encoding is not canonical if the value could have been
 		// encoded using fewer bytes.
-		min := uint64(0x10000)
-		if rv < min {
+		minValue := uint64(0x10000)
+		if rv < minValue {
 			return 0, messageError("ReadVarInt", fmt.Sprintf(
-				errNonCanonicalVarInt, rv, discriminant, min))
+				errNonCanonicalVarInt, rv, discriminant, minValue))
 		}
 
 	case 0xfd:
@@ -520,10 +520,10 @@ func ReadVarInt(r io.Reader, _ uint32) (uint64, error) {
 
 		// The encoding is not canonical if the value could have been
 		// encoded using fewer bytes.
-		min := uint64(0xfd)
-		if rv < min {
+		minValue := uint64(0xfd)
+		if rv < minValue {
 			return 0, messageError("ReadVarInt", fmt.Sprintf(
-				errNonCanonicalVarInt, rv, discriminant, min))
+				errNonCanonicalVarInt, rv, discriminant, minValue))
 		}
 
 	default:
