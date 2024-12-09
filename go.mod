@@ -11,7 +11,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/kr/pretty v0.3.1
-	github.com/magiconair/properties v1.8.7
+	github.com/magiconair/properties v1.8.9
 	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.19.0
@@ -27,7 +27,7 @@ require (
 	github.com/kinbiko/jsonassert v1.2.0
 	github.com/lib/pq v1.10.9
 	github.com/prometheus/client_golang v1.20.5
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/testcontainers/testcontainers-go v0.34.0
 )
 
