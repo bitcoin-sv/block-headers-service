@@ -1,8 +1,6 @@
 module github.com/bitcoin-sv/block-headers-service
 
-go 1.22.0
-
-toolchain go1.22.5
+go 1.24.0
 
 require (
 	github.com/btcsuite/go-socks v0.0.0-20170105172521-4720035b7bfd
