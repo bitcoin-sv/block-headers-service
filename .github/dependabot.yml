@@ -18,6 +18,9 @@
 #   • Force‑push and delete‑branch disabled via branch‑protection rules.
 #   • PR limit = 10 to avoid queue flooding.
 #   • All dependency PRs require passing CI checks before merging.
+#   • Cooldown – version updates wait 3 days after a release (Go modules: patch 3,
+#     minor 7, major 14 days); trusted publishers are excluded. Security updates
+#     are never delayed.
 # ────────────────────────────────────────────────────────────────
 
 version: 2
@@ -49,6 +52,11 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    cooldown:
+      default-days: 3
+      semver-major-days: 14
+      semver-minor-days: 7
+      semver-patch-days: 3
 
   # ──────────────────────────────────────────────────────────────
   # 2. GitHub Actions Workflows
@@ -72,6 +80,9 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    cooldown:
+      default-days: 3
+      exclude: ["actions/*", "github/*", "gitleaks/*", "ossf/*"]
 
   # ──────────────────────────────────────────────────────────────
   # 3. DevContainer (devcontainer.json : base image + features)
@@ -95,6 +106,9 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    cooldown:
+      default-days: 3
+      exclude: ["ghcr.io/devcontainers/features/*"]
 
   # ──────────────────────────────────────────────────────────────
   # 4. Dockerfiles (any Dockerfile in repo root or sub‑dirs)
@@ -118,3 +132,57 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    cooldown:
+      default-days: 3
+      exclude: ["golang"]
+
+  # ──────────────────────────────────────────────────────────────
+  # 5. Docker Compose (docker-compose.yml)
+  # ──────────────────────────────────────────────────────────────
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    target-branch: "main"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "10:00"
+      timezone: "America/New_York"
+    allow:
+      - dependency-type: "direct"
+    groups:
+      docker-compose-all:
+        patterns: ["*"]
+    open-pull-requests-limit: 5
+    assignees: ["mrz1836"]
+    labels: ["chore", "dependencies", "docker"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    cooldown:
+      default-days: 3
+
+  # ──────────────────────────────────────────────────────────────
+  # 6. Release Dockerfile (release/Dockerfile)
+  # ──────────────────────────────────────────────────────────────
+  - package-ecosystem: "docker"
+    directory: "/release"
+    target-branch: "main"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "10:15"
+      timezone: "America/New_York"
+    allow:
+      - dependency-type: "direct"
+    groups:
+      dockerfiles-release-all:
+        patterns: ["*"]
+    open-pull-requests-limit: 5
+    assignees: ["mrz1836"]
+    labels: ["chore", "dependencies", "docker"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    cooldown:
+      default-days: 3
+      exclude: ["golang"]
