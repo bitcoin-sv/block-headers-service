@@ -3,7 +3,7 @@
 # Pinned by digest for reproducibility and security (Scorecard requirement).
 # This is a manifest list digest, so it works with --platform for multi-arch builds.
 # Update periodically: docker pull ubuntu:24.04 && docker inspect --format='{{index .RepoDigests 0}}' ubuntu:24.04
-FROM --platform=$TARGETPLATFORM ubuntu@sha256:c35e29c9450151419d9448b0fd75374fec4fff364a27f176fb458d472dfc9e54
+FROM --platform=$TARGETPLATFORM ubuntu@sha256:c098726dd9b9733f3e885f8de0ef375206a311b0a317eadc40d347b1115fb944
 
 RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 
